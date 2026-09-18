@@ -1129,16 +1129,16 @@ It expects these files that your extraction already created:
 
 ```text
 output_pruaccess/
-├── bid_history.json
-├── prudential_fund.json
-└── pagination.json
+bid_history.json
+prudential_fund.json
+pagination.json
 ```
 
 It will create:
 
 ```text
 output_pruaccess/
-└── validation.json
+validation.json
 ```
 
 The important thing I want to see next is the bottom section:
