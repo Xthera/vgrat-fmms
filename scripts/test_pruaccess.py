@@ -3,46 +3,56 @@
 """
 PruAccess historical BID price extractor.
 
-Current stage:
-    Read all populated fund rows from Funds Links.xlsm,
-    but process only the first fund.
+MASTER SOURCE:
+    Funds Links.xlsm
 
 Excel:
     Column A = Prudential fund URL
     Column B = PruAccess fund name
 
 Workflow:
-    Excel
-       ↓
-    Read all populated rows
-       ↓
-    Use first row for current extraction test
-       ↓
+
+    Funds Links.xlsm
+          ↓
+    Read every populated Excel row
+          ↓
     Prudential fund page/API
-       ↓
+          ↓
+    Get official fund information
+          ↓
     Get official inception date
-       ↓
+          ↓
     PruAccess
-       ↓
+          ↓
     Exact fund-name match
-       ↓
+          ↓
     Table view
-       ↓
-    Start = inception date
-    End = today
-       ↓
+          ↓
+    Start = Prudential inception date
+    End   = request date
+          ↓
     Direct pagination
-       ↓
+          ↓
     Extract BID prices only
+          ↓
+    Repeat for every Excel fund
+          ↓
+    Consolidated JSON
 
 Important:
+- Funds Links.xlsm determines the fund universe.
+- Column A determines which funds exist.
+- Column B provides the PruAccess fund name.
+- No hardcoded fund count.
 - No synthetic data.
 - No estimated data.
 - No interpolation.
 - No fuzzy fund matching.
 - Fund Price Type is NOT changed.
 - Historical BID prices come directly from PruAccess.
-- Offer prices are not stored in bid_history.json.
+- Offer prices are not stored as historical BID prices.
+- If a fund fails, the failure is recorded.
+- A failed fund is NOT replaced with fake or previous data.
 """
 
 from __future__ import annotations
@@ -66,6 +76,10 @@ OUTPUT_DIR = Path(
     "output_pruaccess"
 )
 
+FUNDS_OUTPUT_DIR = (
+    OUTPUT_DIR / "funds"
+)
+
 PRUACCESS_URL = (
     "https://pruaccess.prudential.com.sg/"
     "prulinkfund/viewFundPerformance.do"
@@ -76,6 +90,12 @@ PAGE_SIZE = 20
 MAX_PAGES = 1000
 
 PAGE_WAIT_MS = 500
+
+PRUDENTIAL_WAIT_MS = 3000
+
+PRUACCESS_INITIAL_WAIT_MS = 1500
+
+PRUACCESS_RESULT_WAIT_MS = 2500
 
 
 # ============================================================
@@ -124,6 +144,11 @@ def save_json(
     data,
 ) -> None:
 
+    path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
     path.write_text(
         json.dumps(
             data,
@@ -153,6 +178,31 @@ def pruaccess_date(
     )
 
 
+def safe_filename(
+    value: str,
+) -> str:
+
+    value = clean_text(
+        value
+    )
+
+    value = re.sub(
+        r"[^A-Za-z0-9._-]+",
+        "_",
+        value,
+    )
+
+    value = value.strip(
+        "._"
+    )
+
+    if not value:
+
+        value = "fund"
+
+    return value[:120]
+
+
 # ============================================================
 # EXCEL
 # ============================================================
@@ -160,7 +210,15 @@ def pruaccess_date(
 def read_excel_funds() -> list[dict]:
 
     print(
-        "\n=== Reading Funds Links.xlsm ==="
+        "\n============================================================"
+    )
+
+    print(
+        "READING FUNDS LINKS.XLSM"
+    )
+
+    print(
+        "============================================================"
     )
 
     if not EXCEL_FILE.exists():
@@ -201,20 +259,23 @@ def read_excel_funds() -> list[dict]:
         )
 
         # ----------------------------------------------------
-        # Column A is the master-universe field.
-        #
-        # If Column A is empty, this row does not represent
-        # a Prudential fund and is skipped.
+        # Column A is the master universe.
         # ----------------------------------------------------
 
         if not prudential_url:
+
             continue
 
         funds.append(
             {
-                "excelRow": row_number,
-                "prudentialUrl": prudential_url,
-                "pruAccessName": pruaccess_name,
+                "excelRow":
+                    row_number,
+
+                "prudentialUrl":
+                    prudential_url,
+
+                "pruAccessName":
+                    pruaccess_name,
             }
         )
 
@@ -228,21 +289,23 @@ def read_excel_funds() -> list[dict]:
         )
 
     print(
-        f"\nPopulated Prudential fund URLs found: "
+        f"\nPopulated fund URLs found: "
         f"{len(funds)}"
     )
 
     print(
-        "\nExcel fund list:"
+        "\nExcel universe:"
     )
 
     for fund in funds:
 
         print(
             f"Row {fund['excelRow']}: "
-            f"{fund['pruAccessName']} "
-            f"| "
-            f"{fund['prudentialUrl']}"
+            f"{fund['pruAccessName'] or '[NO PRUACCESS NAME]'}"
+        )
+
+        print(
+            f"    {fund['prudentialUrl']}"
         )
 
     return funds
@@ -285,15 +348,24 @@ def get_prudential_fund_data(
         handle_response,
     )
 
-    page.goto(
-        prudential_url,
-        wait_until="domcontentloaded",
-        timeout=120000,
-    )
+    try:
 
-    page.wait_for_timeout(
-        3000
-    )
+        page.goto(
+            prudential_url,
+            wait_until="domcontentloaded",
+            timeout=120000,
+        )
+
+        page.wait_for_timeout(
+            PRUDENTIAL_WAIT_MS
+        )
+
+    finally:
+
+        page.remove_listener(
+            "response",
+            handle_response,
+        )
 
     if not captured_urls:
 
@@ -338,19 +410,54 @@ def get_prudential_fund_data(
 
     fund = data[0]
 
+    fund_identifier = clean_text(
+        fund.get(
+            "fundIdentifier"
+        )
+    )
+
+    fund_name = clean_text(
+        fund.get(
+            "fundName"
+        )
+    )
+
+    inception_date = clean_text(
+        fund.get(
+            "inceptionDate"
+        )
+    )
+
+    if not fund_identifier:
+
+        raise RuntimeError(
+            "Prudential fundIdentifier "
+            "is missing."
+        )
+
+    if not fund_name:
+
+        raise RuntimeError(
+            "Prudential fundName "
+            "is missing."
+        )
+
+    if not inception_date:
+
+        raise RuntimeError(
+            "Prudential inceptionDate "
+            "is missing."
+        )
+
     result = {
         "apiUrl":
             api_url,
 
         "fundIdentifier":
-            fund.get(
-                "fundIdentifier"
-            ),
+            fund_identifier,
 
         "fundName":
-            fund.get(
-                "fundName"
-            ),
+            fund_name,
 
         "fundCode":
             fund.get(
@@ -398,9 +505,7 @@ def get_prudential_fund_data(
             ),
 
         "inceptionDate":
-            fund.get(
-                "inceptionDate"
-            ),
+            inception_date,
 
         "cumulativeYtd":
             fund.get(
@@ -510,7 +615,9 @@ def get_fund_options(
 
     result = []
 
-    for index in range(count):
+    for index in range(
+        count
+    ):
 
         option = options.nth(
             index
@@ -531,6 +638,59 @@ def get_fund_options(
         )
 
     return result
+
+
+# ============================================================
+# PRUACCESS EXACT MATCH
+# ============================================================
+
+def find_exact_pruaccess_match(
+    options: list[dict],
+    target_name: str,
+) -> dict:
+
+    target_normalized = normalize_name(
+        target_name
+    )
+
+    if not target_normalized:
+
+        raise RuntimeError(
+            "Excel PruAccess fund name "
+            "is empty."
+        )
+
+    matches = []
+
+    for option in options:
+
+        option_name = normalize_name(
+            option["text"]
+        )
+
+        if option_name == target_normalized:
+
+            matches.append(
+                option
+            )
+
+    if not matches:
+
+        raise RuntimeError(
+            "Exact PruAccess fund-name "
+            "match failed for: "
+            f"{target_name}"
+        )
+
+    if len(matches) > 1:
+
+        raise RuntimeError(
+            "Multiple exact PruAccess "
+            "fund-name matches found for: "
+            f"{target_name}"
+        )
+
+    return matches[0]
 
 
 # ============================================================
@@ -635,6 +795,7 @@ def extract_price_rows(
             cell_count = cells.count()
 
             if cell_count < 2:
+
                 continue
 
             values = []
@@ -652,6 +813,7 @@ def extract_price_rows(
                 )
 
             if len(values) < 2:
+
                 continue
 
             date_value = values[0]
@@ -660,6 +822,7 @@ def extract_price_rows(
                 r"^\d{1,2}-[A-Za-z]{3}-\d{4}$",
                 date_value,
             ):
+
                 continue
 
             bid_value = values[1]
@@ -668,14 +831,22 @@ def extract_price_rows(
                 r"^-?\d+(?:\.\d+)?$",
                 bid_value,
             ):
+
                 continue
 
             all_rows.append(
                 {
-                    "date": date_value,
-                    "bidPrice": bid_value,
+                    "date":
+                        date_value,
+
+                    "bidPrice":
+                        bid_value,
                 }
             )
+
+    # --------------------------------------------------------
+    # Remove duplicate date/price records.
+    # --------------------------------------------------------
 
     seen = set()
 
@@ -689,9 +860,12 @@ def extract_price_rows(
         )
 
         if key in seen:
+
             continue
 
-        seen.add(key)
+        seen.add(
+            key
+        )
 
         result.append(
             row
@@ -802,10 +976,17 @@ def extract_all_pages(
 
             page_diagnostics.append(
                 {
-                    "page": page_number,
-                    "url": url,
-                    "rowCount": 0,
-                    "status": "empty",
+                    "page":
+                        page_number,
+
+                    "url":
+                        url,
+
+                    "rowCount":
+                        0,
+
+                    "status":
+                        "empty",
                 }
             )
 
@@ -822,14 +1003,27 @@ def extract_all_pages(
 
         page_diagnostics.append(
             {
-                "page": page_number,
-                "url": url,
+                "page":
+                    page_number,
+
+                "url":
+                    url,
+
                 "rowCount":
-                    len(current_rows),
+                    len(
+                        current_rows
+                    ),
+
                 "firstDate":
-                    current_rows[0]["date"],
+                    current_rows[0][
+                        "date"
+                    ],
+
                 "lastDate":
-                    current_rows[-1]["date"],
+                    current_rows[-1][
+                        "date"
+                    ],
+
                 "status":
                     "success",
             }
@@ -842,13 +1036,26 @@ def extract_all_pages(
             f"{current_rows[-1]['date']}"
         )
 
-        if len(current_rows) < PAGE_SIZE:
+        if len(
+            current_rows
+        ) < PAGE_SIZE:
 
             print(
                 "\nFinal page detected."
             )
 
             break
+
+    else:
+
+        raise RuntimeError(
+            f"Pagination exceeded "
+            f"MAX_PAGES={MAX_PAGES}."
+        )
+
+    # --------------------------------------------------------
+    # Sort newest → oldest.
+    # --------------------------------------------------------
 
     def sort_date(row):
 
@@ -876,6 +1083,626 @@ def extract_all_pages(
 
 
 # ============================================================
+# SINGLE FUND EXTRACTION
+# ============================================================
+
+def extract_single_fund(
+    page,
+    excel_fund: dict,
+    pruaccess_options: list[dict],
+) -> dict:
+
+    excel_row = excel_fund[
+        "excelRow"
+    ]
+
+    prudential_url = excel_fund[
+        "prudentialUrl"
+    ]
+
+    excel_pruaccess_name = excel_fund[
+        "pruAccessName"
+    ]
+
+    print(
+        "\n\n"
+        "################################################################"
+    )
+
+    print(
+        f"PROCESSING EXCEL ROW {excel_row}"
+    )
+
+    print(
+        "################################################################"
+    )
+
+    print(
+        f"\nPrudential URL:"
+    )
+
+    print(
+        prudential_url
+    )
+
+    print(
+        f"\nExcel PruAccess name:"
+    )
+
+    print(
+        excel_pruaccess_name
+    )
+
+    # ========================================================
+    # PRUDENTIAL
+    # ========================================================
+
+    prudential = (
+        get_prudential_fund_data(
+            page,
+            prudential_url,
+        )
+    )
+
+    print(
+        "\n=== Prudential fund ==="
+    )
+
+    print(
+        prudential.get(
+            "fundName"
+        )
+    )
+
+    print(
+        f"Citicode / identifier: "
+        f"{prudential.get('fundIdentifier')}"
+    )
+
+    print(
+        f"Fund code: "
+        f"{prudential.get('fundCode')}"
+    )
+
+    print(
+        f"Current bid: "
+        f"{prudential.get('bidPrice')}"
+    )
+
+    print(
+        f"Current offer: "
+        f"{prudential.get('offerPrice')}"
+    )
+
+    print(
+        f"Inception: "
+        f"{prudential.get('inceptionDate')}"
+    )
+
+    # ========================================================
+    # DATE RANGE
+    # ========================================================
+
+    inception_raw = prudential.get(
+        "inceptionDate"
+    )
+
+    if not inception_raw:
+
+        raise RuntimeError(
+            "Prudential inception date "
+            "is missing."
+        )
+
+    inception_date = (
+        parse_prudential_date(
+            inception_raw
+        )
+    )
+
+    start_date = pruaccess_date(
+        inception_date
+    )
+
+    end_date = datetime.now().strftime(
+        "%d-%b-%Y"
+    )
+
+    print(
+        "\nPruAccess start date:"
+    )
+
+    print(
+        start_date
+    )
+
+    print(
+        "\nPruAccess end date:"
+    )
+
+    print(
+        end_date
+    )
+
+    # ========================================================
+    # EXACT PRUACCESS MATCH
+    # ========================================================
+
+    selected = (
+        find_exact_pruaccess_match(
+            pruaccess_options,
+            excel_pruaccess_name,
+        )
+    )
+
+    print(
+        "\nMatched PruAccess fund:"
+    )
+
+    print(
+        selected
+    )
+
+    fund_id = selected[
+        "value"
+    ]
+
+    if not fund_id:
+
+        raise RuntimeError(
+            "Matched PruAccess fund "
+            "has no fund ID."
+        )
+
+    # ========================================================
+    # OPEN PRUACCESS
+    # ========================================================
+
+    print(
+        "\n=== Opening PruAccess ==="
+    )
+
+    page.goto(
+        PRUACCESS_URL,
+        wait_until="domcontentloaded",
+        timeout=120000,
+    )
+
+    page.wait_for_timeout(
+        PRUACCESS_INITIAL_WAIT_MS
+    )
+
+    # ========================================================
+    # SELECT FUND
+    # ========================================================
+
+    fund_selector = page.locator(
+        "#fundName"
+    )
+
+    if fund_selector.count() == 0:
+
+        raise RuntimeError(
+            "PruAccess #fundName "
+            "selector not found."
+        )
+
+    fund_selector.select_option(
+        fund_id
+    )
+
+    # ========================================================
+    # TABLE VIEW
+    # ========================================================
+
+    view_selector = page.locator(
+        "#viewType"
+    )
+
+    if view_selector.count() == 0:
+
+        raise RuntimeError(
+            "PruAccess #viewType "
+            "selector not found."
+        )
+
+    view_selector.select_option(
+        "TBL"
+    )
+
+    # ========================================================
+    # FUND PRICE TYPE
+    #
+    # DO NOT MODIFY.
+    # ========================================================
+
+    fund_price_type = page.locator(
+        "#fundPriceType"
+    )
+
+    if fund_price_type.count():
+
+        fund_price_type_value = (
+            fund_price_type.input_value()
+        )
+
+    else:
+
+        fund_price_type_value = None
+
+    print(
+        "\nFund Price Type:"
+    )
+
+    print(
+        f"{fund_price_type_value} "
+        "(left untouched)"
+    )
+
+    # ========================================================
+    # SET DATES
+    # ========================================================
+
+    print(
+        "\n=== Setting PruAccess dates ==="
+    )
+
+    set_readonly_input_value(
+        page,
+        'input[name="startDate"]',
+        start_date,
+    )
+
+    set_readonly_input_value(
+        page,
+        'input[name="endDate"]',
+        end_date,
+    )
+
+    # ========================================================
+    # CSRF
+    # ========================================================
+
+    csrf = page.locator(
+        'input[name="_csrf"]'
+    )
+
+    if csrf.count() == 0:
+
+        raise RuntimeError(
+            "PruAccess CSRF input not found."
+        )
+
+    csrf_value = csrf.input_value()
+
+    if not csrf_value:
+
+        raise RuntimeError(
+            "PruAccess CSRF token is empty."
+        )
+
+    # ========================================================
+    # VERIFY DATES
+    # ========================================================
+
+    actual_start = page.locator(
+        'input[name="startDate"]'
+    ).input_value()
+
+    actual_end = page.locator(
+        'input[name="endDate"]'
+    ).input_value()
+
+    print(
+        "\nVerified dates:"
+    )
+
+    print(
+        f"Start: {actual_start}"
+    )
+
+    print(
+        f"End:   {actual_end}"
+    )
+
+    if actual_start != start_date:
+
+        raise RuntimeError(
+            "Start date verification failed."
+        )
+
+    if actual_end != end_date:
+
+        raise RuntimeError(
+            "End date verification failed."
+        )
+
+    # ========================================================
+    # PRE-SUBMIT DATA
+    # ========================================================
+
+    pre_submit = {
+        "excelRow":
+            excel_row,
+
+        "prudentialUrl":
+            prudential_url,
+
+        "excelPruAccessName":
+            excel_pruaccess_name,
+
+        "matchedPruAccessName":
+            selected["text"],
+
+        "matchedPruAccessValue":
+            selected["value"],
+
+        "startDate":
+            start_date,
+
+        "endDate":
+            end_date,
+
+        "viewType":
+            "TBL",
+
+        "fundPriceType":
+            fund_price_type_value,
+
+        "csrfPresent":
+            bool(
+                csrf_value
+            ),
+    }
+
+    # ========================================================
+    # SUBMIT
+    # ========================================================
+
+    print(
+        "\n=== Submitting PruAccess form ==="
+    )
+
+    page.locator(
+        "#fundForm"
+    ).evaluate(
+        """
+        form => {
+            form.submit();
+        }
+        """
+    )
+
+    page.wait_for_load_state(
+        "domcontentloaded",
+        timeout=120000,
+    )
+
+    page.wait_for_timeout(
+        PRUACCESS_RESULT_WAIT_MS
+    )
+
+    # ========================================================
+    # EXTRACT ALL PAGES
+    # ========================================================
+
+    (
+        historical_rows,
+        page_diagnostics,
+    ) = extract_all_pages(
+        page,
+        fund_id,
+        start_date,
+        end_date,
+    )
+
+    if not historical_rows:
+
+        raise RuntimeError(
+            "No historical BID observations "
+            "were extracted."
+        )
+
+    # ========================================================
+    # CREATE FUND RESULT
+    # ========================================================
+
+    bid_history = {
+        "source":
+            "PruAccess",
+
+        "fundName":
+            prudential.get(
+                "fundName"
+            ),
+
+        "pruAccessFundName":
+            selected["text"],
+
+        "fundId":
+            fund_id,
+
+        "fundIdentifier":
+            prudential.get(
+                "fundIdentifier"
+            ),
+
+        "fundCode":
+            prudential.get(
+                "fundCode"
+            ),
+
+        "currency":
+            prudential.get(
+                "fundCurrency"
+            ),
+
+        "startDate":
+            start_date,
+
+        "endDate":
+            end_date,
+
+        "priceType":
+            "BID",
+
+        "pageSize":
+            PAGE_SIZE,
+
+        "observationCount":
+            len(
+                historical_rows
+            ),
+
+        "observations":
+            historical_rows,
+    }
+
+    # ========================================================
+    # SUMMARY
+    # ========================================================
+
+    summary = {
+        "status":
+            "success",
+
+        "excelRow":
+            excel_row,
+
+        "prudentialUrl":
+            prudential_url,
+
+        "prudentialFundName":
+            prudential.get(
+                "fundName"
+            ),
+
+        "excelPruAccessName":
+            excel_pruaccess_name,
+
+        "matchedPruAccessName":
+            selected["text"],
+
+        "pruAccessFundId":
+            fund_id,
+
+        "fundIdentifier":
+            prudential.get(
+                "fundIdentifier"
+            ),
+
+        "fundCode":
+            prudential.get(
+                "fundCode"
+            ),
+
+        "inceptionDate":
+            inception_raw,
+
+        "startDate":
+            start_date,
+
+        "endDate":
+            end_date,
+
+        "currentBidPrice":
+            prudential.get(
+                "bidPrice"
+            ),
+
+        "currentOfferPrice":
+            prudential.get(
+                "offerPrice"
+            ),
+
+        "fundPriceType":
+            fund_price_type_value,
+
+        "historicalPriceType":
+            "BID",
+
+        "pageSize":
+            PAGE_SIZE,
+
+        "pagesExtracted":
+            len(
+                page_diagnostics
+            ),
+
+        "historicalObservationCount":
+            len(
+                historical_rows
+            ),
+
+        "newestObservation":
+            historical_rows[0],
+
+        "oldestObservation":
+            historical_rows[-1],
+    }
+
+    # ========================================================
+    # CONSOLIDATED FUND RECORD
+    # ========================================================
+
+    fund_record = {
+        "status":
+            "success",
+
+        "excelRow":
+            excel_row,
+
+        "prudentialUrl":
+            prudential_url,
+
+        "excelPruAccessName":
+            excel_pruaccess_name,
+
+        "prudential":
+            prudential,
+
+        "pruAccess": {
+            "fundName":
+                selected["text"],
+
+            "fundId":
+                fund_id,
+
+            "startDate":
+                start_date,
+
+            "endDate":
+                end_date,
+
+            "priceType":
+                "BID",
+
+            "pageSize":
+                PAGE_SIZE,
+
+            "observationCount":
+                len(
+                    historical_rows
+                ),
+        },
+
+        "summary":
+            summary,
+
+        "preSubmit":
+            pre_submit,
+
+        "pagination":
+            page_diagnostics,
+
+        "bidHistory":
+            bid_history,
+    }
+
+    return fund_record
+
+
+# ============================================================
 # MAIN
 # ============================================================
 
@@ -886,12 +1713,21 @@ def main():
         exist_ok=True,
     )
 
+    FUNDS_OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
     print(
         "============================================================"
     )
 
     print(
-        "PruAccess Historical BID Price Extraction"
+        "PRUACCESS HISTORICAL BID PRICE EXTRACTION"
+    )
+
+    print(
+        "ALL EXCEL FUNDS"
     )
 
     print(
@@ -899,56 +1735,24 @@ def main():
     )
 
     # ========================================================
-    # READ ALL EXCEL FUNDS
+    # READ EXCEL UNIVERSE
     # ========================================================
 
     funds = read_excel_funds()
 
     # ========================================================
-    # CURRENT TEST MODE
-    #
-    # We intentionally process ONLY the first fund.
-    #
-    # This step is only verifying that the Excel universe
-    # can now be read dynamically.
+    # RUN METADATA
     # ========================================================
 
-    fund = funds[0]
+    run_started = datetime.utcnow()
 
-    prudential_url = fund[
-        "prudentialUrl"
-    ]
+    successful_funds = []
 
-    excel_pruaccess_name = fund[
-        "pruAccessName"
-    ]
+    failed_funds = []
 
-    print(
-        "\n============================================================"
-    )
+    all_bid_history = {}
 
-    print(
-        "CURRENT TEST FUND"
-    )
-
-    print(
-        "============================================================"
-    )
-
-    print(
-        f"Excel row: "
-        f"{fund['excelRow']}"
-    )
-
-    print(
-        f"Prudential URL: "
-        f"{prudential_url}"
-    )
-
-    print(
-        f"PruAccess name: "
-        f"{excel_pruaccess_name}"
-    )
+    all_fund_records = []
 
     # ========================================================
     # PLAYWRIGHT
@@ -970,108 +1774,19 @@ def main():
         page = context.new_page()
 
         # ====================================================
-        # PRUDENTIAL
-        # ====================================================
-
-        prudential = (
-            get_prudential_fund_data(
-                page,
-                prudential_url,
-            )
-        )
-
-        save_json(
-            OUTPUT_DIR
-            / "prudential_fund.json",
-            prudential,
-        )
-
-        print(
-            "\n=== Prudential fund ==="
-        )
-
-        print(
-            prudential.get(
-                "fundName"
-            )
-        )
-
-        print(
-            f"Citicode / identifier: "
-            f"{prudential.get('fundIdentifier')}"
-        )
-
-        print(
-            f"Fund code: "
-            f"{prudential.get('fundCode')}"
-        )
-
-        print(
-            f"Current bid: "
-            f"{prudential.get('bidPrice')}"
-        )
-
-        print(
-            f"Current offer: "
-            f"{prudential.get('offerPrice')}"
-        )
-
-        print(
-            f"Inception: "
-            f"{prudential.get('inceptionDate')}"
-        )
-
-        # ====================================================
-        # DATE RANGE
-        # ====================================================
-
-        inception_raw = prudential.get(
-            "inceptionDate"
-        )
-
-        if not inception_raw:
-
-            raise RuntimeError(
-                "Prudential inception date "
-                "is missing."
-            )
-
-        inception_date = (
-            parse_prudential_date(
-                inception_raw
-            )
-        )
-
-        start_date = pruaccess_date(
-            inception_date
-        )
-
-        end_date = datetime.now().strftime(
-            "%d-%b-%Y"
-        )
-
-        print(
-            "\nPruAccess start date:"
-        )
-
-        print(
-            start_date
-        )
-
-        print(
-            "\nPruAccess end date:"
-        )
-
-        print(
-            end_date
-        )
-
-        # ====================================================
-        # OPEN PRUACCESS
+        # LOAD PRUACCESS OPTIONS ONCE
         # ====================================================
 
         print(
-            "\n=== Opening PruAccess ==="
+            "\n============================================================"
+        )
+
+        print(
+            "LOADING PRUACCESS FUND OPTIONS"
+        )
+
+        print(
+            "============================================================"
         )
 
         page.goto(
@@ -1081,541 +1796,590 @@ def main():
         )
 
         page.wait_for_timeout(
-            1500
+            PRUACCESS_INITIAL_WAIT_MS
         )
 
-        (
-            OUTPUT_DIR
-            / "pre_submit_visible_text.txt"
-        ).write_text(
-            page.locator(
-                "body"
-            ).inner_text(),
-            encoding="utf-8",
-        )
-
-        # ====================================================
-        # FUND OPTIONS
-        # ====================================================
-
-        options = get_fund_options(
-            page
+        pruaccess_options = (
+            get_fund_options(
+                page
+            )
         )
 
         save_json(
             OUTPUT_DIR
             / "fund_options.json",
-            options,
+            pruaccess_options,
         )
 
-        target_name = normalize_name(
-            excel_pruaccess_name
+        # ====================================================
+        # PROCESS EVERY EXCEL FUND
+        # ====================================================
+
+        total_funds = len(
+            funds
         )
 
-        matches = []
+        for fund_index, excel_fund in enumerate(
+            funds,
+            start=1,
+        ):
 
-        for option in options:
+            print(
+                "\n\n"
+                "############################################################"
+            )
 
-            if normalize_name(
-                option["text"]
-            ) == target_name:
+            print(
+                f"FUND {fund_index} / {total_funds}"
+            )
 
-                matches.append(
-                    option
+            print(
+                f"EXCEL ROW {excel_fund['excelRow']}"
+            )
+
+            print(
+                "############################################################"
+            )
+
+            try:
+
+                result = extract_single_fund(
+                    page,
+                    excel_fund,
+                    pruaccess_options,
                 )
 
-        if not matches:
-
-            raise RuntimeError(
-                "Exact PruAccess fund-name "
-                "match failed."
-            )
-
-        if len(matches) > 1:
-
-            raise RuntimeError(
-                "Multiple exact PruAccess "
-                "fund-name matches found."
-            )
-
-        selected = matches[0]
-
-        print(
-            "\nMatched PruAccess fund:"
-        )
-
-        print(
-            selected
-        )
-
-        fund_id = selected[
-            "value"
-        ]
-
-        # ====================================================
-        # SELECT FUND
-        # ====================================================
-
-        page.locator(
-            "#fundName"
-        ).select_option(
-            fund_id
-        )
-
-        # ====================================================
-        # TABLE VIEW
-        # ====================================================
-
-        page.locator(
-            "#viewType"
-        ).select_option(
-            "TBL"
-        )
-
-        # ====================================================
-        # FUND PRICE TYPE
-        #
-        # DO NOT MODIFY.
-        # ====================================================
-
-        fund_price_type = page.locator(
-            "#fundPriceType"
-        )
-
-        if fund_price_type.count():
-
-            fund_price_type_value = (
-                fund_price_type.input_value()
-            )
-
-        else:
-
-            fund_price_type_value = None
-
-        print(
-            "\nFund Price Type:"
-        )
-
-        print(
-            f"{fund_price_type_value} "
-            "(left untouched)"
-        )
-
-        # ====================================================
-        # SET DATES
-        # ====================================================
-
-        print(
-            "\n=== Setting PruAccess dates ==="
-        )
-
-        set_readonly_input_value(
-            page,
-            'input[name="startDate"]',
-            start_date,
-        )
-
-        set_readonly_input_value(
-            page,
-            'input[name="endDate"]',
-            end_date,
-        )
-
-        # ====================================================
-        # CSRF
-        # ====================================================
-
-        csrf = page.locator(
-            'input[name="_csrf"]'
-        )
-
-        if csrf.count() == 0:
-
-            raise RuntimeError(
-                "PruAccess CSRF input not found."
-            )
-
-        csrf_value = csrf.input_value()
-
-        if not csrf_value:
-
-            raise RuntimeError(
-                "PruAccess CSRF token is empty."
-            )
-
-        # ====================================================
-        # VERIFY
-        # ====================================================
-
-        actual_start = page.locator(
-            'input[name="startDate"]'
-        ).input_value()
-
-        actual_end = page.locator(
-            'input[name="endDate"]'
-        ).input_value()
-
-        print(
-            "\nVerified dates:"
-        )
-
-        print(
-            f"Start: {actual_start}"
-        )
-
-        print(
-            f"End:   {actual_end}"
-        )
-
-        if actual_start != start_date:
-
-            raise RuntimeError(
-                "Start date verification failed."
-            )
-
-        if actual_end != end_date:
-
-            raise RuntimeError(
-                "End date verification failed."
-            )
-
-        # ====================================================
-        # PRE-SUBMIT
-        # ====================================================
-
-        pre_submit = {
-            "excelRow":
-                fund["excelRow"],
-
-            "prudentialUrl":
-                prudential_url,
-
-            "excelPruAccessName":
-                excel_pruaccess_name,
-
-            "matchedPruAccessName":
-                selected["text"],
-
-            "matchedPruAccessValue":
-                selected["value"],
-
-            "startDate":
-                start_date,
-
-            "endDate":
-                end_date,
-
-            "viewType":
-                "TBL",
-
-            "fundPriceType":
-                fund_price_type_value,
-
-            "csrfPresent":
-                bool(csrf_value),
-        }
-
-        save_json(
-            OUTPUT_DIR
-            / "pre_submit.json",
-            pre_submit,
-        )
-
-        # ====================================================
-        # SUBMIT
-        # ====================================================
-
-        print(
-            "\n=== Submitting PruAccess form ==="
-        )
-
-        page.locator(
-            "#fundForm"
-        ).evaluate(
-            """
-            form => {
-                form.submit();
-            }
-            """
-        )
-
-        page.wait_for_load_state(
-            "domcontentloaded",
-            timeout=120000,
-        )
-
-        page.wait_for_timeout(
-            2500
-        )
-
-        # ====================================================
-        # SAVE FIRST RESULT
-        # ====================================================
-
-        (
-            OUTPUT_DIR
-            / "result.html"
-        ).write_text(
-            page.content(),
-            encoding="utf-8",
-        )
-
-        (
-            OUTPUT_DIR
-            / "result_visible_text.txt"
-        ).write_text(
-            page.locator(
-                "body"
-            ).inner_text(),
-            encoding="utf-8",
-        )
-
-        print(
-            "\nReturned URL:"
-        )
-
-        print(
-            page.url
-        )
-
-        # ====================================================
-        # EXTRACT ALL PAGES
-        # ====================================================
-
-        (
-            historical_rows,
-            page_diagnostics,
-        ) = extract_all_pages(
-            page,
-            fund_id,
-            start_date,
-            end_date,
-        )
-
-        # ====================================================
-        # SAVE BID HISTORY
-        # ====================================================
-
-        bid_history = {
-            "source":
-                "PruAccess",
-
-            "fundName":
-                prudential.get(
-                    "fundName"
-                ),
-
-            "pruAccessFundName":
-                selected["text"],
-
-            "fundId":
-                fund_id,
-
-            "fundIdentifier":
-                prudential.get(
-                    "fundIdentifier"
-                ),
-
-            "fundCode":
-                prudential.get(
-                    "fundCode"
-                ),
-
-            "currency":
-                prudential.get(
-                    "fundCurrency"
-                ),
-
-            "startDate":
-                start_date,
-
-            "endDate":
-                end_date,
-
-            "priceType":
-                "BID",
-
-            "pageSize":
-                PAGE_SIZE,
-
-            "observationCount":
-                len(
-                    historical_rows
-                ),
-
-            "observations":
-                historical_rows,
-        }
-
-        save_json(
-            OUTPUT_DIR
-            / "bid_history.json",
-            bid_history,
-        )
-
-        # ====================================================
-        # SAVE PAGINATION
-        # ====================================================
-
-        save_json(
-            OUTPUT_DIR
-            / "pagination.json",
-            page_diagnostics,
-        )
-
-        # ====================================================
-        # SUMMARY
-        # ====================================================
-
-        summary = {
-            "status":
-                "success",
-
-            "excelRow":
-                fund["excelRow"],
-
-            "prudentialFundName":
-                prudential.get(
-                    "fundName"
-                ),
-
-            "excelPruAccessName":
-                excel_pruaccess_name,
-
-            "matchedPruAccessName":
-                selected["text"],
-
-            "pruAccessFundId":
-                fund_id,
-
-            "fundIdentifier":
-                prudential.get(
-                    "fundIdentifier"
-                ),
-
-            "fundCode":
-                prudential.get(
-                    "fundCode"
-                ),
-
-            "inceptionDate":
-                inception_raw,
-
-            "startDate":
-                start_date,
-
-            "endDate":
-                end_date,
-
-            "currentBidPrice":
-                prudential.get(
-                    "bidPrice"
-                ),
-
-            "currentOfferPrice":
-                prudential.get(
-                    "offerPrice"
-                ),
-
-            "fundPriceType":
-                fund_price_type_value,
-
-            "historicalPriceType":
-                "BID",
-
-            "pageSize":
-                PAGE_SIZE,
-
-            "pagesExtracted":
-                len(
-                    page_diagnostics
-                ),
-
-            "historicalObservationCount":
-                len(
-                    historical_rows
-                ),
-
-            "newestObservation":
-                (
-                    historical_rows[0]
-                    if historical_rows
-                    else None
-                ),
-
-            "oldestObservation":
-                (
-                    historical_rows[-1]
-                    if historical_rows
-                    else None
-                ),
-        }
-
-        save_json(
-            OUTPUT_DIR
-            / "summary.json",
-            summary,
-        )
-
-        # ====================================================
-        # CONSOLE SUMMARY
-        # ====================================================
-
-        print(
-            "\n============================================================"
-        )
-
-        print(
-            "EXTRACTION COMPLETE"
-        )
-
-        print(
-            "============================================================"
-        )
-
-        print(
-            f"Excel funds detected: "
-            f"{len(funds)}"
-        )
-
-        print(
-            f"Test fund processed: "
-            f"row {fund['excelRow']}"
-        )
-
-        print(
-            f"Pages extracted: "
-            f"{len(page_diagnostics)}"
-        )
-
-        print(
-            f"Historical BID observations: "
-            f"{len(historical_rows)}"
-        )
-
-        if historical_rows:
-
-            print(
-                "\nNewest BID:"
-            )
-
-            print(
-                historical_rows[0]
-            )
-
-            print(
-                "\nOldest BID:"
-            )
-
-            print(
-                historical_rows[-1]
-            )
+                all_fund_records.append(
+                    result
+                )
+
+                successful_funds.append(
+                    result
+                )
+
+                # ------------------------------------------------
+                # Individual fund directory.
+                # ------------------------------------------------
+
+                prudential = result[
+                    "prudential"
+                ]
+
+                fund_identifier = (
+                    clean_text(
+                        prudential.get(
+                            "fundIdentifier"
+                        )
+                    )
+                )
+
+                fund_code = (
+                    clean_text(
+                        prudential.get(
+                            "fundCode"
+                        )
+                    )
+                )
+
+                fund_name = (
+                    clean_text(
+                        prudential.get(
+                            "fundName"
+                        )
+                    )
+                )
+
+                directory_name = (
+                    f"{excel_fund['excelRow']}_"
+                    f"{safe_filename(fund_identifier or fund_code or fund_name)}"
+                )
+
+                fund_output_dir = (
+                    FUNDS_OUTPUT_DIR
+                    / directory_name
+                )
+
+                fund_output_dir.mkdir(
+                    parents=True,
+                    exist_ok=True,
+                )
+
+                save_json(
+                    fund_output_dir
+                    / "prudential_fund.json",
+                    prudential,
+                )
+
+                save_json(
+                    fund_output_dir
+                    / "pre_submit.json",
+                    result[
+                        "preSubmit"
+                    ],
+                )
+
+                save_json(
+                    fund_output_dir
+                    / "pagination.json",
+                    result[
+                        "pagination"
+                    ],
+                )
+
+                save_json(
+                    fund_output_dir
+                    / "bid_history.json",
+                    result[
+                        "bidHistory"
+                    ],
+                )
+
+                save_json(
+                    fund_output_dir
+                    / "summary.json",
+                    result[
+                        "summary"
+                    ],
+                )
+
+                # ------------------------------------------------
+                # Store consolidated BID history keyed by
+                # Prudential fund identifier.
+                # ------------------------------------------------
+
+                history_key = (
+                    fund_identifier
+                    or fund_code
+                    or str(
+                        excel_fund[
+                            "excelRow"
+                        ]
+                    )
+                )
+
+                all_bid_history[
+                    history_key
+                ] = result[
+                    "bidHistory"
+                ]
+
+                print(
+                    "\n============================================================"
+                )
+
+                print(
+                    "FUND SUCCESS"
+                )
+
+                print(
+                    "============================================================"
+                )
+
+                print(
+                    f"Fund: {fund_name}"
+                )
+
+                print(
+                    f"Identifier: {fund_identifier}"
+                )
+
+                print(
+                    f"PruAccess ID: "
+                    f"{result['pruAccess']['fundId']}"
+                )
+
+                print(
+                    f"Pages: "
+                    f"{result['pruAccess']['observationCount']}"
+                    " observations"
+                )
+
+                print(
+                    f"Historical BID observations: "
+                    f"{result['pruAccess']['observationCount']}"
+                )
+
+            except Exception as error:
+
+                error_text = clean_text(
+                    str(error)
+                )
+
+                print(
+                    "\n============================================================"
+                )
+
+                print(
+                    "FUND FAILED"
+                )
+
+                print(
+                    "============================================================"
+                )
+
+                print(
+                    f"Excel row: "
+                    f"{excel_fund['excelRow']}"
+                )
+
+                print(
+                    f"Prudential URL: "
+                    f"{excel_fund['prudentialUrl']}"
+                )
+
+                print(
+                    f"PruAccess name: "
+                    f"{excel_fund['pruAccessName']}"
+                )
+
+                print(
+                    f"Error: "
+                    f"{error_text}"
+                )
+
+                failure = {
+                    "status":
+                        "failed",
+
+                    "excelRow":
+                        excel_fund[
+                            "excelRow"
+                        ],
+
+                    "prudentialUrl":
+                        excel_fund[
+                            "prudentialUrl"
+                        ],
+
+                    "excelPruAccessName":
+                        excel_fund[
+                            "pruAccessName"
+                        ],
+
+                    "error":
+                        error_text,
+                }
+
+                failed_funds.append(
+                    failure
+                )
+
+                # ------------------------------------------------
+                # Save individual failure record.
+                # ------------------------------------------------
+
+                failure_dir_name = (
+                    f"{excel_fund['excelRow']}_"
+                    f"failed"
+                )
+
+                failure_output_dir = (
+                    FUNDS_OUTPUT_DIR
+                    / failure_dir_name
+                )
+
+                failure_output_dir.mkdir(
+                    parents=True,
+                    exist_ok=True,
+                )
+
+                save_json(
+                    failure_output_dir
+                    / "failure.json",
+                    failure,
+                )
+
+                # ------------------------------------------------
+                # Continue with the next fund.
+                # ------------------------------------------------
+
+                continue
 
         browser.close()
 
     # ========================================================
-    # FILES
+    # CONSOLIDATED FUND DATA
     # ========================================================
+
+    run_finished = datetime.utcnow()
+
+    all_funds = {
+        "source":
+            "Funds Links.xlsm",
+
+        "generatedAtUtc":
+            run_finished.isoformat()
+            + "Z",
+
+        "fundUniverseCount":
+            len(
+                funds
+            ),
+
+        "successfulFundCount":
+            len(
+                successful_funds
+            ),
+
+        "failedFundCount":
+            len(
+                failed_funds
+            ),
+
+        "funds":
+            all_fund_records,
+
+        "failed":
+            failed_funds,
+    }
+
+    save_json(
+        OUTPUT_DIR
+        / "all_funds.json",
+        all_funds,
+    )
+
+    # ========================================================
+    # CONSOLIDATED BID HISTORY
+    # ========================================================
+
+    consolidated_bid_history = {
+        "source":
+            "PruAccess",
+
+        "priceType":
+            "BID",
+
+        "generatedAtUtc":
+            run_finished.isoformat()
+            + "Z",
+
+        "fundCount":
+            len(
+                all_bid_history
+            ),
+
+        "funds":
+            all_bid_history,
+    }
+
+    save_json(
+        OUTPUT_DIR
+        / "all_bid_history.json",
+        consolidated_bid_history,
+    )
+
+    # ========================================================
+    # RUN SUMMARY
+    # ========================================================
+
+    total_observations = 0
+
+    for fund_record in successful_funds:
+
+        total_observations += (
+            fund_record[
+                "pruAccess"
+            ][
+                "observationCount"
+            ]
+        )
+
+    run_summary = {
+        "status":
+            (
+                "success"
+                if not failed_funds
+                else "partial"
+            ),
+
+        "startedAtUtc":
+            run_started.isoformat()
+            + "Z",
+
+        "completedAtUtc":
+            run_finished.isoformat()
+            + "Z",
+
+        "excelFile":
+            str(
+                EXCEL_FILE
+            ),
+
+        "fundUniverseCount":
+            len(
+                funds
+            ),
+
+        "successfulFundCount":
+            len(
+                successful_funds
+            ),
+
+        "failedFundCount":
+            len(
+                failed_funds
+            ),
+
+        "totalHistoricalBidObservations":
+            total_observations,
+
+        "historicalPriceType":
+            "BID",
+
+        "pageSize":
+            PAGE_SIZE,
+
+        "successfulFunds":
+            [
+                {
+                    "excelRow":
+                        fund[
+                            "excelRow"
+                        ],
+
+                    "fundName":
+                        fund[
+                            "prudential"
+                        ].get(
+                            "fundName"
+                        ),
+
+                    "fundIdentifier":
+                        fund[
+                            "prudential"
+                        ].get(
+                            "fundIdentifier"
+                        ),
+
+                    "fundCode":
+                        fund[
+                            "prudential"
+                        ].get(
+                            "fundCode"
+                        ),
+
+                    "pruAccessFundName":
+                        fund[
+                            "pruAccess"
+                        ].get(
+                            "fundName"
+                        ),
+
+                    "pruAccessFundId":
+                        fund[
+                            "pruAccess"
+                        ].get(
+                            "fundId"
+                        ),
+
+                    "observationCount":
+                        fund[
+                            "pruAccess"
+                        ].get(
+                            "observationCount"
+                        ),
+
+                    "newestObservation":
+                        fund[
+                            "summary"
+                        ].get(
+                            "newestObservation"
+                        ),
+
+                    "oldestObservation":
+                        fund[
+                            "summary"
+                        ].get(
+                            "oldestObservation"
+                        ),
+                }
+
+                for fund in successful_funds
+            ],
+
+        "failedFunds":
+            failed_funds,
+    }
+
+    save_json(
+        OUTPUT_DIR
+        / "run_summary.json",
+        run_summary,
+    )
+
+    # ========================================================
+    # CONSOLE SUMMARY
+    # ========================================================
+
+    print(
+        "\n\n"
+        "============================================================"
+    )
+
+    print(
+        "ALL-FUND EXTRACTION COMPLETE"
+    )
+
+    print(
+        "============================================================"
+    )
+
+    print(
+        f"Excel fund universe: "
+        f"{len(funds)}"
+    )
+
+    print(
+        f"Successful funds: "
+        f"{len(successful_funds)}"
+    )
+
+    print(
+        f"Failed funds: "
+        f"{len(failed_funds)}"
+    )
+
+    print(
+        f"Total historical BID observations: "
+        f"{total_observations}"
+    )
+
+    print(
+        "\nSuccessful funds:"
+    )
+
+    for fund in successful_funds:
+
+        prudential = fund[
+            "prudential"
+        ]
+
+        print(
+            f" - Row "
+            f"{fund['excelRow']}: "
+            f"{prudential.get('fundName')} "
+            f"| "
+            f"{prudential.get('fundIdentifier')} "
+            f"| "
+            f"{fund['pruAccess']['observationCount']} observations"
+        )
+
+    if failed_funds:
+
+        print(
+            "\nFailed funds:"
+        )
+
+        for failure in failed_funds:
+
+            print(
+                f" - Row "
+                f"{failure['excelRow']}: "
+                f"{failure['excelPruAccessName']} "
+                f"| "
+                f"{failure['error']}"
+            )
 
     print(
         "\nFiles created:"
@@ -1625,9 +2389,19 @@ def main():
         OUTPUT_DIR.iterdir()
     ):
 
-        print(
-            f" - {file}"
-        )
+        if file.is_file():
+
+            print(
+                f" - {file}"
+            )
+
+    print(
+        "\nIndividual fund results:"
+    )
+
+    print(
+        f" - {FUNDS_OUTPUT_DIR}"
+    )
 
     print(
         "\nDone."
