@@ -28,9 +28,19 @@ jobs:
         run: |
           playwright install --with-deps chromium
 
+      - name: Create output directory
+        run: |
+          mkdir -p output_pruaccess
+
       - name: Run PruAccess diagnostic
         run: |
           python scripts/test_pruaccess.py
+
+      - name: List diagnostic files
+        if: always()
+        run: |
+          echo "=== output_pruaccess contents ==="
+          ls -lah output_pruaccess || true
 
       - name: Upload PruAccess diagnostic results
         if: always()
