@@ -5,7 +5,16 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 
-TEST_URL = "https://pruaccess.prudential.com.sg/prulinkfund/viewFundPerformance.do"
+TEST_URL = (
+    "https://pruaccess.prudential.com.sg/"
+    "prulinkfund/viewFundPerformance.do"
+)
+
+TEST_FUND_NAME = (
+    "PRULink ActiveInvest Portfolio - Balanced (SGD)"
+)
+
+TEST_FUND_ID = "335771"
 
 OUTPUT_DIR = Path("output_pruaccess")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -23,16 +32,17 @@ async def main():
         )
 
         page = await browser.new_page(
-            viewport={"width": 1440, "height": 1000}
+            viewport={
+                "width": 1440,
+                "height": 1200
+            }
         )
 
         async def handle_request(request):
 
-            url = request.url
-
             captured_requests.append({
                 "method": request.method,
-                "url": url,
+                "url": request.url,
                 "resourceType": request.resource_type,
                 "postData": request.post_data,
                 "headers": dict(request.headers),
@@ -40,7 +50,7 @@ async def main():
 
             print()
             print("REQUEST:")
-            print(request.method, url)
+            print(request.method, request.url)
 
             if request.post_data:
                 print("POST DATA:")
@@ -48,10 +58,8 @@ async def main():
 
         async def handle_response(response):
 
-            url = response.url
-
             captured_responses.append({
-                "url": url,
+                "url": response.url,
                 "status": response.status,
                 "contentType": response.headers.get(
                     "content-type",
@@ -61,16 +69,15 @@ async def main():
 
             print()
             print("RESPONSE:")
-            print(response.status, url)
+            print(response.status, response.url)
 
             content_type = response.headers.get(
                 "content-type",
                 ""
             ).lower()
 
-            # Save potentially useful responses.
             interesting = any(
-                keyword in url.lower()
+                keyword in response.url.lower()
                 for keyword in [
                     "fund",
                     "performance",
@@ -83,17 +90,20 @@ async def main():
                 ]
             )
 
-            if interesting:
+            if interesting or "text/html" in content_type:
 
                 try:
 
                     body = await response.text()
 
                     filename = (
-                        f"response_{len(captured_responses)}.txt"
+                        f"response_"
+                        f"{len(captured_responses)}.txt"
                     )
 
-                    output_file = OUTPUT_DIR / filename
+                    output_file = (
+                        OUTPUT_DIR / filename
+                    )
 
                     output_file.write_text(
                         body,
@@ -143,23 +153,398 @@ async def main():
             )
 
         print()
-        print("Waiting for page JavaScript...")
+        print("Waiting for initial JavaScript...")
 
         await page.wait_for_timeout(
-            15000
+            5000
         )
 
-        # Capture rendered page.
+        # --------------------------------------------------
+        # Inspect forms and buttons
+        # --------------------------------------------------
+
+        form_info = await page.evaluate(
+            """
+            () => {
+
+                return {
+
+                    forms: [...document.forms].map(
+                        (form, index) => ({
+                            index: index,
+                            id: form.id,
+                            name: form.name,
+                            method: form.method,
+                            action: form.action
+                        })
+                    ),
+
+                    buttons: [
+                        ...document.querySelectorAll(
+                            'button, input[type="submit"], '
+                            'input[type="button"]'
+                        )
+                    ].map(
+                        (button, index) => ({
+                            index: index,
+                            tag: button.tagName,
+                            id: button.id,
+                            name: button.name,
+                            type: button.type,
+                            value: button.value,
+                            text: button.innerText || "",
+                            outerHTML: button.outerHTML
+                        })
+                    )
+
+                };
+
+            }
+            """
+        )
+
+        (
+            OUTPUT_DIR / "forms_and_buttons.json"
+        ).write_text(
+            json.dumps(
+                form_info,
+                indent=2,
+                ensure_ascii=False
+            ),
+            encoding="utf-8"
+        )
+
+        print()
+        print("========================================")
+        print("FORMS AND BUTTONS")
+        print("========================================")
+
+        print(
+            json.dumps(
+                form_info,
+                indent=2,
+                ensure_ascii=False
+            )
+        )
+
+        # --------------------------------------------------
+        # Select the test fund
+        # --------------------------------------------------
+
+        print()
+        print("========================================")
+        print("SELECTING TEST FUND")
+        print("========================================")
+
+        fund_select = page.locator(
+            "#fundName"
+        )
+
+        await fund_select.select_option(
+            TEST_FUND_ID
+        )
+
+        print(
+            "Selected:",
+            TEST_FUND_NAME
+        )
+
+        print(
+            "Fund ID:",
+            TEST_FUND_ID
+        )
+
+        # --------------------------------------------------
+        # Select Bid Price
+        # --------------------------------------------------
+
+        price_select = page.locator(
+            "#fundPriceType"
+        )
+
+        await price_select.select_option(
+            "BID"
+        )
+
+        print(
+            "Price type: BID"
+        )
+
+        # --------------------------------------------------
+        # Set date range
+        #
+        # Use a long range. If PruAccess limits the
+        # maximum range, the resulting page/request will
+        # tell us what it accepts.
+        # --------------------------------------------------
+
+        start_date = page.locator(
+            "#startDate"
+        )
+
+        end_date = page.locator(
+            "#endDate"
+        )
+
+        await start_date.fill(
+            "03-Nov-2021"
+        )
+
+        await end_date.fill(
+            "17-Sep-2026"
+        )
+
+        print(
+            "Start date:",
+            await start_date.input_value()
+        )
+
+        print(
+            "End date:",
+            await end_date.input_value()
+        )
+
+        # --------------------------------------------------
+        # Capture selected values before submission
+        # --------------------------------------------------
+
+        selected_values = await page.evaluate(
+            """
+            () => {
+
+                const fund = document.querySelector(
+                    '#fundName'
+                );
+
+                const price = document.querySelector(
+                    '#fundPriceType'
+                );
+
+                const start = document.querySelector(
+                    '#startDate'
+                );
+
+                const end = document.querySelector(
+                    '#endDate'
+                );
+
+                return {
+                    fundValue: fund ? fund.value : null,
+                    fundText: fund
+                        ? fund.options[fund.selectedIndex].text
+                        : null,
+                    priceType: price
+                        ? price.value
+                        : null,
+                    startDate: start
+                        ? start.value
+                        : null,
+                    endDate: end
+                        ? end.value
+                        : null
+                };
+
+            }
+            """
+        )
+
+        (
+            OUTPUT_DIR / "selected_values.json"
+        ).write_text(
+            json.dumps(
+                selected_values,
+                indent=2,
+                ensure_ascii=False
+            ),
+            encoding="utf-8"
+        )
+
+        print()
+        print("SELECTED VALUES:")
+        print(
+            json.dumps(
+                selected_values,
+                indent=2,
+                ensure_ascii=False
+            )
+        )
+
+        # --------------------------------------------------
+        # Attempt to submit the form
+        # --------------------------------------------------
+
+        print()
+        print("========================================")
+        print("SUBMITTING PRUACCESS FORM")
+        print("========================================")
+
+        submitted = False
+
+        # First look for common submit controls.
+        submit_candidates = page.locator(
+            'button[type="submit"], '
+            'input[type="submit"], '
+            'button'
+        )
+
+        count = await submit_candidates.count()
+
+        print(
+            "Submit candidates:",
+            count
+        )
+
+        for i in range(count):
+
+            try:
+
+                element = submit_candidates.nth(i)
+
+                tag = await element.evaluate(
+                    "(el) => el.tagName"
+                )
+
+                element_id = await element.get_attribute(
+                    "id"
+                )
+
+                name = await element.get_attribute(
+                    "name"
+                )
+
+                value = await element.get_attribute(
+                    "value"
+                )
+
+                text = (
+                    await element.inner_text()
+                ).strip()
+
+                print(
+                    f"Candidate {i}: "
+                    f"tag={tag}, "
+                    f"id={element_id}, "
+                    f"name={name}, "
+                    f"value={value}, "
+                    f"text={text}"
+                )
+
+            except Exception as e:
+
+                print(
+                    "Could not inspect candidate:",
+                    i,
+                    repr(e)
+                )
+
+        # Try buttons that look like a search/query/
+        # performance submission control.
+        for i in range(count):
+
+            element = submit_candidates.nth(i)
+
+            try:
+
+                label = " ".join([
+                    str(
+                        await element.get_attribute("id")
+                        or ""
+                    ),
+                    str(
+                        await element.get_attribute("name")
+                        or ""
+                    ),
+                    str(
+                        await element.get_attribute("value")
+                        or ""
+                    ),
+                    (
+                        await element.inner_text()
+                    ).strip()
+                ]).lower()
+
+                keywords = [
+                    "search",
+                    "submit",
+                    "view",
+                    "performance",
+                    "show",
+                    "generate",
+                    "go"
+                ]
+
+                if not any(
+                    keyword in label
+                    for keyword in keywords
+                ):
+                    continue
+
+                print()
+                print(
+                    "Attempting click:",
+                    label
+                )
+
+                try:
+
+                    await element.click(
+                        timeout=10000
+                    )
+
+                    submitted = True
+
+                    print(
+                        "CLICKED."
+                    )
+
+                    break
+
+                except Exception as e:
+
+                    print(
+                        "Click failed:",
+                        repr(e)
+                    )
+
+            except Exception:
+                continue
+
+        # --------------------------------------------------
+        # Wait for resulting request/page
+        # --------------------------------------------------
+
+        if submitted:
+
+            print()
+            print(
+                "Waiting for PruAccess result..."
+            )
+
+            await page.wait_for_timeout(
+                10000
+            )
+
+        else:
+
+            print()
+            print(
+                "No obvious submit button was "
+                "automatically clicked."
+            )
+
+        # --------------------------------------------------
+        # Save resulting page
+        # --------------------------------------------------
+
         html = await page.content()
 
         (
-            OUTPUT_DIR / "rendered.html"
+            OUTPUT_DIR / "result.html"
         ).write_text(
             html,
             encoding="utf-8"
         )
 
-        # Capture visible text.
         try:
 
             visible_text = await page.locator(
@@ -167,7 +552,7 @@ async def main():
             ).inner_text()
 
             (
-                OUTPUT_DIR / "visible_text.txt"
+                OUTPUT_DIR / "result_text.txt"
             ).write_text(
                 visible_text,
                 encoding="utf-8"
@@ -176,63 +561,14 @@ async def main():
         except Exception as e:
 
             print(
-                "Could not capture visible text:",
+                "Could not capture result text:",
                 repr(e)
             )
 
-        # Capture page forms and select elements.
-        try:
+        # --------------------------------------------------
+        # Save all network information
+        # --------------------------------------------------
 
-            form_data = await page.evaluate(
-                """
-                () => {
-
-                    const selects = [...document.querySelectorAll("select")];
-
-                    return {
-                        selects: selects.map((s, index) => ({
-                            index: index,
-                            name: s.name,
-                            id: s.id,
-                            value: s.value,
-                            options: [...s.options].map(o => ({
-                                text: o.text,
-                                value: o.value
-                            }))
-                        })),
-
-                        inputs: [...document.querySelectorAll("input")].map((i, index) => ({
-                            index: index,
-                            name: i.name,
-                            id: i.id,
-                            type: i.type,
-                            value: i.value
-                        }))
-                    };
-
-                }
-                """
-            )
-
-            (
-                OUTPUT_DIR / "form_elements.json"
-            ).write_text(
-                json.dumps(
-                    form_data,
-                    indent=2,
-                    ensure_ascii=False
-                ),
-                encoding="utf-8"
-            )
-
-        except Exception as e:
-
-            print(
-                "Could not inspect forms:",
-                repr(e)
-            )
-
-        # Save request log.
         (
             OUTPUT_DIR / "requests.json"
         ).write_text(
@@ -244,7 +580,6 @@ async def main():
             encoding="utf-8"
         )
 
-        # Save response log.
         (
             OUTPUT_DIR / "responses.json"
         ).write_text(
@@ -256,24 +591,56 @@ async def main():
             encoding="utf-8"
         )
 
+        summary = {
+            "testUrl": TEST_URL,
+            "testFundName": TEST_FUND_NAME,
+            "testFundId": TEST_FUND_ID,
+            "selectedValues": selected_values,
+            "submitted": submitted,
+            "requestCount": len(
+                captured_requests
+            ),
+            "responseCount": len(
+                captured_responses
+            )
+        }
+
+        (
+            OUTPUT_DIR / "summary.json"
+        ).write_text(
+            json.dumps(
+                summary,
+                indent=2,
+                ensure_ascii=False
+            ),
+            encoding="utf-8"
+        )
+
         print()
         print("========================================")
-        print("PRUACCESS DIAGNOSTIC COMPLETE")
+        print("PRUACCESS TEST COMPLETE")
         print("========================================")
 
         print(
-            "Requests captured:",
+            "Submitted:",
+            submitted
+        )
+
+        print(
+            "Requests:",
             len(captured_requests)
         )
 
         print(
-            "Responses captured:",
+            "Responses:",
             len(captured_responses)
         )
 
         print()
-        print("Files saved to:")
-        print(OUTPUT_DIR)
+        print(
+            "Files saved to:",
+            OUTPUT_DIR
+        )
 
         await browser.close()
 
