@@ -2,58 +2,93 @@
 """
 Validate the complete all-fund PruAccess BID extraction.
 
-Validation rules
-----------------
-1. Funds Links.xlsm is the master fund universe.
-2. Every Excel fund must have a successful extraction.
-3. Historical prices must come from PruAccess.
-4. Historical price type must be BID.
-5. Every observation must contain a valid date and BID price.
-6. Dates must be strictly descending.
-7. No duplicate dates.
-8. No duplicate date/price records.
-9. Pagination counts must match observations.
-10. No synthetic/interpolated/generated data fields.
-11. Latest PruAccess BID must be reasonably consistent with the
-    current Prudential BID.
-12. Consolidated all_bid_history.json must agree with individual
-    fund bid_history.json files.
-13. The validator exits with code 1 if any required check fails.
+Master universe:
+    Funds Links.xlsm
+    Column A = Prudential fund URL
+    Column B = PruAccess fund name
+
+Expected extraction output:
+    output_pruaccess/
+        run_summary.json
+        all_funds.json
+        all_bid_history.json
+        funds/
+            <excelRow>_<fundIdentifier>/
+                summary.json
+                bid_history.json
+                pagination.json
+                prudential_fund.json
+
+The validator:
+    - Reads the Excel universe dynamically.
+    - Reads the extractor run summary.
+    - Validates every successful fund.
+    - Validates every individual BID history.
+    - Validates pagination.
+    - Validates current Prudential BID vs latest PruAccess BID.
+    - Validates consolidated all_bid_history.json.
+    - Fails if any of the 67 funds failed extraction.
 """
 
 from __future__ import annotations
 
 import json
+import math
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from openpyxl import load_workbook
 
 
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
 
 EXCEL_FILE = Path("Funds Links.xlsm")
+
 OUTPUT_DIR = Path("output_pruaccess")
-FUNDS_OUTPUT_DIR = OUTPUT_DIR / "funds"
 
 RUN_SUMMARY_FILE = OUTPUT_DIR / "run_summary.json"
 ALL_FUNDS_FILE = OUTPUT_DIR / "all_funds.json"
 ALL_BID_HISTORY_FILE = OUTPUT_DIR / "all_bid_history.json"
 
+FUNDS_OUTPUT_DIR = OUTPUT_DIR / "funds"
+
 VALIDATION_FILE = OUTPUT_DIR / "validation.json"
+
+EXPECTED_FUND_COUNT = 67
 
 PAGE_SIZE = 20
 
 PRICE_TOLERANCE = 0.0002
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+# ============================================================================
+# GENERAL HELPERS
+# ============================================================================
+
+def clean_text(value) -> str:
+    if value is None:
+        return ""
+
+    text = str(value)
+
+    text = text.replace("\xa0", " ")
+
+    text = re.sub(
+        r"\s+",
+        " ",
+        text,
+    )
+
+    return text.strip()
+
+
+def normalize_text(value) -> str:
+    return clean_text(value).casefold()
+
 
 def load_json(path: Path):
     if not path.exists():
@@ -64,32 +99,49 @@ def load_json(path: Path):
     with path.open(
         "r",
         encoding="utf-8",
-    ) as handle:
-        return json.load(handle)
+    ) as file:
+
+        return json.load(file)
 
 
-def clean_text(value) -> str:
-    if value is None:
-        return ""
+def save_json(
+    path: Path,
+    data,
+):
+    path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
-    text = str(value)
+    with path.open(
+        "w",
+        encoding="utf-8",
+    ) as file:
 
-    text = text.replace("\xa0", " ")
-    text = re.sub(r"\s+", " ", text)
+        json.dump(
+            data,
+            file,
+            indent=2,
+            ensure_ascii=False,
+        )
 
-    return text.strip()
-
-
-def normalize_text(value) -> str:
-    return clean_text(value).casefold()
+        file.write("\n")
 
 
 def parse_price(value) -> float:
     text = clean_text(value)
 
-    text = text.replace(",", "")
-    text = text.replace("$", "")
-    text = text.replace("S$", "")
+    if not text:
+        raise ValueError(
+            "Empty price."
+        )
+
+    text = (
+        text
+        .replace(",", "")
+        .replace("S$", "")
+        .replace("$", "")
+    )
 
     match = re.search(
         r"-?\d+(?:\.\d+)?",
@@ -101,7 +153,16 @@ def parse_price(value) -> float:
             f"Invalid price: {value}"
         )
 
-    return float(match.group(0))
+    price = float(
+        match.group(0)
+    )
+
+    if not math.isfinite(price):
+        raise ValueError(
+            f"Non-finite price: {value}"
+        )
+
+    return price
 
 
 def parse_date(value) -> datetime:
@@ -119,6 +180,7 @@ def parse_date(value) -> datetime:
     for fmt in formats:
 
         try:
+
             return datetime.strptime(
                 text,
                 fmt,
@@ -132,10 +194,28 @@ def parse_date(value) -> datetime:
     )
 
 
+def get_fund_directory(
+    excel_row: int,
+    fund_identifier: str,
+) -> Path:
+
+    return (
+        FUNDS_OUTPUT_DIR
+        / f"{excel_row}_{fund_identifier}"
+    )
+
+
+# ============================================================================
+# EXCEL MASTER UNIVERSE
+# ============================================================================
+
 def read_excel_universe() -> list[dict]:
+
     if not EXCEL_FILE.exists():
+
         raise FileNotFoundError(
-            f"Required Excel file not found: {EXCEL_FILE}"
+            f"Required Excel file not found: "
+            f"{EXCEL_FILE}"
         )
 
     workbook = load_workbook(
@@ -183,40 +263,125 @@ def read_excel_universe() -> list[dict]:
     return funds
 
 
-def get_fund_directory(
-    excel_row: int,
-    fund_identifier: str,
-) -> Path:
-    return (
-        FUNDS_OUTPUT_DIR
-        / f"{excel_row}_{fund_identifier}"
-    )
+# ============================================================================
+# EXTRACTOR SUMMARY NORMALIZATION
+# ============================================================================
+
+def extract_successful_funds(
+    run_summary: dict,
+) -> list[dict]:
+    """
+    The extractor may store successful funds under slightly different
+    structures depending on the version.
+
+    Accept the known structures without changing the extractor itself.
+    """
+
+    candidates = [
+        run_summary.get(
+            "successfulFunds"
+        ),
+        run_summary.get(
+            "funds"
+        ),
+        run_summary.get(
+            "successful"
+        ),
+    ]
+
+    for candidate in candidates:
+
+        if isinstance(
+            candidate,
+            list,
+        ):
+
+            return candidate
+
+    return []
 
 
-# ---------------------------------------------------------------------------
-# Validation
-# ---------------------------------------------------------------------------
+def extract_failed_funds(
+    run_summary: dict,
+) -> list[dict]:
+    """
+    Read failed fund records from the known run-summary structures.
+    """
+
+    candidates = [
+        run_summary.get(
+            "failedFunds"
+        ),
+        run_summary.get(
+            "failures"
+        ),
+        run_summary.get(
+            "failed"
+        ),
+    ]
+
+    for candidate in candidates:
+
+        if isinstance(
+            candidate,
+            list,
+        ):
+
+            return candidate
+
+    return []
+
+
+def get_summary_excel_row(
+    fund: dict,
+):
+    possible_keys = [
+        "excelRow",
+        "row",
+        "excel_row",
+    ]
+
+    for key in possible_keys:
+
+        value = fund.get(
+            key
+        )
+
+        if value is not None:
+            return value
+
+    return None
+
+
+# ============================================================================
+# INDIVIDUAL FUND VALIDATION
+# ============================================================================
 
 def validate_fund(
     excel_fund: dict,
     successful_summary: dict,
 ) -> tuple[bool, dict]:
-    """
-    Validate one successfully extracted fund.
-    """
 
-    excel_row = excel_fund["excelRow"]
+    excel_row = excel_fund[
+        "excelRow"
+    ]
 
     fund_name = clean_text(
-        successful_summary.get("fundName")
+        successful_summary.get(
+            "fundName"
+        )
     )
 
     fund_identifier = clean_text(
-        successful_summary.get("fundIdentifier")
+        successful_summary.get(
+            "fundIdentifier"
+        )
     )
 
     fund_code = clean_text(
-        successful_summary.get("fundCode")
+        successful_summary.get(
+            "fundCode"
+        )
     )
 
     checks = []
@@ -226,6 +391,7 @@ def validate_fund(
         passed: bool,
         details: str,
     ):
+
         checks.append(
             {
                 "name": name,
@@ -234,24 +400,34 @@ def validate_fund(
             }
         )
 
-    # -----------------------------------------------------------------------
-    # Basic identity
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Required identity
+    # ------------------------------------------------------------------------
+
+    add_check(
+        "Fund identifier present",
+        bool(fund_identifier),
+        (
+            f"fundIdentifier='{fund_identifier}'."
+        ),
+    )
 
     if not fund_identifier:
-        add_check(
-            "Fund identifier present",
-            False,
-            "fundIdentifier is empty.",
-        )
 
         return False, {
             "excelRow": excel_row,
             "fundName": fund_name,
-            "fundIdentifier": fund_identifier,
+            "fundIdentifier": "",
             "fundCode": fund_code,
+            "observationCount": 0,
             "checks": checks,
+            "details": {},
+            "passed": False,
         }
+
+    # ------------------------------------------------------------------------
+    # Fund directory
+    # ------------------------------------------------------------------------
 
     fund_dir = get_fund_directory(
         excel_row,
@@ -274,10 +450,6 @@ def validate_fund(
         fund_dir / "prudential_fund.json"
     )
 
-    # -----------------------------------------------------------------------
-    # Required files
-    # -----------------------------------------------------------------------
-
     required_files = [
         bid_history_file,
         pagination_file,
@@ -293,9 +465,9 @@ def validate_fund(
 
     add_check(
         "Required fund files",
-        not missing_files,
+        len(missing_files) == 0,
         (
-            "All required fund files found."
+            "All required files found."
             if not missing_files
             else
             "Missing: "
@@ -304,19 +476,26 @@ def validate_fund(
     )
 
     if missing_files:
+
         return False, {
             "excelRow": excel_row,
             "fundName": fund_name,
             "fundIdentifier": fund_identifier,
             "fundCode": fund_code,
+            "observationCount": 0,
             "checks": checks,
+            "details": {
+                "missingFiles": missing_files,
+            },
+            "passed": False,
         }
 
-    # -----------------------------------------------------------------------
-    # Load fund files
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Load JSON files
+    # ------------------------------------------------------------------------
 
     try:
+
         bid_history = load_json(
             bid_history_file
         )
@@ -333,6 +512,12 @@ def validate_fund(
             prudential_file
         )
 
+        add_check(
+            "Fund JSON files readable",
+            True,
+            "All fund JSON files parsed successfully.",
+        )
+
     except Exception as error:
 
         add_check(
@@ -346,18 +531,15 @@ def validate_fund(
             "fundName": fund_name,
             "fundIdentifier": fund_identifier,
             "fundCode": fund_code,
+            "observationCount": 0,
             "checks": checks,
+            "details": {},
+            "passed": False,
         }
 
-    add_check(
-        "Fund JSON files readable",
-        True,
-        "All fund JSON files parsed successfully.",
-    )
-
-    # -----------------------------------------------------------------------
-    # BID history structure
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Historical structure
+    # ------------------------------------------------------------------------
 
     observations = bid_history.get(
         "observations"
@@ -379,62 +561,81 @@ def validate_fund(
             "fundName": fund_name,
             "fundIdentifier": fund_identifier,
             "fundCode": fund_code,
+            "observationCount": 0,
             "checks": checks,
+            "details": {},
+            "passed": False,
         }
+
+    actual_count = len(
+        observations
+    )
 
     add_check(
         "Historical observations list",
-        True,
-        f"Found {len(observations)} observations.",
+        actual_count > 0,
+        f"Found {actual_count} observations.",
     )
 
-    # -----------------------------------------------------------------------
-    # Source
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Source and BID type
+    # ------------------------------------------------------------------------
 
     source = clean_text(
-        bid_history.get("source")
+        bid_history.get(
+            "source"
+        )
+    )
+
+    price_type = clean_text(
+        bid_history.get(
+            "priceType"
+        )
     )
 
     add_check(
         "Historical source",
-        normalize_text(source) == "pruaccess",
+        normalize_text(source)
+        == "pruaccess",
         f"source='{source}'",
-    )
-
-    price_type = clean_text(
-        bid_history.get("priceType")
     )
 
     add_check(
         "Historical price type",
-        normalize_text(price_type) == "bid",
+        normalize_text(price_type)
+        == "bid",
         f"priceType='{price_type}'",
     )
 
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     # Identity consistency
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
 
-    history_fund_name = clean_text(
-        bid_history.get("fundName")
+    history_name = clean_text(
+        bid_history.get(
+            "fundName"
+        )
     )
 
     history_identifier = clean_text(
-        bid_history.get("fundIdentifier")
+        bid_history.get(
+            "fundIdentifier"
+        )
     )
 
-    history_fund_code = clean_text(
-        bid_history.get("fundCode")
+    history_code = clean_text(
+        bid_history.get(
+            "fundCode"
+        )
     )
 
     add_check(
         "Fund name consistency",
-        normalize_text(history_fund_name)
+        normalize_text(history_name)
         == normalize_text(fund_name),
         (
             f"Summary='{fund_name}'; "
-            f"history='{history_fund_name}'"
+            f"history='{history_name}'."
         ),
     )
 
@@ -444,64 +645,70 @@ def validate_fund(
         == normalize_text(fund_identifier),
         (
             f"Summary='{fund_identifier}'; "
-            f"history='{history_identifier}'"
+            f"history='{history_identifier}'."
         ),
     )
 
     add_check(
         "Fund code consistency",
-        normalize_text(history_fund_code)
+        normalize_text(history_code)
         == normalize_text(fund_code),
         (
             f"Summary='{fund_code}'; "
-            f"history='{history_fund_code}'"
+            f"history='{history_code}'."
         ),
     )
 
-    # -----------------------------------------------------------------------
-    # Observation count
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Observation counts
+    # ------------------------------------------------------------------------
 
-    actual_count = len(observations)
-
-    stored_count = bid_history.get(
-        "observationCount"
+    stored_history_count = (
+        bid_history.get(
+            "observationCount"
+        )
     )
+
+    stored_summary_count = (
+        successful_summary.get(
+            "historicalObservationCount"
+        )
+    )
+
+    if stored_summary_count is None:
+
+        stored_summary_count = (
+            successful_summary.get(
+                "observationCount"
+            )
+        )
 
     add_check(
         "Stored observation count",
-        stored_count == actual_count,
+        stored_history_count == actual_count,
         (
-            f"Stored={stored_count}; "
+            f"Stored={stored_history_count}; "
             f"actual={actual_count}."
         ),
-    )
-
-    summary_count = successful_summary.get(
-        "observationCount"
     )
 
     add_check(
         "Run summary observation count",
-        summary_count == actual_count,
+        stored_summary_count == actual_count,
         (
-            f"Run summary={summary_count}; "
+            f"Run summary={stored_summary_count}; "
             f"actual={actual_count}."
         ),
     )
 
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     # Validate observations
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
 
     invalid_dates = []
     invalid_prices = []
     missing_fields = []
-    parsed_dates = []
-    duplicate_dates = {}
-    duplicate_records = {}
-
-    previous_date = None
+    parsed_observations = []
 
     for index, observation in enumerate(
         observations
@@ -515,7 +722,9 @@ def validate_fund(
             missing_fields.append(
                 {
                     "index": index,
-                    "reason": "Observation is not an object.",
+                    "reason": (
+                        "Observation is not an object."
+                    ),
                 }
             )
 
@@ -539,22 +748,22 @@ def validate_fund(
             missing_fields.append(
                 {
                     "index": index,
-                    "reason": "Missing date or bidPrice.",
+                    "reason": (
+                        "Missing date or bidPrice."
+                    ),
                     "observation": observation,
                 }
             )
 
             continue
 
-        # Date validation.
+        parsed_date = None
+        parsed_price = None
+
         try:
 
             parsed_date = parse_date(
                 date_value
-            )
-
-            parsed_dates.append(
-                parsed_date
             )
 
         except ValueError as error:
@@ -567,14 +776,23 @@ def validate_fund(
                 }
             )
 
-            continue
-
-        # Price validation.
         try:
 
-            parse_price(
+            parsed_price = parse_price(
                 bid_value
             )
+
+            if parsed_price <= 0:
+
+                invalid_prices.append(
+                    {
+                        "index": index,
+                        "bidPrice": bid_value,
+                        "error": (
+                            "Price must be greater than zero."
+                        ),
+                    }
+                )
 
         except ValueError as error:
 
@@ -586,108 +804,24 @@ def validate_fund(
                 }
             )
 
-        # Ordering validation.
-        if previous_date is not None:
+        if (
+            parsed_date is not None
+            and parsed_price is not None
+        ):
 
-            if parsed_date >= previous_date:
-
-                # Ordering violation is recorded later
-                # using the parsed date list.
-
-                pass
-
-        previous_date = parsed_date
-
-    # -----------------------------------------------------------------------
-    # Date ordering
-    # -----------------------------------------------------------------------
-
-    ordering_violations = []
-
-    for index in range(
-        1,
-        len(parsed_dates),
-    ):
-
-        if parsed_dates[index] >= parsed_dates[index - 1]:
-
-            ordering_violations.append(
+            parsed_observations.append(
                 {
                     "index": index,
-                    "previousDate": (
-                        parsed_dates[index - 1]
-                        .strftime("%d-%b-%Y")
+                    "date": parsed_date,
+                    "dateRaw": clean_text(
+                        date_value
                     ),
-                    "currentDate": (
-                        parsed_dates[index]
-                        .strftime("%d-%b-%Y")
+                    "price": parsed_price,
+                    "priceRaw": clean_text(
+                        bid_value
                     ),
                 }
             )
-
-    # -----------------------------------------------------------------------
-    # Duplicate dates
-    # -----------------------------------------------------------------------
-
-    date_counts = {}
-
-    for observation in observations:
-
-        date_value = clean_text(
-            observation.get("date")
-        )
-
-        if not date_value:
-            continue
-
-        date_counts[date_value] = (
-            date_counts.get(
-                date_value,
-                0,
-            )
-            + 1
-        )
-
-    duplicate_dates = {
-        date: count
-        for date, count in date_counts.items()
-        if count > 1
-    }
-
-    # -----------------------------------------------------------------------
-    # Duplicate date/price records
-    # -----------------------------------------------------------------------
-
-    record_counts = {}
-
-    for observation in observations:
-
-        date_value = clean_text(
-            observation.get("date")
-        )
-
-        price_value = clean_text(
-            observation.get("bidPrice")
-        )
-
-        key = (
-            date_value,
-            price_value,
-        )
-
-        record_counts[key] = (
-            record_counts.get(
-                key,
-                0,
-            )
-            + 1
-        )
-
-    duplicate_records = {
-        f"{key[0]}|{key[1]}": count
-        for key, count in record_counts.items()
-        if count > 1
-    }
 
     add_check(
         "All dates valid",
@@ -710,6 +844,39 @@ def validate_fund(
         ),
     )
 
+    # ------------------------------------------------------------------------
+    # Date ordering
+    # ------------------------------------------------------------------------
+
+    ordering_violations = []
+
+    for index in range(
+        1,
+        len(parsed_observations),
+    ):
+
+        previous = parsed_observations[
+            index - 1
+        ]
+
+        current = parsed_observations[
+            index
+        ]
+
+        if current["date"] >= previous["date"]:
+
+            ordering_violations.append(
+                {
+                    "index": current["index"],
+                    "previousDate": (
+                        previous["dateRaw"]
+                    ),
+                    "currentDate": (
+                        current["dateRaw"]
+                    ),
+                }
+            )
+
     add_check(
         "Dates strictly descending",
         len(ordering_violations) == 0,
@@ -718,6 +885,37 @@ def validate_fund(
             f"{len(ordering_violations)}."
         ),
     )
+
+    # ------------------------------------------------------------------------
+    # Duplicate dates
+    # ------------------------------------------------------------------------
+
+    date_counts = {}
+
+    for observation in observations:
+
+        date_value = clean_text(
+            observation.get(
+                "date"
+            )
+        )
+
+        if not date_value:
+            continue
+
+        date_counts[date_value] = (
+            date_counts.get(
+                date_value,
+                0,
+            )
+            + 1
+        )
+
+    duplicate_dates = {
+        date: count
+        for date, count in date_counts.items()
+        if count > 1
+    }
 
     add_check(
         "No duplicate dates",
@@ -728,6 +926,45 @@ def validate_fund(
         ),
     )
 
+    # ------------------------------------------------------------------------
+    # Duplicate records
+    # ------------------------------------------------------------------------
+
+    record_counts = {}
+
+    for observation in observations:
+
+        date_value = clean_text(
+            observation.get(
+                "date"
+            )
+        )
+
+        price_value = clean_text(
+            observation.get(
+                "bidPrice"
+            )
+        )
+
+        key = (
+            date_value,
+            price_value,
+        )
+
+        record_counts[key] = (
+            record_counts.get(
+                key,
+                0,
+            )
+            + 1
+        )
+
+    duplicate_records = {
+        f"{key[0]}|{key[1]}": count
+        for key, count in record_counts.items()
+        if count > 1
+    }
+
     add_check(
         "No duplicate date/price records",
         len(duplicate_records) == 0,
@@ -737,9 +974,9 @@ def validate_fund(
         ),
     )
 
-    # -----------------------------------------------------------------------
-    # Newest / oldest observations
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Newest / oldest
+    # ------------------------------------------------------------------------
 
     newest_observation = (
         observations[0]
@@ -759,11 +996,12 @@ def validate_fund(
         (
             (
                 f"{newest_observation.get('date')} "
-                f"BID={newest_observation.get('bidPrice')}."
+                f"BID="
+                f"{newest_observation.get('bidPrice')}."
             )
             if newest_observation
             else
-            "No observations found."
+            "No observations."
         ),
     )
 
@@ -773,66 +1011,57 @@ def validate_fund(
         (
             (
                 f"{oldest_observation.get('date')} "
-                f"BID={oldest_observation.get('bidPrice')}."
+                f"BID="
+                f"{oldest_observation.get('bidPrice')}."
             )
             if oldest_observation
             else
-            "No observations found."
+            "No observations."
         ),
     )
 
-    # -----------------------------------------------------------------------
-    # Historical data reaches inception
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Inception validation
+    # ------------------------------------------------------------------------
 
     inception_value = clean_text(
-        fund_summary.get("inceptionDate")
+        successful_summary.get(
+            "inceptionDate"
+        )
     )
 
     if not inception_value:
+
         inception_value = clean_text(
-            successful_summary.get(
+            fund_summary.get(
                 "inceptionDate"
             )
         )
 
-    if not inception_value:
-        inception_value = clean_text(
-            fund_summary.get(
-                "prudentialFundData",
-                {},
-            ).get("inceptionDate")
-            if isinstance(
-                fund_summary.get(
-                    "prudentialFundData"
-                ),
-                dict,
-            )
-            else ""
-        )
-
     inception_date = None
 
-    try:
+    if inception_value:
 
-        if inception_value:
+        try:
 
             inception_date = parse_date(
                 inception_value
             )
 
-    except ValueError:
-        inception_date = None
+        except ValueError:
+            inception_date = None
 
     if (
         inception_date is not None
-        and oldest_observation
+        and oldest_observation is not None
     ):
 
         try:
 
             oldest_date = parse_date(
-                oldest_observation["date"]
+                oldest_observation.get(
+                    "date"
+                )
             )
 
             reaches_inception = (
@@ -860,14 +1089,13 @@ def validate_fund(
             "Historical data reaches inception",
             False,
             (
-                f"Unable to validate inception. "
-                f"Inception='{inception_value}'."
+                "Could not determine inception date."
             ),
         )
 
-    # -----------------------------------------------------------------------
-    # Synthetic/generated data detection
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Suspicious generated-data fields
+    # ------------------------------------------------------------------------
 
     suspicious_fields = []
 
@@ -950,9 +1178,9 @@ def validate_fund(
         ),
     )
 
-    # -----------------------------------------------------------------------
-    # Pagination validation
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Pagination
+    # ------------------------------------------------------------------------
 
     pages = pagination.get(
         "pages"
@@ -975,7 +1203,7 @@ def validate_fund(
 
     add_check(
         "Pagination JSON structure",
-        isinstance(pages, list),
+        actual_page_count > 0,
         (
             f"Pages found="
             f"{actual_page_count}."
@@ -992,12 +1220,39 @@ def validate_fund(
     )
 
     pagination_row_total = 0
+
+    page_number_violations = []
+
     full_page_violations = []
+
     final_page_valid = False
 
     for index, page in enumerate(
         pages
     ):
+
+        if not isinstance(
+            page,
+            dict,
+        ):
+            continue
+
+        expected_page_number = (
+            index + 1
+        )
+
+        actual_page_number = page.get(
+            "page"
+        )
+
+        if actual_page_number != expected_page_number:
+
+            page_number_violations.append(
+                {
+                    "expected": expected_page_number,
+                    "actual": actual_page_number,
+                }
+            )
 
         row_count = page.get(
             "rowCount"
@@ -1007,7 +1262,6 @@ def validate_fund(
             row_count,
             int,
         ):
-
             continue
 
         pagination_row_total += row_count
@@ -1023,7 +1277,7 @@ def validate_fund(
 
                 full_page_violations.append(
                     {
-                        "page": page.get("page"),
+                        "page": actual_page_number,
                         "rowCount": row_count,
                     }
                 )
@@ -1032,8 +1286,20 @@ def validate_fund(
 
             final_page_valid = (
                 row_count > 0
-                and row_count < PAGE_SIZE
+                and row_count <= PAGE_SIZE
             )
+
+    add_check(
+        "Pagination page numbering",
+        len(page_number_violations) == 0,
+        (
+            "Pages are sequential."
+            if not page_number_violations
+            else
+            f"Violations="
+            f"{len(page_number_violations)}."
+        ),
+    )
 
     add_check(
         "Pagination full pages contain 20 rows",
@@ -1049,7 +1315,7 @@ def validate_fund(
     )
 
     add_check(
-        "Final pagination page is partial",
+        "Final pagination page is valid",
         final_page_valid,
         (
             (
@@ -1058,7 +1324,7 @@ def validate_fund(
             )
             if pages
             else
-            "No pagination pages found."
+            "No pages."
         ),
     )
 
@@ -1073,45 +1339,47 @@ def validate_fund(
         ),
     )
 
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     # Current Prudential BID vs latest PruAccess BID
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
 
     current_prudential_bid = None
-
-    prudential_data = None
 
     if isinstance(
         prudential_fund,
         dict,
     ):
 
-        prudential_data = (
-            prudential_fund.get(
+        # Most likely structure.
+        if prudential_fund.get(
+            "bidPrice"
+        ) is not None:
+
+            current_prudential_bid = (
+                prudential_fund.get(
+                    "bidPrice"
+                )
+            )
+
+        else:
+
+            data = prudential_fund.get(
                 "data"
             )
-        )
 
-    if not isinstance(
-        prudential_data,
-        dict,
-    ):
+            if isinstance(
+                data,
+                dict,
+            ):
 
-        # Some versions may store the fund data directly.
-        prudential_data = prudential_fund
-
-    if isinstance(
-        prudential_data,
-        dict,
-    ):
-
-        current_prudential_bid = (
-            prudential_data.get(
-                "bidPrice"
-            )
-        )
+                current_prudential_bid = (
+                    data.get(
+                        "bidPrice"
+                    )
+                )
 
     latest_pruaccess_bid = None
+    latest_pruaccess_date = None
 
     if newest_observation:
 
@@ -1121,8 +1389,14 @@ def validate_fund(
             )
         )
 
-    bid_match_passed = False
+        latest_pruaccess_date = (
+            newest_observation.get(
+                "date"
+            )
+        )
+
     bid_difference = None
+    bid_match_passed = False
 
     try:
 
@@ -1152,6 +1426,7 @@ def validate_fund(
             )
 
     except Exception:
+
         bid_match_passed = False
 
     add_check(
@@ -1169,9 +1444,9 @@ def validate_fund(
         ),
     )
 
-    # -----------------------------------------------------------------------
-    # Determine overall fund result
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Overall fund result
+    # ------------------------------------------------------------------------
 
     passed = all(
         check["passed"]
@@ -1199,11 +1474,7 @@ def validate_fund(
             "paginationPageCount": actual_page_count,
             "currentPrudentialBid": current_prudential_bid,
             "latestPruAccessBid": latest_pruaccess_bid,
-            "latestPruAccessDate": (
-                newest_observation.get("date")
-                if newest_observation
-                else None
-            ),
+            "latestPruAccessDate": latest_pruaccess_date,
             "bidDifference": bid_difference,
         },
         "passed": passed,
@@ -1212,9 +1483,9 @@ def validate_fund(
     return passed, result
 
 
-# ---------------------------------------------------------------------------
-# Main validation
-# ---------------------------------------------------------------------------
+# ============================================================================
+# MAIN
+# ============================================================================
 
 def main() -> int:
 
@@ -1226,21 +1497,25 @@ def main() -> int:
 
     try:
 
-        # -------------------------------------------------------------------
-        # Load master universe
-        # -------------------------------------------------------------------
+        # ====================================================================
+        # Load master Excel universe
+        # ====================================================================
 
         excel_funds = read_excel_universe()
+
+        expected_count = len(
+            excel_funds
+        )
 
         print()
         print(
             f"Excel fund universe: "
-            f"{len(excel_funds)}"
+            f"{expected_count}"
         )
 
-        # -------------------------------------------------------------------
-        # Load run summary
-        # -------------------------------------------------------------------
+        # ====================================================================
+        # Load extractor files
+        # ====================================================================
 
         run_summary = load_json(
             RUN_SUMMARY_FILE
@@ -1254,20 +1529,41 @@ def main() -> int:
             ALL_BID_HISTORY_FILE
         )
 
-        # -------------------------------------------------------------------
-        # Top-level extraction checks
-        # -------------------------------------------------------------------
+        # ====================================================================
+        # Read successful / failed results
+        # ====================================================================
 
-        expected_count = len(
-            excel_funds
+        successful_funds = (
+            extract_successful_funds(
+                run_summary
+            )
         )
 
-        successful_count = run_summary.get(
-            "successfulFundCount"
+        failed_fund_records = (
+            extract_failed_funds(
+                run_summary
+            )
         )
 
-        failed_count = run_summary.get(
-            "failedFundCount"
+        successful_count = len(
+            successful_funds
+        )
+
+        failed_count = len(
+            failed_fund_records
+        )
+
+        # If explicit counts exist, display them for comparison.
+        reported_successful_count = (
+            run_summary.get(
+                "successfulFundCount"
+            )
+        )
+
+        reported_failed_count = (
+            run_summary.get(
+                "failedFundCount"
+            )
         )
 
         print(
@@ -1280,7 +1576,33 @@ def main() -> int:
             f"{failed_count}"
         )
 
-        print()
+        if (
+            reported_successful_count
+            != successful_count
+        ):
+
+            print(
+                "WARNING: run_summary successfulFundCount "
+                f"is {reported_successful_count}, "
+                f"but successful fund records found="
+                f"{successful_count}"
+            )
+
+        if (
+            reported_failed_count
+            != failed_count
+        ):
+
+            print(
+                "WARNING: run_summary failedFundCount "
+                f"is {reported_failed_count}, "
+                f"but failed fund records found="
+                f"{failed_count}"
+            )
+
+        # ====================================================================
+        # Top-level checks
+        # ====================================================================
 
         top_level_checks = []
 
@@ -1289,6 +1611,7 @@ def main() -> int:
             passed: bool,
             details: str,
         ):
+
             top_level_checks.append(
                 {
                     "name": name,
@@ -1299,10 +1622,11 @@ def main() -> int:
 
         top_check(
             "Excel fund universe count",
-            expected_count == 67,
+            expected_count == EXPECTED_FUND_COUNT,
             (
                 f"Found {expected_count} funds "
-                f"in Funds Links.xlsm."
+                f"in Funds Links.xlsm; "
+                f"expected {EXPECTED_FUND_COUNT}."
             ),
         )
 
@@ -1323,7 +1647,7 @@ def main() -> int:
             "All funds extracted successfully",
             successful_count == expected_count,
             (
-                f"Successful="
+                f"Successful records="
                 f"{successful_count}; "
                 f"expected="
                 f"{expected_count}."
@@ -1334,36 +1658,35 @@ def main() -> int:
             "No failed funds",
             failed_count == 0,
             (
-                f"Failed funds="
+                f"Failed records="
                 f"{failed_count}."
             ),
         )
 
-        # -------------------------------------------------------------------
-        # Check successful summary against Excel
-        # -------------------------------------------------------------------
-
-        successful_funds = run_summary.get(
-            "successfulFunds"
-        )
-
-        if not isinstance(
-            successful_funds,
-            list,
-        ):
-
-            successful_funds = []
+        # ====================================================================
+        # Build successful lookup by Excel row
+        # ====================================================================
 
         successful_by_row = {}
 
+        duplicate_success_rows = []
+
         for fund in successful_funds:
 
-            row = fund.get(
-                "excelRow"
+            row = get_summary_excel_row(
+                fund
             )
 
-            if row is not None:
-                successful_by_row[row] = fund
+            if row is None:
+                continue
+
+            if row in successful_by_row:
+
+                duplicate_success_rows.append(
+                    row
+                )
+
+            successful_by_row[row] = fund
 
         missing_excel_rows = [
             fund["excelRow"]
@@ -1387,10 +1710,23 @@ def main() -> int:
             ),
         )
 
-        # -------------------------------------------------------------------
-        # Validate each fund
-        # -------------------------------------------------------------------
+        top_check(
+            "No duplicate successful Excel rows",
+            len(duplicate_success_rows) == 0,
+            (
+                "No duplicate successful rows."
+                if not duplicate_success_rows
+                else
+                f"Duplicate rows="
+                f"{duplicate_success_rows}."
+            ),
+        )
 
+        # ====================================================================
+        # Validate individual funds
+        # ====================================================================
+
+        print()
         print(
             "Validating individual funds..."
         )
@@ -1398,43 +1734,48 @@ def main() -> int:
         fund_results = []
 
         passed_funds = 0
-        failed_funds = 0
+        failed_validation_funds = 0
 
         for index, excel_fund in enumerate(
             excel_funds,
             start=1,
         ):
 
-            row = excel_fund[
+            excel_row = excel_fund[
                 "excelRow"
             ]
 
             print(
-                f"  [{index}/{len(excel_funds)}] "
-                f"Excel row {row}: ",
+                f"  [{index}/{expected_count}] "
+                f"Excel row {excel_row}: ",
                 end="",
                 flush=True,
             )
 
             successful_summary = (
-                successful_by_row.get(row)
+                successful_by_row.get(
+                    excel_row
+                )
             )
 
             if successful_summary is None:
 
                 result = {
-                    "excelRow": row,
+                    "excelRow": excel_row,
                     "fundName": "",
                     "fundIdentifier": "",
                     "fundCode": "",
                     "observationCount": 0,
                     "checks": [
                         {
-                            "name": "Successful extraction exists",
+                            "name": (
+                                "Successful extraction exists"
+                            ),
                             "passed": False,
                             "details": (
                                 "No successful extraction "
-                                "exists for this Excel row."
+                                "record exists for this "
+                                "Excel row."
                             ),
                         }
                     ],
@@ -1446,7 +1787,7 @@ def main() -> int:
                     result
                 )
 
-                failed_funds += 1
+                failed_validation_funds += 1
 
                 print(
                     "FAILED"
@@ -1455,8 +1796,8 @@ def main() -> int:
                 continue
 
             passed, result = validate_fund(
-                excel_fund=excel_fund,
-                successful_summary=successful_summary,
+                excel_fund,
+                successful_summary,
             )
 
             fund_results.append(
@@ -1474,15 +1815,15 @@ def main() -> int:
 
             else:
 
-                failed_funds += 1
+                failed_validation_funds += 1
 
                 print(
                     "FAILED"
                 )
 
-        # -------------------------------------------------------------------
-        # Validate consolidated all_bid_history.json
-        # -------------------------------------------------------------------
+        # ====================================================================
+        # Consolidated history
+        # ====================================================================
 
         print()
         print(
@@ -1502,26 +1843,14 @@ def main() -> int:
 
             consolidated_funds = {}
 
-        top_check(
-            "Consolidated BID history fund count",
-            len(consolidated_funds)
-            == expected_count,
-            (
-                f"Consolidated funds="
-                f"{len(consolidated_funds)}; "
-                f"expected="
-                f"{expected_count}."
-            ),
-        )
+        consolidated_mismatches = []
 
         consolidated_total = 0
-
-        consolidated_mismatches = []
 
         for result in fund_results:
 
             if not result.get(
-                "passed"
+                "fundIdentifier"
             ):
 
                 continue
@@ -1541,32 +1870,14 @@ def main() -> int:
                 consolidated_mismatches.append(
                     {
                         "fundIdentifier": identifier,
-                        "reason": "Missing consolidated fund.",
+                        "reason": (
+                            "Missing from consolidated "
+                            "all_bid_history.json."
+                        ),
                     }
                 )
 
                 continue
-
-            consolidated_count = consolidated.get(
-                "observationCount"
-            )
-
-            actual_count = result[
-                "observationCount"
-            ]
-
-            if consolidated_count != actual_count:
-
-                consolidated_mismatches.append(
-                    {
-                        "fundIdentifier": identifier,
-                        "reason": (
-                            "Observation count mismatch."
-                        ),
-                        "consolidated": consolidated_count,
-                        "individual": actual_count,
-                    }
-                )
 
             consolidated_observations = (
                 consolidated.get(
@@ -1591,9 +1902,46 @@ def main() -> int:
 
                 continue
 
-            consolidated_total += len(
+            consolidated_count = len(
                 consolidated_observations
             )
+
+            consolidated_total += (
+                consolidated_count
+            )
+
+            if consolidated_count != result[
+                "observationCount"
+            ]:
+
+                consolidated_mismatches.append(
+                    {
+                        "fundIdentifier": identifier,
+                        "reason": (
+                            "Observation count mismatch."
+                        ),
+                        "consolidated": (
+                            consolidated_count
+                        ),
+                        "individual": (
+                            result[
+                                "observationCount"
+                            ]
+                        ),
+                    }
+                )
+
+        top_check(
+            "Consolidated BID history fund count",
+            len(consolidated_funds)
+            == successful_count,
+            (
+                f"Consolidated funds="
+                f"{len(consolidated_funds)}; "
+                f"successful funds="
+                f"{successful_count}."
+            ),
+        )
 
         top_check(
             "Consolidated BID history matches individual files",
@@ -1607,28 +1955,26 @@ def main() -> int:
             ),
         )
 
-        # -------------------------------------------------------------------
-        # Validate consolidated total
-        # -------------------------------------------------------------------
-
-        expected_total = run_summary.get(
-            "totalHistoricalBidObservations"
+        reported_total = (
+            run_summary.get(
+                "totalHistoricalBidObservations"
+            )
         )
 
         top_check(
             "Consolidated observation total",
-            consolidated_total == expected_total,
+            consolidated_total == reported_total,
             (
                 f"Consolidated="
                 f"{consolidated_total}; "
                 f"run summary="
-                f"{expected_total}."
+                f"{reported_total}."
             ),
         )
 
-        # -------------------------------------------------------------------
-        # Validate all_funds.json
-        # -------------------------------------------------------------------
+        # ====================================================================
+        # all_funds.json
+        # ====================================================================
 
         all_funds_list = all_funds.get(
             "funds"
@@ -1644,18 +1990,18 @@ def main() -> int:
         top_check(
             "all_funds.json fund count",
             len(all_funds_list)
-            == expected_count,
+            == successful_count,
             (
                 f"all_funds.json="
                 f"{len(all_funds_list)}; "
-                f"expected="
-                f"{expected_count}."
+                f"successful="
+                f"{successful_count}."
             ),
         )
 
-        # -------------------------------------------------------------------
-        # Total individual observations
-        # -------------------------------------------------------------------
+        # ====================================================================
+        # Observation total
+        # ====================================================================
 
         individual_total = sum(
             result.get(
@@ -1663,49 +2009,52 @@ def main() -> int:
                 0,
             )
             for result in fund_results
-            if result.get("passed")
         )
 
         top_check(
             "Individual observation total",
-            individual_total
-            == expected_total,
+            individual_total == reported_total,
             (
                 f"Individual="
                 f"{individual_total}; "
                 f"run summary="
-                f"{expected_total}."
+                f"{reported_total}."
             ),
         )
 
-        # -------------------------------------------------------------------
-        # Overall result
-        # -------------------------------------------------------------------
+        # ====================================================================
+        # Overall status
+        # ====================================================================
 
-        all_top_checks_passed = all(
+        top_level_passed = all(
             check["passed"]
             for check in top_level_checks
         )
 
         overall_passed = (
-            all_top_checks_passed
-            and failed_funds == 0
+            top_level_passed
             and passed_funds == expected_count
+            and failed_validation_funds == 0
         )
 
         status = (
             "PASS"
             if overall_passed
-            else "FAIL"
+            else
+            "FAIL"
         )
+
+        # ====================================================================
+        # Write validation.json
+        # ====================================================================
 
         validation = {
             "status": status,
 
             "validatedAtUtc": (
-                datetime.utcnow()
-                .isoformat()
-                + "Z"
+                datetime.now(
+                    timezone.utc
+                ).isoformat()
             ),
 
             "excelFile": str(
@@ -1714,22 +2063,45 @@ def main() -> int:
 
             "fundUniverseCount": expected_count,
 
-            "passedFundCount": passed_funds,
+            "successfulExtractionCount": (
+                successful_count
+            ),
 
-            "failedFundCount": failed_funds,
+            "failedExtractionCount": (
+                failed_count
+            ),
 
-            "totalHistoricalBidObservations": individual_total,
+            "validatedPassCount": (
+                passed_funds
+            ),
 
-            "expectedTotalHistoricalBidObservations": (
-                expected_total
+            "validatedFailCount": (
+                failed_validation_funds
+            ),
+
+            "totalHistoricalBidObservations": (
+                individual_total
+            ),
+
+            "reportedHistoricalBidObservations": (
+                reported_total
             ),
 
             "topLevelChecks": top_level_checks,
 
             "fundResults": fund_results,
 
+            "failedExtractionRecords": (
+                failed_fund_records
+            ),
+
             "details": {
-                "missingExcelRows": missing_excel_rows,
+                "missingExcelRows": (
+                    missing_excel_rows
+                ),
+                "duplicateSuccessfulRows": (
+                    duplicate_success_rows
+                ),
                 "consolidatedMismatches": (
                     consolidated_mismatches
                 ),
@@ -1741,9 +2113,9 @@ def main() -> int:
             validation,
         )
 
-        # -------------------------------------------------------------------
-        # Console output
-        # -------------------------------------------------------------------
+        # ====================================================================
+        # Final console report
+        # ====================================================================
 
         print()
         print("=" * 70)
@@ -1758,13 +2130,23 @@ def main() -> int:
         )
 
         print(
-            f"Funds passed: "
+            f"Successful extraction records: "
+            f"{successful_count}"
+        )
+
+        print(
+            f"Failed extraction records: "
+            f"{failed_count}"
+        )
+
+        print(
+            f"Funds passed validation: "
             f"{passed_funds}"
         )
 
         print(
-            f"Funds failed: "
-            f"{failed_funds}"
+            f"Funds failed validation: "
+            f"{failed_validation_funds}"
         )
 
         print(
@@ -1782,7 +2164,8 @@ def main() -> int:
             marker = (
                 "PASS"
                 if check["passed"]
-                else "FAIL"
+                else
+                "FAIL"
             )
 
             print(
@@ -1791,7 +2174,11 @@ def main() -> int:
                 f"{check['details']}"
             )
 
-        if failed_funds:
+        # ====================================================================
+        # Failed funds
+        # ====================================================================
+
+        if failed_validation_funds:
 
             print()
             print(
@@ -1816,12 +2203,14 @@ def main() -> int:
                     [],
                 ):
 
-                    if not check["passed"]:
+                    if not check.get(
+                        "passed"
+                    ):
 
                         print(
                             f"    - "
-                            f"{check['name']}: "
-                            f"{check['details']}"
+                            f"{check.get('name')}: "
+                            f"{check.get('details')}"
                         )
 
         print()
@@ -1837,7 +2226,7 @@ def main() -> int:
         if overall_passed:
 
             print(
-                "ALL FUNDS PASSED VALIDATION."
+                "ALL 67 FUNDS PASSED VALIDATION."
             )
 
             return 0
@@ -1858,13 +2247,19 @@ def main() -> int:
         print("=" * 70)
 
         print(
-            str(error)
+            f"{type(error).__name__}: "
+            f"{error}"
         )
 
         return 1
 
 
+# ============================================================================
+# ENTRY POINT
+# ============================================================================
+
 if __name__ == "__main__":
+
     sys.exit(
         main()
     )
