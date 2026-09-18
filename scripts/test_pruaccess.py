@@ -1,16 +1,22 @@
-
 #!/usr/bin/env python3
 
 """
 PruAccess historical BID price extractor.
 
-Test fund:
-    Funds Links.xlsm
-        Column A = Prudential fund URL
-        Column B = PruAccess fund name
+Current stage:
+    Read all populated fund rows from Funds Links.xlsm,
+    but process only the first fund.
+
+Excel:
+    Column A = Prudential fund URL
+    Column B = PruAccess fund name
 
 Workflow:
     Excel
+       ↓
+    Read all populated rows
+       ↓
+    Use first row for current extraction test
        ↓
     Prudential fund page/API
        ↓
@@ -25,11 +31,7 @@ Workflow:
     Start = inception date
     End = today
        ↓
-    Direct pagination:
-        page.page=1
-        page.page=2
-        page.page=3
-        ...
+    Direct pagination
        ↓
     Extract BID prices only
 
@@ -49,7 +51,6 @@ import json
 import re
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import urljoin
 
 from openpyxl import load_workbook
 from playwright.sync_api import sync_playwright
@@ -156,7 +157,7 @@ def pruaccess_date(
 # EXCEL
 # ============================================================
 
-def read_excel_fund():
+def read_excel_funds() -> list[dict]:
 
     print(
         "\n=== Reading Funds Links.xlsm ==="
@@ -178,40 +179,73 @@ def read_excel_fund():
 
     worksheet = workbook.active
 
-    prudential_url = clean_text(
-        worksheet["A2"].value
-    )
+    funds = []
 
-    pruaccess_name = clean_text(
-        worksheet["B2"].value
-    )
+    for row_number in range(
+        2,
+        worksheet.max_row + 1,
+    ):
+
+        prudential_url = clean_text(
+            worksheet.cell(
+                row=row_number,
+                column=1,
+            ).value
+        )
+
+        pruaccess_name = clean_text(
+            worksheet.cell(
+                row=row_number,
+                column=2,
+            ).value
+        )
+
+        # ----------------------------------------------------
+        # Column A is the master-universe field.
+        #
+        # If Column A is empty, this row does not represent
+        # a Prudential fund and is skipped.
+        # ----------------------------------------------------
+
+        if not prudential_url:
+            continue
+
+        funds.append(
+            {
+                "excelRow": row_number,
+                "prudentialUrl": prudential_url,
+                "pruAccessName": pruaccess_name,
+            }
+        )
 
     workbook.close()
 
-    if not prudential_url:
+    if not funds:
 
         raise RuntimeError(
-            "Funds Links.xlsm A2 is empty."
-        )
-
-    if not pruaccess_name:
-
-        raise RuntimeError(
-            "Funds Links.xlsm B2 is empty."
+            "No populated Prudential fund URLs "
+            "were found in Column A."
         )
 
     print(
-        f"Excel A2: {prudential_url}"
+        f"\nPopulated Prudential fund URLs found: "
+        f"{len(funds)}"
     )
 
     print(
-        f"Excel B2: {pruaccess_name}"
+        "\nExcel fund list:"
     )
 
-    return (
-        prudential_url,
-        pruaccess_name,
-    )
+    for fund in funds:
+
+        print(
+            f"Row {fund['excelRow']}: "
+            f"{fund['pruAccessName']} "
+            f"| "
+            f"{fund['prudentialUrl']}"
+        )
+
+    return funds
 
 
 # ============================================================
@@ -305,7 +339,8 @@ def get_prudential_fund_data(
     fund = data[0]
 
     result = {
-        "apiUrl": api_url,
+        "apiUrl":
+            api_url,
 
         "fundIdentifier":
             fund.get(
@@ -447,7 +482,8 @@ def get_prudential_fund_data(
                 "dividendRate"
             ),
 
-        "raw": fund,
+        "raw":
+            fund,
     }
 
     return result
@@ -482,9 +518,11 @@ def get_fund_options(
 
         result.append(
             {
-                "text": clean_text(
-                    option.inner_text()
-                ),
+                "text":
+                    clean_text(
+                        option.inner_text()
+                    ),
+
                 "value":
                     option.get_attribute(
                         "value"
@@ -559,22 +597,6 @@ def set_readonly_input_value(
 def extract_price_rows(
     page,
 ) -> list[dict]:
-
-    """
-    Extract rows from the current PruAccess
-    price table.
-
-    Expected:
-
-        Date
-        Bid Price
-        Offer Price
-
-    We intentionally store only:
-
-        Date
-        Bid Price
-    """
 
     tables = page.locator(
         "table"
@@ -655,7 +677,6 @@ def extract_price_rows(
                 }
             )
 
-    # Remove duplicates while preserving order.
     seen = set()
 
     result = []
@@ -714,18 +735,6 @@ def extract_all_pages(
     end_date: str,
 ) -> tuple[list[dict], list[dict]]:
 
-    """
-    Directly request page 1, page 2, page 3, etc.
-
-    We do NOT click pagination controls.
-
-    PruAccess has already shown that its pagination
-    URLs use:
-
-        page.page=N
-        page.size=20
-    """
-
     print(
         "\n============================================================"
     )
@@ -765,7 +774,7 @@ def extract_all_pages(
             url
         )
 
-        response = page.goto(
+        page.goto(
             url,
             wait_until="domcontentloaded",
             timeout=120000,
@@ -783,10 +792,6 @@ def extract_all_pages(
             f"Rows found: "
             f"{len(current_rows)}"
         )
-
-        # ----------------------------------------------------
-        # If there are no rows, pagination is finished.
-        # ----------------------------------------------------
 
         if not current_rows:
 
@@ -806,10 +811,6 @@ def extract_all_pages(
 
             break
 
-        # ----------------------------------------------------
-        # Record rows.
-        # ----------------------------------------------------
-
         for row in current_rows:
 
             key = (
@@ -823,18 +824,14 @@ def extract_all_pages(
             {
                 "page": page_number,
                 "url": url,
-                "rowCount": len(
-                    current_rows
-                ),
+                "rowCount":
+                    len(current_rows),
                 "firstDate":
-                    current_rows[0][
-                        "date"
-                    ],
+                    current_rows[0]["date"],
                 "lastDate":
-                    current_rows[-1][
-                        "date"
-                    ],
-                "status": "success",
+                    current_rows[-1]["date"],
+                "status":
+                    "success",
             }
         )
 
@@ -845,11 +842,6 @@ def extract_all_pages(
             f"{current_rows[-1]['date']}"
         )
 
-        # ----------------------------------------------------
-        # If fewer than PAGE_SIZE rows are returned,
-        # this is the final page.
-        # ----------------------------------------------------
-
         if len(current_rows) < PAGE_SIZE:
 
             print(
@@ -857,10 +849,6 @@ def extract_all_pages(
             )
 
             break
-
-    # --------------------------------------------------------
-    # Sort newest → oldest.
-    # --------------------------------------------------------
 
     def sort_date(row):
 
@@ -911,13 +899,56 @@ def main():
     )
 
     # ========================================================
-    # READ EXCEL
+    # READ ALL EXCEL FUNDS
     # ========================================================
 
-    (
-        prudential_url,
-        excel_pruaccess_name,
-    ) = read_excel_fund()
+    funds = read_excel_funds()
+
+    # ========================================================
+    # CURRENT TEST MODE
+    #
+    # We intentionally process ONLY the first fund.
+    #
+    # This step is only verifying that the Excel universe
+    # can now be read dynamically.
+    # ========================================================
+
+    fund = funds[0]
+
+    prudential_url = fund[
+        "prudentialUrl"
+    ]
+
+    excel_pruaccess_name = fund[
+        "pruAccessName"
+    ]
+
+    print(
+        "\n============================================================"
+    )
+
+    print(
+        "CURRENT TEST FUND"
+    )
+
+    print(
+        "============================================================"
+    )
+
+    print(
+        f"Excel row: "
+        f"{fund['excelRow']}"
+    )
+
+    print(
+        f"Prudential URL: "
+        f"{prudential_url}"
+    )
+
+    print(
+        f"PruAccess name: "
+        f"{excel_pruaccess_name}"
+    )
 
     # ========================================================
     # PLAYWRIGHT
@@ -1253,6 +1284,9 @@ def main():
         # ====================================================
 
         pre_submit = {
+            "excelRow":
+                fund["excelRow"],
+
             "prudentialUrl":
                 prudential_url,
 
@@ -1437,6 +1471,9 @@ def main():
             "status":
                 "success",
 
+            "excelRow":
+                fund["excelRow"],
+
             "prudentialFundName":
                 prudential.get(
                     "fundName"
@@ -1537,6 +1574,16 @@ def main():
         )
 
         print(
+            f"Excel funds detected: "
+            f"{len(funds)}"
+        )
+
+        print(
+            f"Test fund processed: "
+            f"row {fund['excelRow']}"
+        )
+
+        print(
             f"Pages extracted: "
             f"{len(page_diagnostics)}"
         )
@@ -1589,4 +1636,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
