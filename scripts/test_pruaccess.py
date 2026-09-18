@@ -15,7 +15,7 @@ from playwright.async_api import async_playwright
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_DIR = SCRIPT_DIR.parent
 
-EXCEL_FILE = REPO_DIR / "Funds_Links.xlsm"
+EXCEL_FILE = REPO_DIR / "Funds Links.xlsm"
 
 OUTPUT_DIR = REPO_DIR / "output_pruaccess"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
