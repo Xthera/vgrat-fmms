@@ -1,4 +1,3 @@
-```python
 #!/usr/bin/env python3
 
 """
@@ -1156,6 +1155,6 @@ VALIDATION RESULTS
 ======================================================================
 OVERALL RESULT: PASS
 ======================================================================
-```
+
 
 Run it and paste that output here.
