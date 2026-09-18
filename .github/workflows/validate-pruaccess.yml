@@ -1,4 +1,3 @@
-```yaml
 name: Validate PruAccess Extraction
 
 on:
@@ -33,4 +32,3 @@ jobs:
           name: pruaccess-validation-report
           path: output_pruaccess/validation.json
           if-no-files-found: warn
-```
