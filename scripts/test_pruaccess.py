@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import asyncio
 import json
 import re
@@ -31,6 +33,7 @@ PRUACCESS_URL = (
 # ============================================================
 
 def save_text(filename, text):
+
     output_file = OUTPUT_DIR / filename
 
     output_file.write_text(
@@ -38,10 +41,11 @@ def save_text(filename, text):
         encoding="utf-8",
     )
 
-    print(f"Saved: {output_file}")
+    print("Saved:", output_file)
 
 
 def save_json(filename, data):
+
     output_file = OUTPUT_DIR / filename
 
     output_file.write_text(
@@ -54,7 +58,7 @@ def save_json(filename, data):
         encoding="utf-8",
     )
 
-    print(f"Saved: {output_file}")
+    print("Saved:", output_file)
 
 
 # ============================================================
@@ -62,15 +66,14 @@ def save_json(filename, data):
 # ============================================================
 
 def read_excel_fund():
+
     print()
     print("========================================")
     print("READING FUNDS LINKS XLSM")
     print("========================================")
 
-    print("Expected file:")
-    print(EXCEL_FILE)
-
     if not EXCEL_FILE.exists():
+
         raise FileNotFoundError(
             f"Excel file not found: {EXCEL_FILE}"
         )
@@ -83,6 +86,7 @@ def read_excel_fund():
     )
 
     try:
+
         sheet = workbook.active
 
         url = sheet["A2"].value
@@ -90,39 +94,43 @@ def read_excel_fund():
 
         if not url:
             raise ValueError(
-                "Funds Links.xlsm cell A2 is empty."
+                "Funds Links.xlsm A2 is empty."
             )
 
         if not pruaccess_name:
             raise ValueError(
-                "Funds Links.xlsm cell B2 is empty."
+                "Funds Links.xlsm B2 is empty."
             )
 
         result = {
             "excelRow": 2,
             "prudentialUrl": str(url).strip(),
-            "pruaccessName": str(pruaccess_name).strip(),
+            "pruaccessName": str(
+                pruaccess_name
+            ).strip(),
         }
 
         print()
-        print("Excel A2 URL:")
+        print("Excel A2:")
         print(result["prudentialUrl"])
 
         print()
-        print("Excel B2 PruAccess name:")
+        print("Excel B2:")
         print(result["pruaccessName"])
 
         return result
 
     finally:
+
         workbook.close()
 
 
 # ============================================================
-# TEXT NORMALISATION
+# NORMALISE TEXT
 # ============================================================
 
 def normalize_text(value):
+
     if value is None:
         return ""
 
@@ -138,13 +146,14 @@ def normalize_text(value):
 
 
 # ============================================================
-# PRUDENTIAL FUND INFORMATION
+# PRUDENTIAL FUND API
 # ============================================================
 
 async def get_prudential_fund(
     page,
     prudential_url,
 ):
+
     print()
     print("========================================")
     print("GETTING PRUDENTIAL FUND INFORMATION")
@@ -162,13 +171,11 @@ async def get_prudential_fund(
             return
 
         print()
-        print("FOUND PRUDENTIAL FUND API:")
+        print("FOUND PRUDENTIAL API:")
         print(response.url)
 
-        print("STATUS:")
-        print(response.status)
-
         try:
+
             body = await response.text()
 
             data = json.loads(body)
@@ -178,8 +185,9 @@ async def get_prudential_fund(
             captured["data"] = data
 
         except Exception as exc:
+
             print(
-                "Could not parse Prudential JSON:",
+                "JSON parse error:",
                 repr(exc),
             )
 
@@ -194,29 +202,43 @@ async def get_prudential_fund(
         timeout=120000,
     )
 
-    print()
-    print("Waiting for Prudential JavaScript...")
-
-    await page.wait_for_timeout(15000)
+    await page.wait_for_timeout(
+        15000
+    )
 
     if captured["data"] is None:
+
         raise RuntimeError(
-            "Prudential ilpfunds.json response "
+            "Prudential ilpfunds.json "
             "was not captured."
         )
 
-    data = captured["data"]
+    if not isinstance(
+        captured["data"],
+        list,
+    ):
 
-    if not isinstance(data, list) or not data:
         raise RuntimeError(
-            "Unexpected Prudential fund API response."
+            "Unexpected Prudential API structure."
         )
 
-    fund = data[0]
+    if not captured["data"]:
+
+        raise RuntimeError(
+            "Prudential API returned no fund."
+        )
+
+    fund = captured["data"][0]
 
     result = {
-        "fundName": fund.get("fundName", ""),
-        "inceptionDate": fund.get("inceptionDate", ""),
+        "fundName": fund.get(
+            "fundName",
+            "",
+        ),
+        "inceptionDate": fund.get(
+            "inceptionDate",
+            "",
+        ),
         "fundIdentifier": fund.get(
             "fundIdentifier",
             "",
@@ -241,38 +263,31 @@ async def get_prudential_fund(
     }
 
     print()
-    print("Prudential fund name:")
+    print("Prudential fund:")
     print(result["fundName"])
 
     print()
-    print("Prudential inception date:")
+    print("Inception:")
     print(result["inceptionDate"])
 
     print()
-    print("Current bid price:")
+    print("Bid:")
     print(result["bidPrice"])
 
     print()
-    print("Current offer price:")
-    print(result["offerPrice"])
-
-    print()
-    print("Valuation date:")
+    print("Valuation:")
     print(result["valuationDate"])
-
-    if not result["inceptionDate"]:
-        raise RuntimeError(
-            "Prudential did not provide an inceptionDate."
-        )
 
     return result
 
 
 # ============================================================
-# DATE FUNCTIONS
+# DATE CONVERSION
 # ============================================================
 
-def convert_prudential_date_to_pruaccess(value):
+def convert_prudential_date(
+    value,
+):
 
     parsed = datetime.strptime(
         value,
@@ -292,10 +307,10 @@ def get_run_date():
 
 
 # ============================================================
-# PRUACCESS INSPECTION
+# PRUACCESS
 # ============================================================
 
-async def inspect_pruaccess(
+async def run_pruaccess(
     page,
     excel_fund,
     prudential_fund,
@@ -306,12 +321,12 @@ async def inspect_pruaccess(
     print("OPENING PRUACCESS")
     print("========================================")
 
-    captured_requests = []
-    captured_responses = []
+    requests = []
+    responses = []
 
     async def handle_request(request):
 
-        captured_requests.append({
+        requests.append({
             "method": request.method,
             "url": request.url,
             "resourceType": request.resource_type,
@@ -319,7 +334,7 @@ async def inspect_pruaccess(
 
     async def handle_response(response):
 
-        captured_responses.append({
+        responses.append({
             "status": response.status,
             "url": response.url,
         })
@@ -340,50 +355,17 @@ async def inspect_pruaccess(
         timeout=120000,
     )
 
-    await page.wait_for_timeout(5000)
-
-    print()
-    print("PruAccess loaded:")
-    print(page.url)
-
-    # --------------------------------------------------------
-    # Save initial page
-    # --------------------------------------------------------
-
-    html = await page.content()
-
-    save_text(
-        "initial_page.html",
-        html,
-    )
-
-    visible_text = await page.locator(
-        "body"
-    ).inner_text()
-
-    save_text(
-        "initial_visible_text.txt",
-        visible_text,
+    await page.wait_for_timeout(
+        5000
     )
 
     # --------------------------------------------------------
-    # Inspect fund selector
+    # FUND OPTIONS
     # --------------------------------------------------------
 
     fund_selector = page.locator(
         "#fundName"
     )
-
-    fund_count = await fund_selector.count()
-
-    print()
-    print("Fund selector count:")
-    print(fund_count)
-
-    if fund_count == 0:
-        raise RuntimeError(
-            "PruAccess #fundName selector was not found."
-        )
 
     options = await fund_selector.locator(
         "option"
@@ -394,7 +376,10 @@ async def inspect_pruaccess(
     for option in options:
 
         text = await option.inner_text()
-        value = await option.get_attribute("value")
+
+        value = await option.get_attribute(
+            "value"
+        )
 
         fund_options.append({
             "text": text.strip(),
@@ -407,352 +392,273 @@ async def inspect_pruaccess(
     )
 
     # --------------------------------------------------------
-    # Match Excel B2
+    # MATCH B2
     # --------------------------------------------------------
 
-    target_name = excel_fund[
-        "pruaccessName"
-    ]
-
-    target_normalized = normalize_text(
-        target_name
+    target = normalize_text(
+        excel_fund["pruaccessName"]
     )
 
-    matched_option = None
+    matched = None
 
     for option in fund_options:
 
         if normalize_text(
             option["text"]
-        ) == target_normalized:
+        ) == target:
 
-            matched_option = option
+            matched = option
             break
 
     print()
     print("Excel B2:")
-    print(target_name)
+    print(
+        excel_fund["pruaccessName"]
+    )
 
     print()
-    print("Matched PruAccess option:")
-    print(matched_option)
+    print("Matched option:")
+    print(matched)
 
-    if matched_option is None:
+    if matched is None:
+
         raise RuntimeError(
-            "Could not find an exact PruAccess "
-            "fund-name match for Excel B2."
+            "No exact PruAccess fund match."
         )
 
     # --------------------------------------------------------
-    # Select fund
+    # SELECT FUND
     # --------------------------------------------------------
 
     await fund_selector.select_option(
-        matched_option["value"]
+        matched["value"]
     )
 
-    print()
-    print("Selected PruAccess fund:")
-    print(matched_option["text"])
-
     # --------------------------------------------------------
-    # Select TABLE view
+    # TABLE VIEW
     # --------------------------------------------------------
 
-    view_selector = page.locator(
+    await page.locator(
         "#viewType"
+    ).select_option(
+        "TBL"
     )
 
-    if await view_selector.count() > 0:
-
-        await view_selector.select_option(
-            "TBL"
-        )
-
-        print()
-        print("View type:")
-        print("TBL - Table")
-
     # --------------------------------------------------------
-    # DO NOT TOUCH FUND PRICE TYPE
+    # FUND PRICE TYPE
     # --------------------------------------------------------
+    #
+    # IMPORTANT:
+    # This field is disabled/greyed out.
+    # We deliberately DO NOT modify it.
+    #
 
     price_selector = page.locator(
         "#fundPriceType"
     )
 
-    if await price_selector.count() > 0:
+    price_value = None
+
+    if await price_selector.count():
 
         price_value = await price_selector.input_value()
 
-        print()
-        print("Fund price type:")
-        print(price_value)
-
-        print(
-            "Fund price type was NOT changed."
-        )
+    print()
+    print("Fund price type:")
+    print(price_value)
 
     # --------------------------------------------------------
-    # DATE INPUTS
+    # REQUIRED DATES
     # --------------------------------------------------------
-
-    start_input = page.locator(
-        'input[name="startDate"]'
-    )
-
-    end_input = page.locator(
-        'input[name="endDate"]'
-    )
-
-    start_count = await start_input.count()
-    end_count = await end_input.count()
-
-    print()
-    print("Start date input count:")
-    print(start_count)
-
-    print()
-    print("End date input count:")
-    print(end_count)
-
-    current_start = None
-    current_end = None
-
-    if start_count > 0:
-        current_start = await start_input.first.get_attribute(
-            "value"
-        )
-
-    if end_count > 0:
-        current_end = await end_input.first.get_attribute(
-            "value"
-        )
 
     required_start = (
-        convert_prudential_date_to_pruaccess(
-            prudential_fund["inceptionDate"]
+        convert_prudential_date(
+            prudential_fund[
+                "inceptionDate"
+            ]
         )
     )
 
     required_end = get_run_date()
 
     print()
-    print("Current PruAccess start date:")
-    print(current_start)
-
-    print()
-    print("Current PruAccess end date:")
-    print(current_end)
-
-    print()
-    print("Required start date:")
+    print("Required start:")
     print(required_start)
 
     print()
-    print("Required end date:")
+    print("Required end:")
     print(required_end)
 
     # --------------------------------------------------------
-    # Inspect readonly/date-picker structure
+    # FORM FIELDS
     # --------------------------------------------------------
 
-    datepicker_info = await page.evaluate(
-        """
-        () => {
-            const start = document.querySelector(
-                'input[name="startDate"]'
-            );
+    csrf = await page.locator(
+        'input[name="_csrf"]'
+    ).input_value()
 
-            const end = document.querySelector(
-                'input[name="endDate"]'
-            );
+    selected_funds = matched["value"]
 
-            return {
-                start: start ? {
-                    id: start.id,
-                    name: start.name,
-                    value: start.value,
-                    readOnly: start.readOnly,
-                    disabled: start.disabled,
-                    outerHTML: start.outerHTML
-                } : null,
+    # --------------------------------------------------------
+    # SAVE PRE-SUBMIT STATE
+    # --------------------------------------------------------
 
-                end: end ? {
-                    id: end.id,
-                    name: end.name,
-                    value: end.value,
-                    readOnly: end.readOnly,
-                    disabled: end.disabled,
-                    outerHTML: end.outerHTML
-                } : null
-            };
-        }
-        """
-    )
+    pre_submit = {
+        "csrfPresent": bool(csrf),
+        "selectedFunds": selected_funds,
+        "selectedFundName": matched["text"],
+        "viewType": "TBL",
+        "fundPriceType": price_value,
+        "startDate": required_start,
+        "endDate": required_end,
+    }
 
     save_json(
-        "date_inputs.json",
-        datepicker_info,
+        "pre_submit.json",
+        pre_submit,
     )
 
     # --------------------------------------------------------
-    # Inspect forms
+    # SUBMIT FORM
     # --------------------------------------------------------
 
-    forms = await page.locator(
-        "form"
-    ).evaluate_all(
-        """
-        forms => forms.map(form => ({
-            action: form.action,
-            method: form.method,
-            id: form.id,
-            name: form.name,
-            outerHTML: form.outerHTML
-        }))
-        """
+    print()
+    print("========================================")
+    print("SUBMITTING PRUACCESS FORM")
+    print("========================================")
+
+    async with page.expect_navigation(
+        wait_until="domcontentloaded",
+        timeout=120000,
+    ):
+
+        await page.locator(
+            "#fundForm"
+        ).evaluate(
+            """
+            (form, data) => {
+
+                const setField = (
+                    name,
+                    value
+                ) => {
+
+                    let field =
+                        form.querySelector(
+                            `[name="${name}"]`
+                        );
+
+                    if (!field) {
+
+                        field =
+                            document.createElement(
+                                "input"
+                            );
+
+                        field.type = "hidden";
+                        field.name = name;
+
+                        form.appendChild(
+                            field
+                        );
+                    }
+
+                    field.value = value;
+                };
+
+                setField(
+                    "_csrf",
+                    data.csrf
+                );
+
+                setField(
+                    "viewType",
+                    "TBL"
+                );
+
+                setField(
+                    "selectedFunds",
+                    data.selectedFunds
+                );
+
+                setField(
+                    "startDate",
+                    data.startDate
+                );
+
+                setField(
+                    "endDate",
+                    data.endDate
+                );
+
+                form.submit();
+            }
+            """,
+            {
+                "csrf": csrf,
+                "selectedFunds": selected_funds,
+                "startDate": required_start,
+                "endDate": required_end,
+            },
+        )
+
+    # --------------------------------------------------------
+    # WAIT FOR RESULT
+    # --------------------------------------------------------
+
+    await page.wait_for_timeout(
+        5000
     )
 
-    save_json(
-        "forms.json",
-        forms,
+    print()
+    print("Returned URL:")
+    print(page.url)
+
+    # --------------------------------------------------------
+    # SAVE RESULT
+    # --------------------------------------------------------
+
+    result_html = await page.content()
+
+    result_text = await page.locator(
+        "body"
+    ).inner_text()
+
+    save_text(
+        "result.html",
+        result_html,
     )
 
-    # --------------------------------------------------------
-    # Inspect buttons
-    # --------------------------------------------------------
-
-    buttons = await page.locator(
-        "button, input[type='submit'], input[type='button'], a"
-    ).evaluate_all(
-        """
-        elements => elements.map(el => ({
-            tag: el.tagName,
-            type: el.type || null,
-            id: el.id || null,
-            name: el.name || null,
-            text: (el.innerText || el.value || '').trim(),
-            href: el.href || null,
-            onclick: el.getAttribute('onclick'),
-            disabled: el.disabled || false
-        }))
-        """
+    save_text(
+        "result_visible_text.txt",
+        result_text,
     )
-
-    save_json(
-        "buttons.json",
-        buttons,
-    )
-
-    # --------------------------------------------------------
-    # Save selected state
-    # --------------------------------------------------------
-
-    selected_state = await page.evaluate(
-        """
-        () => {
-            const fund = document.querySelector(
-                '#fundName'
-            );
-
-            const view = document.querySelector(
-                '#viewType'
-            );
-
-            const price = document.querySelector(
-                '#fundPriceType'
-            );
-
-            const start = document.querySelector(
-                'input[name="startDate"]'
-            );
-
-            const end = document.querySelector(
-                'input[name="endDate"]'
-            );
-
-            return {
-                fund: fund ? {
-                    value: fund.value,
-                    text: fund.options[
-                        fund.selectedIndex
-                    ]?.text || ''
-                } : null,
-
-                view: view ? {
-                    value: view.value,
-                    text: view.options[
-                        view.selectedIndex
-                    ]?.text || ''
-                } : null,
-
-                price: price ? {
-                    value: price.value,
-                    text: price.options[
-                        price.selectedIndex
-                    ]?.text || ''
-                } : null,
-
-                start: start ? start.value : null,
-                end: end ? end.value : null
-            };
-        }
-        """
-    )
-
-    save_json(
-        "selected_state.json",
-        selected_state,
-    )
-
-    # --------------------------------------------------------
-    # Save network information
-    # --------------------------------------------------------
 
     save_json(
         "requests.json",
-        captured_requests,
+        requests,
     )
 
     save_json(
         "responses.json",
-        captured_responses,
+        responses,
     )
 
     # --------------------------------------------------------
-    # Save final page before submit
-    # --------------------------------------------------------
-
-    save_text(
-        "before_submit.html",
-        await page.content(),
-    )
-
-    save_text(
-        "before_submit_visible_text.txt",
-        await page.locator(
-            "body"
-        ).inner_text(),
-    )
-
-    # --------------------------------------------------------
-    # Summary
+    # SUMMARY
     # --------------------------------------------------------
 
     summary = {
         "excelFund": excel_fund,
         "prudentialFund": prudential_fund,
-        "requiredStartDate": required_start,
-        "requiredEndDate": required_end,
-        "matchedPruAccessOption": matched_option,
-        "selectedState": selected_state,
-        "requestCount": len(
-            captured_requests
-        ),
-        "responseCount": len(
-            captured_responses
-        ),
+        "matchedPruAccessFund": matched,
+        "startDate": required_start,
+        "endDate": required_end,
+        "viewType": "TBL",
+        "fundPriceType": price_value,
+        "returnedUrl": page.url,
+        "requestCount": len(requests),
+        "responseCount": len(responses),
     }
 
     save_json(
@@ -762,7 +668,7 @@ async def inspect_pruaccess(
 
     print()
     print("========================================")
-    print("PRUACCESS DIAGNOSTIC COMPLETE")
+    print("PRUACCESS SEARCH COMPLETE")
     print("========================================")
 
 
@@ -772,75 +678,51 @@ async def inspect_pruaccess(
 
 async def main():
 
-    try:
+    excel_fund = read_excel_fund()
 
-        excel_fund = read_excel_fund()
+    save_json(
+        "excel_fund.json",
+        excel_fund,
+    )
 
-        save_json(
-            "excel_fund.json",
-            excel_fund,
+    async with async_playwright() as p:
+
+        browser = await p.chromium.launch(
+            headless=True,
         )
 
-        async with async_playwright() as p:
+        try:
 
-            browser = await p.chromium.launch(
-                headless=True,
+            page = await browser.new_page(
+                viewport={
+                    "width": 1440,
+                    "height": 1000,
+                }
             )
 
-            try:
-
-                page = await browser.new_page(
-                    viewport={
-                        "width": 1440,
-                        "height": 1000,
-                    }
-                )
-
-                prudential_fund = (
-                    await get_prudential_fund(
-                        page,
-                        excel_fund[
-                            "prudentialUrl"
-                        ],
-                    )
-                )
-
-                save_json(
-                    "prudential_fund.json",
-                    prudential_fund,
-                )
-
-                await inspect_pruaccess(
+            prudential_fund = (
+                await get_prudential_fund(
                     page,
-                    excel_fund,
-                    prudential_fund,
+                    excel_fund[
+                        "prudentialUrl"
+                    ],
                 )
+            )
 
-            finally:
+            save_json(
+                "prudential_fund.json",
+                prudential_fund,
+            )
 
-                await browser.close()
+            await run_pruaccess(
+                page,
+                excel_fund,
+                prudential_fund,
+            )
 
-    except Exception as exc:
+        finally:
 
-        print()
-        print("========================================")
-        print("DIAGNOSTIC FAILED")
-        print("========================================")
-
-        print(
-            type(exc).__name__,
-            str(exc),
-        )
-
-        save_json(
-            "error.json",
-            {
-                "errorType": type(exc).__name__,
-                "error": str(exc),
-            },
-        )
-
-        raise
+            await browser.close()
 
 
 if __name__ == "__main__":
