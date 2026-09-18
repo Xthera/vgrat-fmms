@@ -11,25 +11,8 @@ Input files:
     output_pruaccess/prudential_fund.json
     output_pruaccess/pagination.json
 
-This script ONLY validates the extracted data.
-It does not modify the source data.
-
-Validation checks:
-    - Correct fund
-    - PruAccess source
-    - BID price type
-    - Expected observation count
-    - Valid dates
-    - Valid numeric BID prices
-    - No missing fields
-    - Dates strictly descending
-    - No duplicate dates
-    - No duplicate date/price records
-    - Historical data reaches inception
-    - Newest and oldest observations
-    - No synthetic/interpolated fields
-    - Prudential current BID vs PruAccess latest BID
-    - Pagination count and row counts
+Output:
+    output_pruaccess/validation.json
 """
 
 from __future__ import annotations
@@ -59,12 +42,9 @@ EXPECTED_FUND_NAME = (
 EXPECTED_PAGES = 62
 EXPECTED_OBSERVATIONS = 1223
 
-PruACCESS_DATE_FORMAT = "%d-%b-%Y"
+PRUACCESS_DATE_FORMAT = "%d-%b-%Y"
 PRUDENTIAL_DATE_FORMAT = "%d/%m/%Y"
 
-# Prudential current bid is displayed to 4 decimal places.
-# PruAccess historical bid contains 5 decimal places.
-# Therefore this is a tolerance check, not exact equality.
 CURRENT_BID_TOLERANCE = Decimal("0.0002")
 
 
@@ -91,6 +71,11 @@ def load_json(path: Path):
 
 
 def save_json(path: Path, data) -> None:
+    path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
     path.write_text(
         json.dumps(
             data,
@@ -104,7 +89,7 @@ def save_json(path: Path, data) -> None:
 def parse_pruaccess_date(value: str) -> datetime:
     return datetime.strptime(
         clean_text(value),
-        PruACCESS_DATE_FORMAT,
+        PRUACCESS_DATE_FORMAT,
     )
 
 
@@ -140,7 +125,6 @@ def parse_decimal(value) -> Decimal:
 def is_valid_price(value) -> bool:
     try:
         number = parse_decimal(value)
-
         return number > 0
 
     except (
@@ -170,10 +154,11 @@ def print_result(
 
 
 # ============================================================
-# MAIN VALIDATION
+# VALIDATION
 # ============================================================
 
 def validate():
+
     print()
     print("=" * 70)
     print("PruAccess Historical BID Price Validation")
@@ -199,7 +184,7 @@ def validate():
     checks = []
 
     # --------------------------------------------------------
-    # 1. Basic JSON structure
+    # 1. JSON structure
     # --------------------------------------------------------
 
     structure_ok = (
@@ -238,9 +223,7 @@ def validate():
     checks.append({
         "name": "Historical source",
         "passed": source_ok,
-        "details": (
-            f"source={source!r}"
-        ),
+        "details": f"source={source!r}",
     })
 
     # --------------------------------------------------------
@@ -258,9 +241,7 @@ def validate():
     checks.append({
         "name": "Historical price type",
         "passed": price_type_ok,
-        "details": (
-            f"priceType={price_type!r}"
-        ),
+        "details": f"priceType={price_type!r}",
     })
 
     # --------------------------------------------------------
@@ -278,9 +259,7 @@ def validate():
     checks.append({
         "name": "Fund identity",
         "passed": fund_ok,
-        "details": (
-            f"Fund={fund_name}"
-        ),
+        "details": f"Fund={fund_name}",
     })
 
     # --------------------------------------------------------
@@ -327,6 +306,7 @@ def validate():
     })
 
     if not observations:
+
         checks.append({
             "name": "Historical observations available",
             "passed": False,
@@ -336,7 +316,7 @@ def validate():
         return checks
 
     # --------------------------------------------------------
-    # 7. Validate every observation
+    # 7. Validate observations
     # --------------------------------------------------------
 
     invalid_dates = []
@@ -353,10 +333,12 @@ def validate():
             observation,
             dict,
         ):
+
             missing_fields.append({
                 "index": index,
                 "reason": "Not an object",
             })
+
             continue
 
         date_value = observation.get(
@@ -397,7 +379,7 @@ def validate():
                     "date": date_value,
                 })
 
-        # BID
+        # BID price
         if not clean_text(bid_value):
 
             missing_fields.append({
@@ -433,37 +415,25 @@ def validate():
                 ),
             })
 
-    dates_ok = (
-        len(invalid_dates) == 0
-    )
-
     checks.append({
         "name": "All dates valid",
-        "passed": dates_ok,
+        "passed": len(invalid_dates) == 0,
         "details": (
             f"Invalid dates={len(invalid_dates)}."
         ),
     })
 
-    prices_ok = (
-        len(invalid_prices) == 0
-    )
-
     checks.append({
         "name": "All BID prices numeric",
-        "passed": prices_ok,
+        "passed": len(invalid_prices) == 0,
         "details": (
             f"Invalid prices={len(invalid_prices)}."
         ),
     })
 
-    missing_ok = (
-        len(missing_fields) == 0
-    )
-
     checks.append({
         "name": "No missing observation fields",
-        "passed": missing_ok,
+        "passed": len(missing_fields) == 0,
         "details": (
             f"Missing/invalid records="
             f"{len(missing_fields)}."
@@ -488,13 +458,9 @@ def validate():
                 "current": current["dateText"],
             })
 
-    ordering_ok = (
-        len(ordering_violations) == 0
-    )
-
     checks.append({
         "name": "Dates strictly descending",
-        "passed": ordering_ok,
+        "passed": len(ordering_violations) == 0,
         "details": (
             f"Ordering violations="
             f"{len(ordering_violations)}."
@@ -523,13 +489,9 @@ def validate():
         if len(rows) > 1
     }
 
-    duplicate_dates_ok = (
-        len(duplicate_dates) == 0
-    )
-
     checks.append({
         "name": "No duplicate dates",
-        "passed": duplicate_dates_ok,
+        "passed": len(duplicate_dates) == 0,
         "details": (
             f"Duplicate dates="
             f"{len(duplicate_dates)}."
@@ -564,13 +526,9 @@ def validate():
         if count > 1
     }
 
-    duplicate_records_ok = (
-        len(duplicate_records) == 0
-    )
-
     checks.append({
         "name": "No duplicate date/price records",
-        "passed": duplicate_records_ok,
+        "passed": len(duplicate_records) == 0,
         "details": (
             f"Duplicate records="
             f"{len(duplicate_records)}."
@@ -578,7 +536,7 @@ def validate():
     })
 
     # --------------------------------------------------------
-    # 11. Inception date coverage
+    # 11. Inception date
     # --------------------------------------------------------
 
     inception_raw = clean_text(
@@ -609,8 +567,7 @@ def validate():
         )
 
         inception_details = (
-            f"Inception="
-            f"{inception_raw}; "
+            f"Inception={inception_raw}; "
             f"oldest observation="
             f"{oldest_row['dateText']}."
         )
@@ -710,16 +667,12 @@ def validate():
                     "field": field,
                 })
 
-    synthetic_ok = (
-        len(suspicious_fields) == 0
-    )
-
     checks.append({
         "name": "No synthetic/interpolated fields",
-        "passed": synthetic_ok,
+        "passed": len(suspicious_fields) == 0,
         "details": (
             "No generated-data fields detected."
-            if synthetic_ok
+            if len(suspicious_fields) == 0
             else (
                 f"Suspicious fields="
                 f"{len(suspicious_fields)}."
@@ -783,7 +736,7 @@ def validate():
     })
 
     # --------------------------------------------------------
-    # 16. Pagination validation
+    # 16. Pagination structure
     # --------------------------------------------------------
 
     pagination_ok = isinstance(
@@ -838,12 +791,15 @@ def validate():
 
             pagination_rows_ok = all(
                 count == 20
-                for count
-                in full_page_counts
+                for count in full_page_counts
             )
 
             final_page_ok = (
-                row_counts[-1] < 20
+                isinstance(
+                    row_counts[-1],
+                    int,
+                )
+                and row_counts[-1] < 20
             )
 
         checks.append({
@@ -909,7 +865,7 @@ def validate():
         })
 
     # --------------------------------------------------------
-    # OVERALL RESULT
+    # Overall result
     # --------------------------------------------------------
 
     overall_passed = all(
@@ -918,7 +874,7 @@ def validate():
     )
 
     # --------------------------------------------------------
-    # Build validation report
+    # Validation report
     # --------------------------------------------------------
 
     validation_result = {
@@ -1115,46 +1071,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-### Then run
-
-From the **root of `vgrat-fmms`**:
-
-```bash
-python scripts/test_pruaccess_validation.py
-```
-
-It expects these files that your extraction already created:
-
-```text
-output_pruaccess/
-bid_history.json
-prudential_fund.json
-pagination.json
-```
-
-It will create:
-
-```text
-output_pruaccess/
-validation.json
-```
-
-The important thing I want to see next is the bottom section:
-
-```text
-======================================================================
-VALIDATION RESULTS
-======================================================================
-
-[PASS] ...
-[PASS] ...
-...
-
-======================================================================
-OVERALL RESULT: PASS
-======================================================================
-
-
-Run it and paste that output here.
