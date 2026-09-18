@@ -532,32 +532,29 @@ async def main():
             "#viewType"
         ).select_option("TBL")
 
-        # ----------------------------------------------------
-        # 11. Set start date
-        # ----------------------------------------------------
+       # ----------------------------------------------------
+# Set dates using the actual date-picker inputs
+# ----------------------------------------------------
 
-        print(
-            "Setting Start Date =",
-            start_date,
-        )
+print("Setting Start Date =", start_date)
 
-        await page.locator(
-            "#startDate"
-        ).fill(start_date)
+start_input = page.locator(
+    'input[name="startDate"]'
+)
 
-        # ----------------------------------------------------
-        # 12. Set end date
-        # ----------------------------------------------------
+end_input = page.locator(
+    'input[name="endDate"]'
+)
 
-        print(
-            "Setting End Date =",
-            end_date,
-        )
+print("Current PruAccess start date:")
+print(await start_input.input_value())
 
-        await page.locator(
-            "#endDate"
-        ).fill(end_date)
+print("Current PruAccess end date:")
+print(await end_input.input_value())
 
+# The inputs are readonly, so we do NOT use fill().
+# We will inspect the date-picker implementation first.
+      
         # ----------------------------------------------------
         # 13. Save selected values
         # ----------------------------------------------------
