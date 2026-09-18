@@ -533,16 +533,6 @@ async def main():
         ).select_option("TBL")
 
         # ----------------------------------------------------
-        # 10. Select Bid Price
-        # ----------------------------------------------------
-
-        print("Selecting Price Type = Bid Price")
-
-        await page.locator(
-            "#fundPriceType"
-        ).select_option("BID")
-
-        # ----------------------------------------------------
         # 11. Set start date
         # ----------------------------------------------------
 
