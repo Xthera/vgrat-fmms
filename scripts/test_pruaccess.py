@@ -8,10 +8,11 @@ MASTER SOURCE:
 
 Excel:
     Column A = Prudential fund URL
-    Column B = PruAccess fund name
+    Column B = exact PruAccess fund name
 
+================================================================
 WORKFLOW
-========
+================================================================
 
     Funds Links.xlsm
           |
@@ -28,42 +29,50 @@ WORKFLOW
     Official Prudential inception date
           |
           v
-    PruAccess
+    PruAccess exact fund-name match
           |
           v
-    Exact fund-name match
+    Automatically split history into <=10-year windows
           |
           v
-    Table view
-          |
-          v
-    Start = Prudential inception date
-    End   = current Singapore date
-          |
-          v
-    Submit PruAccess search
+    Submit each PruAccess window
           |
           v
     Establish authenticated/session cookies
           |
           v
-    Direct HTTP pagination
+    Discover complete pagination
           |
           v
-    Extract BID prices only
+    Parallel HTTP page retrieval
           |
           v
-    Validate complete pagination
+    Retry failed pages
           |
           v
-    Repeat for every Excel fund
+    Validate every expected page
+          |
+          v
+    Extract BID observations only
+          |
+          v
+    Reconstruct complete chronology
+          |
+          v
+    Validate inception coverage
+          |
+          v
+    Validate duplicates
+          |
+          v
+    Save fund
           |
           v
     Consolidated JSON
 
-
+================================================================
 IMPORTANT RULES
-===============
+================================================================
 
 1. Funds Links.xlsm determines the fund universe.
 
@@ -91,55 +100,110 @@ IMPORTANT RULES
 
 13. Fund Price Type is never changed.
 
-14. Start date is the official Prudential inception date.
+14. The historical extraction begins from the official
+    Prudential inception date.
 
-15. End date is the current Singapore date.
+15. PruAccess date windows must never exceed 10 years.
 
-16. All pagination pages must be successfully retrieved.
+16. The historical end date is the current Singapore date.
 
-17. A permanently failed page fails the entire fund.
+17. Every expected pagination page must be retrieved.
 
-18. A fund is never marked successful with partial history.
+18. A permanently failed page fails the entire window.
 
-19. Duplicate observations are not silently removed by the extractor.
+19. A failed window fails the entire fund.
 
-20. Validation detects duplicate observations.
+20. A fund is never marked successful with partial history.
 
-21. Current Prudential BID is stored separately from historical PruAccess BID.
+21. Duplicate observations are NOT silently removed.
 
-22. Prudential fund name is authoritative.
+22. Duplicate observations are detected and cause validation
+    failure.
 
-23. Citicode/fundIdentifier is technical identity metadata.
+23. Current Prudential BID is stored separately from historical
+    PruAccess BID.
 
-24. No PruAccess fund is added to the universe unless it exists
+24. Prudential fund name is authoritative.
+
+25. Citicode/fundIdentifier is technical identity metadata.
+
+26. No PruAccess fund is added to the universe unless it exists
     in Funds Links.xlsm.
 
-25. If the extractor cannot confidently obtain data, it fails loudly.
+27. If the extractor cannot confidently obtain data, it fails
+    loudly.
 
-26. Code is intentionally API/HTTP-first for pagination.
+28. Code is HTTP/API-first for pagination.
 
-27. Playwright is used only where needed to establish the PruAccess
-    session and submit the initial search.
+29. Playwright is used where required to establish the PruAccess
+    session and submit each initial search window.
 
-28. Direct HTTP pagination uses the same PruAccess session cookies.
+30. Direct HTTP pagination uses the same Playwright browser
+    context session cookies.
 
-29. Full pagination is validated before a fund becomes successful.
+31. Pagination pages are retrieved in parallel.
 
-30. No partial-success fund is published as successful.
+32. Every page is individually validated.
+
+33. Full pagination is validated before a window becomes
+    successful.
+
+34. Every window must be successful before a fund becomes
+    successful.
+
+35. All windows are reconstructed chronologically.
+
+36. Historical date gaps are allowed.
+
+37. Missing calendar dates are NOT filled.
+
+38. Weekends, public holidays, non-valuation days and other
+    legitimate PruAccess gaps are allowed.
+
+39. The oldest historical BID observation must be either:
+        - the Prudential inception date, OR
+        - no more than 1 calendar day after inception.
+
+40. The validator does NOT require continuous daily observations.
+
+41. No observation is fabricated to satisfy inception coverage.
+
+42. If PruAccess genuinely provides no observation on the
+    inception date but provides one on the following calendar
+    day, that is valid.
+
+43. Any history beginning more than 1 calendar day after the
+    official inception date fails validation.
+
+44. The extractor does not silently deduplicate overlapping or
+    repeated observations.
+
+45. If duplicate date observations are found, validation fails.
+
+46. Every code change should result in the COMPLETE updated
+    script being supplied, not a patch.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 import time
-from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
+from datetime import date, datetime, timedelta
 from pathlib import Path
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup
 from openpyxl import load_workbook
-from playwright.sync_api import sync_playwright
+from playwright.async_api import (
+    Browser,
+    BrowserContext,
+    Page,
+    async_playwright,
+)
 
 
 # ============================================================
@@ -159,45 +223,77 @@ PRUACCESS_URL = (
     "prulinkfund/viewFundPerformance.do"
 )
 
+# ------------------------------------------------------------
+# PruAccess pagination
+# ------------------------------------------------------------
+
 PAGE_SIZE = 20
 
 MAX_PAGES = 1000
 
-# Number of retries for an individual pagination request.
+# Number of attempts for each HTTP page.
 PAGE_RETRY_COUNT = 4
 
 # Seconds between retries.
 PAGE_RETRY_DELAY_SECONDS = 5
 
-# Direct HTTP request timeout.
+# HTTP timeout in milliseconds.
 PAGE_TIMEOUT_MS = 120000
 
-# Initial Playwright navigation timeout.
+# ------------------------------------------------------------
+# Parallelism
+# ------------------------------------------------------------
+
+# Number of historical pagination pages retrieved concurrently.
+#
+# This does NOT change the number of pages retrieved.
+# It only controls concurrency.
+PARALLEL_PAGE_WORKERS = 6
+
+# ------------------------------------------------------------
+# Browser timing
+# ------------------------------------------------------------
+
 INITIAL_PAGE_TIMEOUT_MS = 120000
 
-# Wait after opening Prudential.
 PRUDENTIAL_WAIT_MS = 3000
 
-# Wait after opening PruAccess.
 PRUACCESS_INITIAL_WAIT_MS = 1500
 
-# Wait after submitting PruAccess form.
 PRUACCESS_RESULT_WAIT_MS = 2500
 
-# Headless browser.
 BROWSER_HEADLESS = True
 
-# Singapore timezone.
+# ------------------------------------------------------------
+# PruAccess date limitation
+# ------------------------------------------------------------
+
+# PruAccess allows a maximum historical date range of 10 years.
+#
+# To remain safely inside that limit, each window is constructed
+# as:
+#
+#     start -> start + 10 calendar years - 1 day
+#
+# The next window starts the following calendar day.
+#
+# Therefore no window exceeds exactly 10 calendar years.
+MAX_WINDOW_YEARS = 10
+
+# ------------------------------------------------------------
+# Singapore timezone
+# ------------------------------------------------------------
+
 SINGAPORE_TZ = ZoneInfo(
     "Asia/Singapore"
 )
 
 
 # ============================================================
-# HELPERS
+# GENERAL HELPERS
 # ============================================================
 
-def clean_text(value) -> str:
+def clean_text(value: Any) -> str:
 
     if value is None:
         return ""
@@ -236,7 +332,7 @@ def normalize_name(value: str) -> str:
 
 def save_json(
     path: Path,
-    data,
+    data: Any,
 ) -> None:
 
     path.parent.mkdir(
@@ -264,8 +360,18 @@ def parse_prudential_date(
     )
 
 
-def pruaccess_date(
-    value: datetime,
+def parse_pruaccess_date(
+    value: str,
+) -> date:
+
+    return datetime.strptime(
+        value.strip(),
+        "%d-%b-%Y",
+    ).date()
+
+
+def format_pruaccess_date(
+    value: date,
 ) -> str:
 
     return value.strftime(
@@ -273,12 +379,17 @@ def pruaccess_date(
     )
 
 
-def singapore_today() -> str:
+def singapore_today() -> date:
 
     return datetime.now(
         SINGAPORE_TZ
-    ).strftime(
-        "%d-%b-%Y"
+    ).date()
+
+
+def singapore_today_pruaccess() -> str:
+
+    return format_pruaccess_date(
+        singapore_today()
     )
 
 
@@ -317,7 +428,210 @@ def safe_filename(
 
 
 # ============================================================
-# EXCEL
+# DATE WINDOW GENERATION
+# ============================================================
+
+def add_calendar_years(
+    value: date,
+    years: int,
+) -> date:
+
+    """
+    Add calendar years while handling February 29.
+
+    Example:
+
+        29-Feb-2024 + 10 years
+        -> 28-Feb-2034
+    """
+
+    try:
+
+        return value.replace(
+            year=value.year + years
+        )
+
+    except ValueError:
+
+        # February 29 -> February 28
+        return value.replace(
+            year=value.year + years,
+            day=28,
+        )
+
+
+def build_date_windows(
+    inception_date: date,
+    end_date: date,
+) -> list[dict]:
+
+    """
+    Split inception -> end into sequential windows where each
+    window is safely <= 10 calendar years.
+
+    Example:
+
+        01-Jan-2000 -> 31-Dec-2010
+
+    becomes approximately:
+
+        01-Jan-2000 -> 31-Dec-2009
+        01-Jan-2010 -> 31-Dec-2010
+
+    No dates are skipped.
+
+    Windows are adjacent, not overlapping, so legitimate
+    duplicate observations are not created merely by the
+    extraction design.
+    """
+
+    if end_date < inception_date:
+
+        raise RuntimeError(
+            "PruAccess end date is earlier "
+            "than Prudential inception date."
+        )
+
+    windows = []
+
+    current_start = inception_date
+
+    window_number = 1
+
+    while current_start <= end_date:
+
+        ten_year_boundary = (
+            add_calendar_years(
+                current_start,
+                MAX_WINDOW_YEARS,
+            )
+            - timedelta(days=1)
+        )
+
+        current_end = min(
+            ten_year_boundary,
+            end_date,
+        )
+
+        if current_end < current_start:
+
+            raise RuntimeError(
+                "Generated invalid PruAccess "
+                "date window."
+            )
+
+        windows.append(
+            {
+                "windowNumber":
+                    window_number,
+
+                "startDate":
+                    current_start,
+
+                "endDate":
+                    current_end,
+
+                "startDateText":
+                    format_pruaccess_date(
+                        current_start
+                    ),
+
+                "endDateText":
+                    format_pruaccess_date(
+                        current_end
+                    ),
+
+                "calendarDays":
+                    (
+                        current_end
+                        - current_start
+                    ).days + 1,
+            }
+        )
+
+        next_start = (
+            current_end
+            + timedelta(days=1)
+        )
+
+        if next_start <= current_start:
+
+            raise RuntimeError(
+                "Date-window generator did not "
+                "advance chronologically."
+            )
+
+        current_start = next_start
+
+        window_number += 1
+
+    # --------------------------------------------------------
+    # Final coverage validation.
+    # --------------------------------------------------------
+
+    if not windows:
+
+        raise RuntimeError(
+            "No PruAccess date windows generated."
+        )
+
+    if (
+        windows[0]["startDate"]
+        != inception_date
+    ):
+
+        raise RuntimeError(
+            "First PruAccess window does not "
+            "start at Prudential inception date."
+        )
+
+    if (
+        windows[-1]["endDate"]
+        != end_date
+    ):
+
+        raise RuntimeError(
+            "Last PruAccess window does not "
+            "reach the current Singapore date."
+        )
+
+    # --------------------------------------------------------
+    # Ensure no gaps or overlaps between windows.
+    # --------------------------------------------------------
+
+    for index in range(
+        1,
+        len(windows),
+    ):
+
+        previous = windows[
+            index - 1
+        ]
+
+        current = windows[
+            index
+        ]
+
+        expected_start = (
+            previous["endDate"]
+            + timedelta(days=1)
+        )
+
+        if (
+            current["startDate"]
+            != expected_start
+        ):
+
+            raise RuntimeError(
+                "PruAccess windows contain a "
+                "gap or overlap."
+            )
+
+    return windows
+
+
+# ============================================================
+# EXCEL MASTER UNIVERSE
 # ============================================================
 
 def read_excel_funds() -> list[dict]:
@@ -373,6 +687,7 @@ def read_excel_funds() -> list[dict]:
 
         # Column A is the master universe.
         if not prudential_url:
+
             continue
 
         funds.append(
@@ -420,8 +735,8 @@ def read_excel_funds() -> list[dict]:
 # PRUDENTIAL API
 # ============================================================
 
-def get_prudential_fund_data(
-    page,
+async def get_prudential_fund_data(
+    page: Page,
     prudential_url: str,
 ) -> dict:
 
@@ -435,7 +750,7 @@ def get_prudential_fund_data(
 
     captured_urls = []
 
-    def handle_response(
+    async def handle_response(
         response,
     ):
 
@@ -457,13 +772,13 @@ def get_prudential_fund_data(
 
     try:
 
-        page.goto(
+        await page.goto(
             prudential_url,
             wait_until="domcontentloaded",
             timeout=INITIAL_PAGE_TIMEOUT_MS,
         )
 
-        page.wait_for_timeout(
+        await page.wait_for_timeout(
             PRUDENTIAL_WAIT_MS
         )
 
@@ -491,7 +806,7 @@ def get_prudential_fund_data(
         api_url
     )
 
-    response = page.request.get(
+    response = await page.request.get(
         api_url,
         timeout=INITIAL_PAGE_TIMEOUT_MS,
     )
@@ -503,7 +818,7 @@ def get_prudential_fund_data(
             f"HTTP {response.status}"
         )
 
-    data = response.json()
+    data = await response.json()
 
     if (
         not isinstance(data, list)
@@ -728,15 +1043,15 @@ def get_prudential_fund_data(
 # PRUACCESS FUND OPTIONS
 # ============================================================
 
-def get_fund_options(
-    page,
+async def get_fund_options(
+    page: Page,
 ) -> list[dict]:
 
     options = page.locator(
         "#fundName option"
     )
 
-    count = options.count()
+    count = await options.count()
 
     print(
         f"\nPruAccess fund options found: "
@@ -757,11 +1072,11 @@ def get_fund_options(
             {
                 "text":
                     clean_text(
-                        option.inner_text()
+                        await option.inner_text()
                     ),
 
                 "value":
-                    option.get_attribute(
+                    await option.get_attribute(
                         "value"
                     ),
             }
@@ -771,7 +1086,7 @@ def get_fund_options(
 
 
 # ============================================================
-# PRUACCESS EXACT MATCH
+# EXACT PRUACCESS MATCH
 # ============================================================
 
 def find_exact_pruaccess_match(
@@ -830,8 +1145,8 @@ def find_exact_pruaccess_match(
 # READONLY DATE INPUT
 # ============================================================
 
-def set_readonly_input_value(
-    page,
+async def set_readonly_input_value(
+    page: Page,
     selector: str,
     value: str,
 ) -> None:
@@ -840,14 +1155,14 @@ def set_readonly_input_value(
         selector
     )
 
-    if locator.count() == 0:
+    if await locator.count() == 0:
 
         raise RuntimeError(
             f"Could not find input: "
             f"{selector}"
         )
 
-    locator.evaluate(
+    await locator.evaluate(
         """
         (element, value) => {
             element.value = value;
@@ -868,7 +1183,7 @@ def set_readonly_input_value(
         value,
     )
 
-    actual = locator.input_value()
+    actual = await locator.input_value()
 
     if actual != value:
 
@@ -907,6 +1222,7 @@ def extract_price_rows_from_html(
             )
 
             if len(cells) < 2:
+
                 continue
 
             values = [
@@ -920,6 +1236,7 @@ def extract_price_rows_from_html(
             ]
 
             if len(values) < 2:
+
                 continue
 
             date_value = values[0]
@@ -928,6 +1245,7 @@ def extract_price_rows_from_html(
                 r"^\d{1,2}-[A-Za-z]{3}-\d{4}$",
                 date_value,
             ):
+
                 continue
 
             bid_value = values[1]
@@ -936,6 +1254,18 @@ def extract_price_rows_from_html(
                 r"^\d+(?:\.\d+)?$",
                 bid_value,
             ):
+
+                continue
+
+            # Verify the date can actually be parsed.
+            try:
+
+                parse_pruaccess_date(
+                    date_value
+                )
+
+            except ValueError:
+
                 continue
 
             rows.append(
@@ -976,6 +1306,7 @@ def discover_max_page(
         )
 
         if not href:
+
             continue
 
         matches = re.findall(
@@ -995,8 +1326,6 @@ def discover_max_page(
 
                 continue
 
-    # Some versions of the site may expose
-    # page numbers in plain text rather than links.
     text = soup.get_text(
         " ",
         strip=True,
@@ -1059,10 +1388,41 @@ def build_page_url(
 
 
 # ============================================================
-# DIRECT HTTP PAGINATION REQUEST
+# RESPONSE VALIDATION
 # ============================================================
 
-def request_page_html(
+def validate_pagination_html(
+    html: str,
+    page_number: int,
+) -> None:
+
+    if not html:
+
+        raise RuntimeError(
+            f"Page {page_number} returned "
+            "an empty HTTP response."
+        )
+
+    if (
+        "PruLink Fund Price Table"
+        not in html
+        and
+        "Fund Performance"
+        not in html
+    ):
+
+        raise RuntimeError(
+            f"Page {page_number} response does not "
+            "appear to be a PruAccess fund-performance "
+            "page."
+        )
+
+
+# ============================================================
+# ASYNC HTTP PAGE RETRIEVAL
+# ============================================================
+
+async def request_page_html(
     request_context,
     url: str,
     page_number: int,
@@ -1076,13 +1436,13 @@ def request_page_html(
     ):
 
         print(
-            f"  HTTP page {page_number} "
+            f"    HTTP page {page_number} "
             f"attempt {attempt}/{PAGE_RETRY_COUNT}"
         )
 
         try:
 
-            response = request_context.get(
+            response = await request_context.get(
                 url,
                 timeout=PAGE_TIMEOUT_MS,
                 fail_on_status_code=False,
@@ -1096,29 +1456,12 @@ def request_page_html(
                     f"HTTP {status}"
                 )
 
-            html = response.text()
+            html = await response.text()
 
-            if not html:
-
-                raise RuntimeError(
-                    "Empty HTTP response"
-                )
-
-            # Verify that this is actually a
-            # PruAccess fund-performance page.
-            if (
-                "PruLink Fund Price Table"
-                not in html
-                and
-                "Fund Performance"
-                not in html
-            ):
-
-                raise RuntimeError(
-                    "Response does not appear "
-                    "to be a PruAccess fund "
-                    "performance page."
-                )
+            validate_pagination_html(
+                html,
+                page_number,
+            )
 
             return (
                 html,
@@ -1130,19 +1473,19 @@ def request_page_html(
             last_error = error
 
             print(
-                f"  Page {page_number} failed: "
+                f"    Page {page_number} failed: "
                 f"{clean_text(str(error))}"
             )
 
             if attempt < PAGE_RETRY_COUNT:
 
                 print(
-                    f"  Waiting "
+                    f"    Waiting "
                     f"{PAGE_RETRY_DELAY_SECONDS}s "
                     f"before retry..."
                 )
 
-                time.sleep(
+                await asyncio.sleep(
                     PAGE_RETRY_DELAY_SECONDS
                 )
 
@@ -1155,10 +1498,117 @@ def request_page_html(
 
 
 # ============================================================
-# FULL PAGINATION EXTRACTION
+# PARALLEL PAGE RETRIEVAL
 # ============================================================
 
-def extract_all_pages(
+async def fetch_pages_parallel(
+    request_context,
+    page_jobs: list[tuple[int, str]],
+) -> dict[int, dict]:
+
+    """
+    Retrieve pagination pages concurrently.
+
+    A permanently failed page raises an exception.
+
+    The caller therefore cannot accidentally publish a
+    partially retrieved window.
+    """
+
+    semaphore = asyncio.Semaphore(
+        PARALLEL_PAGE_WORKERS
+    )
+
+    async def fetch_one(
+        page_number: int,
+        url: str,
+    ):
+
+        async with semaphore:
+
+            html, status = (
+                await request_page_html(
+                    request_context,
+                    url,
+                    page_number,
+                )
+            )
+
+            rows = extract_price_rows_from_html(
+                html
+            )
+
+            if not rows:
+
+                raise RuntimeError(
+                    f"Expected PruAccess page "
+                    f"{page_number} but it returned "
+                    "zero BID observations."
+                )
+
+            return (
+                page_number,
+                {
+                    "html":
+                        html,
+
+                    "status":
+                        status,
+
+                    "rows":
+                        rows,
+
+                    "url":
+                        url,
+                },
+            )
+
+    tasks = [
+        asyncio.create_task(
+            fetch_one(
+                page_number,
+                url,
+            )
+        )
+        for page_number, url
+        in page_jobs
+    ]
+
+    try:
+
+        results = await asyncio.gather(
+            *tasks
+        )
+
+    except Exception:
+
+        for task in tasks:
+
+            if not task.done():
+
+                task.cancel()
+
+        await asyncio.gather(
+            *tasks,
+            return_exceptions=True,
+        )
+
+        raise
+
+    return {
+        page_number:
+            data
+
+        for page_number, data
+        in results
+    }
+
+
+# ============================================================
+# FIRST PAGE + COMPLETE PAGINATION
+# ============================================================
+
+async def extract_all_pages(
     request_context,
     fund_id: str,
     start_date: str,
@@ -1170,7 +1620,15 @@ def extract_all_pages(
     )
 
     print(
-        "STARTING DIRECT HTTP PRUACCESS PAGINATION"
+        "STARTING PRUACCESS PAGINATION WINDOW"
+    )
+
+    print(
+        f"Fund ID: {fund_id}"
+    )
+
+    print(
+        f"Date range: {start_date} -> {end_date}"
     )
 
     print(
@@ -1186,8 +1644,13 @@ def extract_all_pages(
         1,
     )
 
+    # --------------------------------------------------------
+    # Page 1 is requested first because it tells us the
+    # expected pagination count.
+    # --------------------------------------------------------
+
     first_html, first_status = (
-        request_page_html(
+        await request_page_html(
             request_context,
             first_url,
             1,
@@ -1222,6 +1685,38 @@ def extract_all_pages(
         f"Discovered maximum page: "
         f"{discovered_max_page}"
     )
+
+    # --------------------------------------------------------
+    # Determine final page.
+    # --------------------------------------------------------
+
+    if discovered_max_page is not None:
+
+        if discovered_max_page > MAX_PAGES:
+
+            raise RuntimeError(
+                f"PruAccess reports "
+                f"{discovered_max_page} pages, "
+                f"which exceeds MAX_PAGES="
+                f"{MAX_PAGES}."
+            )
+
+        max_page = discovered_max_page
+
+    else:
+
+        if len(first_rows) < PAGE_SIZE:
+
+            max_page = 1
+
+        else:
+
+            # We do not accept an unknown pagination state
+            # that could potentially exceed MAX_PAGES.
+            #
+            # We probe sequentially until a partial page is
+            # found, but every page must still be successful.
+            max_page = None
 
     page_diagnostics = []
 
@@ -1260,185 +1755,151 @@ def extract_all_pages(
         first_rows
     )
 
-    # --------------------------------------------------------
-    # If page 1 is already a partial page and no explicit
-    # pagination says otherwise, page 1 is the final page.
-    # --------------------------------------------------------
+    # ========================================================
+    # CASE A:
+    # Explicit page count
+    # ========================================================
 
-    if (
-        discovered_max_page is None
-        and len(first_rows) < PAGE_SIZE
-    ):
+    if max_page is not None:
 
-        max_page = 1
+        remaining_jobs = []
 
-    elif discovered_max_page is not None:
+        for page_number in range(
+            2,
+            max_page + 1,
+        ):
 
-        max_page = min(
-            discovered_max_page,
-            MAX_PAGES,
-        )
-
-    else:
-
-        max_page = MAX_PAGES
-
-    # --------------------------------------------------------
-    # Fetch remaining pages.
-    # --------------------------------------------------------
-
-    for page_number in range(
-        2,
-        max_page + 1,
-    ):
-
-        url = build_page_url(
-            PRUACCESS_URL,
-            fund_id,
-            "TBL",
-            start_date,
-            end_date,
-            page_number,
-        )
-
-        print(
-            f"\nFetching page "
-            f"{page_number}/{max_page}"
-        )
-
-        html, status = request_page_html(
-            request_context,
-            url,
-            page_number,
-        )
-
-        rows = extract_price_rows_from_html(
-            html
-        )
-
-        print(
-            f"  Rows found: "
-            f"{len(rows)}"
-        )
-
-        # ----------------------------------------------------
-        # Empty pages are NOT automatically accepted.
-        # request_page_html already retried the request.
-        # ----------------------------------------------------
-
-        if not rows:
-
-            # If we already know the page count,
-            # an empty expected page is a failure.
-            if (
-                discovered_max_page is not None
-                and page_number <= discovered_max_page
-            ):
-
-                raise RuntimeError(
-                    f"Expected PruAccess page "
-                    f"{page_number} but it returned "
-                    f"zero BID observations."
-                )
-
-            # Otherwise this marks the end.
-            page_diagnostics.append(
-                {
-                    "page":
-                        page_number,
-
-                    "url":
-                        url,
-
-                    "httpStatus":
-                        status,
-
-                    "rowCount":
-                        0,
-
-                    "status":
-                        "empty",
-                }
+            url = build_page_url(
+                PRUACCESS_URL,
+                fund_id,
+                "TBL",
+                start_date,
+                end_date,
+                page_number,
             )
 
-            break
-
-        page_diagnostics.append(
-            {
-                "page":
+            remaining_jobs.append(
+                (
                     page_number,
-
-                "url":
                     url,
+                )
+            )
 
-                "httpStatus":
-                    status,
-
-                "rowCount":
-                    len(rows),
-
-                "firstDate":
-                    rows[0]["date"],
-
-                "lastDate":
-                    rows[-1]["date"],
-
-                "status":
-                    "success",
-            }
-        )
-
-        all_rows.extend(
-            rows
-        )
-
-        print(
-            f"  Date range: "
-            f"{rows[0]['date']} "
-            f"-> "
-            f"{rows[-1]['date']}"
-        )
-
-        # ----------------------------------------------------
-        # If no explicit page count exists, a partial page
-        # ends pagination.
-        # ----------------------------------------------------
-
-        if (
-            discovered_max_page is None
-            and len(rows) < PAGE_SIZE
-        ):
+        if remaining_jobs:
 
             print(
-                "\nFinal partial page detected."
+                "\nParallel page retrieval:"
             )
 
-            break
-
-    else:
-
-        if (
-            discovered_max_page is None
-            and max_page == MAX_PAGES
-        ):
-
-            raise RuntimeError(
-                "Pagination reached MAX_PAGES "
-                f"({MAX_PAGES}) without determining "
-                "the final page."
+            print(
+                f"  Pages: "
+                f"2-{max_page}"
             )
 
-    # --------------------------------------------------------
-    # If pagination explicitly told us N pages exist,
-    # make absolutely sure every page was fetched.
-    # --------------------------------------------------------
+            print(
+                f"  Workers: "
+                f"{PARALLEL_PAGE_WORKERS}"
+            )
 
-    if discovered_max_page is not None:
+            page_results = (
+                await fetch_pages_parallel(
+                    request_context,
+                    remaining_jobs,
+                )
+            )
+
+            # ------------------------------------------------
+            # Validate EVERY expected page.
+            # ------------------------------------------------
+
+            expected_pages = set(
+                range(
+                    1,
+                    max_page + 1,
+                )
+            )
+
+            actual_pages = set(
+                page_results.keys()
+            )
+
+            actual_pages.add(
+                1
+            )
+
+            missing_pages = sorted(
+                expected_pages
+                - actual_pages
+            )
+
+            if missing_pages:
+
+                raise RuntimeError(
+                    "Pagination incomplete. "
+                    f"Missing pages: "
+                    f"{missing_pages}"
+                )
+
+            # ------------------------------------------------
+            # Preserve chronological page ordering as
+            # returned by PruAccess.
+            # ------------------------------------------------
+
+            for page_number in range(
+                2,
+                max_page + 1,
+            ):
+
+                result = page_results[
+                    page_number
+                ]
+
+                rows = result[
+                    "rows"
+                ]
+
+                url = result[
+                    "url"
+                ]
+
+                status = result[
+                    "status"
+                ]
+
+                page_diagnostics.append(
+                    {
+                        "page":
+                            page_number,
+
+                        "url":
+                            url,
+
+                        "httpStatus":
+                            status,
+
+                        "rowCount":
+                            len(rows),
+
+                        "firstDate":
+                            rows[0]["date"],
+
+                        "lastDate":
+                            rows[-1]["date"],
+
+                        "status":
+                            "success",
+                    }
+                )
+
+                all_rows.extend(
+                    rows
+                )
 
         successful_pages = {
             item["page"]
             for item in page_diagnostics
-            if item.get("status") == "success"
+            if item.get("status")
+            == "success"
         }
 
         expected_pages = set(
@@ -1456,24 +1917,151 @@ def extract_all_pages(
         if missing_pages:
 
             raise RuntimeError(
-                "Pagination incomplete. "
-                f"Missing pages: {missing_pages}"
+                "Complete pagination validation "
+                "failed. Missing pages: "
+                f"{missing_pages}"
             )
 
-    # --------------------------------------------------------
+    # ========================================================
+    # CASE B:
+    # No explicit page count.
+    #
+    # We must continue until a short page is found.
+    # These pages cannot be parallelized safely because the
+    # termination condition is not known until each page is
+    # inspected.
+    # ========================================================
+
+    else:
+
+        current_page = 2
+
+        while True:
+
+            if current_page > MAX_PAGES:
+
+                raise RuntimeError(
+                    "Pagination reached MAX_PAGES "
+                    f"({MAX_PAGES}) without determining "
+                    "the final page."
+                )
+
+            url = build_page_url(
+                PRUACCESS_URL,
+                fund_id,
+                "TBL",
+                start_date,
+                end_date,
+                current_page,
+            )
+
+            print(
+                f"\nFetching page "
+                f"{current_page}"
+            )
+
+            html, status = (
+                await request_page_html(
+                    request_context,
+                    url,
+                    current_page,
+                )
+            )
+
+            rows = extract_price_rows_from_html(
+                html
+            )
+
+            if not rows:
+
+                raise RuntimeError(
+                    f"PruAccess page "
+                    f"{current_page} returned "
+                    "zero BID observations."
+                )
+
+            page_diagnostics.append(
+                {
+                    "page":
+                        current_page,
+
+                    "url":
+                        url,
+
+                    "httpStatus":
+                        status,
+
+                    "rowCount":
+                        len(rows),
+
+                    "firstDate":
+                        rows[0]["date"],
+
+                    "lastDate":
+                        rows[-1]["date"],
+
+                    "status":
+                        "success",
+                }
+            )
+
+            all_rows.extend(
+                rows
+            )
+
+            if len(rows) < PAGE_SIZE:
+
+                print(
+                    "\nFinal partial page detected."
+                )
+
+                break
+
+            current_page += 1
+
+    # ========================================================
+    # FINAL PAGE SEQUENCE VALIDATION
+    # ========================================================
+
+    page_diagnostics.sort(
+        key=lambda item:
+            item["page"]
+    )
+
+    actual_pages = [
+        item["page"]
+        for item in page_diagnostics
+        if item.get("status")
+        == "success"
+    ]
+
+    expected_pages = list(
+        range(
+            1,
+            len(page_diagnostics) + 1,
+        )
+    )
+
+    if actual_pages != expected_pages:
+
+        raise RuntimeError(
+            "Pagination page sequence is "
+            "incomplete or out of order."
+        )
+
+    # ========================================================
     # IMPORTANT:
     #
-    # Do NOT silently deduplicate here.
+    # DO NOT DEDUPLICATE.
     #
-    # The raw observations are preserved so the validator can
-    # detect duplicates.
-    # --------------------------------------------------------
+    # Duplicates are intentionally preserved so validation
+    # can detect them.
+    # ========================================================
 
     def sort_date(row):
 
-        return datetime.strptime(
-            row["date"],
-            "%d-%b-%Y",
+        return parse_pruaccess_date(
+            row["date"]
         )
 
     final_rows = sorted(
@@ -1489,11 +2077,11 @@ def extract_all_pages(
 
 
 # ============================================================
-# SUBMIT PRUACCESS FORM
+# SUBMIT PRUACCESS SEARCH
 # ============================================================
 
-def submit_pruaccess_search(
-    page,
+async def submit_pruaccess_search(
+    page: Page,
     fund_id: str,
     start_date: str,
     end_date: str,
@@ -1503,13 +2091,13 @@ def submit_pruaccess_search(
         "\n=== Opening PruAccess ==="
     )
 
-    page.goto(
+    await page.goto(
         PRUACCESS_URL,
         wait_until="domcontentloaded",
         timeout=INITIAL_PAGE_TIMEOUT_MS,
     )
 
-    page.wait_for_timeout(
+    await page.wait_for_timeout(
         PRUACCESS_INITIAL_WAIT_MS
     )
 
@@ -1521,14 +2109,14 @@ def submit_pruaccess_search(
         "#fundName"
     )
 
-    if fund_selector.count() == 0:
+    if await fund_selector.count() == 0:
 
         raise RuntimeError(
             "PruAccess #fundName "
             "selector not found."
         )
 
-    fund_selector.select_option(
+    await fund_selector.select_option(
         fund_id
     )
 
@@ -1540,14 +2128,14 @@ def submit_pruaccess_search(
         "#viewType"
     )
 
-    if view_selector.count() == 0:
+    if await view_selector.count() == 0:
 
         raise RuntimeError(
             "PruAccess #viewType "
             "selector not found."
         )
 
-    view_selector.select_option(
+    await view_selector.select_option(
         "TBL"
     )
 
@@ -1561,15 +2149,23 @@ def submit_pruaccess_search(
         "#fundPriceType"
     )
 
-    if fund_price_type.count():
+    if await fund_price_type.count():
 
         fund_price_type_value = (
-            fund_price_type.input_value()
+            await fund_price_type.input_value()
+        )
+
+        fund_price_type_label = clean_text(
+            await fund_price_type.locator(
+                "option:checked"
+            ).inner_text()
         )
 
     else:
 
         fund_price_type_value = None
+
+        fund_price_type_label = None
 
     print(
         "\nFund Price Type:"
@@ -1577,6 +2173,7 @@ def submit_pruaccess_search(
 
     print(
         f"{fund_price_type_value} "
+        f"| {fund_price_type_label} "
         "(left untouched)"
     )
 
@@ -1584,13 +2181,13 @@ def submit_pruaccess_search(
     # Dates
     # --------------------------------------------------------
 
-    set_readonly_input_value(
+    await set_readonly_input_value(
         page,
         'input[name="startDate"]',
         start_date,
     )
 
-    set_readonly_input_value(
+    await set_readonly_input_value(
         page,
         'input[name="endDate"]',
         end_date,
@@ -1604,13 +2201,13 @@ def submit_pruaccess_search(
         'input[name="_csrf"]'
     )
 
-    if csrf.count() == 0:
+    if await csrf.count() == 0:
 
         raise RuntimeError(
             "PruAccess CSRF input not found."
         )
 
-    csrf_value = csrf.input_value()
+    csrf_value = await csrf.input_value()
 
     if not csrf_value:
 
@@ -1619,14 +2216,14 @@ def submit_pruaccess_search(
         )
 
     # --------------------------------------------------------
-    # Verify
+    # Verify dates before submit.
     # --------------------------------------------------------
 
-    actual_start = page.locator(
+    actual_start = await page.locator(
         'input[name="startDate"]'
     ).input_value()
 
-    actual_end = page.locator(
+    actual_end = await page.locator(
         'input[name="endDate"]'
     ).input_value()
 
@@ -1643,17 +2240,55 @@ def submit_pruaccess_search(
         )
 
     # --------------------------------------------------------
+    # Verify window length.
+    # --------------------------------------------------------
+
+    start_parsed = parse_pruaccess_date(
+        start_date
+    )
+
+    end_parsed = parse_pruaccess_date(
+        end_date
+    )
+
+    if (
+        end_parsed
+        < start_parsed
+    ):
+
+        raise RuntimeError(
+            "PruAccess window has an end date "
+            "before its start date."
+        )
+
+    max_allowed_end = (
+        add_calendar_years(
+            start_parsed,
+            MAX_WINDOW_YEARS,
+        )
+        - timedelta(days=1)
+    )
+
+    if end_parsed > max_allowed_end:
+
+        raise RuntimeError(
+            "PruAccess date window exceeds "
+            "the configured 10-year limit: "
+            f"{start_date} -> {end_date}"
+        )
+
+    # --------------------------------------------------------
     # Submit.
     #
-    # We intentionally use the form's normal submit.
-    # This establishes the PruAccess session/cookies.
+    # Normal form submission establishes the PruAccess
+    # session/cookies.
     # --------------------------------------------------------
 
     print(
         "\n=== Submitting PruAccess form ==="
     )
 
-    page.locator(
+    await page.locator(
         "#fundForm"
     ).evaluate(
         """
@@ -1663,21 +2298,21 @@ def submit_pruaccess_search(
         """
     )
 
-    page.wait_for_load_state(
+    await page.wait_for_load_state(
         "domcontentloaded",
         timeout=INITIAL_PAGE_TIMEOUT_MS,
     )
 
-    page.wait_for_timeout(
+    await page.wait_for_timeout(
         PRUACCESS_RESULT_WAIT_MS
     )
 
     # --------------------------------------------------------
-    # Verify that the resulting page contains the table.
+    # Verify result.
     # --------------------------------------------------------
 
     result_text = clean_text(
-        page.locator(
+        await page.locator(
             "body"
         ).inner_text()
     )
@@ -1695,6 +2330,9 @@ def submit_pruaccess_search(
     return {
         "fundPriceType":
             fund_price_type_value,
+
+        "fundPriceTypeLabel":
+            fund_price_type_label,
 
         "csrfPresent":
             bool(csrf_value),
@@ -1714,12 +2352,469 @@ def submit_pruaccess_search(
 
 
 # ============================================================
+# DUPLICATE VALIDATION
+# ============================================================
+
+def find_duplicate_dates(
+    observations: list[dict],
+) -> list[dict]:
+
+    by_date = {}
+
+    for observation in observations:
+
+        observation_date = clean_text(
+            observation.get(
+                "date"
+            )
+        )
+
+        by_date.setdefault(
+            observation_date,
+            [],
+        ).append(
+            observation
+        )
+
+    duplicates = []
+
+    for observation_date, rows in by_date.items():
+
+        if len(rows) > 1:
+
+            duplicates.append(
+                {
+                    "date":
+                        observation_date,
+
+                    "count":
+                        len(rows),
+
+                    "observations":
+                        rows,
+                }
+            )
+
+    duplicates.sort(
+        key=lambda item:
+            parse_pruaccess_date(
+                item["date"]
+            )
+    )
+
+    return duplicates
+
+
+# ============================================================
+# CHRONOLOGICAL RECONSTRUCTION
+# ============================================================
+
+def reconstruct_history(
+    window_results: list[dict],
+) -> tuple[list[dict], list[dict]]:
+
+    """
+    Combine all successfully retrieved windows.
+
+    No observations are removed.
+
+    Returns:
+        chronological_history
+        duplicate_dates
+    """
+
+    all_rows = []
+
+    for window_result in window_results:
+
+        all_rows.extend(
+            window_result[
+                "observations"
+            ]
+        )
+
+    if not all_rows:
+
+        raise RuntimeError(
+            "No historical observations exist "
+            "after window reconstruction."
+        )
+
+    duplicates = find_duplicate_dates(
+        all_rows
+    )
+
+    # --------------------------------------------------------
+    # Preserve every raw observation.
+    #
+    # Sort chronologically.
+    # --------------------------------------------------------
+
+    chronological = sorted(
+        all_rows,
+        key=lambda row:
+            parse_pruaccess_date(
+                row["date"]
+            )
+    )
+
+    return (
+        chronological,
+        duplicates,
+    )
+
+
+# ============================================================
+# FULL-HISTORY VALIDATION
+# ============================================================
+
+def validate_full_history_to_inception(
+    historical_rows: list[dict],
+    inception_date: date,
+    end_date: date,
+    duplicate_dates: list[dict],
+) -> dict:
+
+    if not historical_rows:
+
+        raise RuntimeError(
+            "Historical BID history is empty."
+        )
+
+    # --------------------------------------------------------
+    # Duplicate validation.
+    # --------------------------------------------------------
+
+    if duplicate_dates:
+
+        duplicate_dates_text = ", ".join(
+            item["date"]
+            for item in duplicate_dates
+        )
+
+        raise RuntimeError(
+            "Duplicate historical BID observations "
+            "detected for date(s): "
+            f"{duplicate_dates_text}"
+        )
+
+    # --------------------------------------------------------
+    # Parse all dates.
+    # --------------------------------------------------------
+
+    parsed_dates = []
+
+    for row in historical_rows:
+
+        try:
+
+            parsed_dates.append(
+                parse_pruaccess_date(
+                    row["date"]
+                )
+            )
+
+        except Exception as error:
+
+            raise RuntimeError(
+                "Invalid historical BID date: "
+                f"{row.get('date')}"
+            ) from error
+
+    oldest_date = min(
+        parsed_dates
+    )
+
+    newest_date = max(
+        parsed_dates
+    )
+
+    # --------------------------------------------------------
+    # The oldest observation must be:
+    #
+    # inception date
+    # OR
+    # inception date + 1 calendar day
+    #
+    # Date gaps are otherwise allowed.
+    # --------------------------------------------------------
+
+    latest_allowed_oldest_date = (
+        inception_date
+        + timedelta(days=1)
+    )
+
+    if oldest_date < inception_date:
+
+        raise RuntimeError(
+            "Historical PruAccess data contains "
+            "an observation earlier than the "
+            "official Prudential inception date. "
+            f"Inception={format_pruaccess_date(inception_date)}, "
+            f"oldest={format_pruaccess_date(oldest_date)}"
+        )
+
+    if oldest_date > latest_allowed_oldest_date:
+
+        raise RuntimeError(
+            "Historical PruAccess data does not "
+            "reach the Prudential inception date "
+            "within the permitted +1 calendar day. "
+            f"Inception="
+            f"{format_pruaccess_date(inception_date)}, "
+            f"oldest="
+            f"{format_pruaccess_date(oldest_date)}"
+        )
+
+    # --------------------------------------------------------
+    # Newest historical observation must not be after the
+    # requested Singapore end date.
+    # --------------------------------------------------------
+
+    if newest_date > end_date:
+
+        raise RuntimeError(
+            "Historical PruAccess data contains "
+            "an observation later than the requested "
+            f"end date {format_pruaccess_date(end_date)}."
+        )
+
+    # --------------------------------------------------------
+    # Chronological ordering.
+    # --------------------------------------------------------
+
+    for index in range(
+        1,
+        len(parsed_dates),
+    ):
+
+        if (
+            parsed_dates[index]
+            < parsed_dates[index - 1]
+        ):
+
+            raise RuntimeError(
+                "Historical BID reconstruction "
+                "is not chronological."
+            )
+
+    # --------------------------------------------------------
+    # Date gaps are deliberately NOT treated as errors.
+    # --------------------------------------------------------
+
+    date_gaps = []
+
+    for index in range(
+        1,
+        len(parsed_dates),
+    ):
+
+        previous_date = parsed_dates[
+            index - 1
+        ]
+
+        current_date = parsed_dates[
+            index
+        ]
+
+        gap_days = (
+            current_date
+            - previous_date
+        ).days
+
+        if gap_days > 1:
+
+            date_gaps.append(
+                {
+                    "fromDate":
+                        format_pruaccess_date(
+                            previous_date
+                        ),
+
+                    "toDate":
+                        format_pruaccess_date(
+                            current_date
+                        ),
+
+                    "missingCalendarDays":
+                        gap_days - 1,
+                }
+            )
+
+    return {
+        "status":
+            "passed",
+
+        "inceptionDate":
+            format_pruaccess_date(
+                inception_date
+            ),
+
+        "oldestHistoricalDate":
+            format_pruaccess_date(
+                oldest_date
+            ),
+
+        "newestHistoricalDate":
+            format_pruaccess_date(
+                newest_date
+            ),
+
+        "allowedLatestOldestDate":
+            format_pruaccess_date(
+                latest_allowed_oldest_date
+            ),
+
+        "inceptionCoverage":
+            (
+                "exact"
+                if oldest_date == inception_date
+                else "inception+1-day"
+            ),
+
+        "observationCount":
+            len(
+                historical_rows
+            ),
+
+        "duplicateDateCount":
+            len(
+                duplicate_dates
+            ),
+
+        "dateGapCount":
+            len(
+                date_gaps
+            ),
+
+        "dateGaps":
+            date_gaps,
+    }
+
+
+# ============================================================
+# WINDOW VALIDATION
+# ============================================================
+
+def validate_window_coverage(
+    window: dict,
+    observations: list[dict],
+) -> dict:
+
+    if not observations:
+
+        raise RuntimeError(
+            f"Window {window['windowNumber']} "
+            "contains no observations."
+        )
+
+    window_start = window[
+        "startDate"
+    ]
+
+    window_end = window[
+        "endDate"
+    ]
+
+    parsed_dates = []
+
+    for observation in observations:
+
+        observation_date = (
+            parse_pruaccess_date(
+                observation["date"]
+            )
+        )
+
+        if observation_date < window_start:
+
+            raise RuntimeError(
+                f"Window {window['windowNumber']} "
+                "contains an observation before "
+                "its requested start date: "
+                f"{observation['date']}"
+            )
+
+        if observation_date > window_end:
+
+            raise RuntimeError(
+                f"Window {window['windowNumber']} "
+                "contains an observation after "
+                "its requested end date: "
+                f"{observation['date']}"
+            )
+
+        parsed_dates.append(
+            observation_date
+        )
+
+    # --------------------------------------------------------
+    # Duplicate detection within the window.
+    # --------------------------------------------------------
+
+    duplicate_dates = (
+        find_duplicate_dates(
+            observations
+        )
+    )
+
+    if duplicate_dates:
+
+        dates = ", ".join(
+            item["date"]
+            for item in duplicate_dates
+        )
+
+        raise RuntimeError(
+            f"Window {window['windowNumber']} "
+            "contains duplicate historical "
+            f"BID dates: {dates}"
+        )
+
+    return {
+        "status":
+            "passed",
+
+        "windowNumber":
+            window["windowNumber"],
+
+        "requestedStartDate":
+            window["startDateText"],
+
+        "requestedEndDate":
+            window["endDateText"],
+
+        "oldestObservation":
+            min(
+                parsed_dates
+            ).strftime(
+                "%d-%b-%Y"
+            ),
+
+        "newestObservation":
+            max(
+                parsed_dates
+            ).strftime(
+                "%d-%b-%Y"
+            ),
+
+        "observationCount":
+            len(
+                observations
+            ),
+
+        "duplicateDateCount":
+            0,
+    }
+
+
+# ============================================================
 # SINGLE FUND EXTRACTION
 # ============================================================
 
-def extract_single_fund(
-    context,
-    page,
+async def extract_single_fund(
+    context: BrowserContext,
+    page: Page,
     excel_fund: dict,
     pruaccess_options: list[dict],
 ) -> dict:
@@ -1754,7 +2849,7 @@ def extract_single_fund(
     # ========================================================
 
     prudential = (
-        get_prudential_fund_data(
+        await get_prudential_fund_data(
             page,
             prudential_url,
         )
@@ -1789,23 +2884,57 @@ def extract_single_fund(
     )
 
     # ========================================================
-    # DATE RANGE
+    # DATES
     # ========================================================
 
-    inception_date = parse_prudential_date(
-        prudential["inceptionDate"]
+    inception_datetime = (
+        parse_prudential_date(
+            prudential["inceptionDate"]
+        )
     )
 
-    start_date = pruaccess_date(
-        inception_date
+    inception_date = (
+        inception_datetime.date()
     )
 
     end_date = singapore_today()
 
     print(
-        f"\nPruAccess date range: "
-        f"{start_date} -> {end_date}"
+        "\nHistorical extraction:"
     )
+
+    print(
+        f"Inception: "
+        f"{format_pruaccess_date(inception_date)}"
+    )
+
+    print(
+        f"End: "
+        f"{format_pruaccess_date(end_date)}"
+    )
+
+    # ========================================================
+    # AUTOMATIC DATE WINDOWS
+    # ========================================================
+
+    windows = build_date_windows(
+        inception_date,
+        end_date,
+    )
+
+    print(
+        f"\nPruAccess windows required: "
+        f"{len(windows)}"
+    )
+
+    for window in windows:
+
+        print(
+            f"  Window {window['windowNumber']}: "
+            f"{window['startDateText']} -> "
+            f"{window['endDateText']} "
+            f"({window['calendarDays']} calendar days)"
+        )
 
     # ========================================================
     # EXACT PRUACCESS MATCH
@@ -1840,94 +2969,273 @@ def extract_single_fund(
     )
 
     # ========================================================
-    # SUBMIT SEARCH
+    # WINDOW EXTRACTION
     # ========================================================
 
-    pre_submit = submit_pruaccess_search(
-        page,
-        fund_id,
-        start_date,
-        end_date,
-    )
+    window_results = []
 
-    pre_submit.update(
-        {
-            "excelRow":
-                excel_row,
+    window_diagnostics = []
 
-            "prudentialUrl":
-                prudential_url,
+    request_context = context.request
 
-            "excelPruAccessName":
-                excel_pruaccess_name,
+    for window in windows:
 
-            "matchedPruAccessName":
-                selected["text"],
+        window_number = window[
+            "windowNumber"
+        ]
 
-            "matchedPruAccessValue":
-                selected["value"],
+        start_date = window[
+            "startDateText"
+        ]
+
+        end_date_text = window[
+            "endDateText"
+        ]
+
+        print(
+            "\n\n"
+            "------------------------------------------------------------"
+        )
+
+        print(
+            f"WINDOW {window_number} / "
+            f"{len(windows)}"
+        )
+
+        print(
+            f"{start_date} -> {end_date_text}"
+        )
+
+        print(
+            "------------------------------------------------------------"
+        )
+
+        # ----------------------------------------------------
+        # Establish PruAccess session for this window.
+        # ----------------------------------------------------
+
+        pre_submit = (
+            await submit_pruaccess_search(
+                page,
+                fund_id,
+                start_date,
+                end_date_text,
+            )
+        )
+
+        # ----------------------------------------------------
+        # Direct HTTP pagination using the same browser
+        # context session cookies.
+        # ----------------------------------------------------
+
+        observations, page_diagnostics = (
+            await extract_all_pages(
+                request_context,
+                fund_id,
+                start_date,
+                end_date_text,
+            )
+        )
+
+        # ----------------------------------------------------
+        # Window validation.
+        # ----------------------------------------------------
+
+        window_validation = (
+            validate_window_coverage(
+                window,
+                observations,
+            )
+        )
+
+        window_result = {
+            "windowNumber":
+                window_number,
+
+            "startDate":
+                start_date,
+
+            "endDate":
+                end_date_text,
+
+            "fundId":
+                fund_id,
+
+            "fundPriceType":
+                pre_submit.get(
+                    "fundPriceType"
+                ),
+
+            "fundPriceTypeLabel":
+                pre_submit.get(
+                    "fundPriceTypeLabel"
+                ),
+
+            "historicalPriceType":
+                "BID",
+
+            "pageSize":
+                PAGE_SIZE,
+
+            "pagesExtracted":
+                len(
+                    page_diagnostics
+                ),
+
+            "observationCount":
+                len(
+                    observations
+                ),
+
+            "observations":
+                observations,
+
+            "pagination":
+                page_diagnostics,
+
+            "validation":
+                window_validation,
         }
+
+        window_results.append(
+            window_result
+        )
+
+        window_diagnostics.append(
+            {
+                "windowNumber":
+                    window_number,
+
+                "startDate":
+                    start_date,
+
+                "endDate":
+                    end_date_text,
+
+                "pagesExtracted":
+                    len(
+                        page_diagnostics
+                    ),
+
+                "observationCount":
+                    len(
+                        observations
+                    ),
+
+                "oldestObservation":
+                    window_validation[
+                        "oldestObservation"
+                    ],
+
+                "newestObservation":
+                    window_validation[
+                        "newestObservation"
+                    ],
+
+                "status":
+                    "success",
+            }
+        )
+
+        print(
+            f"\nWINDOW {window_number} SUCCESS"
+        )
+
+        print(
+            f"Pages: "
+            f"{len(page_diagnostics)}"
+        )
+
+        print(
+            f"Observations: "
+            f"{len(observations)}"
+        )
+
+    # ========================================================
+    # CHRONOLOGICAL RECONSTRUCTION
+    # ========================================================
+
+    (
+        chronological_history,
+        duplicate_dates,
+    ) = reconstruct_history(
+        window_results
+    )
+
+    print(
+        "\n============================================================"
+    )
+
+    print(
+        "CHRONOLOGICAL RECONSTRUCTION"
+    )
+
+    print(
+        "============================================================"
+    )
+
+    print(
+        f"Total observations: "
+        f"{len(chronological_history)}"
+    )
+
+    print(
+        f"Duplicate dates: "
+        f"{len(duplicate_dates)}"
     )
 
     # ========================================================
-    # DIRECT HTTP PAGINATION
-    #
-    # Browser is no longer used for every historical page.
-    # The BrowserContext request context shares the browser
-    # session cookies.
+    # FULL HISTORY VALIDATION
     # ========================================================
 
-    historical_rows, page_diagnostics = (
-        extract_all_pages(
-            context.request,
-            fund_id,
-            start_date,
+    history_validation = (
+        validate_full_history_to_inception(
+            chronological_history,
+            inception_date,
             end_date,
+            duplicate_dates,
         )
     )
 
-    if not historical_rows:
-
-        raise RuntimeError(
-            "No historical BID observations "
-            "were extracted."
-        )
-
-    # ========================================================
-    # BASIC EXTRACTION INTEGRITY
-    # ========================================================
-
-    if (
-        page_diagnostics
-        and page_diagnostics[0]["page"] != 1
-    ):
-
-        raise RuntimeError(
-            "Pagination does not start at page 1."
-        )
-
-    expected_pages = list(
-        range(
-            1,
-            len(page_diagnostics) + 1,
-        )
+    print(
+        "\n============================================================"
     )
 
-    actual_pages = [
-        item["page"]
-        for item in page_diagnostics
-        if item.get("status") == "success"
-    ]
+    print(
+        "FULL-HISTORY VALIDATION PASSED"
+    )
 
-    if actual_pages != expected_pages:
+    print(
+        "============================================================"
+    )
 
-        raise RuntimeError(
-            "Pagination page sequence is incomplete "
-            "or out of order."
-        )
+    print(
+        f"Inception: "
+        f"{history_validation['inceptionDate']}"
+    )
+
+    print(
+        f"Oldest BID: "
+        f"{history_validation['oldestHistoricalDate']}"
+    )
+
+    print(
+        f"Newest BID: "
+        f"{history_validation['newestHistoricalDate']}"
+    )
+
+    print(
+        f"Inception coverage: "
+        f"{history_validation['inceptionCoverage']}"
+    )
+
+    print(
+        f"Date gaps: "
+        f"{history_validation['dateGapCount']}"
+    )
 
     # ========================================================
-    # BID HISTORY
+    # FINAL BID HISTORY
     # ========================================================
 
     bid_history = {
@@ -1957,10 +3265,14 @@ def extract_single_fund(
             ),
 
         "startDate":
-            start_date,
+            format_pruaccess_date(
+                inception_date
+            ),
 
         "endDate":
-            end_date,
+            format_pruaccess_date(
+                end_date
+            ),
 
         "priceType":
             "BID",
@@ -1968,13 +3280,18 @@ def extract_single_fund(
         "pageSize":
             PAGE_SIZE,
 
+        "windowCount":
+            len(
+                windows
+            ),
+
         "observationCount":
             len(
-                historical_rows
+                chronological_history
             ),
 
         "observations":
-            historical_rows,
+            chronological_history,
     }
 
     # ========================================================
@@ -2015,10 +3332,14 @@ def extract_single_fund(
             prudential["inceptionDate"],
 
         "startDate":
-            start_date,
+            format_pruaccess_date(
+                inception_date
+            ),
 
         "endDate":
-            end_date,
+            format_pruaccess_date(
+                end_date
+            ),
 
         "currentBidPrice":
             prudential.get(
@@ -2030,32 +3351,40 @@ def extract_single_fund(
                 "offerPrice"
             ),
 
-        "fundPriceType":
-            pre_submit.get(
-                "fundPriceType"
-            ),
-
         "historicalPriceType":
             "BID",
 
         "pageSize":
             PAGE_SIZE,
 
-        "pagesExtracted":
+        "windowCount":
             len(
-                page_diagnostics
+                windows
+            ),
+
+        "pagesExtracted":
+            sum(
+                item["pagesExtracted"]
+                for item
+                in window_diagnostics
             ),
 
         "historicalObservationCount":
             len(
-                historical_rows
+                chronological_history
             ),
 
         "newestObservation":
-            historical_rows[0],
+            chronological_history[-1],
 
         "oldestObservation":
-            historical_rows[-1],
+            chronological_history[0],
+
+        "inceptionValidation":
+            history_validation,
+
+        "windows":
+            window_diagnostics,
     }
 
     # ========================================================
@@ -2086,10 +3415,14 @@ def extract_single_fund(
                 fund_id,
 
             "startDate":
-                start_date,
+                format_pruaccess_date(
+                    inception_date
+                ),
 
             "endDate":
-                end_date,
+                format_pruaccess_date(
+                    end_date
+                ),
 
             "priceType":
                 "BID",
@@ -2097,20 +3430,31 @@ def extract_single_fund(
             "pageSize":
                 PAGE_SIZE,
 
+            "windowCount":
+                len(
+                    windows
+                ),
+
             "observationCount":
                 len(
-                    historical_rows
+                    chronological_history
                 ),
         },
 
+        "dateWindows":
+            windows,
+
+        "windowResults":
+            window_results,
+
+        "windowDiagnostics":
+            window_diagnostics,
+
+        "inceptionValidation":
+            history_validation,
+
         "summary":
             summary,
-
-        "preSubmit":
-            pre_submit,
-
-        "pagination":
-            page_diagnostics,
 
         "bidHistory":
             bid_history,
@@ -2151,8 +3495,6 @@ def save_successful_fund(
         )
     )
 
-    # Calculate the safe filename separately.
-    # This avoids nested quotation marks inside the f-string.
     safe_fund_name = safe_filename(
         fund_identifier
         or fund_code
@@ -2182,14 +3524,26 @@ def save_successful_fund(
 
     save_json(
         fund_output_dir
-        / "pre_submit.json",
-        result["preSubmit"],
+        / "date_windows.json",
+        result["dateWindows"],
     )
 
     save_json(
         fund_output_dir
-        / "pagination.json",
-        result["pagination"],
+        / "window_diagnostics.json",
+        result["windowDiagnostics"],
+    )
+
+    save_json(
+        fund_output_dir
+        / "inception_validation.json",
+        result["inceptionValidation"],
+    )
+
+    save_json(
+        fund_output_dir
+        / "window_results.json",
+        result["windowResults"],
     )
 
     save_json(
@@ -2209,7 +3563,7 @@ def save_successful_fund(
 # MAIN
 # ============================================================
 
-def main():
+async def main():
 
     OUTPUT_DIR.mkdir(
         parents=True,
@@ -2230,7 +3584,7 @@ def main():
     )
 
     print(
-        "DIRECT HTTP PAGINATION VERSION"
+        "10-YEAR WINDOW + PARALLEL PAGINATION VERSION"
     )
 
     print(
@@ -2259,20 +3613,24 @@ def main():
     # PLAYWRIGHT
     # ========================================================
 
-    with sync_playwright() as playwright:
+    async with async_playwright() as playwright:
 
-        browser = playwright.chromium.launch(
-            headless=BROWSER_HEADLESS
+        browser: Browser = (
+            await playwright.chromium.launch(
+                headless=BROWSER_HEADLESS
+            )
         )
 
-        context = browser.new_context(
-            viewport={
-                "width": 1440,
-                "height": 1000,
-            }
+        context: BrowserContext = (
+            await browser.new_context(
+                viewport={
+                    "width": 1440,
+                    "height": 1000,
+                }
+            )
         )
 
-        page = context.new_page()
+        page = await context.new_page()
 
         # ====================================================
         # LOAD PRUACCESS OPTIONS ONCE
@@ -2290,18 +3648,18 @@ def main():
             "============================================================"
         )
 
-        page.goto(
+        await page.goto(
             PRUACCESS_URL,
             wait_until="domcontentloaded",
             timeout=INITIAL_PAGE_TIMEOUT_MS,
         )
 
-        page.wait_for_timeout(
+        await page.wait_for_timeout(
             PRUACCESS_INITIAL_WAIT_MS
         )
 
         pruaccess_options = (
-            get_fund_options(
+            await get_fund_options(
                 page
             )
         )
@@ -2358,12 +3716,19 @@ def main():
 
             try:
 
-                result = extract_single_fund(
-                    context,
-                    page,
-                    excel_fund,
-                    pruaccess_options,
+                result = (
+                    await extract_single_fund(
+                        context,
+                        page,
+                        excel_fund,
+                        pruaccess_options,
+                    )
                 )
+
+                # ------------------------------------------------
+                # DO NOT save the fund until every window and
+                # full-history validation has passed.
+                # ------------------------------------------------
 
                 save_successful_fund(
                     result
@@ -2429,6 +3794,11 @@ def main():
                 )
 
                 print(
+                    f"Windows: "
+                    f"{result['pruAccess']['windowCount']}"
+                )
+
+                print(
                     f"Pages: "
                     f"{result['summary']['pagesExtracted']}"
                 )
@@ -2436,6 +3806,16 @@ def main():
                 print(
                     f"Historical BID observations: "
                     f"{result['pruAccess']['observationCount']}"
+                )
+
+                print(
+                    f"Oldest BID: "
+                    f"{result['summary']['oldestObservation']}"
+                )
+
+                print(
+                    f"Newest BID: "
+                    f"{result['summary']['newestObservation']}"
                 )
 
             except Exception as error:
@@ -2525,7 +3905,7 @@ def main():
 
                 continue
 
-        browser.close()
+        await browser.close()
 
     # ========================================================
     # CONSOLIDATED DATA
@@ -2536,6 +3916,20 @@ def main():
     total_observations = sum(
         fund["pruAccess"][
             "observationCount"
+        ]
+        for fund in successful_funds
+    )
+
+    total_windows = sum(
+        fund["pruAccess"][
+            "windowCount"
+        ]
+        for fund in successful_funds
+    )
+
+    total_pages = sum(
+        fund["summary"][
+            "pagesExtracted"
         ]
         for fund in successful_funds
     )
@@ -2601,6 +3995,12 @@ def main():
                 all_bid_history
             ),
 
+        "totalWindows":
+            total_windows,
+
+        "totalPages":
+            total_pages,
+
         "totalHistoricalBidObservations":
             total_observations,
 
@@ -2616,12 +4016,21 @@ def main():
 
     # ========================================================
     # RUN SUMMARY
+    #
+    # IMPORTANT:
+    #
+    # Any failed fund means the complete run is NOT a
+    # successful production extraction.
     # ========================================================
 
     run_status = (
         "success"
-        if not failed_funds
-        else "partial"
+        if (
+            not failed_funds
+            and len(successful_funds)
+            == len(funds)
+        )
+        else "failed"
     )
 
     run_summary = {
@@ -2654,14 +4063,26 @@ def main():
                 failed_funds
             ),
 
+        "totalWindows":
+            total_windows,
+
+        "totalPages":
+            total_pages,
+
         "totalHistoricalBidObservations":
             total_observations,
 
         "historicalPriceType":
             "BID",
 
+        "maximumWindowYears":
+            MAX_WINDOW_YEARS,
+
         "pageSize":
             PAGE_SIZE,
+
+        "parallelPageWorkers":
+            PARALLEL_PAGE_WORKERS,
 
         "pageRetryCount":
             PAGE_RETRY_COUNT,
@@ -2671,6 +4092,30 @@ def main():
 
         "pageTimeoutMs":
             PAGE_TIMEOUT_MS,
+
+        "inceptionCoverageRule":
+            {
+                "oldestObservationMustBeOnOrAfterInception":
+                    True,
+
+                "maximumAllowedDaysAfterInception":
+                    1,
+
+                "dateGapsAllowed":
+                    True,
+
+                "duplicateDatesAllowed":
+                    False,
+
+                "syntheticDataAllowed":
+                    False,
+
+                "interpolationAllowed":
+                    False,
+
+                "estimationAllowed":
+                    False,
+            },
 
         "successfulFunds":
             [
@@ -2720,6 +4165,13 @@ def main():
                             "observationCount"
                         ),
 
+                    "windowCount":
+                        fund[
+                            "pruAccess"
+                        ].get(
+                            "windowCount"
+                        ),
+
                     "pagesExtracted":
                         fund[
                             "summary"
@@ -2740,6 +4192,11 @@ def main():
                         ].get(
                             "oldestObservation"
                         ),
+
+                    "inceptionValidation":
+                        fund.get(
+                            "inceptionValidation"
+                        ),
                 }
 
                 for fund
@@ -2754,6 +4211,92 @@ def main():
         OUTPUT_DIR
         / "run_summary.json",
         run_summary,
+    )
+
+    # ========================================================
+    # VALIDATION SUMMARY
+    # ========================================================
+
+    validation_summary = {
+        "status":
+            run_status,
+
+        "generatedAtUtc":
+            run_finished,
+
+        "excelFundUniverse":
+            len(
+                funds
+            ),
+
+        "successfulFunds":
+            len(
+                successful_funds
+            ),
+
+        "failedFunds":
+            len(
+                failed_funds
+            ),
+
+        "totalHistoricalBidObservations":
+            total_observations,
+
+        "totalWindows":
+            total_windows,
+
+        "totalPages":
+            total_pages,
+
+        "rules": {
+            "automaticTenYearWindows":
+                True,
+
+            "parallelPageRetrieval":
+                True,
+
+            "retryHandling":
+                True,
+
+            "completePaginationValidation":
+                True,
+
+            "noSyntheticData":
+                True,
+
+            "chronologicalReconstruction":
+                True,
+
+            "fullHistoryToInceptionValidation":
+                True,
+
+            "firstObservationMayBeOneDayAfterInception":
+                True,
+
+            "dateGapsAllowed":
+                True,
+
+            "duplicateDatesCauseFailure":
+                True,
+
+            "exactPruAccessNameMatch":
+                True,
+
+            "excelMasterUniverse":
+                True,
+
+            "hardcodedFundCount":
+                False,
+        },
+
+        "failedFunds":
+            failed_funds,
+    }
+
+    save_json(
+        OUTPUT_DIR
+        / "validation.json",
+        validation_summary,
     )
 
     # ========================================================
@@ -2789,8 +4332,46 @@ def main():
     )
 
     print(
+        f"Total windows: "
+        f"{total_windows}"
+    )
+
+    print(
+        f"Total pages: "
+        f"{total_pages}"
+    )
+
+    print(
         f"Total historical BID observations: "
         f"{total_observations}"
+    )
+
+    print(
+        "\nInception rule:"
+    )
+
+    print(
+        " - Exact inception date: PASS"
+    )
+
+    print(
+        " - Inception + 1 calendar day: PASS"
+    )
+
+    print(
+        " - Date gaps: ALLOWED"
+    )
+
+    print(
+        " - Synthetic data: FORBIDDEN"
+    )
+
+    print(
+        " - Interpolation: FORBIDDEN"
+    )
+
+    print(
+        " - Duplicate dates: FAIL"
     )
 
     if failed_funds:
@@ -2831,10 +4412,104 @@ def main():
         f" - {FUNDS_OUTPUT_DIR}"
     )
 
+    # ========================================================
+    # PRODUCTION GATE
+    # ========================================================
+
+    if failed_funds:
+
+        print(
+            "\n============================================================"
+        )
+
+        print(
+            "VALIDATION FAILED"
+        )
+
+        print(
+            "============================================================"
+        )
+
+        print(
+            "One or more Excel-master funds failed."
+        )
+
+        print(
+            "The run must NOT be treated as a complete "
+            "production dataset."
+        )
+
+        raise SystemExit(1)
+
+    if len(successful_funds) != len(funds):
+
+        print(
+            "\n============================================================"
+        )
+
+        print(
+            "VALIDATION FAILED"
+        )
+
+        print(
+            "============================================================"
+        )
+
+        print(
+            "Successful fund count does not equal "
+            "the Excel master-universe count."
+        )
+
+        raise SystemExit(1)
+
+    print(
+        "\n============================================================"
+    )
+
+    print(
+        "VALIDATION PASSED"
+    )
+
+    print(
+        "============================================================"
+    )
+
+    print(
+        f"{len(successful_funds)} / "
+        f"{len(funds)} Excel-master funds passed."
+    )
+
+    print(
+        "All historical BID windows passed."
+    )
+
+    print(
+        "All pagination passed."
+    )
+
+    print(
+        "All inception-coverage checks passed."
+    )
+
+    print(
+        "No synthetic data was generated."
+    )
+
+    print(
+        "Date gaps were allowed without filling."
+    )
+
     print(
         "\nDone."
     )
 
 
+# ============================================================
+# ENTRY POINT
+# ============================================================
+
 if __name__ == "__main__":
-    main()
+
+    asyncio.run(
+        main()
+    )
