@@ -1,180 +1,242 @@
 #!/usr/bin/env python3
+
 """
-Validate the complete all-fund PruAccess BID extraction.
+Validation suite for PruAccess historical BID extraction.
 
-Master universe:
+MASTER SOURCE
+=============
+
     Funds Links.xlsm
-    Column A = Prudential fund URL
-    Column B = PruAccess fund name
 
-Expected extraction output:
-    output_pruaccess/
-        run_summary.json
-        all_funds.json
-        all_bid_history.json
-        funds/
-            <excelRow>_<fundIdentifier>/
-                summary.json
-                bid_history.json
-                pagination.json
-                prudential_fund.json
+Validation compares the extracted data against:
 
-The validator:
-    - Reads the Excel universe dynamically.
-    - Reads the extractor run summary.
-    - Validates every successful fund.
-    - Validates every individual BID history.
-    - Validates pagination.
-    - Validates current Prudential BID vs latest PruAccess BID.
-    - Validates consolidated all_bid_history.json.
-    - Fails if any of the 67 funds failed extraction.
+    1. Funds Links.xlsm
+    2. output_pruaccess/run_summary.json
+    3. output_pruaccess/all_funds.json
+    4. output_pruaccess/all_bid_history.json
+    5. individual fund JSON files
+
+IMPORTANT RULES
+===============
+
+1. Excel Column A dynamically defines the fund universe.
+2. Excel Column B defines the exact PruAccess lookup name.
+3. No hardcoded fund count.
+4. Prudential fund identity is authoritative.
+5. Historical prices must come from PruAccess.
+6. Historical price type must be BID.
+7. Fund Price Type must not be manipulated.
+8. No synthetic data.
+9. No estimated data.
+10. No interpolation.
+11. No fabricated values.
+12. No carry-forward values.
+13. Every pagination page must be present.
+14. Every page must have the expected row count.
+15. Historical dates must be strictly descending.
+16. Duplicate dates are errors.
+17. Duplicate date/price observations are errors.
+18. Historical data must reach the Prudential inception date.
+19. Latest PruAccess BID must agree with current Prudential BID
+    within the configured tolerance.
+20. Missing funds cause validation failure.
+21. Failed extraction funds cause validation failure.
+22. The validator must never crash merely because a JSON field
+    contains a list where a dictionary was expected.
 """
 
 from __future__ import annotations
 
 import json
-import math
 import re
-import sys
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from openpyxl import load_workbook
 
 
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
+# ============================================================
+# CONFIG
+# ============================================================
 
-EXCEL_FILE = Path("Funds Links.xlsm")
+EXCEL_FILE = Path(
+    "Funds Links.xlsm"
+)
 
-OUTPUT_DIR = Path("output_pruaccess")
+OUTPUT_DIR = Path(
+    "output_pruaccess"
+)
 
-RUN_SUMMARY_FILE = OUTPUT_DIR / "run_summary.json"
-ALL_FUNDS_FILE = OUTPUT_DIR / "all_funds.json"
-ALL_BID_HISTORY_FILE = OUTPUT_DIR / "all_bid_history.json"
+RUN_SUMMARY_FILE = (
+    OUTPUT_DIR
+    / "run_summary.json"
+)
 
-FUNDS_OUTPUT_DIR = OUTPUT_DIR / "funds"
+ALL_FUNDS_FILE = (
+    OUTPUT_DIR
+    / "all_funds.json"
+)
 
-VALIDATION_FILE = OUTPUT_DIR / "validation.json"
+ALL_BID_HISTORY_FILE = (
+    OUTPUT_DIR
+    / "all_bid_history.json"
+)
 
-EXPECTED_FUND_COUNT = 67
+FUNDS_OUTPUT_DIR = (
+    OUTPUT_DIR
+    / "funds"
+)
+
+VALIDATION_FILE = (
+    OUTPUT_DIR
+    / "validation.json"
+)
 
 PAGE_SIZE = 20
 
 PRICE_TOLERANCE = 0.0002
 
 
-# ============================================================================
-# GENERAL HELPERS
-# ============================================================================
+# ============================================================
+# HELPERS
+# ============================================================
 
 def clean_text(value) -> str:
+
     if value is None:
         return ""
 
-    text = str(value)
-
-    text = text.replace("\xa0", " ")
-
-    text = re.sub(
+    return re.sub(
         r"\s+",
         " ",
-        text,
-    )
-
-    return text.strip()
+        str(value),
+    ).strip()
 
 
 def normalize_text(value) -> str:
-    return clean_text(value).casefold()
+
+    value = clean_text(
+        value
+    ).lower()
+
+    value = value.replace(
+        "–",
+        "-"
+    )
+
+    value = value.replace(
+        "—",
+        "-"
+    )
+
+    value = re.sub(
+        r"\s+",
+        " ",
+        value,
+    )
+
+    return value.strip()
 
 
-def load_json(path: Path):
+def load_json(
+    path: Path,
+):
+
     if not path.exists():
+
         raise FileNotFoundError(
-            f"Required file not found: {path}"
+            f"Required JSON file not found: {path}"
         )
 
-    with path.open(
-        "r",
-        encoding="utf-8",
-    ) as file:
+    try:
 
-        return json.load(file)
+        return json.loads(
+            path.read_text(
+                encoding="utf-8"
+            )
+        )
+
+    except Exception as error:
+
+        raise RuntimeError(
+            f"Could not parse JSON file "
+            f"{path}: {error}"
+        ) from error
 
 
 def save_json(
     path: Path,
     data,
-):
+) -> None:
+
     path.parent.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    with path.open(
-        "w",
-        encoding="utf-8",
-    ) as file:
-
-        json.dump(
+    path.write_text(
+        json.dumps(
             data,
-            file,
             indent=2,
             ensure_ascii=False,
-        )
-
-        file.write("\n")
-
-
-def parse_price(value) -> float:
-    text = clean_text(value)
-
-    if not text:
-        raise ValueError(
-            "Empty price."
-        )
-
-    text = (
-        text
-        .replace(",", "")
-        .replace("S$", "")
-        .replace("$", "")
+        ),
+        encoding="utf-8",
     )
 
-    match = re.search(
-        r"-?\d+(?:\.\d+)?",
+
+def parse_price(
+    value,
+) -> float:
+
+    text = clean_text(
+        value
+    )
+
+    text = text.replace(
+        "$",
+        ""
+    )
+
+    text = text.replace(
+        ",",
+        ""
+    )
+
+    if not re.fullmatch(
+        r"\d+(?:\.\d+)?",
         text,
-    )
+    ):
 
-    if not match:
         raise ValueError(
-            f"Invalid price: {value}"
+            f"Invalid numeric price: {value}"
         )
 
-    price = float(
-        match.group(0)
+    result = float(
+        text
     )
 
-    if not math.isfinite(price):
+    if result <= 0:
+
         raise ValueError(
-            f"Non-finite price: {value}"
+            f"Price must be greater than zero: "
+            f"{value}"
         )
 
-    return price
+    return result
 
 
-def parse_date(value) -> datetime:
-    text = clean_text(value)
+def parse_date(
+    value: str,
+) -> datetime:
+
+    value = clean_text(
+        value
+    )
 
     formats = [
         "%d-%b-%Y",
-        "%d-%b-%y",
         "%d/%m/%Y",
-        "%d-%m-%Y",
         "%Y-%m-%d",
-        "%d/%m/%y",
     ]
 
     for fmt in formats:
@@ -182,45 +244,83 @@ def parse_date(value) -> datetime:
         try:
 
             return datetime.strptime(
-                text,
+                value,
                 fmt,
             )
 
         except ValueError:
+
             continue
 
     raise ValueError(
-        f"Invalid date: {value}"
+        f"Unsupported date format: {value}"
     )
 
 
 def get_fund_directory(
     excel_row: int,
-    fund_identifier: str,
-) -> Path:
+) -> Path | None:
+    """
+    Locate the individual fund directory by Excel row.
 
-    return (
-        FUNDS_OUTPUT_DIR
-        / f"{excel_row}_{fund_identifier}"
+    Expected form:
+
+        output_pruaccess/funds/2_D39F
+        output_pruaccess/funds/31_<identifier>
+        etc.
+
+    The identifier itself is not assumed.
+    """
+
+    if not FUNDS_OUTPUT_DIR.exists():
+
+        return None
+
+    prefix = f"{excel_row}_"
+
+    matches = [
+        path
+        for path in FUNDS_OUTPUT_DIR.iterdir()
+        if path.is_dir()
+        and path.name.startswith(prefix)
+        and not path.name.endswith("_failed")
+    ]
+
+    if not matches:
+
+        return None
+
+    if len(matches) > 1:
+
+        raise RuntimeError(
+            f"Multiple fund directories found "
+            f"for Excel row {excel_row}: "
+            f"{matches}"
+        )
+
+    return matches[0]
+
+
+# ============================================================
+# EXCEL UNIVERSE
+# ============================================================
+
+def read_excel_funds() -> list[dict]:
+
+    print(
+        "\nReading Excel fund universe..."
     )
-
-
-# ============================================================================
-# EXCEL MASTER UNIVERSE
-# ============================================================================
-
-def read_excel_universe() -> list[dict]:
 
     if not EXCEL_FILE.exists():
 
         raise FileNotFoundError(
-            f"Required Excel file not found: "
-            f"{EXCEL_FILE}"
+            f"Excel file not found: {EXCEL_FILE}"
         )
 
     workbook = load_workbook(
         EXCEL_FILE,
         read_only=True,
+        keep_vba=True,
         data_only=True,
     )
 
@@ -248,298 +348,1096 @@ def read_excel_universe() -> list[dict]:
         )
 
         if not prudential_url:
+
             continue
 
         funds.append(
             {
-                "excelRow": row_number,
-                "prudentialUrl": prudential_url,
-                "pruAccessName": pruaccess_name,
+                "excelRow":
+                    row_number,
+
+                "prudentialUrl":
+                    prudential_url,
+
+                "pruAccessName":
+                    pruaccess_name,
             }
         )
 
     workbook.close()
 
+    if not funds:
+
+        raise RuntimeError(
+            "Excel Column A contains no populated "
+            "Prudential fund URLs."
+        )
+
     return funds
 
 
-# ============================================================================
-# EXTRACTOR SUMMARY NORMALIZATION
-# ============================================================================
+# ============================================================
+# STRUCTURE NORMALIZATION
+# ============================================================
 
-def extract_successful_funds(
-    run_summary: dict,
+FUND_IDENTITY_KEYS = {
+    "excelrow",
+    "excel_row",
+    "prudentialfundname",
+    "fundname",
+    "fundidentifier",
+    "fundcode",
+    "pruaccessfundid",
+    "pruaccessfundname",
+    "pruaccessfundname",
+    "prudentialurl",
+}
+
+
+def is_probable_fund_record(
+    value,
+) -> bool:
+    """
+    Determine whether a dictionary looks like a fund record.
+
+    This prevents observation dictionaries such as:
+
+        {"date": "...", "bidPrice": "..."}
+
+    from accidentally being treated as fund records.
+    """
+
+    if not isinstance(
+        value,
+        dict,
+    ):
+
+        return False
+
+    keys = {
+        str(key).lower()
+        for key in value.keys()
+    }
+
+    identity_hits = (
+        keys
+        & FUND_IDENTITY_KEYS
+    )
+
+    if not identity_hits:
+
+        return False
+
+    # Observation objects are explicitly excluded.
+    if (
+        "date" in keys
+        and (
+            "bidprice" in keys
+            or "price" in keys
+        )
+        and not (
+            "excelrow" in keys
+            or "excel_row" in keys
+        )
+    ):
+
+        return False
+
+    return True
+
+
+def flatten_fund_records(
+    value,
+    *,
+    inherited_identifier: str | None = None,
 ) -> list[dict]:
     """
-    The extractor may store successful funds under slightly different
-    structures depending on the version.
+    Safely normalize fund records from arbitrary nested JSON.
 
-    Accept the known structures without changing the extractor itself.
+    This is specifically designed to avoid:
+
+        AttributeError:
+        'list' object has no attribute 'get'
+
+    It recursively handles:
+
+        list
+        dict
+        nested funds lists
+        dictionaries keyed by fund identifier
+
+    but only accepts dictionaries that look like actual
+    fund records.
     """
 
-    candidates = [
-        run_summary.get(
-            "successfulFunds"
-        ),
-        run_summary.get(
-            "funds"
-        ),
-        run_summary.get(
-            "successful"
-        ),
-    ]
+    results: list[dict] = []
 
-    for candidate in candidates:
+    if isinstance(
+        value,
+        list,
+    ):
 
-        if isinstance(
-            candidate,
-            list,
-        ):
+        for item in value:
 
-            return candidate
+            results.extend(
+                flatten_fund_records(
+                    item,
+                    inherited_identifier=
+                        inherited_identifier,
+                )
+            )
 
-    return []
+        return results
 
+    if not isinstance(
+        value,
+        dict,
+    ):
 
-def extract_failed_funds(
-    run_summary: dict,
-) -> list[dict]:
-    """
-    Read failed fund records from the known run-summary structures.
-    """
+        return results
 
-    candidates = [
-        run_summary.get(
-            "failedFunds"
-        ),
-        run_summary.get(
-            "failures"
-        ),
-        run_summary.get(
-            "failed"
-        ),
-    ]
+    if is_probable_fund_record(
+        value
+    ):
 
-    for candidate in candidates:
-
-        if isinstance(
-            candidate,
-            list,
-        ):
-
-            return candidate
-
-    return []
-
-
-def get_summary_excel_row(
-    fund: dict,
-):
-    possible_keys = [
-        "excelRow",
-        "row",
-        "excel_row",
-    ]
-
-    for key in possible_keys:
-
-        value = fund.get(
-            key
+        record = dict(
+            value
         )
 
-        if value is not None:
-            return value
+        if (
+            inherited_identifier
+            and not clean_text(
+                record.get(
+                    "fundIdentifier"
+                )
+            )
+        ):
 
-    return None
+            record[
+                "fundIdentifier"
+            ] = inherited_identifier
+
+        results.append(
+            record
+        )
+
+        return results
+
+    # --------------------------------------------------------
+    # Known container keys.
+    # --------------------------------------------------------
+
+    container_keys = [
+        "funds",
+        "successfulFunds",
+        "successful",
+        "failedFunds",
+        "failed",
+        "failures",
+        "records",
+        "results",
+        "data",
+    ]
+
+    for key in container_keys:
+
+        if key not in value:
+
+            continue
+
+        child = value[
+            key
+        ]
+
+        results.extend(
+            flatten_fund_records(
+                child
+            )
+        )
+
+    # --------------------------------------------------------
+    # Dictionary keyed by fund identifier.
+    #
+    # Example:
+    #
+    # "funds": {
+    #     "D39F": {...}
+    # }
+    #
+    # This section is only reached when the current dict itself
+    # was not already recognized as a fund record.
+    # --------------------------------------------------------
+
+    for key, child in value.items():
+
+        if key in container_keys:
+
+            continue
+
+        if isinstance(
+            child,
+            (dict, list),
+        ):
+
+            child_results = (
+                flatten_fund_records(
+                    child,
+                    inherited_identifier=
+                        str(key),
+                )
+            )
+
+            results.extend(
+                child_results
+            )
+
+    return results
 
 
-# ============================================================================
+def deduplicate_fund_records(
+    records: list[dict],
+) -> list[dict]:
+    """
+    Deduplicate fund records deterministically.
+
+    Primary identity:
+        excelRow
+
+    Secondary identity:
+        fundIdentifier
+
+    This only prevents duplicated metadata records.
+    It does not deduplicate historical observations.
+    """
+
+    result: list[dict] = []
+
+    seen_rows = set()
+
+    seen_identifiers = set()
+
+    for record in records:
+
+        if not isinstance(
+            record,
+            dict,
+        ):
+
+            continue
+
+        excel_row = record.get(
+            "excelRow"
+        )
+
+        identifier = clean_text(
+            record.get(
+                "fundIdentifier"
+            )
+        )
+
+        if excel_row is not None:
+
+            try:
+
+                row_key = int(
+                    excel_row
+                )
+
+            except (
+                ValueError,
+                TypeError,
+            ):
+
+                row_key = None
+
+        else:
+
+            row_key = None
+
+        if (
+            row_key is not None
+            and row_key in seen_rows
+        ):
+
+            continue
+
+        if (
+            identifier
+            and identifier in seen_identifiers
+        ):
+
+            continue
+
+        if row_key is not None:
+
+            seen_rows.add(
+                row_key
+            )
+
+        if identifier:
+
+            seen_identifiers.add(
+                identifier
+            )
+
+        result.append(
+            record
+        )
+
+    return result
+
+
+# ============================================================
+# SUCCESSFUL FUND EXTRACTION
+# ============================================================
+
+def extract_successful_funds(
+    run_summary,
+    all_funds,
+) -> list[dict]:
+    """
+    Extract successful fund records robustly.
+
+    Priority:
+
+        1. all_funds.json -> funds
+        2. run_summary.json -> successfulFunds
+
+    The consolidated all_funds file is preferred because it
+    contains the complete successful fund records.
+    """
+
+    candidates: list[dict] = []
+
+    # --------------------------------------------------------
+    # Preferred source: all_funds.json
+    # --------------------------------------------------------
+
+    if isinstance(
+        all_funds,
+        dict,
+    ):
+
+        all_funds_container = (
+            all_funds.get(
+                "funds"
+            )
+        )
+
+        candidates.extend(
+            flatten_fund_records(
+                all_funds_container
+            )
+        )
+
+    # --------------------------------------------------------
+    # Fallback/source cross-check: run_summary.
+    # --------------------------------------------------------
+
+    if isinstance(
+        run_summary,
+        dict,
+    ):
+
+        successful_container = (
+            run_summary.get(
+                "successfulFunds"
+            )
+        )
+
+        candidates.extend(
+            flatten_fund_records(
+                successful_container
+            )
+        )
+
+    candidates = (
+        deduplicate_fund_records(
+            candidates
+        )
+    )
+
+    return candidates
+
+
+# ============================================================
+# FAILED FUND EXTRACTION
+# ============================================================
+
+def extract_failed_funds(
+    run_summary,
+    all_funds,
+) -> list[dict]:
+
+    candidates: list[dict] = []
+
+    # --------------------------------------------------------
+    # run_summary
+    # --------------------------------------------------------
+
+    if isinstance(
+        run_summary,
+        dict,
+    ):
+
+        for key in (
+            "failedFunds",
+            "failed",
+            "failures",
+        ):
+
+            if key in run_summary:
+
+                candidates.extend(
+                    flatten_fund_records(
+                        run_summary.get(
+                            key
+                        )
+                    )
+                )
+
+    # --------------------------------------------------------
+    # all_funds
+    # --------------------------------------------------------
+
+    if isinstance(
+        all_funds,
+        dict,
+    ):
+
+        for key in (
+            "failedFunds",
+            "failed",
+            "failures",
+        ):
+
+            if key in all_funds:
+
+                candidates.extend(
+                    flatten_fund_records(
+                        all_funds.get(
+                            key
+                        )
+                    )
+                )
+
+    # --------------------------------------------------------
+    # Failed records may not contain fundIdentifier,
+    # but should contain excelRow.
+    #
+    # flatten_fund_records recognizes excelRow as identity.
+    # --------------------------------------------------------
+
+    result: list[dict] = []
+
+    seen_rows = set()
+
+    for record in candidates:
+
+        if not isinstance(
+            record,
+            dict,
+        ):
+
+            continue
+
+        row = record.get(
+            "excelRow"
+        )
+
+        if row is None:
+
+            continue
+
+        try:
+
+            row = int(
+                row
+            )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            continue
+
+        if row in seen_rows:
+
+            continue
+
+        seen_rows.add(
+            row
+        )
+
+        result.append(
+            record
+        )
+
+    return result
+
+
+# ============================================================
+# FIND SUMMARY RECORD
+# ============================================================
+
+def get_summary_excel_row(
+    record: dict,
+) -> int | None:
+
+    if not isinstance(
+        record,
+        dict,
+    ):
+
+        return None
+
+    value = record.get(
+        "excelRow"
+    )
+
+    if value is None:
+
+        value = record.get(
+            "excel_row"
+        )
+
+    if value is None:
+
+        value = record.get(
+            "row"
+        )
+
+    try:
+
+        return int(
+            value
+        )
+
+    except (
+        ValueError,
+        TypeError,
+    ):
+
+        return None
+
+
+# ============================================================
+# SUSPICIOUS DATA DETECTION
+# ============================================================
+
+SUSPICIOUS_TERMS = (
+    "synthetic",
+    "interpolat",
+    "simulat",
+    "generated",
+    "estimated",
+    "illustrative",
+    "mock",
+    "placeholder",
+    "carryforward",
+    "carry-forward",
+    "forecast",
+)
+
+
+def find_suspicious_keys(
+    value,
+    path: str = "",
+) -> list[str]:
+    """
+    Search JSON recursively for keys indicating fabricated,
+    synthetic, estimated, simulated, interpolated, or
+    carry-forward data.
+
+    This is intentionally strict.
+    """
+
+    findings: list[str] = []
+
+    if isinstance(
+        value,
+        dict,
+    ):
+
+        for key, child in value.items():
+
+            key_text = clean_text(
+                key
+            ).lower()
+
+            for term in SUSPICIOUS_TERMS:
+
+                if term in key_text:
+
+                    findings.append(
+                        (
+                            f"{path}.{key}"
+                            if path
+                            else str(key)
+                        )
+                    )
+
+                    break
+
+            child_path = (
+                f"{path}.{key}"
+                if path
+                else str(key)
+            )
+
+            findings.extend(
+                find_suspicious_keys(
+                    child,
+                    child_path,
+                )
+            )
+
+    elif isinstance(
+        value,
+        list,
+    ):
+
+        for index, child in enumerate(
+            value
+        ):
+
+            child_path = (
+                f"{path}[{index}]"
+            )
+
+            findings.extend(
+                find_suspicious_keys(
+                    child,
+                    child_path,
+                )
+            )
+
+    return findings
+
+
+# ============================================================
 # INDIVIDUAL FUND VALIDATION
-# ============================================================================
+# ============================================================
 
 def validate_fund(
     excel_fund: dict,
     successful_summary: dict,
-) -> tuple[bool, dict]:
+) -> tuple[bool, list[str], dict]:
+    """
+    Validate one successful fund.
 
-    excel_row = excel_fund[
+    Returns:
+
+        passed
+        errors
+        details
+    """
+
+    errors: list[str] = []
+
+    details: dict = {
+        "excelRow":
+            excel_fund.get(
+                "excelRow"
+            ),
+
+        "checks": {},
+    }
+
+    # --------------------------------------------------------
+    # Defensive type check.
+    #
+    # This is the specific protection against the previous
+    # "'list' object has no attribute 'get'" failure.
+    # --------------------------------------------------------
+
+    if not isinstance(
+        successful_summary,
+        dict,
+    ):
+
+        errors.append(
+            "Successful fund record is not an object."
+        )
+
+        return (
+            False,
+            errors,
+            details,
+        )
+
+    excel_row = excel_fund.get(
         "excelRow"
+    )
+
+    fund_directory = (
+        get_fund_directory(
+            excel_row
+        )
+    )
+
+    if fund_directory is None:
+
+        errors.append(
+            "Individual fund output directory "
+            "was not found."
+        )
+
+        return (
+            False,
+            errors,
+            details,
+        )
+
+    details[
+        "fundDirectory"
+    ] = str(
+        fund_directory
+    )
+
+    # --------------------------------------------------------
+    # Required individual files.
+    # --------------------------------------------------------
+
+    required_files = [
+        "summary.json",
+        "bid_history.json",
+        "pagination.json",
+        "prudential_fund.json",
     ]
 
-    fund_name = clean_text(
+    loaded = {}
+
+    for filename in required_files:
+
+        path = (
+            fund_directory
+            / filename
+        )
+
+        if not path.exists():
+
+            errors.append(
+                f"Missing required file: {filename}"
+            )
+
+            continue
+
+        try:
+
+            loaded[
+                filename
+            ] = load_json(
+                path
+            )
+
+        except Exception as error:
+
+            errors.append(
+                f"Could not load {filename}: {error}"
+            )
+
+    if errors:
+
+        return (
+            False,
+            errors,
+            details,
+        )
+
+    summary = loaded[
+        "summary.json"
+    ]
+
+    bid_history = loaded[
+        "bid_history.json"
+    ]
+
+    pagination = loaded[
+        "pagination.json"
+    ]
+
+    prudential = loaded[
+        "prudential_fund.json"
+    ]
+
+    # --------------------------------------------------------
+    # All top-level structures must be dictionaries where
+    # expected.
+    # --------------------------------------------------------
+
+    if not isinstance(
+        summary,
+        dict,
+    ):
+
+        errors.append(
+            "summary.json is not an object."
+        )
+
+    if not isinstance(
+        bid_history,
+        dict,
+    ):
+
+        errors.append(
+            "bid_history.json is not an object."
+        )
+
+    if not isinstance(
+        pagination,
+        list,
+    ):
+
+        errors.append(
+            "pagination.json must be a list."
+        )
+
+    if not isinstance(
+        prudential,
+        dict,
+    ):
+
+        errors.append(
+            "prudential_fund.json is not an object."
+        )
+
+    if errors:
+
+        return (
+            False,
+            errors,
+            details,
+        )
+
+    # ========================================================
+    # EXCEL IDENTITY
+    # ========================================================
+
+    expected_excel_row = int(
+        excel_fund[
+            "excelRow"
+        ]
+    )
+
+    actual_excel_row = (
         successful_summary.get(
+            "excelRow"
+        )
+    )
+
+    if actual_excel_row is not None:
+
+        try:
+
+            actual_excel_row = int(
+                actual_excel_row
+            )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            errors.append(
+                "Successful record has invalid excelRow."
+            )
+
+    if (
+        actual_excel_row is not None
+        and actual_excel_row
+        != expected_excel_row
+    ):
+
+        errors.append(
+            "Successful record excelRow does not "
+            "match Excel universe."
+        )
+
+    # ========================================================
+    # FUND IDENTITY
+    # ========================================================
+
+    expected_prudential_name = clean_text(
+        successful_summary.get(
+            "fundName"
+        )
+        or successful_summary.get(
+            "prudentialFundName"
+        )
+        or prudential.get(
             "fundName"
         )
     )
 
-    fund_identifier = clean_text(
+    actual_prudential_name = clean_text(
+        prudential.get(
+            "fundName"
+        )
+    )
+
+    if not actual_prudential_name:
+
+        errors.append(
+            "Prudential fund name is missing."
+        )
+
+    if (
+        expected_prudential_name
+        and normalize_text(
+            expected_prudential_name
+        )
+        != normalize_text(
+            actual_prudential_name
+        )
+    ):
+
+        errors.append(
+            "Prudential fund name mismatch."
+        )
+
+    expected_identifier = clean_text(
         successful_summary.get(
+            "fundIdentifier"
+        )
+        or prudential.get(
             "fundIdentifier"
         )
     )
 
-    fund_code = clean_text(
+    actual_identifier = clean_text(
+        prudential.get(
+            "fundIdentifier"
+        )
+    )
+
+    if not actual_identifier:
+
+        errors.append(
+            "Prudential fundIdentifier is missing."
+        )
+
+    elif (
+        expected_identifier
+        and actual_identifier
+        != expected_identifier
+    ):
+
+        errors.append(
+            "fundIdentifier mismatch."
+        )
+
+    expected_fund_code = clean_text(
         successful_summary.get(
+            "fundCode"
+        )
+        or prudential.get(
             "fundCode"
         )
     )
 
-    checks = []
+    actual_fund_code = clean_text(
+        prudential.get(
+            "fundCode"
+        )
+    )
 
-    def add_check(
-        name: str,
-        passed: bool,
-        details: str,
+    if (
+        expected_fund_code
+        and actual_fund_code
+        != expected_fund_code
     ):
 
-        checks.append(
-            {
-                "name": name,
-                "passed": bool(passed),
-                "details": details,
-            }
+        errors.append(
+            "Fund code mismatch."
         )
 
-    # ------------------------------------------------------------------------
-    # Required identity
-    # ------------------------------------------------------------------------
+    # ========================================================
+    # PRUACCESS IDENTITY
+    # ========================================================
 
-    add_check(
-        "Fund identifier present",
-        bool(fund_identifier),
-        (
-            f"fundIdentifier='{fund_identifier}'."
-        ),
+    excel_pruaccess_name = clean_text(
+        excel_fund.get(
+            "pruAccessName"
+        )
     )
 
-    if not fund_identifier:
-
-        return False, {
-            "excelRow": excel_row,
-            "fundName": fund_name,
-            "fundIdentifier": "",
-            "fundCode": fund_code,
-            "observationCount": 0,
-            "checks": checks,
-            "details": {},
-            "passed": False,
-        }
-
-    # ------------------------------------------------------------------------
-    # Fund directory
-    # ------------------------------------------------------------------------
-
-    fund_dir = get_fund_directory(
-        excel_row,
-        fund_identifier,
+    actual_pruaccess_name = clean_text(
+        bid_history.get(
+            "pruAccessFundName"
+        )
     )
 
-    bid_history_file = (
-        fund_dir / "bid_history.json"
-    )
+    if not excel_pruaccess_name:
 
-    pagination_file = (
-        fund_dir / "pagination.json"
-    )
-
-    summary_file = (
-        fund_dir / "summary.json"
-    )
-
-    prudential_file = (
-        fund_dir / "prudential_fund.json"
-    )
-
-    required_files = [
-        bid_history_file,
-        pagination_file,
-        summary_file,
-        prudential_file,
-    ]
-
-    missing_files = [
-        str(path)
-        for path in required_files
-        if not path.exists()
-    ]
-
-    add_check(
-        "Required fund files",
-        len(missing_files) == 0,
-        (
-            "All required files found."
-            if not missing_files
-            else
-            "Missing: "
-            + ", ".join(missing_files)
-        ),
-    )
-
-    if missing_files:
-
-        return False, {
-            "excelRow": excel_row,
-            "fundName": fund_name,
-            "fundIdentifier": fund_identifier,
-            "fundCode": fund_code,
-            "observationCount": 0,
-            "checks": checks,
-            "details": {
-                "missingFiles": missing_files,
-            },
-            "passed": False,
-        }
-
-    # ------------------------------------------------------------------------
-    # Load JSON files
-    # ------------------------------------------------------------------------
-
-    try:
-
-        bid_history = load_json(
-            bid_history_file
+        errors.append(
+            "Excel PruAccess name is empty."
         )
 
-        pagination = load_json(
-            pagination_file
+    if not actual_pruaccess_name:
+
+        errors.append(
+            "Extracted PruAccess fund name is missing."
         )
 
-        fund_summary = load_json(
-            summary_file
+    elif (
+        normalize_text(
+            actual_pruaccess_name
+        )
+        != normalize_text(
+            excel_pruaccess_name
+        )
+    ):
+
+        errors.append(
+            "PruAccess fund name does not exactly "
+            "match Excel Column B."
         )
 
-        prudential_fund = load_json(
-            prudential_file
+    pruaccess_id = clean_text(
+        bid_history.get(
+            "fundId"
+        )
+    )
+
+    if not pruaccess_id:
+
+        errors.append(
+            "PruAccess fund ID is missing."
         )
 
-        add_check(
-            "Fund JSON files readable",
-            True,
-            "All fund JSON files parsed successfully.",
+    # ========================================================
+    # SOURCE / PRICE TYPE
+    # ========================================================
+
+    source = normalize_text(
+        bid_history.get(
+            "source"
+        )
+    )
+
+    if source != "pruaccess":
+
+        errors.append(
+            "Historical source is not PruAccess."
         )
 
-    except Exception as error:
+    price_type = normalize_text(
+        bid_history.get(
+            "priceType"
+        )
+    )
 
-        add_check(
-            "Fund JSON files readable",
-            False,
-            str(error),
+    if price_type != "bid":
+
+        errors.append(
+            "Historical price type is not BID."
         )
 
-        return False, {
-            "excelRow": excel_row,
-            "fundName": fund_name,
-            "fundIdentifier": fund_identifier,
-            "fundCode": fund_code,
-            "observationCount": 0,
-            "checks": checks,
-            "details": {},
-            "passed": False,
-        }
-
-    # ------------------------------------------------------------------------
-    # Historical structure
-    # ------------------------------------------------------------------------
+    # ========================================================
+    # OBSERVATIONS
+    # ========================================================
 
     observations = bid_history.get(
         "observations"
@@ -550,168 +1448,111 @@ def validate_fund(
         list,
     ):
 
-        add_check(
-            "Historical observations list",
-            False,
-            "observations is not a list.",
+        errors.append(
+            "bid_history.observations is not a list."
         )
 
-        return False, {
-            "excelRow": excel_row,
-            "fundName": fund_name,
-            "fundIdentifier": fund_identifier,
-            "fundCode": fund_code,
-            "observationCount": 0,
-            "checks": checks,
-            "details": {},
-            "passed": False,
-        }
+        observations = []
 
-    actual_count = len(
+    observation_count = len(
         observations
     )
 
-    add_check(
-        "Historical observations list",
-        actual_count > 0,
-        f"Found {actual_count} observations.",
-    )
-
-    # ------------------------------------------------------------------------
-    # Source and BID type
-    # ------------------------------------------------------------------------
-
-    source = clean_text(
-        bid_history.get(
-            "source"
-        )
-    )
-
-    price_type = clean_text(
-        bid_history.get(
-            "priceType"
-        )
-    )
-
-    add_check(
-        "Historical source",
-        normalize_text(source)
-        == "pruaccess",
-        f"source='{source}'",
-    )
-
-    add_check(
-        "Historical price type",
-        normalize_text(price_type)
-        == "bid",
-        f"priceType='{price_type}'",
-    )
-
-    # ------------------------------------------------------------------------
-    # Identity consistency
-    # ------------------------------------------------------------------------
-
-    history_name = clean_text(
-        bid_history.get(
-            "fundName"
-        )
-    )
-
-    history_identifier = clean_text(
-        bid_history.get(
-            "fundIdentifier"
-        )
-    )
-
-    history_code = clean_text(
-        bid_history.get(
-            "fundCode"
-        )
-    )
-
-    add_check(
-        "Fund name consistency",
-        normalize_text(history_name)
-        == normalize_text(fund_name),
-        (
-            f"Summary='{fund_name}'; "
-            f"history='{history_name}'."
-        ),
-    )
-
-    add_check(
-        "Fund identifier consistency",
-        normalize_text(history_identifier)
-        == normalize_text(fund_identifier),
-        (
-            f"Summary='{fund_identifier}'; "
-            f"history='{history_identifier}'."
-        ),
-    )
-
-    add_check(
-        "Fund code consistency",
-        normalize_text(history_code)
-        == normalize_text(fund_code),
-        (
-            f"Summary='{fund_code}'; "
-            f"history='{history_code}'."
-        ),
-    )
-
-    # ------------------------------------------------------------------------
-    # Observation counts
-    # ------------------------------------------------------------------------
-
-    stored_history_count = (
+    stored_observation_count = (
         bid_history.get(
             "observationCount"
         )
     )
 
-    stored_summary_count = (
+    if stored_observation_count is not None:
+
+        try:
+
+            stored_observation_count = int(
+                stored_observation_count
+            )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            errors.append(
+                "bid_history observationCount is invalid."
+            )
+
+        else:
+
+            if (
+                stored_observation_count
+                != observation_count
+            ):
+
+                errors.append(
+                    "bid_history observationCount "
+                    "does not match actual observations."
+                )
+
+    # --------------------------------------------------------
+    # Successful summary count.
+    # --------------------------------------------------------
+
+    summary_count = (
         successful_summary.get(
+            "observationCount"
+        )
+        or successful_summary.get(
             "historicalObservationCount"
         )
     )
 
-    if stored_summary_count is None:
+    if summary_count is not None:
 
-        stored_summary_count = (
-            successful_summary.get(
-                "observationCount"
+        try:
+
+            summary_count = int(
+                summary_count
             )
-        )
 
-    add_check(
-        "Stored observation count",
-        stored_history_count == actual_count,
-        (
-            f"Stored={stored_history_count}; "
-            f"actual={actual_count}."
-        ),
-    )
+        except (
+            ValueError,
+            TypeError,
+        ):
 
-    add_check(
-        "Run summary observation count",
-        stored_summary_count == actual_count,
-        (
-            f"Run summary={stored_summary_count}; "
-            f"actual={actual_count}."
-        ),
-    )
+            errors.append(
+                "Successful summary observation count "
+                "is invalid."
+            )
 
-    # ------------------------------------------------------------------------
-    # Validate observations
-    # ------------------------------------------------------------------------
+        else:
 
-    invalid_dates = []
-    invalid_prices = []
-    missing_fields = []
-    parsed_observations = []
+            if (
+                summary_count
+                != observation_count
+            ):
+
+                errors.append(
+                    "Successful summary observation count "
+                    "does not match actual observations."
+                )
+
+    # ========================================================
+    # DATE / PRICE VALIDATION
+    # ========================================================
+
+    parsed_dates: list[datetime] = []
+
+    raw_dates: list[str] = []
+
+    duplicate_dates = set()
+
+    duplicate_records = set()
+
+    previous_date = None
 
     for index, observation in enumerate(
-        observations
+        observations,
+        start=1,
     ):
 
         if not isinstance(
@@ -719,46 +1560,43 @@ def validate_fund(
             dict,
         ):
 
-            missing_fields.append(
-                {
-                    "index": index,
-                    "reason": (
-                        "Observation is not an object."
-                    ),
-                }
+            errors.append(
+                f"Observation {index} is not an object."
             )
 
             continue
 
-        date_value = observation.get(
-            "date"
+        date_value = clean_text(
+            observation.get(
+                "date"
+            )
         )
 
-        bid_value = observation.get(
-            "bidPrice"
+        bid_value = clean_text(
+            observation.get(
+                "bidPrice"
+            )
         )
 
-        if (
-            date_value is None
-            or bid_value is None
-            or clean_text(date_value) == ""
-            or clean_text(bid_value) == ""
-        ):
+        if not date_value:
 
-            missing_fields.append(
-                {
-                    "index": index,
-                    "reason": (
-                        "Missing date or bidPrice."
-                    ),
-                    "observation": observation,
-                }
+            errors.append(
+                f"Observation {index} has no date."
             )
 
             continue
 
-        parsed_date = None
-        parsed_price = None
+        if not bid_value:
+
+            errors.append(
+                f"Observation {index} has no BID price."
+            )
+
+            continue
+
+        raw_dates.append(
+            date_value
+        )
 
         try:
 
@@ -766,1500 +1604,2099 @@ def validate_fund(
                 date_value
             )
 
+            parsed_dates.append(
+                parsed_date
+            )
+
         except ValueError as error:
 
-            invalid_dates.append(
-                {
-                    "index": index,
-                    "date": date_value,
-                    "error": str(error),
-                }
+            errors.append(
+                f"Observation {index}: {error}"
             )
+
+            continue
 
         try:
 
-            parsed_price = parse_price(
+            price = parse_price(
                 bid_value
             )
 
-            if parsed_price <= 0:
+        except ValueError as error:
 
-                invalid_prices.append(
-                    {
-                        "index": index,
-                        "bidPrice": bid_value,
-                        "error": (
-                            "Price must be greater than zero."
-                        ),
-                    }
+            errors.append(
+                f"Observation {index}: {error}"
+            )
+
+            continue
+
+        # ----------------------------------------------------
+        # Strict descending order.
+        # ----------------------------------------------------
+
+        if (
+            previous_date is not None
+            and parsed_date
+            >= previous_date
+        ):
+
+            errors.append(
+                "Historical dates are not strictly "
+                "descending at observation "
+                f"{index}."
+            )
+
+        previous_date = parsed_date
+
+        # ----------------------------------------------------
+        # Duplicate date.
+        # ----------------------------------------------------
+
+        if date_value in raw_dates[:-1]:
+
+            duplicate_dates.add(
+                date_value
+            )
+
+        # ----------------------------------------------------
+        # Duplicate date + price.
+        # ----------------------------------------------------
+
+        record_key = (
+            date_value,
+            bid_value,
+        )
+
+        if record_key in duplicate_records:
+
+            pass
+
+        duplicate_records.add(
+            record_key
+        )
+
+    # --------------------------------------------------------
+    # Duplicate date detection using normalized parsed dates.
+    # --------------------------------------------------------
+
+    seen_date_objects = set()
+
+    for parsed_date in parsed_dates:
+
+        if parsed_date in seen_date_objects:
+
+            duplicate_dates.add(
+                parsed_date.strftime(
+                    "%d-%b-%Y"
+                )
+            )
+
+        seen_date_objects.add(
+            parsed_date
+        )
+
+    if duplicate_dates:
+
+        errors.append(
+            "Duplicate historical dates found: "
+            + ", ".join(
+                sorted(
+                    str(value)
+                    for value in duplicate_dates
+                )
+            )
+        )
+
+    # --------------------------------------------------------
+    # Duplicate date/price records.
+    # --------------------------------------------------------
+
+    seen_records = set()
+
+    duplicate_record_values = []
+
+    for observation in observations:
+
+        if not isinstance(
+            observation,
+            dict,
+        ):
+
+            continue
+
+        key = (
+            clean_text(
+                observation.get(
+                    "date"
+                )
+            ),
+            clean_text(
+                observation.get(
+                    "bidPrice"
+                )
+            ),
+        )
+
+        if key in seen_records:
+
+            duplicate_record_values.append(
+                key
+            )
+
+        seen_records.add(
+            key
+        )
+
+    if duplicate_record_values:
+
+        errors.append(
+            "Duplicate date/BID observations found."
+        )
+
+    # ========================================================
+    # OBSERVATION RANGE
+    # ========================================================
+
+    inception_raw = clean_text(
+        prudential.get(
+            "inceptionDate"
+        )
+    )
+
+    if not inception_raw:
+
+        errors.append(
+            "Prudential inception date is missing."
+        )
+
+    else:
+
+        try:
+
+            inception_date = parse_date(
+                inception_raw
+            )
+
+        except ValueError as error:
+
+            errors.append(
+                f"Invalid Prudential inception date: "
+                f"{error}"
+            )
+
+        else:
+
+            if parsed_dates:
+
+                oldest_date = min(
+                    parsed_dates
+                )
+
+                newest_date = max(
+                    parsed_dates
+                )
+
+                # ------------------------------------------------
+                # Historical data must reach inception.
+                #
+                # PruAccess may not have a price exactly on the
+                # inception date in every possible circumstance,
+                # so allow only the first available observation
+                # on the same date or earlier.
+                # ------------------------------------------------
+
+                if oldest_date > inception_date:
+
+                    errors.append(
+                        "Historical BID data does not "
+                        "reach Prudential inception date. "
+                        f"Oldest={oldest_date.date()}, "
+                        f"Inception={inception_date.date()}."
+                    )
+
+                # Newest observation cannot be after the
+                # requested end date.
+                requested_end_raw = clean_text(
+                    bid_history.get(
+                        "endDate"
+                    )
+                )
+
+                if requested_end_raw:
+
+                    try:
+
+                        requested_end = parse_date(
+                            requested_end_raw
+                        )
+
+                    except ValueError as error:
+
+                        errors.append(
+                            f"Invalid PruAccess end date: "
+                            f"{error}"
+                        )
+
+                    else:
+
+                        if newest_date > requested_end:
+
+                            errors.append(
+                                "Historical newest observation "
+                                "is after requested end date."
+                            )
+
+    # ========================================================
+    # BID HISTORY DATES
+    # ========================================================
+
+    start_date_raw = clean_text(
+        bid_history.get(
+            "startDate"
+        )
+    )
+
+    end_date_raw = clean_text(
+        bid_history.get(
+            "endDate"
+        )
+    )
+
+    if inception_raw and start_date_raw:
+
+        try:
+
+            inception_date = parse_date(
+                inception_raw
+            )
+
+            history_start = parse_date(
+                start_date_raw
+            )
+
+            if inception_date != history_start:
+
+                errors.append(
+                    "PruAccess start date does not "
+                    "match Prudential inception date."
+                )
+
+        except ValueError:
+
+            pass
+
+    # ========================================================
+    # PAGINATION
+    # ========================================================
+
+    if not isinstance(
+        pagination,
+        list,
+    ):
+
+        pagination = []
+
+    if not pagination:
+
+        errors.append(
+            "Pagination diagnostics are empty."
+        )
+
+    page_numbers = []
+
+    page_row_total = 0
+
+    for index, page_record in enumerate(
+        pagination,
+        start=1,
+    ):
+
+        if not isinstance(
+            page_record,
+            dict,
+        ):
+
+            errors.append(
+                f"Pagination record {index} is not an object."
+            )
+
+            continue
+
+        page_number = page_record.get(
+            "page"
+        )
+
+        row_count = page_record.get(
+            "rowCount"
+        )
+
+        try:
+
+            page_number = int(
+                page_number
+            )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            errors.append(
+                f"Pagination record {index} "
+                "has invalid page number."
+            )
+
+            continue
+
+        try:
+
+            row_count = int(
+                row_count
+            )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            errors.append(
+                f"Pagination page {page_number} "
+                "has invalid row count."
+            )
+
+            continue
+
+        page_numbers.append(
+            page_number
+        )
+
+        page_row_total += (
+            row_count
+        )
+
+        if page_record.get(
+            "status"
+        ) != "success":
+
+            errors.append(
+                f"Pagination page {page_number} "
+                "is not marked success."
+            )
+
+        if row_count < 1:
+
+            errors.append(
+                f"Pagination page {page_number} "
+                "has no rows."
+            )
+
+    # --------------------------------------------------------
+    # Page sequence.
+    # --------------------------------------------------------
+
+    expected_page_numbers = list(
+        range(
+            1,
+            len(page_numbers) + 1,
+        )
+    )
+
+    if page_numbers != expected_page_numbers:
+
+        errors.append(
+            "Pagination page sequence is invalid. "
+            f"Actual={page_numbers}, "
+            f"Expected={expected_page_numbers}."
+        )
+
+    # --------------------------------------------------------
+    # Full pages.
+    #
+    # Every page except final should contain 20 rows.
+    # Final page should contain 1..20.
+    # --------------------------------------------------------
+
+    for index, page_record in enumerate(
+        pagination
+    ):
+
+        if not isinstance(
+            page_record,
+            dict,
+        ):
+
+            continue
+
+        page_number = page_record.get(
+            "page"
+        )
+
+        row_count = page_record.get(
+            "rowCount"
+        )
+
+        try:
+
+            page_number = int(
+                page_number
+            )
+
+            row_count = int(
+                row_count
+            )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            continue
+
+        is_final = (
+            index
+            == len(pagination) - 1
+        )
+
+        if not is_final:
+
+            if row_count != PAGE_SIZE:
+
+                errors.append(
+                    f"Pagination page {page_number} "
+                    f"returned {row_count} rows; "
+                    f"expected {PAGE_SIZE}."
+                )
+
+        else:
+
+            if not (
+                1
+                <= row_count
+                <= PAGE_SIZE
+            ):
+
+                errors.append(
+                    f"Final pagination page "
+                    f"{page_number} has invalid "
+                    f"row count {row_count}."
+                )
+
+    # --------------------------------------------------------
+    # Pagination total must equal observations.
+    # --------------------------------------------------------
+
+    if page_row_total != observation_count:
+
+        errors.append(
+            "Pagination row total does not match "
+            "historical observation count. "
+            f"Pagination={page_row_total}, "
+            f"Observations={observation_count}."
+        )
+
+    # --------------------------------------------------------
+    # Summary page count.
+    # --------------------------------------------------------
+
+    summary_pages = (
+        successful_summary.get(
+            "pagesExtracted"
+        )
+    )
+
+    if summary_pages is None:
+
+        summary_pages = summary.get(
+            "pagesExtracted"
+        )
+
+    if summary_pages is not None:
+
+        try:
+
+            summary_pages = int(
+                summary_pages
+            )
+
+            if (
+                summary_pages
+                != len(pagination)
+            ):
+
+                errors.append(
+                    "Summary pagesExtracted does not "
+                    "match pagination page count."
+                )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            errors.append(
+                "pagesExtracted is invalid."
+            )
+
+    # ========================================================
+    # CURRENT PRUDENTIAL BID VS LATEST PRUACCESS BID
+    # ========================================================
+
+    current_prudential_bid = clean_text(
+        prudential.get(
+            "bidPrice"
+        )
+    )
+
+    latest_pruaccess_bid = ""
+
+    if observations:
+
+        latest_observation = observations[
+            0
+        ]
+
+        if isinstance(
+            latest_observation,
+            dict,
+        ):
+
+            latest_pruaccess_bid = clean_text(
+                latest_observation.get(
+                    "bidPrice"
+                )
+            )
+
+    if not current_prudential_bid:
+
+        errors.append(
+            "Current Prudential BID price is missing."
+        )
+
+    if not latest_pruaccess_bid:
+
+        errors.append(
+            "Latest PruAccess BID price is missing."
+        )
+
+    if (
+        current_prudential_bid
+        and latest_pruaccess_bid
+    ):
+
+        try:
+
+            prudential_bid = parse_price(
+                current_prudential_bid
+            )
+
+            pruaccess_bid = parse_price(
+                latest_pruaccess_bid
+            )
+
+            difference = abs(
+                prudential_bid
+                - pruaccess_bid
+            )
+
+            details[
+                "currentPrudentialBid"
+            ] = prudential_bid
+
+            details[
+                "latestPruAccessBid"
+            ] = pruaccess_bid
+
+            details[
+                "currentBidDifference"
+            ] = difference
+
+            if difference > PRICE_TOLERANCE:
+
+                errors.append(
+                    "Current Prudential BID and latest "
+                    "PruAccess BID differ beyond tolerance. "
+                    f"Prudential={prudential_bid}, "
+                    f"PruAccess={pruaccess_bid}, "
+                    f"Difference={difference}, "
+                    f"Tolerance={PRICE_TOLERANCE}."
                 )
 
         except ValueError as error:
 
-            invalid_prices.append(
-                {
-                    "index": index,
-                    "bidPrice": bid_value,
-                    "error": str(error),
-                }
+            errors.append(
+                f"Could not compare current BID prices: "
+                f"{error}"
             )
 
-        if (
-            parsed_date is not None
-            and parsed_price is not None
-        ):
+    # ========================================================
+    # SYNTHETIC / FABRICATED DATA CHECK
+    # ========================================================
 
-            parsed_observations.append(
-                {
-                    "index": index,
-                    "date": parsed_date,
-                    "dateRaw": clean_text(
-                        date_value
-                    ),
-                    "price": parsed_price,
-                    "priceRaw": clean_text(
-                        bid_value
-                    ),
-                }
-            )
+    suspicious_files = {
+        "summary.json":
+            summary,
 
-    add_check(
-        "All dates valid",
-        len(invalid_dates) == 0,
-        f"Invalid dates={len(invalid_dates)}.",
-    )
+        "bid_history.json":
+            bid_history,
 
-    add_check(
-        "All BID prices numeric",
-        len(invalid_prices) == 0,
-        f"Invalid prices={len(invalid_prices)}.",
-    )
+        "pagination.json":
+            pagination,
 
-    add_check(
-        "No missing observation fields",
-        len(missing_fields) == 0,
-        (
-            f"Missing/invalid records="
-            f"{len(missing_fields)}."
-        ),
-    )
+        "prudential_fund.json":
+            prudential,
+    }
 
-    # ------------------------------------------------------------------------
-    # Date ordering
-    # ------------------------------------------------------------------------
+    suspicious_findings = []
 
-    ordering_violations = []
-
-    for index in range(
-        1,
-        len(parsed_observations),
+    for filename, content in (
+        suspicious_files.items()
     ):
 
-        previous = parsed_observations[
-            index - 1
-        ]
+        findings = find_suspicious_keys(
+            content
+        )
 
-        current = parsed_observations[
-            index
-        ]
+        for finding in findings:
 
-        if current["date"] >= previous["date"]:
-
-            ordering_violations.append(
-                {
-                    "index": current["index"],
-                    "previousDate": (
-                        previous["dateRaw"]
-                    ),
-                    "currentDate": (
-                        current["dateRaw"]
-                    ),
-                }
+            suspicious_findings.append(
+                f"{filename}:{finding}"
             )
 
-    add_check(
-        "Dates strictly descending",
-        len(ordering_violations) == 0,
-        (
-            f"Ordering violations="
-            f"{len(ordering_violations)}."
-        ),
+    if suspicious_findings:
+
+        errors.append(
+            "Suspicious generated/synthetic-style "
+            "fields detected: "
+            + ", ".join(
+                suspicious_findings
+            )
+        )
+
+    # ========================================================
+    # FUND STATUS
+    # ========================================================
+
+    status = normalize_text(
+        summary.get(
+            "status"
+        )
     )
 
-    # ------------------------------------------------------------------------
-    # Duplicate dates
-    # ------------------------------------------------------------------------
+    if status != "success":
 
-    date_counts = {}
-
-    for observation in observations:
-
-        date_value = clean_text(
-            observation.get(
-                "date"
-            )
+        errors.append(
+            "Individual fund summary status "
+            "is not success."
         )
 
-        if not date_value:
-            continue
+    # ========================================================
+    # DETAILS
+    # ========================================================
 
-        date_counts[date_value] = (
-            date_counts.get(
-                date_value,
-                0,
-            )
-            + 1
-        )
+    details[
+        "fundName"
+    ] = actual_prudential_name
 
-    duplicate_dates = {
-        date: count
-        for date, count in date_counts.items()
-        if count > 1
-    }
+    details[
+        "fundIdentifier"
+    ] = actual_identifier
 
-    add_check(
-        "No duplicate dates",
-        len(duplicate_dates) == 0,
-        (
-            f"Duplicate dates="
-            f"{len(duplicate_dates)}."
-        ),
+    details[
+        "fundCode"
+    ] = actual_fund_code
+
+    details[
+        "pruAccessFundId"
+    ] = pruaccess_id
+
+    details[
+        "observationCount"
+    ] = observation_count
+
+    details[
+        "pageCount"
+    ] = len(
+        pagination
     )
 
-    # ------------------------------------------------------------------------
-    # Duplicate records
-    # ------------------------------------------------------------------------
-
-    record_counts = {}
-
-    for observation in observations:
-
-        date_value = clean_text(
-            observation.get(
-                "date"
-            )
-        )
-
-        price_value = clean_text(
-            observation.get(
-                "bidPrice"
-            )
-        )
-
-        key = (
-            date_value,
-            price_value,
-        )
-
-        record_counts[key] = (
-            record_counts.get(
-                key,
-                0,
-            )
-            + 1
-        )
-
-    duplicate_records = {
-        f"{key[0]}|{key[1]}": count
-        for key, count in record_counts.items()
-        if count > 1
-    }
-
-    add_check(
-        "No duplicate date/price records",
-        len(duplicate_records) == 0,
-        (
-            f"Duplicate records="
-            f"{len(duplicate_records)}."
-        ),
-    )
-
-    # ------------------------------------------------------------------------
-    # Newest / oldest
-    # ------------------------------------------------------------------------
-
-    newest_observation = (
-        observations[0]
-        if observations
-        else None
-    )
-
-    oldest_observation = (
+    details[
+        "oldestObservation"
+    ] = (
         observations[-1]
         if observations
         else None
     )
 
-    add_check(
-        "Newest historical observation identified",
-        newest_observation is not None,
-        (
-            (
-                f"{newest_observation.get('date')} "
-                f"BID="
-                f"{newest_observation.get('bidPrice')}."
-            )
-            if newest_observation
-            else
-            "No observations."
-        ),
+    details[
+        "newestObservation"
+    ] = (
+        observations[0]
+        if observations
+        else None
     )
 
-    add_check(
-        "Oldest historical observation identified",
-        oldest_observation is not None,
-        (
-            (
-                f"{oldest_observation.get('date')} "
-                f"BID="
-                f"{oldest_observation.get('bidPrice')}."
-            )
-            if oldest_observation
-            else
-            "No observations."
-        ),
-    )
-
-    # ------------------------------------------------------------------------
-    # Inception validation
-    # ------------------------------------------------------------------------
-
-    inception_value = clean_text(
-        successful_summary.get(
-            "inceptionDate"
-        )
-    )
-
-    if not inception_value:
-
-        inception_value = clean_text(
-            fund_summary.get(
-                "inceptionDate"
-            )
-        )
-
-    inception_date = None
-
-    if inception_value:
-
-        try:
-
-            inception_date = parse_date(
-                inception_value
-            )
-
-        except ValueError:
-            inception_date = None
-
-    if (
-        inception_date is not None
-        and oldest_observation is not None
-    ):
-
-        try:
-
-            oldest_date = parse_date(
-                oldest_observation.get(
-                    "date"
-                )
-            )
-
-            reaches_inception = (
-                oldest_date.date()
-                <= inception_date.date()
-            )
-
-        except Exception:
-
-            reaches_inception = False
-
-        add_check(
-            "Historical data reaches inception",
-            reaches_inception,
-            (
-                f"Inception={inception_value}; "
-                f"oldest observation="
-                f"{oldest_observation.get('date')}."
+    details[
+        "checks"
+    ] = {
+        "identity":
+            not any(
+                "mismatch" in error.lower()
+                or "missing" in error.lower()
+                for error in errors
             ),
-        )
 
-    else:
+        "source":
+            source == "pruaccess",
 
-        add_check(
-            "Historical data reaches inception",
-            False,
-            (
-                "Could not determine inception date."
+        "priceType":
+            price_type == "bid",
+
+        "observations":
+            observation_count > 0,
+
+        "pagination":
+            bool(
+                pagination
+            )
+            and page_row_total
+            == observation_count,
+
+        "syntheticData":
+            not bool(
+                suspicious_findings
             ),
-        )
+    }
 
-    # ------------------------------------------------------------------------
-    # Suspicious generated-data fields
-    # ------------------------------------------------------------------------
-
-    suspicious_fields = []
-
-    suspicious_keywords = [
-        "synthetic",
-        "interpolat",
-        "simulat",
-        "generated",
-        "estimated",
-        "illustrative",
-        "mock",
-        "placeholder",
-        "carryforward",
-        "carry-forward",
-        "forecast",
-    ]
-
-    def inspect_object(
-        obj,
-        location: str,
-    ):
-
-        if isinstance(
-            obj,
-            dict,
-        ):
-
-            for key, value in obj.items():
-
-                key_text = normalize_text(
-                    key
-                )
-
-                if any(
-                    keyword in key_text
-                    for keyword in suspicious_keywords
-                ):
-
-                    suspicious_fields.append(
-                        {
-                            "location": location,
-                            "field": key,
-                            "value": value,
-                        }
-                    )
-
-                inspect_object(
-                    value,
-                    f"{location}.{key}",
-                )
-
-        elif isinstance(
-            obj,
-            list,
-        ):
-
-            for index, value in enumerate(
-                obj
-            ):
-
-                inspect_object(
-                    value,
-                    f"{location}[{index}]",
-                )
-
-    inspect_object(
-        bid_history,
-        "bid_history",
+    passed = (
+        len(errors)
+        == 0
     )
 
-    add_check(
-        "No synthetic/interpolated fields",
-        len(suspicious_fields) == 0,
-        (
-            "No generated-data fields detected."
-            if not suspicious_fields
-            else
-            f"Suspicious fields="
-            f"{len(suspicious_fields)}."
-        ),
+    return (
+        passed,
+        errors,
+        details,
     )
 
-    # ------------------------------------------------------------------------
-    # Pagination
-    # ------------------------------------------------------------------------
 
-    pages = pagination.get(
-        "pages"
-    )
+# ============================================================
+# CONSOLIDATED HISTORY VALIDATION
+# ============================================================
+
+def validate_consolidated_history(
+    excel_funds: list[dict],
+    all_bid_history,
+) -> tuple[bool, list[str], dict]:
+    """
+    Validate all_bid_history.json.
+    """
+
+    errors: list[str] = []
+
+    details = {
+        "checks": {},
+    }
 
     if not isinstance(
-        pages,
-        list,
-    ):
-
-        pages = []
-
-    stored_page_count = pagination.get(
-        "pagesExtracted"
-    )
-
-    actual_page_count = len(
-        pages
-    )
-
-    add_check(
-        "Pagination JSON structure",
-        actual_page_count > 0,
-        (
-            f"Pages found="
-            f"{actual_page_count}."
-        ),
-    )
-
-    add_check(
-        "Pagination page count",
-        stored_page_count == actual_page_count,
-        (
-            f"Stored={stored_page_count}; "
-            f"actual={actual_page_count}."
-        ),
-    )
-
-    pagination_row_total = 0
-
-    page_number_violations = []
-
-    full_page_violations = []
-
-    final_page_valid = False
-
-    for index, page in enumerate(
-        pages
-    ):
-
-        if not isinstance(
-            page,
-            dict,
-        ):
-            continue
-
-        expected_page_number = (
-            index + 1
-        )
-
-        actual_page_number = page.get(
-            "page"
-        )
-
-        if actual_page_number != expected_page_number:
-
-            page_number_violations.append(
-                {
-                    "expected": expected_page_number,
-                    "actual": actual_page_number,
-                }
-            )
-
-        row_count = page.get(
-            "rowCount"
-        )
-
-        if not isinstance(
-            row_count,
-            int,
-        ):
-            continue
-
-        pagination_row_total += row_count
-
-        is_final_page = (
-            index
-            == len(pages) - 1
-        )
-
-        if not is_final_page:
-
-            if row_count != PAGE_SIZE:
-
-                full_page_violations.append(
-                    {
-                        "page": actual_page_number,
-                        "rowCount": row_count,
-                    }
-                )
-
-        else:
-
-            final_page_valid = (
-                row_count > 0
-                and row_count <= PAGE_SIZE
-            )
-
-    add_check(
-        "Pagination page numbering",
-        len(page_number_violations) == 0,
-        (
-            "Pages are sequential."
-            if not page_number_violations
-            else
-            f"Violations="
-            f"{len(page_number_violations)}."
-        ),
-    )
-
-    add_check(
-        "Pagination full pages contain 20 rows",
-        len(full_page_violations) == 0,
-        (
-            f"Full pages checked="
-            f"{max(actual_page_count - 1, 0)}."
-            if not full_page_violations
-            else
-            f"Violations="
-            f"{len(full_page_violations)}."
-        ),
-    )
-
-    add_check(
-        "Final pagination page is valid",
-        final_page_valid,
-        (
-            (
-                f"Final page rows="
-                f"{pages[-1].get('rowCount')}."
-            )
-            if pages
-            else
-            "No pages."
-        ),
-    )
-
-    add_check(
-        "Pagination row total matches observations",
-        pagination_row_total == actual_count,
-        (
-            f"Pagination rows="
-            f"{pagination_row_total}; "
-            f"observations="
-            f"{actual_count}."
-        ),
-    )
-
-    # ------------------------------------------------------------------------
-    # Current Prudential BID vs latest PruAccess BID
-    # ------------------------------------------------------------------------
-
-    current_prudential_bid = None
-
-    if isinstance(
-        prudential_fund,
+        all_bid_history,
         dict,
     ):
 
-        # Most likely structure.
-        if prudential_fund.get(
-            "bidPrice"
-        ) is not None:
+        return (
+            False,
+            [
+                "all_bid_history.json is not an object."
+            ],
+            details,
+        )
 
-            current_prudential_bid = (
-                prudential_fund.get(
-                    "bidPrice"
+    source = normalize_text(
+        all_bid_history.get(
+            "source"
+        )
+    )
+
+    if source != "pruaccess":
+
+        errors.append(
+            "Consolidated history source is not PruAccess."
+        )
+
+    price_type = normalize_text(
+        all_bid_history.get(
+            "priceType"
+        )
+    )
+
+    if price_type != "bid":
+
+        errors.append(
+            "Consolidated history priceType is not BID."
+        )
+
+    funds_container = (
+        all_bid_history.get(
+            "funds"
+        )
+    )
+
+    if not isinstance(
+        funds_container,
+        dict,
+    ):
+
+        errors.append(
+            "all_bid_history.funds is not an object."
+        )
+
+        return (
+            False,
+            errors,
+            details,
+        )
+
+    # --------------------------------------------------------
+    # Expected successful fund count based on Excel cannot be
+    # assumed because there may be extraction failures.
+    # Compare against actual successful individual records
+    # later.
+    # --------------------------------------------------------
+
+    consolidated_fund_count = len(
+        funds_container
+    )
+
+    details[
+        "consolidatedFundCount"
+    ] = consolidated_fund_count
+
+    total_observations = 0
+
+    for identifier, record in (
+        funds_container.items()
+    ):
+
+        if not isinstance(
+            record,
+            dict,
+        ):
+
+            errors.append(
+                f"Consolidated fund {identifier} "
+                "is not an object."
+            )
+
+            continue
+
+        record_source = normalize_text(
+            record.get(
+                "source"
+            )
+        )
+
+        record_price_type = normalize_text(
+            record.get(
+                "priceType"
+            )
+        )
+
+        if record_source != "pruaccess":
+
+            errors.append(
+                f"Consolidated fund {identifier} "
+                "source is not PruAccess."
+            )
+
+        if record_price_type != "bid":
+
+            errors.append(
+                f"Consolidated fund {identifier} "
+                "priceType is not BID."
+            )
+
+        observations = record.get(
+            "observations"
+        )
+
+        if not isinstance(
+            observations,
+            list,
+        ):
+
+            errors.append(
+                f"Consolidated fund {identifier} "
+                "observations is not a list."
+            )
+
+            continue
+
+        observation_count = len(
+            observations
+        )
+
+        stored_count = record.get(
+            "observationCount"
+        )
+
+        if stored_count is not None:
+
+            try:
+
+                stored_count = int(
+                    stored_count
                 )
-            )
 
-        else:
-
-            data = prudential_fund.get(
-                "data"
-            )
-
-            if isinstance(
-                data,
-                dict,
+            except (
+                ValueError,
+                TypeError,
             ):
 
-                current_prudential_bid = (
-                    data.get(
-                        "bidPrice"
-                    )
-                )
-
-    latest_pruaccess_bid = None
-    latest_pruaccess_date = None
-
-    if newest_observation:
-
-        latest_pruaccess_bid = (
-            newest_observation.get(
-                "bidPrice"
-            )
-        )
-
-        latest_pruaccess_date = (
-            newest_observation.get(
-                "date"
-            )
-        )
-
-    bid_difference = None
-    bid_match_passed = False
-
-    try:
-
-        if (
-            current_prudential_bid
-            is not None
-            and latest_pruaccess_bid
-            is not None
-        ):
-
-            prudential_price = parse_price(
-                current_prudential_bid
-            )
-
-            pruaccess_price = parse_price(
-                latest_pruaccess_bid
-            )
-
-            bid_difference = abs(
-                prudential_price
-                - pruaccess_price
-            )
-
-            bid_match_passed = (
-                bid_difference
-                <= PRICE_TOLERANCE
-            )
-
-    except Exception:
-
-        bid_match_passed = False
-
-    add_check(
-        "Current Prudential BID matches latest PruAccess BID",
-        bid_match_passed,
-        (
-            f"Prudential current BID="
-            f"{current_prudential_bid}; "
-            f"PruAccess latest BID="
-            f"{latest_pruaccess_bid}; "
-            f"difference="
-            f"{bid_difference}; "
-            f"tolerance="
-            f"{PRICE_TOLERANCE}."
-        ),
-    )
-
-    # ------------------------------------------------------------------------
-    # Overall fund result
-    # ------------------------------------------------------------------------
-
-    passed = all(
-        check["passed"]
-        for check in checks
-    )
-
-    result = {
-        "excelRow": excel_row,
-        "fundName": fund_name,
-        "fundIdentifier": fund_identifier,
-        "fundCode": fund_code,
-        "observationCount": actual_count,
-        "newestObservation": newest_observation,
-        "oldestObservation": oldest_observation,
-        "checks": checks,
-        "details": {
-            "invalidDates": invalid_dates,
-            "invalidPrices": invalid_prices,
-            "missingFields": missing_fields,
-            "orderingViolations": ordering_violations,
-            "duplicateDates": duplicate_dates,
-            "duplicateRecords": duplicate_records,
-            "suspiciousGeneratedFields": suspicious_fields,
-            "paginationRowTotal": pagination_row_total,
-            "paginationPageCount": actual_page_count,
-            "currentPrudentialBid": current_prudential_bid,
-            "latestPruAccessBid": latest_pruaccess_bid,
-            "latestPruAccessDate": latest_pruaccess_date,
-            "bidDifference": bid_difference,
-        },
-        "passed": passed,
-    }
-
-    return passed, result
-
-
-# ============================================================================
-# MAIN
-# ============================================================================
-
-def main() -> int:
-
-    print("=" * 70)
-    print(
-        "PruAccess All-Fund Historical BID Price Validation"
-    )
-    print("=" * 70)
-
-    try:
-
-        # ====================================================================
-        # Load master Excel universe
-        # ====================================================================
-
-        excel_funds = read_excel_universe()
-
-        expected_count = len(
-            excel_funds
-        )
-
-        print()
-        print(
-            f"Excel fund universe: "
-            f"{expected_count}"
-        )
-
-        # ====================================================================
-        # Load extractor files
-        # ====================================================================
-
-        run_summary = load_json(
-            RUN_SUMMARY_FILE
-        )
-
-        all_funds = load_json(
-            ALL_FUNDS_FILE
-        )
-
-        all_bid_history = load_json(
-            ALL_BID_HISTORY_FILE
-        )
-
-        # ====================================================================
-        # Read successful / failed results
-        # ====================================================================
-
-        successful_funds = (
-            extract_successful_funds(
-                run_summary
-            )
-        )
-
-        failed_fund_records = (
-            extract_failed_funds(
-                run_summary
-            )
-        )
-
-        successful_count = len(
-            successful_funds
-        )
-
-        failed_count = len(
-            failed_fund_records
-        )
-
-        # If explicit counts exist, display them for comparison.
-        reported_successful_count = (
-            run_summary.get(
-                "successfulFundCount"
-            )
-        )
-
-        reported_failed_count = (
-            run_summary.get(
-                "failedFundCount"
-            )
-        )
-
-        print(
-            f"Run successful funds: "
-            f"{successful_count}"
-        )
-
-        print(
-            f"Run failed funds: "
-            f"{failed_count}"
-        )
-
-        if (
-            reported_successful_count
-            != successful_count
-        ):
-
-            print(
-                "WARNING: run_summary successfulFundCount "
-                f"is {reported_successful_count}, "
-                f"but successful fund records found="
-                f"{successful_count}"
-            )
-
-        if (
-            reported_failed_count
-            != failed_count
-        ):
-
-            print(
-                "WARNING: run_summary failedFundCount "
-                f"is {reported_failed_count}, "
-                f"but failed fund records found="
-                f"{failed_count}"
-            )
-
-        # ====================================================================
-        # Top-level checks
-        # ====================================================================
-
-        top_level_checks = []
-
-        def top_check(
-            name: str,
-            passed: bool,
-            details: str,
-        ):
-
-            top_level_checks.append(
-                {
-                    "name": name,
-                    "passed": bool(passed),
-                    "details": details,
-                }
-            )
-
-        top_check(
-            "Excel fund universe count",
-            expected_count == EXPECTED_FUND_COUNT,
-            (
-                f"Found {expected_count} funds "
-                f"in Funds Links.xlsm; "
-                f"expected {EXPECTED_FUND_COUNT}."
-            ),
-        )
-
-        top_check(
-            "Run summary universe count",
-            run_summary.get(
-                "fundUniverseCount"
-            ) == expected_count,
-            (
-                f"Run summary="
-                f"{run_summary.get('fundUniverseCount')}; "
-                f"Excel="
-                f"{expected_count}."
-            ),
-        )
-
-        top_check(
-            "All funds extracted successfully",
-            successful_count == expected_count,
-            (
-                f"Successful records="
-                f"{successful_count}; "
-                f"expected="
-                f"{expected_count}."
-            ),
-        )
-
-        top_check(
-            "No failed funds",
-            failed_count == 0,
-            (
-                f"Failed records="
-                f"{failed_count}."
-            ),
-        )
-
-        # ====================================================================
-        # Build successful lookup by Excel row
-        # ====================================================================
-
-        successful_by_row = {}
-
-        duplicate_success_rows = []
-
-        for fund in successful_funds:
-
-            row = get_summary_excel_row(
-                fund
-            )
-
-            if row is None:
-                continue
-
-            if row in successful_by_row:
-
-                duplicate_success_rows.append(
-                    row
-                )
-
-            successful_by_row[row] = fund
-
-        missing_excel_rows = [
-            fund["excelRow"]
-            for fund in excel_funds
-            if fund["excelRow"]
-            not in successful_by_row
-        ]
-
-        top_check(
-            "Every Excel fund has successful result",
-            len(missing_excel_rows) == 0,
-            (
-                "All Excel rows have successful results."
-                if not missing_excel_rows
-                else
-                "Missing Excel rows: "
-                + ", ".join(
-                    str(row)
-                    for row in missing_excel_rows
-                )
-            ),
-        )
-
-        top_check(
-            "No duplicate successful Excel rows",
-            len(duplicate_success_rows) == 0,
-            (
-                "No duplicate successful rows."
-                if not duplicate_success_rows
-                else
-                f"Duplicate rows="
-                f"{duplicate_success_rows}."
-            ),
-        )
-
-        # ====================================================================
-        # Validate individual funds
-        # ====================================================================
-
-        print()
-        print(
-            "Validating individual funds..."
-        )
-
-        fund_results = []
-
-        passed_funds = 0
-        failed_validation_funds = 0
-
-        for index, excel_fund in enumerate(
-            excel_funds,
-            start=1,
-        ):
-
-            excel_row = excel_fund[
-                "excelRow"
-            ]
-
-            print(
-                f"  [{index}/{expected_count}] "
-                f"Excel row {excel_row}: ",
-                end="",
-                flush=True,
-            )
-
-            successful_summary = (
-                successful_by_row.get(
-                    excel_row
-                )
-            )
-
-            if successful_summary is None:
-
-                result = {
-                    "excelRow": excel_row,
-                    "fundName": "",
-                    "fundIdentifier": "",
-                    "fundCode": "",
-                    "observationCount": 0,
-                    "checks": [
-                        {
-                            "name": (
-                                "Successful extraction exists"
-                            ),
-                            "passed": False,
-                            "details": (
-                                "No successful extraction "
-                                "record exists for this "
-                                "Excel row."
-                            ),
-                        }
-                    ],
-                    "details": {},
-                    "passed": False,
-                }
-
-                fund_results.append(
-                    result
-                )
-
-                failed_validation_funds += 1
-
-                print(
-                    "FAILED"
-                )
-
-                continue
-
-            passed, result = validate_fund(
-                excel_fund,
-                successful_summary,
-            )
-
-            fund_results.append(
-                result
-            )
-
-            if passed:
-
-                passed_funds += 1
-
-                print(
-                    f"PASS "
-                    f"({result['observationCount']} observations)"
+                errors.append(
+                    f"Consolidated fund {identifier} "
+                    "has invalid observationCount."
                 )
 
             else:
 
-                failed_validation_funds += 1
+                if (
+                    stored_count
+                    != observation_count
+                ):
 
-                print(
-                    "FAILED"
-                )
+                    errors.append(
+                        f"Consolidated fund {identifier} "
+                        "observationCount mismatch."
+                    )
 
-        # ====================================================================
-        # Consolidated history
-        # ====================================================================
-
-        print()
-        print(
-            "Validating consolidated BID history..."
+        total_observations += (
+            observation_count
         )
 
-        consolidated_funds = (
-            all_bid_history.get(
+    details[
+        "totalHistoricalBidObservations"
+    ] = total_observations
+
+    reported_total = (
+        all_bid_history.get(
+            "totalHistoricalBidObservations"
+        )
+    )
+
+    if reported_total is not None:
+
+        try:
+
+            reported_total = int(
+                reported_total
+            )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            errors.append(
+                "Consolidated totalHistoricalBidObservations "
+                "is invalid."
+            )
+
+        else:
+
+            if (
+                reported_total
+                != total_observations
+            ):
+
+                errors.append(
+                    "Consolidated totalHistoricalBidObservations "
+                    "does not match actual total."
+                )
+
+    passed = (
+        len(errors)
+        == 0
+    )
+
+    return (
+        passed,
+        errors,
+        details,
+    )
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
+def main():
+
+    print(
+        "======================================================================"
+    )
+
+    print(
+        "PruAccess All-Fund Historical BID Price Validation"
+    )
+
+    print(
+        "======================================================================"
+    )
+
+    # ========================================================
+    # LOAD MASTER DATA
+    # ========================================================
+
+    excel_funds = read_excel_funds()
+
+    run_summary = load_json(
+        RUN_SUMMARY_FILE
+    )
+
+    all_funds = load_json(
+        ALL_FUNDS_FILE
+    )
+
+    all_bid_history = load_json(
+        ALL_BID_HISTORY_FILE
+    )
+
+    excel_count = len(
+        excel_funds
+    )
+
+    print(
+        f"\nExcel fund universe: {excel_count}"
+    )
+
+    # ========================================================
+    # BASIC RUN SUMMARY
+    # ========================================================
+
+    if not isinstance(
+        run_summary,
+        dict,
+    ):
+
+        raise RuntimeError(
+            "run_summary.json is not an object."
+        )
+
+    reported_universe_count = (
+        run_summary.get(
+            "fundUniverseCount"
+        )
+    )
+
+    if reported_universe_count is not None:
+
+        try:
+
+            reported_universe_count = int(
+                reported_universe_count
+            )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            reported_universe_count = None
+
+            print(
+                "WARNING: run_summary fundUniverseCount "
+                "is not numeric."
+            )
+
+        if (
+            reported_universe_count is not None
+            and reported_universe_count
+            != excel_count
+        ):
+
+            print(
+                "ERROR: run_summary fundUniverseCount "
+                "does not match Excel universe."
+            )
+
+    # ========================================================
+    # NORMALIZE SUCCESSFUL FUNDS
+    # ========================================================
+
+    successful_funds = (
+        extract_successful_funds(
+            run_summary,
+            all_funds,
+        )
+    )
+
+    failed_funds = (
+        extract_failed_funds(
+            run_summary,
+            all_funds,
+        )
+    )
+
+    print(
+        f"Normalized successful fund records: "
+        f"{len(successful_funds)}"
+    )
+
+    print(
+        f"Normalized failed fund records: "
+        f"{len(failed_funds)}"
+    )
+
+    # ========================================================
+    # INDEX SUCCESSFUL BY EXCEL ROW
+    # ========================================================
+
+    successful_by_row: dict[int, dict] = {}
+
+    malformed_success_records = []
+
+    for record in successful_funds:
+
+        if not isinstance(
+            record,
+            dict,
+        ):
+
+            malformed_success_records.append(
+                record
+            )
+
+            continue
+
+        excel_row = get_summary_excel_row(
+            record
+        )
+
+        if excel_row is None:
+
+            # ------------------------------------------------
+            # Do not crash. Record malformed structure.
+            # ------------------------------------------------
+
+            malformed_success_records.append(
+                record
+            )
+
+            continue
+
+        if excel_row in successful_by_row:
+
+            print(
+                f"WARNING: Duplicate successful "
+                f"record for Excel row {excel_row}."
+            )
+
+        successful_by_row[
+            excel_row
+        ] = record
+
+    if malformed_success_records:
+
+        print(
+            f"Malformed successful records ignored: "
+            f"{len(malformed_success_records)}"
+        )
+
+    # ========================================================
+    # INDEX FAILED BY EXCEL ROW
+    # ========================================================
+
+    failed_by_row: dict[int, dict] = {}
+
+    for record in failed_funds:
+
+        if not isinstance(
+            record,
+            dict,
+        ):
+
+            continue
+
+        excel_row = get_summary_excel_row(
+            record
+        )
+
+        if excel_row is None:
+
+            continue
+
+        failed_by_row[
+            excel_row
+        ] = record
+
+    # ========================================================
+    # COUNTS
+    # ========================================================
+
+    successful_count = len(
+        successful_by_row
+    )
+
+    failed_count = len(
+        failed_by_row
+    )
+
+    print(
+        f"\nSuccessful funds: {successful_count}"
+    )
+
+    print(
+        f"Failed funds: {failed_count}"
+    )
+
+    # ========================================================
+    # COVERAGE CHECK
+    # ========================================================
+
+    excel_rows = {
+        int(
+            fund["excelRow"]
+        )
+        for fund in excel_funds
+    }
+
+    successful_rows = set(
+        successful_by_row.keys()
+    )
+
+    failed_rows = set(
+        failed_by_row.keys()
+    )
+
+    missing_rows = (
+        excel_rows
+        - successful_rows
+        - failed_rows
+    )
+
+    unexpected_success_rows = (
+        successful_rows
+        - excel_rows
+    )
+
+    unexpected_failed_rows = (
+        failed_rows
+        - excel_rows
+    )
+
+    overall_errors: list[str] = []
+
+    if missing_rows:
+
+        overall_errors.append(
+            "Excel rows are missing from both "
+            "successful and failed extraction records: "
+            + ", ".join(
+                str(row)
+                for row in sorted(
+                    missing_rows
+                )
+            )
+        )
+
+    if unexpected_success_rows:
+
+        overall_errors.append(
+            "Successful records contain Excel rows "
+            "not present in the master Excel universe: "
+            + ", ".join(
+                str(row)
+                for row in sorted(
+                    unexpected_success_rows
+                )
+            )
+        )
+
+    if unexpected_failed_rows:
+
+        overall_errors.append(
+            "Failed records contain Excel rows "
+            "not present in the master Excel universe: "
+            + ", ".join(
+                str(row)
+                for row in sorted(
+                    unexpected_failed_rows
+                )
+            )
+        )
+
+    if (
+        successful_count
+        + failed_count
+        != excel_count
+    ):
+
+        overall_errors.append(
+            "Successful + failed fund counts do not "
+            "cover the complete Excel universe."
+        )
+
+    # ========================================================
+    # VALIDATE EACH EXCEL FUND
+    # ========================================================
+
+    validation_results = []
+
+    passed_count = 0
+
+    failed_validation_count = 0
+
+    print(
+        "\nValidating individual funds..."
+    )
+
+    for index, excel_fund in enumerate(
+        excel_funds,
+        start=1,
+    ):
+
+        excel_row = int(
+            excel_fund[
+                "excelRow"
+            ]
+        )
+
+        print(
+            f"\n[{index}/{excel_count}] "
+            f"Excel row {excel_row}:"
+        )
+
+        # ----------------------------------------------------
+        # Extraction failure.
+        # ----------------------------------------------------
+
+        if excel_row in failed_by_row:
+
+            failure_record = failed_by_row[
+                excel_row
+            ]
+
+            failure_error = clean_text(
+                failure_record.get(
+                    "error"
+                )
+            )
+
+            errors = [
+                "Fund extraction failed."
+            ]
+
+            if failure_error:
+
+                errors.append(
+                    f"Extractor error: {failure_error}"
+                )
+
+            validation_results.append(
+                {
+                    "excelRow":
+                        excel_row,
+
+                    "prudentialUrl":
+                        excel_fund[
+                            "prudentialUrl"
+                        ],
+
+                    "pruAccessName":
+                        excel_fund[
+                            "pruAccessName"
+                        ],
+
+                    "status":
+                        "failed",
+
+                    "errors":
+                        errors,
+                }
+            )
+
+            failed_validation_count += 1
+
+            print(
+                "  FAIL - extraction failed"
+            )
+
+            continue
+
+        # ----------------------------------------------------
+        # Missing success/failure record.
+        # ----------------------------------------------------
+
+        if excel_row not in successful_by_row:
+
+            errors = [
+                "No successful or failed extraction "
+                "record exists for this Excel row."
+            ]
+
+            validation_results.append(
+                {
+                    "excelRow":
+                        excel_row,
+
+                    "prudentialUrl":
+                        excel_fund[
+                            "prudentialUrl"
+                        ],
+
+                    "pruAccessName":
+                        excel_fund[
+                            "pruAccessName"
+                        ],
+
+                    "status":
+                        "failed",
+
+                    "errors":
+                        errors,
+                }
+            )
+
+            failed_validation_count += 1
+
+            print(
+                "  FAIL - missing extraction record"
+            )
+
+            continue
+
+        # ----------------------------------------------------
+        # Validate actual successful fund.
+        # ----------------------------------------------------
+
+        successful_summary = (
+            successful_by_row[
+                excel_row
+            ]
+        )
+
+        # ----------------------------------------------------
+        # Defensive guard.
+        # ----------------------------------------------------
+
+        if not isinstance(
+            successful_summary,
+            dict,
+        ):
+
+            errors = [
+                "Successful extraction record is not "
+                "a dictionary."
+            ]
+
+            validation_results.append(
+                {
+                    "excelRow":
+                        excel_row,
+
+                    "status":
+                        "failed",
+
+                    "errors":
+                        errors,
+                }
+            )
+
+            failed_validation_count += 1
+
+            print(
+                "  FAIL - malformed successful record"
+            )
+
+            continue
+
+        passed, errors, details = (
+            validate_fund(
+                excel_fund,
+                successful_summary,
+            )
+        )
+
+        validation_results.append(
+            {
+                "excelRow":
+                    excel_row,
+
+                "prudentialUrl":
+                    excel_fund[
+                        "prudentialUrl"
+                    ],
+
+                "pruAccessName":
+                    excel_fund[
+                        "pruAccessName"
+                    ],
+
+                "status":
+                    (
+                        "passed"
+                        if passed
+                        else "failed"
+                    ),
+
+                "errors":
+                    errors,
+
+                "details":
+                    details,
+            }
+        )
+
+        if passed:
+
+            passed_count += 1
+
+            print(
+                "  PASS"
+            )
+
+            print(
+                f"  Fund: "
+                f"{details.get('fundName')}"
+            )
+
+            print(
+                f"  Identifier: "
+                f"{details.get('fundIdentifier')}"
+            )
+
+            print(
+                f"  Observations: "
+                f"{details.get('observationCount')}"
+            )
+
+            print(
+                f"  Pages: "
+                f"{details.get('pageCount')}"
+            )
+
+        else:
+
+            failed_validation_count += 1
+
+            print(
+                "  FAIL"
+            )
+
+            for error in errors:
+
+                print(
+                    f"    - {error}"
+                )
+
+    # ========================================================
+    # CONSOLIDATED HISTORY
+    # ========================================================
+
+    print(
+        "\nValidating consolidated BID history..."
+    )
+
+    (
+        consolidated_passed,
+        consolidated_errors,
+        consolidated_details,
+    ) = validate_consolidated_history(
+        excel_funds,
+        all_bid_history,
+    )
+
+    if consolidated_passed:
+
+        print(
+            "  Consolidated history: PASS"
+        )
+
+    else:
+
+        print(
+            "  Consolidated history: FAIL"
+        )
+
+        for error in consolidated_errors:
+
+            print(
+                f"    - {error}"
+            )
+
+    # ========================================================
+    # ALL FUNDS CONSOLIDATED FILE
+    # ========================================================
+
+    all_funds_errors: list[str] = []
+
+    if not isinstance(
+        all_funds,
+        dict,
+    ):
+
+        all_funds_errors.append(
+            "all_funds.json is not an object."
+        )
+
+    else:
+
+        all_funds_funds = (
+            all_funds.get(
                 "funds"
             )
         )
 
         if not isinstance(
-            consolidated_funds,
-            dict,
-        ):
-
-            consolidated_funds = {}
-
-        consolidated_mismatches = []
-
-        consolidated_total = 0
-
-        for result in fund_results:
-
-            if not result.get(
-                "fundIdentifier"
-            ):
-
-                continue
-
-            identifier = result[
-                "fundIdentifier"
-            ]
-
-            consolidated = (
-                consolidated_funds.get(
-                    identifier
-                )
-            )
-
-            if consolidated is None:
-
-                consolidated_mismatches.append(
-                    {
-                        "fundIdentifier": identifier,
-                        "reason": (
-                            "Missing from consolidated "
-                            "all_bid_history.json."
-                        ),
-                    }
-                )
-
-                continue
-
-            consolidated_observations = (
-                consolidated.get(
-                    "observations"
-                )
-            )
-
-            if not isinstance(
-                consolidated_observations,
-                list,
-            ):
-
-                consolidated_mismatches.append(
-                    {
-                        "fundIdentifier": identifier,
-                        "reason": (
-                            "Consolidated observations "
-                            "is not a list."
-                        ),
-                    }
-                )
-
-                continue
-
-            consolidated_count = len(
-                consolidated_observations
-            )
-
-            consolidated_total += (
-                consolidated_count
-            )
-
-            if consolidated_count != result[
-                "observationCount"
-            ]:
-
-                consolidated_mismatches.append(
-                    {
-                        "fundIdentifier": identifier,
-                        "reason": (
-                            "Observation count mismatch."
-                        ),
-                        "consolidated": (
-                            consolidated_count
-                        ),
-                        "individual": (
-                            result[
-                                "observationCount"
-                            ]
-                        ),
-                    }
-                )
-
-        top_check(
-            "Consolidated BID history fund count",
-            len(consolidated_funds)
-            == successful_count,
-            (
-                f"Consolidated funds="
-                f"{len(consolidated_funds)}; "
-                f"successful funds="
-                f"{successful_count}."
-            ),
-        )
-
-        top_check(
-            "Consolidated BID history matches individual files",
-            len(consolidated_mismatches) == 0,
-            (
-                "All consolidated histories match."
-                if not consolidated_mismatches
-                else
-                f"Mismatches="
-                f"{len(consolidated_mismatches)}."
-            ),
-        )
-
-        reported_total = (
-            run_summary.get(
-                "totalHistoricalBidObservations"
-            )
-        )
-
-        top_check(
-            "Consolidated observation total",
-            consolidated_total == reported_total,
-            (
-                f"Consolidated="
-                f"{consolidated_total}; "
-                f"run summary="
-                f"{reported_total}."
-            ),
-        )
-
-        # ====================================================================
-        # all_funds.json
-        # ====================================================================
-
-        all_funds_list = all_funds.get(
-            "funds"
-        )
-
-        if not isinstance(
-            all_funds_list,
+            all_funds_funds,
             list,
         ):
 
-            all_funds_list = []
-
-        top_check(
-            "all_funds.json fund count",
-            len(all_funds_list)
-            == successful_count,
-            (
-                f"all_funds.json="
-                f"{len(all_funds_list)}; "
-                f"successful="
-                f"{successful_count}."
-            ),
-        )
-
-        # ====================================================================
-        # Observation total
-        # ====================================================================
-
-        individual_total = sum(
-            result.get(
-                "observationCount",
-                0,
+            all_funds_errors.append(
+                "all_funds.json funds field "
+                "is not a list."
             )
-            for result in fund_results
+
+        else:
+
+            all_funds_success_count = len(
+                [
+                    item
+                    for item in all_funds_funds
+                    if (
+                        isinstance(
+                            item,
+                            dict,
+                        )
+                        and normalize_text(
+                            item.get(
+                                "status"
+                            )
+                        )
+                        == "success"
+                    )
+                ]
+            )
+
+            if (
+                all_funds_success_count
+                != successful_count
+            ):
+
+                all_funds_errors.append(
+                    "all_funds.json successful fund "
+                    "count does not match normalized "
+                    "successful extraction count."
+                )
+
+        all_funds_universe_count = (
+            all_funds.get(
+                "fundUniverseCount"
+            )
         )
 
-        top_check(
-            "Individual observation total",
-            individual_total == reported_total,
+        if all_funds_universe_count is not None:
+
+            try:
+
+                all_funds_universe_count = int(
+                    all_funds_universe_count
+                )
+
+            except (
+                ValueError,
+                TypeError,
+            ):
+
+                all_funds_errors.append(
+                    "all_funds fundUniverseCount "
+                    "is invalid."
+                )
+
+            else:
+
+                if (
+                    all_funds_universe_count
+                    != excel_count
+                ):
+
+                    all_funds_errors.append(
+                        "all_funds fundUniverseCount "
+                        "does not match Excel universe."
+                    )
+
+    if all_funds_errors:
+
+        print(
+            "\nall_funds.json: FAIL"
+        )
+
+        for error in all_funds_errors:
+
+            print(
+                f"  - {error}"
+            )
+
+        overall_errors.extend(
+            all_funds_errors
+        )
+
+    else:
+
+        print(
+            "\nall_funds.json: PASS"
+        )
+
+    # ========================================================
+    # RUN SUMMARY COUNTS
+    # ========================================================
+
+    run_summary_errors: list[str] = []
+
+    reported_successful = (
+        run_summary.get(
+            "successfulFundCount"
+        )
+    )
+
+    reported_failed = (
+        run_summary.get(
+            "failedFundCount"
+        )
+    )
+
+    if reported_successful is not None:
+
+        try:
+
+            reported_successful = int(
+                reported_successful
+            )
+
+            if (
+                reported_successful
+                != successful_count
+            ):
+
+                run_summary_errors.append(
+                    "run_summary successfulFundCount "
+                    "does not match normalized successful "
+                    "fund count."
+                )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            run_summary_errors.append(
+                "run_summary successfulFundCount "
+                "is invalid."
+            )
+
+    if reported_failed is not None:
+
+        try:
+
+            reported_failed = int(
+                reported_failed
+            )
+
+            if (
+                reported_failed
+                != failed_count
+            ):
+
+                run_summary_errors.append(
+                    "run_summary failedFundCount "
+                    "does not match normalized failed "
+                    "fund count."
+                )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            run_summary_errors.append(
+                "run_summary failedFundCount "
+                "is invalid."
+            )
+
+    if run_summary_errors:
+
+        print(
+            "\nrun_summary.json: FAIL"
+        )
+
+        for error in run_summary_errors:
+
+            print(
+                f"  - {error}"
+            )
+
+        overall_errors.extend(
+            run_summary_errors
+        )
+
+    else:
+
+        print(
+            "\nrun_summary.json: PASS"
+        )
+
+    # ========================================================
+    # TOTAL OBSERVATION CHECK
+    # ========================================================
+
+    actual_individual_total = 0
+
+    for result in validation_results:
+
+        if result.get(
+            "status"
+        ) != "passed":
+
+            continue
+
+        details = result.get(
+            "details"
+        )
+
+        if not isinstance(
+            details,
+            dict,
+        ):
+
+            continue
+
+        observation_count = details.get(
+            "observationCount"
+        )
+
+        if observation_count is None:
+
+            continue
+
+        try:
+
+            actual_individual_total += int(
+                observation_count
+            )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            pass
+
+    consolidated_total = (
+        consolidated_details.get(
+            "totalHistoricalBidObservations"
+        )
+    )
+
+    if consolidated_total is not None:
+
+        try:
+
+            consolidated_total = int(
+                consolidated_total
+            )
+
+            if (
+                consolidated_total
+                != actual_individual_total
+            ):
+
+                overall_errors.append(
+                    "Consolidated total historical "
+                    "BID observations does not match "
+                    "sum of passed individual funds."
+                )
+
+        except (
+            ValueError,
+            TypeError,
+        ):
+
+            overall_errors.append(
+                "Consolidated total observation count "
+                "is invalid."
+            )
+
+    # ========================================================
+    # FINAL STATUS
+    # ========================================================
+
+    overall_passed = (
+        len(overall_errors)
+        == 0
+        and failed_validation_count
+        == 0
+        and passed_count
+        == excel_count
+        and consolidated_passed
+    )
+
+    validation_output = {
+        "status":
             (
-                f"Individual="
-                f"{individual_total}; "
-                f"run summary="
-                f"{reported_total}."
-            ),
-        )
-
-        # ====================================================================
-        # Overall status
-        # ====================================================================
-
-        top_level_passed = all(
-            check["passed"]
-            for check in top_level_checks
-        )
-
-        overall_passed = (
-            top_level_passed
-            and passed_funds == expected_count
-            and failed_validation_funds == 0
-        )
-
-        status = (
-            "PASS"
-            if overall_passed
-            else
-            "FAIL"
-        )
-
-        # ====================================================================
-        # Write validation.json
-        # ====================================================================
-
-        validation = {
-            "status": status,
-
-            "validatedAtUtc": (
-                datetime.now(
-                    timezone.utc
-                ).isoformat()
+                "PASS"
+                if overall_passed
+                else "FAIL"
             ),
 
-            "excelFile": str(
+        "validatedAtUtc":
+            datetime.utcnow().isoformat()
+            + "Z",
+
+        "excelFile":
+            str(
                 EXCEL_FILE
             ),
 
-            "fundUniverseCount": expected_count,
+        "excelFundUniverseCount":
+            excel_count,
 
-            "successfulExtractionCount": (
-                successful_count
+        "successfulFundCount":
+            successful_count,
+
+        "failedExtractionFundCount":
+            failed_count,
+
+        "passedValidationFundCount":
+            passed_count,
+
+        "failedValidationFundCount":
+            failed_validation_count,
+
+        "malformedSuccessfulRecordCount":
+            len(
+                malformed_success_records
             ),
 
-            "failedExtractionCount": (
-                failed_count
+        "missingExcelRows":
+            sorted(
+                missing_rows
             ),
 
-            "validatedPassCount": (
-                passed_funds
+        "unexpectedSuccessfulRows":
+            sorted(
+                unexpected_success_rows
             ),
 
-            "validatedFailCount": (
-                failed_validation_funds
+        "unexpectedFailedRows":
+            sorted(
+                unexpected_failed_rows
             ),
 
-            "totalHistoricalBidObservations": (
-                individual_total
-            ),
+        "consolidatedHistory":
+            {
+                "passed":
+                    consolidated_passed,
 
-            "reportedHistoricalBidObservations": (
-                reported_total
-            ),
+                "errors":
+                    consolidated_errors,
 
-            "topLevelChecks": top_level_checks,
-
-            "fundResults": fund_results,
-
-            "failedExtractionRecords": (
-                failed_fund_records
-            ),
-
-            "details": {
-                "missingExcelRows": (
-                    missing_excel_rows
-                ),
-                "duplicateSuccessfulRows": (
-                    duplicate_success_rows
-                ),
-                "consolidatedMismatches": (
-                    consolidated_mismatches
-                ),
+                "details":
+                    consolidated_details,
             },
-        }
 
-        save_json(
-            VALIDATION_FILE,
-            validation,
-        )
+        "overallErrors":
+            overall_errors,
 
-        # ====================================================================
-        # Final console report
-        # ====================================================================
+        "fundResults":
+            validation_results,
+    }
 
-        print()
-        print("=" * 70)
+    save_json(
+        VALIDATION_FILE,
+        validation_output,
+    )
+
+    # ========================================================
+    # FINAL REPORT
+    # ========================================================
+
+    print(
+        "\n\n"
+        "======================================================================"
+    )
+
+    print(
+        "VALIDATION COMPLETE"
+    )
+
+    print(
+        "======================================================================"
+    )
+
+    print(
+        f"Excel fund universe: "
+        f"{excel_count}"
+    )
+
+    print(
+        f"Normalized successful funds: "
+        f"{successful_count}"
+    )
+
+    print(
+        f"Normalized failed extractions: "
+        f"{failed_count}"
+    )
+
+    print(
+        f"Passed individual validations: "
+        f"{passed_count}"
+    )
+
+    print(
+        f"Failed individual validations: "
+        f"{failed_validation_count}"
+    )
+
+    print(
+        f"Consolidated history: "
+        f"{'PASS' if consolidated_passed else 'FAIL'}"
+    )
+
+    print(
+        f"Overall validation: "
+        f"{'PASS' if overall_passed else 'FAIL'}"
+    )
+
+    if overall_errors:
+
         print(
-            f"VALIDATION {status}"
-        )
-        print("=" * 70)
-
-        print(
-            f"Excel funds: "
-            f"{expected_count}"
+            "\nOverall errors:"
         )
 
-        print(
-            f"Successful extraction records: "
-            f"{successful_count}"
-        )
-
-        print(
-            f"Failed extraction records: "
-            f"{failed_count}"
-        )
-
-        print(
-            f"Funds passed validation: "
-            f"{passed_funds}"
-        )
-
-        print(
-            f"Funds failed validation: "
-            f"{failed_validation_funds}"
-        )
-
-        print(
-            f"Historical BID observations: "
-            f"{individual_total}"
-        )
-
-        print()
-        print(
-            "Top-level checks:"
-        )
-
-        for check in top_level_checks:
-
-            marker = (
-                "PASS"
-                if check["passed"]
-                else
-                "FAIL"
-            )
+        for error in overall_errors:
 
             print(
-                f"  [{marker}] "
-                f"{check['name']}: "
-                f"{check['details']}"
+                f" - {error}"
             )
 
-        # ====================================================================
-        # Failed funds
-        # ====================================================================
+    print(
+        f"\nValidation file:"
+    )
 
-        if failed_validation_funds:
+    print(
+        f" - {VALIDATION_FILE}"
+    )
 
-            print()
-            print(
-                "FAILED FUNDS:"
-            )
+    print(
+        "\n======================================================================"
+    )
 
-            for result in fund_results:
+    if not overall_passed:
 
-                if result.get(
-                    "passed"
-                ):
-                    continue
-
-                print(
-                    f"  Excel row "
-                    f"{result.get('excelRow')}: "
-                    f"{result.get('fundName')}"
-                )
-
-                for check in result.get(
-                    "checks",
-                    [],
-                ):
-
-                    if not check.get(
-                        "passed"
-                    ):
-
-                        print(
-                            f"    - "
-                            f"{check.get('name')}: "
-                            f"{check.get('details')}"
-                        )
-
-        print()
-        print(
-            f"Validation file: "
-            f"{VALIDATION_FILE}"
+        raise SystemExit(
+            1
         )
 
-        print(
-            "=" * 70
-        )
-
-        if overall_passed:
-
-            print(
-                "ALL 67 FUNDS PASSED VALIDATION."
-            )
-
-            return 0
-
-        print(
-            "VALIDATION FAILED."
-        )
-
-        return 1
-
-    except Exception as error:
-
-        print()
-        print("=" * 70)
-        print(
-            "VALIDATION ERROR"
-        )
-        print("=" * 70)
-
-        print(
-            f"{type(error).__name__}: "
-            f"{error}"
-        )
-
-        return 1
-
-
-# ============================================================================
-# ENTRY POINT
-# ============================================================================
 
 if __name__ == "__main__":
-
-    sys.exit(
-        main()
-    )
+    main()
