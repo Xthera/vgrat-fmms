@@ -2151,13 +2151,17 @@ def save_successful_fund(
         )
     )
 
+    # Calculate the safe filename separately.
+    # This avoids nested quotation marks inside the f-string.
+    safe_fund_name = safe_filename(
+        fund_identifier
+        or fund_code
+        or fund_name
+    )
+
     directory_name = (
         f"{excel_row}_"
-        f"{safe_filename("
-            fund_identifier
-            or fund_code
-            or fund_name
-        )}"
+        f"{safe_fund_name}"
     )
 
     fund_output_dir = (
