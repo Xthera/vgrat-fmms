@@ -36,14 +36,15 @@ It checks:
 10. Strict descending date order.
 11. Duplicate observations.
 12. Inception coverage.
-13. Pagination completeness.
-14. Page sizes.
-15. Consolidated history.
-16. Current Prudential BID vs latest PruAccess BID.
-17. Suspicious synthetic/generated fields.
-18. Missing Excel funds.
-19. Duplicate Excel rows.
-20. Duplicate fund identifiers.
+13. Consecutive BID observation date gaps.
+14. Pagination completeness.
+15. Page sizes.
+16. Consolidated history.
+17. Current Prudential BID vs latest PruAccess BID.
+18. Suspicious synthetic/generated fields.
+19. Missing Excel funds.
+20. Duplicate Excel rows.
+21. Duplicate fund identifiers.
 
 NO DATA IS FABRICATED.
 
@@ -94,6 +95,15 @@ VALIDATION_FILE = (
 
 PAGE_SIZE = 20
 
+# Maximum allowed calendar-day gap between consecutive actual
+# PruAccess BID observations.
+#
+# Gaps of 7 calendar days or less are allowed.
+# A gap greater than 7 calendar days is a validation failure.
+#
+# No missing observations are created or filled.
+MAX_BID_DATE_GAP_DAYS = 7
+
 PRICE_TOLERANCE = 0.0002
 
 
@@ -104,6 +114,7 @@ PRICE_TOLERANCE = 0.0002
 def clean_text(value) -> str:
 
     if value is None:
+
         return ""
 
     return re.sub(
@@ -1757,6 +1768,82 @@ def validate_fund(
                 break
 
     # ========================================================
+    # CONSECUTIVE BID OBSERVATION DATE GAPS
+    # ========================================================
+
+    # Historical PruAccess observations do not have to be daily.
+    #
+    # Weekends, public holidays, non-valuation days, and other
+    # valid source gaps are allowed.
+    #
+    # However, the gap between every two consecutive actual BID
+    # observations must not exceed MAX_BID_DATE_GAP_DAYS.
+    #
+    # No missing observations are created.
+    # No carry-forward values are inserted.
+    # No interpolation is performed.
+
+    excessive_date_gaps = []
+
+    if len(
+        parsed_dates
+    ) >= 2:
+
+        for index in range(
+            1,
+            len(parsed_dates),
+        ):
+
+            previous = parsed_dates[
+                index - 1
+            ]
+
+            current = parsed_dates[
+                index
+            ]
+
+            gap_days = (
+                previous - current
+            ).days
+
+            if gap_days > MAX_BID_DATE_GAP_DAYS:
+
+                excessive_date_gaps.append(
+                    {
+                        "fromDate":
+                            previous.strftime(
+                                "%Y-%m-%d"
+                            ),
+
+                        "toDate":
+                            current.strftime(
+                                "%Y-%m-%d"
+                            ),
+
+                        "gapDays":
+                            gap_days,
+                    }
+                )
+
+        if excessive_date_gaps:
+
+            preview = (
+                excessive_date_gaps[:20]
+            )
+
+            errors.append(
+                "Historical BID observation date "
+                "gap exceeds "
+                f"{MAX_BID_DATE_GAP_DAYS} "
+                "calendar days. "
+                f"Found "
+                f"{len(excessive_date_gaps)} "
+                "excessive gap(s). "
+                "First gap(s): "
+                f"{json.dumps(preview, ensure_ascii=False)}"
+            )
+
+    # ========================================================
     # INCEPTION DATE
     # ========================================================
 
@@ -2266,6 +2353,7 @@ def main():
         )
 
         if not identifier:
+
             continue
 
         identifier_rows.setdefault(
@@ -2989,6 +3077,9 @@ def main():
         "priceTolerance":
             PRICE_TOLERANCE,
 
+        "maximumBidObservationGapDays":
+            MAX_BID_DATE_GAP_DAYS,
+
         "totalValidatedHistoricalBidObservations":
             expected_total,
 
@@ -3067,6 +3158,12 @@ def main():
     print(
         f"Consolidated BID observations: "
         f"{actual_total}"
+    )
+
+    print(
+        f"Maximum allowed consecutive BID "
+        f"observation gap: "
+        f"{MAX_BID_DATE_GAP_DAYS} calendar days"
     )
 
     if overall_errors:
