@@ -44,7 +44,8 @@ INCEPTION RULE
 The oldest available PruAccess historical BID observation must be:
 
     - on the official Prudential inception date, OR
-    - no more than 7 calendar days after the official inception date.
+    - no more than 7 calendar days after the official Prudential
+      inception date.
 
 Calendar-date gaps after the first observation are allowed.
 
@@ -169,6 +170,30 @@ MAX_INCEPTION_DELAY_DAYS = 7
 
 SINGAPORE_TZ = ZoneInfo(
     "Asia/Singapore"
+)
+
+
+# ============================================================
+# PRUACCESS SELECTORS
+# ============================================================
+
+# IMPORTANT:
+#
+# PruAccess contains both:
+#
+#   <div id="startDate" ...>
+#   <input id="startDate" name="startDate" ...>
+#
+# Therefore "#startDate" is NOT a unique selector.
+#
+# We must explicitly target the actual input element.
+#
+PRUACCESS_START_DATE_INPUT = (
+    'input[name="startDate"]'
+)
+
+PRUACCESS_END_DATE_INPUT = (
+    'input[name="endDate"]'
 )
 
 
@@ -751,8 +776,6 @@ async def get_prudential_fund_data(
 
         if not captured_api_url:
 
-            # Look for the API URL in page source as a fallback.
-
             content = await page.content()
 
             match = re.search(
@@ -1202,19 +1225,30 @@ async def set_readonly_input_value(
         selector
     )
 
-    if await locator.count() == 0:
+    count = await locator.count()
+
+    if count == 0:
 
         raise RuntimeError(
             f"Readonly date input not found: {selector}"
+        )
+
+    if count != 1:
+
+        raise RuntimeError(
+            f"Readonly date selector is not unique: "
+            f"{selector!r} matched {count} elements."
         )
 
     await locator.evaluate(
         """
         (element, value) => {
             element.value = value;
+
             element.dispatchEvent(
                 new Event("input", { bubbles: true })
             );
+
             element.dispatchEvent(
                 new Event("change", { bubbles: true })
             );
@@ -2090,17 +2124,30 @@ async def submit_pruaccess_search(
 
     # --------------------------------------------------------
     # Set dates.
+    #
+    # IMPORTANT:
+    #
+    # PruAccess has duplicate IDs for the date controls:
+    #
+    #   div#startDate
+    #   input#startDate[name="startDate"]
+    #
+    #   div#endDate
+    #   input#endDate[name="endDate"]
+    #
+    # Therefore we explicitly target the input elements
+    # by their name attribute.
     # --------------------------------------------------------
 
     await set_readonly_input_value(
         page,
-        "#startDate",
+        PRUACCESS_START_DATE_INPUT,
         start_date,
     )
 
     await set_readonly_input_value(
         page,
-        "#endDate",
+        PRUACCESS_END_DATE_INPUT,
         end_date,
     )
 
@@ -2130,30 +2177,53 @@ async def submit_pruaccess_search(
 
     # --------------------------------------------------------
     # Verify requested dates.
+    #
+    # IMPORTANT:
+    # Use the same unique input[name=...] selectors.
     # --------------------------------------------------------
 
+    start_date_locator = page.locator(
+        PRUACCESS_START_DATE_INPUT
+    )
+
+    end_date_locator = page.locator(
+        PRUACCESS_END_DATE_INPUT
+    )
+
+    if await start_date_locator.count() != 1:
+
+        raise RuntimeError(
+            "PruAccess start-date input selector is not unique."
+        )
+
+    if await end_date_locator.count() != 1:
+
+        raise RuntimeError(
+            "PruAccess end-date input selector is not unique."
+        )
+
     actual_start = clean_text(
-        await page.locator(
-            "#startDate"
-        ).input_value()
+        await start_date_locator.input_value()
     )
 
     actual_end = clean_text(
-        await page.locator(
-            "#endDate"
-        ).input_value()
+        await end_date_locator.input_value()
     )
 
     if actual_start != start_date:
 
         raise RuntimeError(
-            "PruAccess start date verification failed."
+            "PruAccess start date verification failed. "
+            f"Expected {start_date!r}, "
+            f"got {actual_start!r}."
         )
 
     if actual_end != end_date:
 
         raise RuntimeError(
-            "PruAccess end date verification failed."
+            "PruAccess end date verification failed. "
+            f"Expected {end_date!r}, "
+            f"got {actual_end!r}."
         )
 
     # --------------------------------------------------------
