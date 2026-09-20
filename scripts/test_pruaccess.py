@@ -3,185 +3,99 @@
 """
 PruAccess historical BID price extractor.
 
-MASTER SOURCE:
-    Funds Links.xlsm
+MASTER SOURCE
+=============
 
-Excel:
-    Column A = Prudential fund URL
-    Column B = exact PruAccess fund name
+Funds Links.xlsm
 
-================================================================
+Column A:
+    Prudential fund URL
+
+Column B:
+    Exact PruAccess fund name
+
 WORKFLOW
-================================================================
+========
 
-    Funds Links.xlsm
-          |
-          v
-    Read every populated Excel row
-          |
-          v
-    Prudential fund page/API
-          |
-          v
-    Official Prudential fund information
-          |
-          v
-    Official Prudential inception date
-          |
-          v
-    PruAccess exact fund-name match
-          |
-          v
-    Automatically split history into <=10-year windows
-          |
-          v
-    Submit each PruAccess window
-          |
-          v
-    Establish authenticated/session cookies
-          |
-          v
-    Discover complete pagination
-          |
-          v
-    Parallel HTTP page retrieval
-          |
-          v
-    Retry failed pages
-          |
-          v
-    Validate every expected page
-          |
-          v
-    Extract BID observations only
-          |
-          v
-    Reconstruct complete chronology
-          |
-          v
-    Validate inception coverage
-          |
-          v
-    Validate duplicates
-          |
-          v
-    Save fund
-          |
-          v
-    Consolidated JSON
+1. Read every populated fund from Funds Links.xlsm.
+2. Use Prudential fund URL as the master universe.
+3. Retrieve current Prudential fund data.
+4. Retrieve official Prudential inception date.
+5. Match the PruAccess fund name exactly.
+6. Build historical date windows of no more than 10 years.
+7. Submit every window through PruAccess using Playwright.
+8. Establish the authenticated/browser session.
+9. Use the same browser-context cookies for direct HTTP pagination.
+10. Retrieve every expected pagination page.
+11. Retrieve pagination pages in parallel.
+12. Retry failed pages.
+13. Validate every page individually.
+14. Extract BID observations only.
+15. Never fabricate missing dates.
+16. Never interpolate missing prices.
+17. Never estimate missing prices.
+18. Reconstruct the complete history chronologically.
+19. Reject duplicate historical dates.
+20. Validate inception coverage.
 
-================================================================
-IMPORTANT RULES
-================================================================
+INCEPTION RULE
+==============
 
-1. Funds Links.xlsm determines the fund universe.
+The oldest available PruAccess historical BID observation must be:
 
-2. Column A determines which funds exist.
+    - on the official Prudential inception date, OR
+    - no more than 7 calendar days after the official inception date.
 
-3. Column B provides the exact PruAccess fund name.
+Calendar-date gaps after the first observation are allowed.
 
-4. No hardcoded fund count.
+The extractor does NOT require continuous daily observations.
 
-5. No fuzzy matching.
+No missing date or price is fabricated.
 
-6. No synthetic data.
+If the oldest observation is more than 7 calendar days after
+the official Prudential inception date, the fund fails validation.
 
-7. No estimated data.
+PRICE TYPE
+==========
 
-8. No interpolation.
+Historical price type is BID.
 
-9. No fabricated observations.
+The selected PruAccess Fund Price Type is never changed by the
+extractor.
 
-10. Historical prices come directly from PruAccess.
+CURRENT BID
+===========
 
-11. Historical price type is BID only.
+The current Prudential BID is stored separately from historical
+PruAccess BID observations.
 
-12. Offer prices are never stored as historical BID prices.
+VALIDATION
+==========
 
-13. Fund Price Type is never changed.
+Every page must succeed.
 
-14. The historical extraction begins from the official
-    Prudential inception date.
+Every expected pagination page must be retrieved.
 
-15. PruAccess date windows must never exceed 10 years.
+Every window must succeed.
 
-16. The historical end date is the current Singapore date.
+Every window must pass validation.
 
-17. Every expected pagination page must be retrieved.
+Every fund must pass full-history validation.
 
-18. A permanently failed page fails the entire window.
+A fund is only saved as successful after every window and the
+complete historical reconstruction have passed.
 
-19. A failed window fails the entire fund.
+If any Excel-master fund fails, the complete production run fails.
 
-20. A fund is never marked successful with partial history.
+NO SYNTHETIC DATA
+=================
 
-21. Duplicate observations are NOT silently removed.
-
-22. Duplicate observations are detected and cause validation
-    failure.
-
-23. Current Prudential BID is stored separately from historical
-    PruAccess BID.
-
-24. Prudential fund name is authoritative.
-
-25. Citicode/fundIdentifier is technical identity metadata.
-
-26. No PruAccess fund is added to the universe unless it exists
-    in Funds Links.xlsm.
-
-27. If the extractor cannot confidently obtain data, it fails
-    loudly.
-
-28. Code is HTTP/API-first for pagination.
-
-29. Playwright is used where required to establish the PruAccess
-    session and submit each initial search window.
-
-30. Direct HTTP pagination uses the same Playwright browser
-    context session cookies.
-
-31. Pagination pages are retrieved in parallel.
-
-32. Every page is individually validated.
-
-33. Full pagination is validated before a window becomes
-    successful.
-
-34. Every window must be successful before a fund becomes
-    successful.
-
-35. All windows are reconstructed chronologically.
-
-36. Historical date gaps are allowed.
-
-37. Missing calendar dates are NOT filled.
-
-38. Weekends, public holidays, non-valuation days and other
-    legitimate PruAccess gaps are allowed.
-
-39. The oldest historical BID observation must be either:
-        - the Prudential inception date, OR
-        - no more than 1 calendar day after inception.
-
-40. The validator does NOT require continuous daily observations.
-
-41. No observation is fabricated to satisfy inception coverage.
-
-42. If PruAccess genuinely provides no observation on the
-    inception date but provides one on the following calendar
-    day, that is valid.
-
-43. Any history beginning more than 1 calendar day after the
-    official inception date fails validation.
-
-44. The extractor does not silently deduplicate overlapping or
-    repeated observations.
-
-45. If duplicate date observations are found, validation fails.
-
-46. Every code change should result in the COMPLETE updated
-    script being supplied, not a patch.
+No synthetic data.
+No estimated data.
+No interpolation.
+No fabricated observations.
+No silent deduplication.
+No fuzzy matching.
 """
 
 from __future__ import annotations
@@ -207,7 +121,7 @@ from playwright.async_api import (
 
 
 # ============================================================
-# CONFIG
+# CONFIGURATION
 # ============================================================
 
 EXCEL_FILE = Path("Funds Links.xlsm")
@@ -215,7 +129,8 @@ EXCEL_FILE = Path("Funds Links.xlsm")
 OUTPUT_DIR = Path("output_pruaccess")
 
 FUNDS_OUTPUT_DIR = (
-    OUTPUT_DIR / "funds"
+    OUTPUT_DIR
+    / "funds"
 )
 
 PRUACCESS_URL = (
@@ -223,36 +138,17 @@ PRUACCESS_URL = (
     "prulinkfund/viewFundPerformance.do"
 )
 
-# ------------------------------------------------------------
-# PruAccess pagination
-# ------------------------------------------------------------
-
 PAGE_SIZE = 20
 
 MAX_PAGES = 1000
 
-# Number of attempts for each HTTP page.
 PAGE_RETRY_COUNT = 4
 
-# Seconds between retries.
 PAGE_RETRY_DELAY_SECONDS = 5
 
-# HTTP timeout in milliseconds.
 PAGE_TIMEOUT_MS = 120000
 
-# ------------------------------------------------------------
-# Parallelism
-# ------------------------------------------------------------
-
-# Number of historical pagination pages retrieved concurrently.
-#
-# This does NOT change the number of pages retrieved.
-# It only controls concurrency.
 PARALLEL_PAGE_WORKERS = 6
-
-# ------------------------------------------------------------
-# Browser timing
-# ------------------------------------------------------------
 
 INITIAL_PAGE_TIMEOUT_MS = 120000
 
@@ -264,25 +160,12 @@ PRUACCESS_RESULT_WAIT_MS = 2500
 
 BROWSER_HEADLESS = True
 
-# ------------------------------------------------------------
-# PruAccess date limitation
-# ------------------------------------------------------------
-
-# PruAccess allows a maximum historical date range of 10 years.
-#
-# To remain safely inside that limit, each window is constructed
-# as:
-#
-#     start -> start + 10 calendar years - 1 day
-#
-# The next window starts the following calendar day.
-#
-# Therefore no window exceeds exactly 10 calendar years.
 MAX_WINDOW_YEARS = 10
 
-# ------------------------------------------------------------
-# Singapore timezone
-# ------------------------------------------------------------
+# IMPORTANT:
+# Historical PruAccess data may begin up to 7 calendar days
+# after the official Prudential inception date.
+MAX_INCEPTION_DELAY_DAYS = 7
 
 SINGAPORE_TZ = ZoneInfo(
     "Asia/Singapore"
@@ -290,84 +173,131 @@ SINGAPORE_TZ = ZoneInfo(
 
 
 # ============================================================
-# GENERAL HELPERS
+# BASIC HELPERS
 # ============================================================
 
-def clean_text(value: Any) -> str:
+def clean_text(
+    value: Any,
+) -> str:
 
     if value is None:
         return ""
 
-    return re.sub(
-        r"\s+",
-        " ",
-        str(value),
+    return " ".join(
+        str(value)
+        .replace("\xa0", " ")
+        .split()
     ).strip()
 
 
-def normalize_name(value: str) -> str:
+def normalize_name(
+    value: Any,
+) -> str:
 
-    value = clean_text(
+    text = clean_text(
         value
-    ).lower()
-
-    value = value.replace(
-        "–",
-        "-"
     )
 
-    value = value.replace(
-        "—",
-        "-"
-    )
-
-    value = re.sub(
+    return re.sub(
         r"\s+",
         " ",
-        value,
-    )
-
-    return value.strip()
-
-
-def save_json(
-    path: Path,
-    data: Any,
-) -> None:
-
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    path.write_text(
-        json.dumps(
-            data,
-            indent=2,
-            ensure_ascii=False,
-        ),
-        encoding="utf-8",
-    )
+        text,
+    ).strip().casefold()
 
 
 def parse_prudential_date(
-    value: str,
-) -> datetime:
+    value: Any,
+) -> date:
 
-    return datetime.strptime(
-        value.strip(),
+    if isinstance(
+        value,
+        datetime,
+    ):
+        return value.date()
+
+    if isinstance(
+        value,
+        date,
+    ):
+        return value
+
+    text = clean_text(
+        value
+    )
+
+    formats = [
+        "%d-%b-%Y",
+        "%d/%b/%Y",
         "%d/%m/%Y",
+        "%Y-%m-%d",
+        "%Y/%m/%d",
+        "%d-%m-%Y",
+        "%d %b %Y",
+    ]
+
+    for fmt in formats:
+
+        try:
+
+            return datetime.strptime(
+                text,
+                fmt,
+            ).date()
+
+        except ValueError:
+
+            continue
+
+    raise ValueError(
+        f"Unable to parse Prudential date: {value!r}"
     )
 
 
 def parse_pruaccess_date(
-    value: str,
+    value: Any,
 ) -> date:
 
-    return datetime.strptime(
-        value.strip(),
+    if isinstance(
+        value,
+        datetime,
+    ):
+        return value.date()
+
+    if isinstance(
+        value,
+        date,
+    ):
+        return value
+
+    text = clean_text(
+        value
+    )
+
+    formats = [
         "%d-%b-%Y",
-    ).date()
+        "%d-%B-%Y",
+        "%d/%b/%Y",
+        "%d/%B/%Y",
+        "%d/%m/%Y",
+        "%Y-%m-%d",
+    ]
+
+    for fmt in formats:
+
+        try:
+
+            return datetime.strptime(
+                text,
+                fmt,
+            ).date()
+
+        except ValueError:
+
+            continue
+
+    raise ValueError(
+        f"Unable to parse PruAccess date: {value!r}"
+    )
 
 
 def format_pruaccess_date(
@@ -395,55 +325,132 @@ def singapore_today_pruaccess() -> str:
 
 def utc_now_iso() -> str:
 
-    return (
-        datetime.now(
-            ZoneInfo("UTC")
-        ).isoformat()
-    )
+    return datetime.now(
+        ZoneInfo("UTC")
+    ).isoformat()
 
 
 def safe_filename(
-    value: str,
+    value: Any,
 ) -> str:
 
-    value = clean_text(
+    text = clean_text(
         value
     )
 
-    value = re.sub(
-        r"[^A-Za-z0-9._-]+",
+    text = re.sub(
+        r'[<>:"/\\|?*]',
         "_",
-        value,
+        text,
     )
 
-    value = value.strip(
-        "._"
-    )
+    text = re.sub(
+        r"\s+",
+        " ",
+        text,
+    ).strip()
 
-    if not value:
-
-        value = "fund"
-
-    return value[:120]
+    return text or "unknown"
 
 
 # ============================================================
-# DATE WINDOW GENERATION
+# JSON SERIALIZATION
+# ============================================================
+
+def make_json_safe(
+    value: Any,
+) -> Any:
+    """
+    Recursively convert Python date/datetime objects into
+    JSON-safe ISO strings.
+
+    This is intentionally recursive because date objects can
+    exist deep inside nested dictionaries/lists.
+    """
+
+    if isinstance(
+        value,
+        datetime,
+    ):
+
+        return value.isoformat()
+
+    if isinstance(
+        value,
+        date,
+    ):
+
+        return value.isoformat()
+
+    if isinstance(
+        value,
+        dict,
+    ):
+
+        return {
+            str(key):
+                make_json_safe(item)
+            for key, item
+            in value.items()
+        }
+
+    if isinstance(
+        value,
+        list,
+    ):
+
+        return [
+            make_json_safe(item)
+            for item
+            in value
+        ]
+
+    if isinstance(
+        value,
+        tuple,
+    ):
+
+        return [
+            make_json_safe(item)
+            for item
+            in value
+        ]
+
+    return value
+
+
+def save_json(
+    path: Path,
+    data: Any,
+) -> None:
+
+    path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    safe_data = make_json_safe(
+        data
+    )
+
+    path.write_text(
+        json.dumps(
+            safe_data,
+            indent=2,
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+
+# ============================================================
+# DATE WINDOW HELPERS
 # ============================================================
 
 def add_calendar_years(
     value: date,
     years: int,
 ) -> date:
-
-    """
-    Add calendar years while handling February 29.
-
-    Example:
-
-        29-Feb-2024 + 10 years
-        -> 28-Feb-2034
-    """
 
     try:
 
@@ -453,7 +460,8 @@ def add_calendar_years(
 
     except ValueError:
 
-        # February 29 -> February 28
+        # Handles 29-Feb when the destination year
+        # is not a leap year.
         return value.replace(
             year=value.year + years,
             day=28,
@@ -463,33 +471,13 @@ def add_calendar_years(
 def build_date_windows(
     inception_date: date,
     end_date: date,
-) -> list[dict]:
-
-    """
-    Split inception -> end into sequential windows where each
-    window is safely <= 10 calendar years.
-
-    Example:
-
-        01-Jan-2000 -> 31-Dec-2010
-
-    becomes approximately:
-
-        01-Jan-2000 -> 31-Dec-2009
-        01-Jan-2010 -> 31-Dec-2010
-
-    No dates are skipped.
-
-    Windows are adjacent, not overlapping, so legitimate
-    duplicate observations are not created merely by the
-    extraction design.
-    """
+) -> list[dict[str, Any]]:
 
     if end_date < inception_date:
 
-        raise RuntimeError(
-            "PruAccess end date is earlier "
-            "than Prudential inception date."
+        raise ValueError(
+            "Historical end date is earlier than "
+            "the Prudential inception date."
         )
 
     windows = []
@@ -515,9 +503,8 @@ def build_date_windows(
 
         if current_end < current_start:
 
-            raise RuntimeError(
-                "Generated invalid PruAccess "
-                "date window."
+            raise ValueError(
+                "Generated invalid historical date window."
             )
 
         windows.append(
@@ -545,34 +532,22 @@ def build_date_windows(
                     (
                         current_end
                         - current_start
-                    ).days + 1,
+                    ).days
+                    + 1,
             }
         )
 
-        next_start = (
+        current_start = (
             current_end
             + timedelta(days=1)
         )
 
-        if next_start <= current_start:
-
-            raise RuntimeError(
-                "Date-window generator did not "
-                "advance chronologically."
-            )
-
-        current_start = next_start
-
         window_number += 1
-
-    # --------------------------------------------------------
-    # Final coverage validation.
-    # --------------------------------------------------------
 
     if not windows:
 
-        raise RuntimeError(
-            "No PruAccess date windows generated."
+        raise ValueError(
+            "No historical date windows were generated."
         )
 
     if (
@@ -580,9 +555,9 @@ def build_date_windows(
         != inception_date
     ):
 
-        raise RuntimeError(
-            "First PruAccess window does not "
-            "start at Prudential inception date."
+        raise ValueError(
+            "First historical window does not start "
+            "at the official inception date."
         )
 
     if (
@@ -590,14 +565,12 @@ def build_date_windows(
         != end_date
     ):
 
-        raise RuntimeError(
-            "Last PruAccess window does not "
-            "reach the current Singapore date."
+        raise ValueError(
+            "Final historical window does not end "
+            "at the requested current date."
         )
 
-    # --------------------------------------------------------
-    # Ensure no gaps or overlaps between windows.
-    # --------------------------------------------------------
+    # Verify no gaps or overlaps between windows.
 
     for index in range(
         1,
@@ -622,9 +595,9 @@ def build_date_windows(
             != expected_start
         ):
 
-            raise RuntimeError(
-                "PruAccess windows contain a "
-                "gap or overlap."
+            raise ValueError(
+                "Generated historical windows contain "
+                "a gap or overlap."
             )
 
     return windows
@@ -634,24 +607,12 @@ def build_date_windows(
 # EXCEL MASTER UNIVERSE
 # ============================================================
 
-def read_excel_funds() -> list[dict]:
-
-    print(
-        "\n============================================================"
-    )
-
-    print(
-        "READING FUNDS LINKS.XLSM"
-    )
-
-    print(
-        "============================================================"
-    )
+def read_excel_funds() -> list[dict[str, Any]]:
 
     if not EXCEL_FILE.exists():
 
         raise FileNotFoundError(
-            f"Excel file not found: "
+            f"Excel master file not found: "
             f"{EXCEL_FILE}"
         )
 
@@ -662,70 +623,84 @@ def read_excel_funds() -> list[dict]:
         data_only=True,
     )
 
-    worksheet = workbook.active
+    try:
 
-    funds = []
+        worksheet = workbook[
+            workbook.sheetnames[0]
+        ]
 
-    for row_number in range(
-        2,
-        worksheet.max_row + 1,
-    ):
+        funds = []
 
-        prudential_url = clean_text(
-            worksheet.cell(
-                row=row_number,
-                column=1,
-            ).value
-        )
+        for row_number in range(
+            2,
+            worksheet.max_row + 1,
+        ):
 
-        pruaccess_name = clean_text(
-            worksheet.cell(
-                row=row_number,
-                column=2,
-            ).value
-        )
+            prudential_url = clean_text(
+                worksheet.cell(
+                    row=row_number,
+                    column=1,
+                ).value
+            )
 
-        # Column A is the master universe.
-        if not prudential_url:
+            pruaccess_name = clean_text(
+                worksheet.cell(
+                    row=row_number,
+                    column=2,
+                ).value
+            )
 
-            continue
+            if not prudential_url:
 
-        funds.append(
-            {
-                "excelRow":
-                    row_number,
+                continue
 
-                "prudentialUrl":
-                    prudential_url,
+            funds.append(
+                {
+                    "excelRow":
+                        row_number,
 
-                "pruAccessName":
-                    pruaccess_name,
-            }
-        )
+                    "prudentialUrl":
+                        prudential_url,
 
-    workbook.close()
+                    "pruAccessName":
+                        pruaccess_name,
+                }
+            )
+
+    finally:
+
+        workbook.close()
 
     if not funds:
 
-        raise RuntimeError(
-            "No populated Prudential fund URLs "
-            "were found in Column A."
+        raise ValueError(
+            "No populated Prudential fund URLs were found "
+            "in Column A of Funds Links.xlsm."
         )
 
     print(
-        f"\nPopulated fund URLs found: "
-        f"{len(funds)}"
+        "\n============================================================"
+    )
+
+    print(
+        "EXCEL MASTER FUND UNIVERSE"
+    )
+
+    print(
+        "============================================================"
+    )
+
+    print(
+        f"Funds found: {len(funds)}"
     )
 
     for fund in funds:
 
         print(
             f"Row {fund['excelRow']}: "
-            f"{fund['pruAccessName'] or '[NO PRUACCESS NAME]'}"
-        )
-
-        print(
-            f"    {fund['prudentialUrl']}"
+            f"{fund['pruAccessName']} "
+            f"| "
+            f"{fund['prudentialUrl']}"
         )
 
     return funds
@@ -738,36 +713,28 @@ def read_excel_funds() -> list[dict]:
 async def get_prudential_fund_data(
     page: Page,
     prudential_url: str,
-) -> dict:
+) -> dict[str, Any]:
 
-    print(
-        "\n=== Opening Prudential fund page ==="
-    )
+    captured_api_url = None
 
-    print(
-        prudential_url
-    )
-
-    captured_urls = []
-
-    async def handle_response(
+    async def response_listener(
         response,
     ):
 
+        nonlocal captured_api_url
+
+        url = response.url
+
         if (
             "ilpfunds.json"
-            in response.url
+            in url.lower()
         ):
 
-            if response.url not in captured_urls:
-
-                captured_urls.append(
-                    response.url
-                )
+            captured_api_url = url
 
     page.on(
         "response",
-        handle_response,
+        response_listener,
     )
 
     try:
@@ -782,261 +749,358 @@ async def get_prudential_fund_data(
             PRUDENTIAL_WAIT_MS
         )
 
+        if not captured_api_url:
+
+            # Look for the API URL in page source as a fallback.
+
+            content = await page.content()
+
+            match = re.search(
+                r'https?[^"\']*ilpfunds\.json[^"\']*',
+                content,
+                re.IGNORECASE,
+            )
+
+            if match:
+
+                captured_api_url = (
+                    match.group(0)
+                )
+
+        if not captured_api_url:
+
+            raise RuntimeError(
+                "Could not identify Prudential ilpfunds.json API."
+            )
+
+        response = await page.request.get(
+            captured_api_url,
+            timeout=PAGE_TIMEOUT_MS,
+        )
+
+        if response.status != 200:
+
+            raise RuntimeError(
+                "Prudential fund API returned "
+                f"HTTP {response.status}."
+            )
+
+        payload = await response.json()
+
+        if isinstance(
+            payload,
+            dict,
+        ):
+
+            if isinstance(
+                payload.get("data"),
+                list,
+            ):
+
+                records = payload["data"]
+
+            elif isinstance(
+                payload.get("funds"),
+                list,
+            ):
+
+                records = payload["funds"]
+
+            else:
+
+                records = [
+                    payload
+                ]
+
+        elif isinstance(
+            payload,
+            list,
+        ):
+
+            records = payload
+
+        else:
+
+            raise RuntimeError(
+                "Unexpected Prudential fund API response format."
+            )
+
+        if not records:
+
+            raise RuntimeError(
+                "Prudential fund API returned no fund records."
+            )
+
+        fund = None
+
+        for item in records:
+
+            if isinstance(
+                item,
+                dict,
+            ):
+
+                fund = item
+
+                break
+
+        if not fund:
+
+            raise RuntimeError(
+                "No Prudential fund object was found in API response."
+            )
+
+        def first_value(
+            *keys,
+        ):
+
+            for key in keys:
+
+                if key in fund:
+
+                    value = fund[key]
+
+                    if (
+                        value is not None
+                        and clean_text(value)
+                    ):
+
+                        return value
+
+            return None
+
+        fund_identifier = first_value(
+            "fundIdentifier",
+            "citicode",
+            "citiCode",
+            "fundId",
+        )
+
+        fund_name = first_value(
+            "fundName",
+            "name",
+            "title",
+        )
+
+        inception_raw = first_value(
+            "inceptionDate",
+            "fundInceptionDate",
+            "launchDate",
+        )
+
+        if not fund_identifier:
+
+            raise RuntimeError(
+                "Prudential API did not provide fundIdentifier."
+            )
+
+        if not fund_name:
+
+            raise RuntimeError(
+                "Prudential API did not provide fundName."
+            )
+
+        if not inception_raw:
+
+            raise RuntimeError(
+                "Prudential API did not provide inceptionDate."
+            )
+
+        inception_date = parse_prudential_date(
+            inception_raw
+        )
+
+        result = {
+            "fundIdentifier":
+                clean_text(
+                    fund_identifier
+                ),
+
+            "fundName":
+                clean_text(
+                    fund_name
+                ),
+
+            "fundCode":
+                clean_text(
+                    first_value(
+                        "fundCode",
+                        "code",
+                    )
+                ),
+
+            "fundCurrency":
+                clean_text(
+                    first_value(
+                        "fundCurrency",
+                        "currency",
+                    )
+                ),
+
+            "unitCurrency":
+                clean_text(
+                    first_value(
+                        "unitCurrency",
+                    )
+                ),
+
+            "assetClass":
+                clean_text(
+                    first_value(
+                        "assetClass",
+                    )
+                ),
+
+            "assetSubClass":
+                clean_text(
+                    first_value(
+                        "assetSubClass",
+                    )
+                ),
+
+            "riskClassification":
+                clean_text(
+                    first_value(
+                        "riskClassification",
+                        "risk",
+                    )
+                ),
+
+            "bidPrice":
+                first_value(
+                    "bidPrice",
+                    "bid",
+                ),
+
+            "offerPrice":
+                first_value(
+                    "offerPrice",
+                    "offer",
+                ),
+
+            "valuationDate":
+                first_value(
+                    "valuationDate",
+                ),
+
+            "inceptionDate":
+                format_pruaccess_date(
+                    inception_date
+                ),
+
+            "cumulativeYtd":
+                first_value(
+                    "cumulativeYtd",
+                ),
+
+            "cumulative1m":
+                first_value(
+                    "cumulative1m",
+                ),
+
+            "cumulative3m":
+                first_value(
+                    "cumulative3m",
+                ),
+
+            "cumulative6m":
+                first_value(
+                    "cumulative6m",
+                ),
+
+            "cumulative1y":
+                first_value(
+                    "cumulative1y",
+                ),
+
+            "cumulative3y":
+                first_value(
+                    "cumulative3y",
+                ),
+
+            "cumulative5y":
+                first_value(
+                    "cumulative5y",
+                ),
+
+            "annualised3y":
+                first_value(
+                    "annualised3y",
+                ),
+
+            "annualised5y":
+                first_value(
+                    "annualised5y",
+                ),
+
+            "annualised10y":
+                first_value(
+                    "annualised10y",
+                ),
+
+            "annualisedSinceLaunch":
+                first_value(
+                    "annualisedSinceLaunch",
+                ),
+
+            "factsheetUrl":
+                first_value(
+                    "factsheetUrl",
+                ),
+
+            "prospectusUrl":
+                first_value(
+                    "prospectusUrl",
+                ),
+
+            "productHighlightSheetUrl":
+                first_value(
+                    "productHighlightSheetUrl",
+                ),
+
+            "annualReportUrl":
+                first_value(
+                    "annualReportUrl",
+                ),
+
+            "fundObjective":
+                first_value(
+                    "fundObjective",
+                ),
+
+            "investmentManager":
+                first_value(
+                    "investmentManager",
+                ),
+
+            "hasDividend":
+                first_value(
+                    "hasDividend",
+                ),
+
+            "dividendRate":
+                first_value(
+                    "dividendRate",
+                ),
+
+            "raw":
+                fund,
+        }
+
+        return result
+
     finally:
 
-        page.remove_listener(
-            "response",
-            handle_response,
-        )
+        try:
 
-    if not captured_urls:
+            page.remove_listener(
+                "response",
+                response_listener,
+            )
 
-        raise RuntimeError(
-            "Could not capture "
-            "Prudential ilpfunds.json."
-        )
+        except Exception:
 
-    api_url = captured_urls[0]
-
-    print(
-        "\nPrudential API:"
-    )
-
-    print(
-        api_url
-    )
-
-    response = await page.request.get(
-        api_url,
-        timeout=INITIAL_PAGE_TIMEOUT_MS,
-    )
-
-    if not response.ok:
-
-        raise RuntimeError(
-            "Prudential API returned "
-            f"HTTP {response.status}"
-        )
-
-    data = await response.json()
-
-    if (
-        not isinstance(data, list)
-        or not data
-    ):
-
-        raise RuntimeError(
-            "Unexpected Prudential "
-            "API response."
-        )
-
-    fund = data[0]
-
-    if not isinstance(
-        fund,
-        dict,
-    ):
-
-        raise RuntimeError(
-            "Unexpected Prudential "
-            "fund record."
-        )
-
-    fund_identifier = clean_text(
-        fund.get(
-            "fundIdentifier"
-        )
-    )
-
-    fund_name = clean_text(
-        fund.get(
-            "fundName"
-        )
-    )
-
-    inception_date = clean_text(
-        fund.get(
-            "inceptionDate"
-        )
-    )
-
-    if not fund_identifier:
-
-        raise RuntimeError(
-            "Prudential fundIdentifier "
-            "is missing."
-        )
-
-    if not fund_name:
-
-        raise RuntimeError(
-            "Prudential fundName "
-            "is missing."
-        )
-
-    if not inception_date:
-
-        raise RuntimeError(
-            "Prudential inceptionDate "
-            "is missing."
-        )
-
-    return {
-        "apiUrl":
-            api_url,
-
-        "fundIdentifier":
-            fund_identifier,
-
-        "fundName":
-            fund_name,
-
-        "fundCode":
-            fund.get(
-                "fundCode"
-            ),
-
-        "fundCurrency":
-            fund.get(
-                "fundCurrency"
-            ),
-
-        "unitCurrency":
-            fund.get(
-                "unitCurrency"
-            ),
-
-        "assetClass":
-            fund.get(
-                "assetClass"
-            ),
-
-        "assetSubClass":
-            fund.get(
-                "assetSubClass"
-            ),
-
-        "riskClassification":
-            fund.get(
-                "riskClassification"
-            ),
-
-        "bidPrice":
-            fund.get(
-                "bidPrice"
-            ),
-
-        "offerPrice":
-            fund.get(
-                "offerPrice"
-            ),
-
-        "valuationDate":
-            fund.get(
-                "valuationDate"
-            ),
-
-        "inceptionDate":
-            inception_date,
-
-        "cumulativeYtd":
-            fund.get(
-                "cumulativeYtd"
-            ),
-
-        "cumulative1m":
-            fund.get(
-                "cumulative1m"
-            ),
-
-        "cumulative3m":
-            fund.get(
-                "cumulative3m"
-            ),
-
-        "cumulative6m":
-            fund.get(
-                "cumulative6m"
-            ),
-
-        "cumulative1y":
-            fund.get(
-                "cumulative1y"
-            ),
-
-        "cumulative3y":
-            fund.get(
-                "cumulative3y"
-            ),
-
-        "cumulative5y":
-            fund.get(
-                "cumulative5y"
-            ),
-
-        "annualised3y":
-            fund.get(
-                "annualised3y"
-            ),
-
-        "annualised5y":
-            fund.get(
-                "annualised5y"
-            ),
-
-        "annualised10y":
-            fund.get(
-                "annualised10y"
-            ),
-
-        "annualisedSinceLaunch":
-            fund.get(
-                "annualisedSinceLaunch"
-            ),
-
-        "factsheetUrl":
-            fund.get(
-                "factsheetUrl"
-            ),
-
-        "prospectusUrl":
-            fund.get(
-                "prospectusUrl"
-            ),
-
-        "productHighlightSheetUrl":
-            fund.get(
-                "productHighlightSheetUrl"
-            ),
-
-        "annualReportUrl":
-            fund.get(
-                "annualReportUrl"
-            ),
-
-        "fundObjective":
-            fund.get(
-                "fundObjective"
-            ),
-
-        "investmentManager":
-            fund.get(
-                "investmentManager"
-            ),
-
-        "hasDividend":
-            fund.get(
-                "hasDividend"
-            ),
-
-        "dividendRate":
-            fund.get(
-                "dividendRate"
-            ),
-
-        "raw":
-            fund,
-    }
+            pass
 
 
 # ============================================================
@@ -1045,97 +1109,80 @@ async def get_prudential_fund_data(
 
 async def get_fund_options(
     page: Page,
-) -> list[dict]:
+) -> list[dict[str, str]]:
 
-    options = page.locator(
+    options = []
+
+    option_elements = await page.locator(
         "#fundName option"
-    )
+    ).all()
 
-    count = await options.count()
+    for option in option_elements:
 
-    print(
-        f"\nPruAccess fund options found: "
-        f"{count}"
-    )
-
-    result = []
-
-    for index in range(
-        count
-    ):
-
-        option = options.nth(
-            index
+        text = clean_text(
+            await option.inner_text()
         )
 
-        result.append(
+        value = clean_text(
+            await option.get_attribute(
+                "value"
+            )
+        )
+
+        if not text and not value:
+
+            continue
+
+        options.append(
             {
                 "text":
-                    clean_text(
-                        await option.inner_text()
-                    ),
+                    text,
 
                 "value":
-                    await option.get_attribute(
-                        "value"
-                    ),
+                    value,
             }
         )
 
-    return result
+    if not options:
 
+        raise RuntimeError(
+            "No PruAccess fund options were found."
+        )
 
-# ============================================================
-# EXACT PRUACCESS MATCH
-# ============================================================
+    return options
+
 
 def find_exact_pruaccess_match(
-    options: list[dict],
+    options: list[dict[str, str]],
     target_name: str,
-) -> dict:
+) -> dict[str, str]:
 
     target_normalized = normalize_name(
         target_name
     )
 
-    if not target_normalized:
-
-        raise RuntimeError(
-            "Excel PruAccess fund name "
-            "is empty."
+    matches = [
+        option
+        for option
+        in options
+        if normalize_name(
+            option["text"]
         )
-
-    matches = []
-
-    for option in options:
-
-        option_name = normalize_name(
-            option.get(
-                "text",
-                "",
-            )
-        )
-
-        if option_name == target_normalized:
-
-            matches.append(
-                option
-            )
+        == target_normalized
+    ]
 
     if not matches:
 
-        raise RuntimeError(
-            "Exact PruAccess fund-name "
-            "match failed for: "
-            f"{target_name}"
+        raise ValueError(
+            "No exact PruAccess fund-name match found for: "
+            f"{target_name!r}"
         )
 
     if len(matches) > 1:
 
-        raise RuntimeError(
-            "Multiple exact PruAccess "
-            "fund-name matches found for: "
-            f"{target_name}"
+        raise ValueError(
+            "Multiple exact PruAccess fund-name matches found for: "
+            f"{target_name!r}"
         )
 
     return matches[0]
@@ -1158,117 +1205,116 @@ async def set_readonly_input_value(
     if await locator.count() == 0:
 
         raise RuntimeError(
-            f"Could not find input: "
-            f"{selector}"
+            f"Readonly date input not found: {selector}"
         )
 
     await locator.evaluate(
         """
         (element, value) => {
             element.value = value;
-
             element.dispatchEvent(
-                new Event("input", {
-                    bubbles: true
-                })
+                new Event("input", { bubbles: true })
             );
-
             element.dispatchEvent(
-                new Event("change", {
-                    bubbles: true
-                })
+                new Event("change", { bubbles: true })
             );
         }
         """,
         value,
     )
 
-    actual = await locator.input_value()
+    actual_value = clean_text(
+        await locator.input_value()
+    )
 
-    if actual != value:
+    if actual_value != value:
 
         raise RuntimeError(
-            f"Could not set {selector}. "
-            f"Expected {value}, "
-            f"got {actual}."
+            f"Failed to set {selector}. "
+            f"Expected {value!r}, got {actual_value!r}."
         )
 
 
 # ============================================================
-# HTML PRICE TABLE EXTRACTION
+# HISTORICAL HTML PARSER
 # ============================================================
 
 def extract_price_rows_from_html(
     html: str,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
 
     soup = BeautifulSoup(
         html,
         "html.parser",
     )
 
-    rows = []
+    observations = []
 
     for table in soup.find_all(
         "table"
     ):
 
-        for tr in table.find_all(
+        for row in table.find_all(
             "tr"
         ):
 
-            cells = tr.find_all(
-                ["th", "td"]
+            cells = row.find_all(
+                ["td", "th"]
             )
 
             if len(cells) < 2:
 
                 continue
 
-            values = [
-                clean_text(
-                    cell.get_text(
-                        " ",
-                        strip=True,
-                    )
+            first = clean_text(
+                cells[0].get_text(
+                    " ",
+                    strip=True,
                 )
-                for cell in cells
-            ]
+            )
 
-            if len(values) < 2:
+            second = clean_text(
+                cells[1].get_text(
+                    " ",
+                    strip=True,
+                )
+            )
 
-                continue
-
-            date_value = values[0]
-
-            if not re.match(
-                r"^\d{1,2}-[A-Za-z]{3}-\d{4}$",
-                date_value,
+            if not re.fullmatch(
+                r"\d{1,2}-[A-Za-z]{3}-\d{4}",
+                first,
             ):
 
                 continue
 
-            bid_value = values[1]
-
-            if not re.match(
-                r"^\d+(?:\.\d+)?$",
-                bid_value,
+            if not re.fullmatch(
+                r"\d+(?:\.\d+)?",
+                second,
             ):
 
                 continue
 
-            # Verify the date can actually be parsed.
             try:
 
-                parse_pruaccess_date(
-                    date_value
+                date_value = parse_pruaccess_date(
+                    first
                 )
 
             except ValueError:
 
                 continue
 
-            rows.append(
+            try:
+
+                bid_value = float(
+                    second
+                )
+
+            except ValueError:
+
+                continue
+
+            observations.append(
                 {
                     "date":
                         date_value,
@@ -1278,11 +1324,11 @@ def extract_price_rows_from_html(
                 }
             )
 
-    return rows
+    return observations
 
 
 # ============================================================
-# PAGINATION PAGE COUNT DISCOVERY
+# PAGINATION DISCOVERY
 # ============================================================
 
 def discover_max_page(
@@ -1294,77 +1340,74 @@ def discover_max_page(
         "html.parser",
     )
 
-    page_numbers = []
+    maximum = None
 
-    for link in soup.find_all(
-        "a"
+    for anchor in soup.find_all(
+        "a",
+        href=True,
     ):
 
-        href = link.get(
-            "href",
-            "",
+        href = clean_text(
+            anchor.get(
+                "href"
+            )
         )
 
-        if not href:
-
-            continue
-
-        matches = re.findall(
+        match = re.search(
             r"page\.page=(\d+)",
             href,
+            re.IGNORECASE,
         )
 
-        for match in matches:
+        if match:
 
-            try:
-
-                page_numbers.append(
-                    int(match)
-                )
-
-            except ValueError:
-
-                continue
-
-    text = soup.get_text(
-        " ",
-        strip=True,
-    )
-
-    text_matches = re.findall(
-        r"[Pp]age\s+(\d+)\s+(?:of|/)\s+(\d+)",
-        text,
-    )
-
-    for _, total in text_matches:
-
-        try:
-
-            page_numbers.append(
-                int(total)
+            page_number = int(
+                match.group(1)
             )
 
-        except ValueError:
+            if (
+                maximum is None
+                or page_number > maximum
+            ):
 
-            pass
+                maximum = page_number
 
-    if not page_numbers:
-
-        return None
-
-    maximum = max(
-        page_numbers
+    text = clean_text(
+        soup.get_text(
+            " ",
+            strip=True,
+        )
     )
 
-    if maximum < 1:
+    patterns = [
+        r"Page\s+\d+\s+of\s+(\d+)",
+        r"Page\s+\d+\s*/\s*(\d+)",
+    ]
 
-        return None
+    for pattern in patterns:
+
+        for match in re.finditer(
+            pattern,
+            text,
+            re.IGNORECASE,
+        ):
+
+            page_number = int(
+                match.group(1)
+            )
+
+            if (
+                maximum is None
+                or page_number > maximum
+            ):
+
+                maximum = page_number
 
     return maximum
 
 
 # ============================================================
-# PAGINATION URL
+# PAGE URL
 # ============================================================
 
 def build_page_url(
@@ -1376,9 +1419,16 @@ def build_page_url(
     page_number: int,
 ) -> str:
 
+    separator = (
+        "&"
+        if "?" in base_url
+        else "?"
+    )
+
     return (
         f"{base_url}"
-        f"?fundId={fund_id}"
+        f"{separator}"
+        f"fundId={fund_id}"
         f"&viewType={view_type}"
         f"&startDate={start_date}"
         f"&endDate={end_date}"
@@ -1388,7 +1438,7 @@ def build_page_url(
 
 
 # ============================================================
-# RESPONSE VALIDATION
+# PAGINATION HTML VALIDATION
 # ============================================================
 
 def validate_pagination_html(
@@ -1396,11 +1446,12 @@ def validate_pagination_html(
     page_number: int,
 ) -> None:
 
-    if not html:
+    if not clean_text(
+        html
+    ):
 
         raise RuntimeError(
-            f"Page {page_number} returned "
-            "an empty HTTP response."
+            f"Pagination page {page_number} returned empty HTML."
         )
 
     if (
@@ -1412,9 +1463,8 @@ def validate_pagination_html(
     ):
 
         raise RuntimeError(
-            f"Page {page_number} response does not "
-            "appear to be a PruAccess fund-performance "
-            "page."
+            f"Pagination page {page_number} does not contain "
+            "the expected PruAccess fund-performance table."
         )
 
 
@@ -1435,17 +1485,14 @@ async def request_page_html(
         PAGE_RETRY_COUNT + 1,
     ):
 
-        print(
-            f"    HTTP page {page_number} "
-            f"attempt {attempt}/{PAGE_RETRY_COUNT}"
-        )
-
         try:
 
-            response = await request_context.get(
-                url,
-                timeout=PAGE_TIMEOUT_MS,
-                fail_on_status_code=False,
+            response = (
+                await request_context.get(
+                    url,
+                    timeout=PAGE_TIMEOUT_MS,
+                    fail_on_status_code=False,
+                )
             )
 
             status = response.status
@@ -1463,26 +1510,19 @@ async def request_page_html(
                 page_number,
             )
 
-            return (
-                html,
-                status,
-            )
+            return html, status
 
         except Exception as error:
 
             last_error = error
 
-            print(
-                f"    Page {page_number} failed: "
-                f"{clean_text(str(error))}"
-            )
-
             if attempt < PAGE_RETRY_COUNT:
 
                 print(
-                    f"    Waiting "
-                    f"{PAGE_RETRY_DELAY_SECONDS}s "
-                    f"before retry..."
+                    f"Page {page_number} "
+                    f"attempt {attempt}/"
+                    f"{PAGE_RETRY_COUNT} failed: "
+                    f"{error}"
                 )
 
                 await asyncio.sleep(
@@ -1490,10 +1530,9 @@ async def request_page_html(
                 )
 
     raise RuntimeError(
-        f"PruAccess page {page_number} "
-        f"failed after "
+        f"Page {page_number} failed after "
         f"{PAGE_RETRY_COUNT} attempts: "
-        f"{clean_text(str(last_error))}"
+        f"{last_error}"
     )
 
 
@@ -1504,16 +1543,7 @@ async def request_page_html(
 async def fetch_pages_parallel(
     request_context,
     page_jobs: list[tuple[int, str]],
-) -> dict[int, dict]:
-
-    """
-    Retrieve pagination pages concurrently.
-
-    A permanently failed page raises an exception.
-
-    The caller therefore cannot accidentally publish a
-    partially retrieved window.
-    """
+) -> dict[int, dict[str, Any]]:
 
     semaphore = asyncio.Semaphore(
         PARALLEL_PAGE_WORKERS
@@ -1534,16 +1564,17 @@ async def fetch_pages_parallel(
                 )
             )
 
-            rows = extract_price_rows_from_html(
-                html
+            rows = (
+                extract_price_rows_from_html(
+                    html
+                )
             )
 
             if not rows:
 
                 raise RuntimeError(
-                    f"Expected PruAccess page "
-                    f"{page_number} but it returned "
-                    "zero BID observations."
+                    f"Page {page_number} returned zero "
+                    "historical BID observations."
                 )
 
             return (
@@ -1552,7 +1583,7 @@ async def fetch_pages_parallel(
                     "html":
                         html,
 
-                    "status":
+                    "httpStatus":
                         status,
 
                     "rows":
@@ -1597,15 +1628,14 @@ async def fetch_pages_parallel(
 
     return {
         page_number:
-            data
-
-        for page_number, data
+            result
+        for page_number, result
         in results
     }
 
 
 # ============================================================
-# FIRST PAGE + COMPLETE PAGINATION
+# EXTRACT ALL PAGINATION PAGES
 # ============================================================
 
 async def extract_all_pages(
@@ -1613,14 +1643,13 @@ async def extract_all_pages(
     fund_id: str,
     start_date: str,
     end_date: str,
-) -> tuple[list[dict], list[dict]]:
+) -> tuple[
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+]:
 
     print(
-        "\n============================================================"
-    )
-
-    print(
-        "STARTING PRUACCESS PAGINATION WINDOW"
+        "\nFetching pagination:"
     )
 
     print(
@@ -1631,11 +1660,7 @@ async def extract_all_pages(
         f"Date range: {start_date} -> {end_date}"
     )
 
-    print(
-        "============================================================"
-    )
-
-    first_url = build_page_url(
+    page_one_url = build_page_url(
         PRUACCESS_URL,
         fund_id,
         "TBL",
@@ -1644,213 +1669,132 @@ async def extract_all_pages(
         1,
     )
 
-    # --------------------------------------------------------
-    # Page 1 is requested first because it tells us the
-    # expected pagination count.
-    # --------------------------------------------------------
-
-    first_html, first_status = (
+    page_one_html, page_one_status = (
         await request_page_html(
             request_context,
-            first_url,
+            page_one_url,
             1,
         )
     )
 
-    first_rows = (
+    page_one_rows = (
         extract_price_rows_from_html(
-            first_html
+            page_one_html
         )
     )
 
-    if not first_rows:
+    if not page_one_rows:
 
         raise RuntimeError(
-            "PruAccess page 1 returned "
-            "no historical BID rows."
+            "PruAccess page 1 returned zero observations."
         )
 
-    discovered_max_page = (
-        discover_max_page(
-            first_html
-        )
-    )
-
-    print(
-        f"Page 1 rows: "
-        f"{len(first_rows)}"
-    )
-
-    print(
-        f"Discovered maximum page: "
-        f"{discovered_max_page}"
-    )
-
-    # --------------------------------------------------------
-    # Determine final page.
-    # --------------------------------------------------------
-
-    if discovered_max_page is not None:
-
-        if discovered_max_page > MAX_PAGES:
-
-            raise RuntimeError(
-                f"PruAccess reports "
-                f"{discovered_max_page} pages, "
-                f"which exceeds MAX_PAGES="
-                f"{MAX_PAGES}."
-            )
-
-        max_page = discovered_max_page
-
-    else:
-
-        if len(first_rows) < PAGE_SIZE:
-
-            max_page = 1
-
-        else:
-
-            # We do not accept an unknown pagination state
-            # that could potentially exceed MAX_PAGES.
-            #
-            # We probe sequentially until a partial page is
-            # found, but every page must still be successful.
-            max_page = None
-
-    page_diagnostics = []
-
-    all_rows = []
-
-    # --------------------------------------------------------
-    # Store page 1.
-    # --------------------------------------------------------
-
-    page_diagnostics.append(
+    page_diagnostics = [
         {
             "page":
                 1,
 
             "url":
-                first_url,
+                page_one_url,
 
             "httpStatus":
-                first_status,
+                page_one_status,
 
             "rowCount":
-                len(first_rows),
+                len(page_one_rows),
 
             "firstDate":
-                first_rows[0]["date"],
+                min(
+                    row["date"]
+                    for row
+                    in page_one_rows
+                ),
 
             "lastDate":
-                first_rows[-1]["date"],
+                max(
+                    row["date"]
+                    for row
+                    in page_one_rows
+                ),
 
             "status":
                 "success",
         }
+    ]
+
+    max_page = discover_max_page(
+        page_one_html
     )
 
-    all_rows.extend(
-        first_rows
-    )
+    all_page_rows = {
+        1:
+            page_one_rows
+    }
 
-    # ========================================================
-    # CASE A:
-    # Explicit page count
-    # ========================================================
+    # --------------------------------------------------------
+    # Explicit pagination count available.
+    # --------------------------------------------------------
 
     if max_page is not None:
 
-        remaining_jobs = []
+        if max_page < 1:
 
-        for page_number in range(
-            2,
-            max_page + 1,
-        ):
-
-            url = build_page_url(
-                PRUACCESS_URL,
-                fund_id,
-                "TBL",
-                start_date,
-                end_date,
-                page_number,
+            raise RuntimeError(
+                f"Invalid PruAccess maximum page: {max_page}"
             )
 
-            remaining_jobs.append(
-                (
-                    page_number,
-                    url,
-                )
+        if max_page > MAX_PAGES:
+
+            raise RuntimeError(
+                f"PruAccess reported {max_page} pages, "
+                f"exceeding MAX_PAGES={MAX_PAGES}."
             )
 
-        if remaining_jobs:
+        if max_page > 1:
 
-            print(
-                "\nParallel page retrieval:"
-            )
-
-            print(
-                f"  Pages: "
-                f"2-{max_page}"
-            )
-
-            print(
-                f"  Workers: "
-                f"{PARALLEL_PAGE_WORKERS}"
-            )
-
-            page_results = (
-                await fetch_pages_parallel(
-                    request_context,
-                    remaining_jobs,
-                )
-            )
-
-            # ------------------------------------------------
-            # Validate EVERY expected page.
-            # ------------------------------------------------
-
-            expected_pages = set(
-                range(
-                    1,
-                    max_page + 1,
-                )
-            )
-
-            actual_pages = set(
-                page_results.keys()
-            )
-
-            actual_pages.add(
-                1
-            )
-
-            missing_pages = sorted(
-                expected_pages
-                - actual_pages
-            )
-
-            if missing_pages:
-
-                raise RuntimeError(
-                    "Pagination incomplete. "
-                    f"Missing pages: "
-                    f"{missing_pages}"
-                )
-
-            # ------------------------------------------------
-            # Preserve chronological page ordering as
-            # returned by PruAccess.
-            # ------------------------------------------------
+            page_jobs = []
 
             for page_number in range(
                 2,
                 max_page + 1,
             ):
 
-                result = page_results[
+                url = build_page_url(
+                    PRUACCESS_URL,
+                    fund_id,
+                    "TBL",
+                    start_date,
+                    end_date,
+                    page_number,
+                )
+
+                page_jobs.append(
+                    (
+                        page_number,
+                        url,
+                    )
+                )
+
+            parallel_results = (
+                await fetch_pages_parallel(
+                    request_context,
+                    page_jobs,
+                )
+            )
+
+            for page_number in range(
+                2,
+                max_page + 1,
+            ):
+
+                if page_number not in parallel_results:
+
+                    raise RuntimeError(
+                        f"Expected pagination page "
+                        f"{page_number} was not retrieved."
+                    )
+
+                result = parallel_results[
                     page_number
                 ]
 
@@ -1858,13 +1802,9 @@ async def extract_all_pages(
                     "rows"
                 ]
 
-                url = result[
-                    "url"
-                ]
-
-                status = result[
-                    "status"
-                ]
+                all_page_rows[
+                    page_number
+                ] = rows
 
                 page_diagnostics.append(
                     {
@@ -1872,201 +1812,188 @@ async def extract_all_pages(
                             page_number,
 
                         "url":
-                            url,
+                            result["url"],
 
                         "httpStatus":
-                            status,
+                            result["httpStatus"],
 
                         "rowCount":
                             len(rows),
 
                         "firstDate":
-                            rows[0]["date"],
+                            min(
+                                row["date"]
+                                for row
+                                in rows
+                            ),
 
                         "lastDate":
-                            rows[-1]["date"],
+                            max(
+                                row["date"]
+                                for row
+                                in rows
+                            ),
 
                         "status":
                             "success",
                     }
                 )
 
-                all_rows.extend(
-                    rows
-                )
-
-        successful_pages = {
-            item["page"]
-            for item in page_diagnostics
-            if item.get("status")
-            == "success"
-        }
-
-        expected_pages = set(
-            range(
-                1,
-                max_page + 1,
-            )
-        )
-
-        missing_pages = sorted(
-            expected_pages
-            - successful_pages
-        )
-
-        if missing_pages:
-
-            raise RuntimeError(
-                "Complete pagination validation "
-                "failed. Missing pages: "
-                f"{missing_pages}"
-            )
-
-    # ========================================================
-    # CASE B:
-    # No explicit page count.
-    #
-    # We must continue until a short page is found.
-    # These pages cannot be parallelized safely because the
-    # termination condition is not known until each page is
-    # inspected.
-    # ========================================================
+    # --------------------------------------------------------
+    # No explicit pagination count.
+    # --------------------------------------------------------
 
     else:
 
-        current_page = 2
+        page_number = 1
 
         while True:
 
-            if current_page > MAX_PAGES:
+            current_rows = all_page_rows[
+                page_number
+            ]
+
+            if len(current_rows) < PAGE_SIZE:
+
+                break
+
+            next_page = (
+                page_number + 1
+            )
+
+            if next_page > MAX_PAGES:
 
                 raise RuntimeError(
-                    "Pagination reached MAX_PAGES "
-                    f"({MAX_PAGES}) without determining "
-                    "the final page."
+                    "PruAccess pagination exceeded "
+                    f"MAX_PAGES={MAX_PAGES}."
                 )
 
-            url = build_page_url(
+            next_url = build_page_url(
                 PRUACCESS_URL,
                 fund_id,
                 "TBL",
                 start_date,
                 end_date,
-                current_page,
+                next_page,
             )
 
-            print(
-                f"\nFetching page "
-                f"{current_page}"
-            )
-
-            html, status = (
+            next_html, next_status = (
                 await request_page_html(
                     request_context,
-                    url,
-                    current_page,
+                    next_url,
+                    next_page,
                 )
             )
 
-            rows = extract_price_rows_from_html(
-                html
+            next_rows = (
+                extract_price_rows_from_html(
+                    next_html
+                )
             )
 
-            if not rows:
+            if not next_rows:
 
                 raise RuntimeError(
-                    f"PruAccess page "
-                    f"{current_page} returned "
-                    "zero BID observations."
+                    f"Pagination page {next_page} "
+                    "returned zero observations."
                 )
+
+            all_page_rows[
+                next_page
+            ] = next_rows
 
             page_diagnostics.append(
                 {
                     "page":
-                        current_page,
+                        next_page,
 
                     "url":
-                        url,
+                        next_url,
 
                     "httpStatus":
-                        status,
+                        next_status,
 
                     "rowCount":
-                        len(rows),
+                        len(next_rows),
 
                     "firstDate":
-                        rows[0]["date"],
+                        min(
+                            row["date"]
+                            for row
+                            in next_rows
+                        ),
 
                     "lastDate":
-                        rows[-1]["date"],
+                        max(
+                            row["date"]
+                            for row
+                            in next_rows
+                        ),
 
                     "status":
                         "success",
                 }
             )
 
-            all_rows.extend(
-                rows
-            )
+            page_number = next_page
 
-            if len(rows) < PAGE_SIZE:
+    # --------------------------------------------------------
+    # Every expected page must exist.
+    # --------------------------------------------------------
 
-                print(
-                    "\nFinal partial page detected."
-                )
+    expected_pages = list(
+        range(
+            1,
+            max(all_page_rows.keys()) + 1,
+        )
+    )
 
-                break
+    actual_pages = sorted(
+        all_page_rows.keys()
+    )
 
-            current_page += 1
+    if actual_pages != expected_pages:
 
-    # ========================================================
-    # FINAL PAGE SEQUENCE VALIDATION
-    # ========================================================
+        raise RuntimeError(
+            "Pagination sequence is incomplete. "
+            f"Expected {expected_pages}, "
+            f"received {actual_pages}."
+        )
 
     page_diagnostics.sort(
         key=lambda item:
             item["page"]
     )
 
-    actual_pages = [
+    if [
         item["page"]
-        for item in page_diagnostics
-        if item.get("status")
-        == "success"
-    ]
-
-    expected_pages = list(
-        range(
-            1,
-            len(page_diagnostics) + 1,
-        )
-    )
-
-    if actual_pages != expected_pages:
+        for item
+        in page_diagnostics
+    ] != expected_pages:
 
         raise RuntimeError(
-            "Pagination page sequence is "
-            "incomplete or out of order."
+            "Pagination diagnostics are incomplete."
         )
 
-    # ========================================================
-    # IMPORTANT:
-    #
-    # DO NOT DEDUPLICATE.
-    #
-    # Duplicates are intentionally preserved so validation
-    # can detect them.
-    # ========================================================
+    # --------------------------------------------------------
+    # Reconstruct observations WITHOUT deduplication.
+    # --------------------------------------------------------
 
-    def sort_date(row):
+    final_rows = []
 
-        return parse_pruaccess_date(
-            row["date"]
+    for page_number in expected_pages:
+
+        final_rows.extend(
+            all_page_rows[
+                page_number
+            ]
         )
 
-    final_rows = sorted(
-        all_rows,
-        key=sort_date,
+    final_rows.sort(
+        key=lambda row:
+            parse_pruaccess_date(
+                row["date"]
+            ),
         reverse=True,
     )
 
@@ -2077,7 +2004,7 @@ async def extract_all_pages(
 
 
 # ============================================================
-# SUBMIT PRUACCESS SEARCH
+# PRUACCESS SEARCH FORM
 # ============================================================
 
 async def submit_pruaccess_search(
@@ -2085,11 +2012,7 @@ async def submit_pruaccess_search(
     fund_id: str,
     start_date: str,
     end_date: str,
-) -> dict:
-
-    print(
-        "\n=== Opening PruAccess ==="
-    )
+) -> dict[str, Any]:
 
     await page.goto(
         PRUACCESS_URL,
@@ -2101,200 +2024,181 @@ async def submit_pruaccess_search(
         PRUACCESS_INITIAL_WAIT_MS
     )
 
-    # --------------------------------------------------------
-    # Fund
-    # --------------------------------------------------------
-
-    fund_selector = page.locator(
+    fund_locator = page.locator(
         "#fundName"
     )
 
-    if await fund_selector.count() == 0:
+    if await fund_locator.count() == 0:
 
         raise RuntimeError(
-            "PruAccess #fundName "
-            "selector not found."
+            "PruAccess fundName selector not found."
         )
 
-    await fund_selector.select_option(
+    await fund_locator.select_option(
         fund_id
     )
 
-    # --------------------------------------------------------
-    # Table view
-    # --------------------------------------------------------
-
-    view_selector = page.locator(
+    view_type_locator = page.locator(
         "#viewType"
     )
 
-    if await view_selector.count() == 0:
+    if await view_type_locator.count() == 0:
 
         raise RuntimeError(
-            "PruAccess #viewType "
-            "selector not found."
+            "PruAccess viewType selector not found."
         )
 
-    await view_selector.select_option(
+    await view_type_locator.select_option(
         "TBL"
     )
 
     # --------------------------------------------------------
-    # Fund Price Type
+    # IMPORTANT:
     #
-    # NEVER MODIFY.
+    # Do NOT change the selected Fund Price Type.
+    # We only inspect and record it.
     # --------------------------------------------------------
 
-    fund_price_type = page.locator(
+    fund_price_type = None
+
+    fund_price_type_label = None
+
+    fund_price_type_locator = page.locator(
         "#fundPriceType"
     )
 
-    if await fund_price_type.count():
+    if (
+        await fund_price_type_locator.count()
+        > 0
+    ):
 
-        fund_price_type_value = (
-            await fund_price_type.input_value()
+        fund_price_type = clean_text(
+            await fund_price_type_locator.input_value()
         )
 
-        fund_price_type_label = clean_text(
-            await fund_price_type.locator(
+        selected_option = (
+            fund_price_type_locator.locator(
                 "option:checked"
-            ).inner_text()
+            )
         )
 
-    else:
+        if await selected_option.count() > 0:
 
-        fund_price_type_value = None
-
-        fund_price_type_label = None
-
-    print(
-        "\nFund Price Type:"
-    )
-
-    print(
-        f"{fund_price_type_value} "
-        f"| {fund_price_type_label} "
-        "(left untouched)"
-    )
+            fund_price_type_label = clean_text(
+                await selected_option.inner_text()
+            )
 
     # --------------------------------------------------------
-    # Dates
+    # Set dates.
     # --------------------------------------------------------
 
     await set_readonly_input_value(
         page,
-        'input[name="startDate"]',
+        "#startDate",
         start_date,
     )
 
     await set_readonly_input_value(
         page,
-        'input[name="endDate"]',
+        "#endDate",
         end_date,
     )
 
     # --------------------------------------------------------
-    # CSRF
+    # CSRF.
     # --------------------------------------------------------
 
-    csrf = page.locator(
-        'input[name="_csrf"]'
+    csrf_locator = page.locator(
+        "input[name='_csrf']"
     )
 
-    if await csrf.count() == 0:
+    if await csrf_locator.count() == 0:
 
         raise RuntimeError(
-            "PruAccess CSRF input not found."
+            "PruAccess CSRF input was not found."
         )
 
-    csrf_value = await csrf.input_value()
+    csrf_value = clean_text(
+        await csrf_locator.input_value()
+    )
 
     if not csrf_value:
 
         raise RuntimeError(
-            "PruAccess CSRF token is empty."
+            "PruAccess CSRF value is empty."
         )
 
     # --------------------------------------------------------
-    # Verify dates before submit.
+    # Verify requested dates.
     # --------------------------------------------------------
 
-    actual_start = await page.locator(
-        'input[name="startDate"]'
-    ).input_value()
+    actual_start = clean_text(
+        await page.locator(
+            "#startDate"
+        ).input_value()
+    )
 
-    actual_end = await page.locator(
-        'input[name="endDate"]'
-    ).input_value()
+    actual_end = clean_text(
+        await page.locator(
+            "#endDate"
+        ).input_value()
+    )
 
     if actual_start != start_date:
 
         raise RuntimeError(
-            "Start date verification failed."
+            "PruAccess start date verification failed."
         )
 
     if actual_end != end_date:
 
         raise RuntimeError(
-            "End date verification failed."
+            "PruAccess end date verification failed."
         )
 
     # --------------------------------------------------------
-    # Verify window length.
+    # Verify the requested window does not exceed 10 years.
     # --------------------------------------------------------
 
-    start_parsed = parse_pruaccess_date(
+    start_value = parse_pruaccess_date(
         start_date
     )
 
-    end_parsed = parse_pruaccess_date(
+    end_value = parse_pruaccess_date(
         end_date
     )
 
-    if (
-        end_parsed
-        < start_parsed
-    ):
-
-        raise RuntimeError(
-            "PruAccess window has an end date "
-            "before its start date."
-        )
-
-    max_allowed_end = (
+    ten_year_limit = (
         add_calendar_years(
-            start_parsed,
+            start_value,
             MAX_WINDOW_YEARS,
         )
-        - timedelta(days=1)
     )
 
-    if end_parsed > max_allowed_end:
+    if end_value >= ten_year_limit:
 
         raise RuntimeError(
-            "PruAccess date window exceeds "
-            "the configured 10-year limit: "
-            f"{start_date} -> {end_date}"
+            "PruAccess historical window exceeds "
+            f"the maximum {MAX_WINDOW_YEARS}-year limit."
         )
 
     # --------------------------------------------------------
-    # Submit.
-    #
-    # Normal form submission establishes the PruAccess
-    # session/cookies.
+    # Submit form.
     # --------------------------------------------------------
 
-    print(
-        "\n=== Submitting PruAccess form ==="
+    form_locator = page.locator(
+        "#fundForm"
     )
 
-    await page.locator(
-        "#fundForm"
-    ).evaluate(
+    if await form_locator.count() == 0:
+
+        raise RuntimeError(
+            "PruAccess fund form was not found."
+        )
+
+    await form_locator.evaluate(
         """
-        form => {
-            form.submit();
-        }
+        form => form.submit()
         """
     )
 
@@ -2307,11 +2211,7 @@ async def submit_pruaccess_search(
         PRUACCESS_RESULT_WAIT_MS
     )
 
-    # --------------------------------------------------------
-    # Verify result.
-    # --------------------------------------------------------
-
-    result_text = clean_text(
+    body_text = clean_text(
         await page.locator(
             "body"
         ).inner_text()
@@ -2319,23 +2219,25 @@ async def submit_pruaccess_search(
 
     if (
         "PruLink Fund Price Table"
-        not in result_text
+        not in body_text
     ):
 
         raise RuntimeError(
-            "PruAccess form submission did not "
-            "produce the expected fund price table."
+            "PruAccess search did not return the expected "
+            "Fund Price Table."
         )
 
     return {
         "fundPriceType":
-            fund_price_type_value,
+            fund_price_type,
 
         "fundPriceTypeLabel":
             fund_price_type_label,
 
         "csrfPresent":
-            bool(csrf_value),
+            bool(
+                csrf_value
+            ),
 
         "startDate":
             start_date,
@@ -2356,21 +2258,21 @@ async def submit_pruaccess_search(
 # ============================================================
 
 def find_duplicate_dates(
-    observations: list[dict],
-) -> list[dict]:
+    observations: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
 
-    by_date = {}
+    grouped = {}
 
     for observation in observations:
 
-        observation_date = clean_text(
-            observation.get(
-                "date"
-            )
+        observation_date = parse_pruaccess_date(
+            observation["date"]
         )
 
-        by_date.setdefault(
-            observation_date,
+        key = observation_date.isoformat()
+
+        grouped.setdefault(
+            key,
             [],
         ).append(
             observation
@@ -2378,14 +2280,16 @@ def find_duplicate_dates(
 
     duplicates = []
 
-    for observation_date, rows in by_date.items():
+    for key, rows in grouped.items():
 
         if len(rows) > 1:
 
             duplicates.append(
                 {
                     "date":
-                        observation_date,
+                        parse_pruaccess_date(
+                            key
+                        ),
 
                     "count":
                         len(rows),
@@ -2410,116 +2314,79 @@ def find_duplicate_dates(
 # ============================================================
 
 def reconstruct_history(
-    window_results: list[dict],
-) -> tuple[list[dict], list[dict]]:
+    window_results: list[dict[str, Any]],
+) -> tuple[
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+]:
 
-    """
-    Combine all successfully retrieved windows.
-
-    No observations are removed.
-
-    Returns:
-        chronological_history
-        duplicate_dates
-    """
-
-    all_rows = []
+    observations = []
 
     for window_result in window_results:
 
-        all_rows.extend(
+        observations.extend(
             window_result[
                 "observations"
             ]
         )
 
-    if not all_rows:
+    if not observations:
 
-        raise RuntimeError(
-            "No historical observations exist "
-            "after window reconstruction."
+        raise ValueError(
+            "No historical observations were extracted."
         )
 
-    duplicates = find_duplicate_dates(
-        all_rows
+    duplicate_dates = (
+        find_duplicate_dates(
+            observations
+        )
     )
 
-    # --------------------------------------------------------
-    # Preserve every raw observation.
-    #
-    # Sort chronologically.
-    # --------------------------------------------------------
-
     chronological = sorted(
-        all_rows,
+        observations,
         key=lambda row:
             parse_pruaccess_date(
                 row["date"]
-            )
+            ),
     )
 
     return (
         chronological,
-        duplicates,
+        duplicate_dates,
     )
 
 
 # ============================================================
-# FULL-HISTORY VALIDATION
+# FULL HISTORY VALIDATION
 # ============================================================
 
 def validate_full_history_to_inception(
-    historical_rows: list[dict],
+    historical_rows: list[dict[str, Any]],
     inception_date: date,
     end_date: date,
-    duplicate_dates: list[dict],
-) -> dict:
+    duplicate_dates: list[dict[str, Any]],
+) -> dict[str, Any]:
 
     if not historical_rows:
 
-        raise RuntimeError(
+        raise ValueError(
             "Historical BID history is empty."
         )
 
-    # --------------------------------------------------------
-    # Duplicate validation.
-    # --------------------------------------------------------
-
     if duplicate_dates:
 
-        duplicate_dates_text = ", ".join(
-            item["date"]
-            for item in duplicate_dates
+        raise ValueError(
+            "Duplicate historical BID dates detected: "
+            f"{len(duplicate_dates)} duplicate date(s)."
         )
 
-        raise RuntimeError(
-            "Duplicate historical BID observations "
-            "detected for date(s): "
-            f"{duplicate_dates_text}"
+    parsed_dates = [
+        parse_pruaccess_date(
+            row["date"]
         )
-
-    # --------------------------------------------------------
-    # Parse all dates.
-    # --------------------------------------------------------
-
-    parsed_dates = []
-
-    for row in historical_rows:
-
-        try:
-
-            parsed_dates.append(
-                parse_pruaccess_date(
-                    row["date"]
-                )
-            )
-
-        except Exception as error:
-
-            raise RuntimeError(
-                "Invalid historical BID date: "
-                f"{row.get('date')}"
-            ) from error
+        for row
+        in historical_rows
+    ]
 
     oldest_date = min(
         parsed_dates
@@ -2530,57 +2397,52 @@ def validate_full_history_to_inception(
     )
 
     # --------------------------------------------------------
-    # The oldest observation must be:
+    # HARD INCEPTION RULE
+    #
+    # Oldest observation must be:
     #
     # inception date
     # OR
-    # inception date + 1 calendar day
-    #
-    # Date gaps are otherwise allowed.
+    # within +7 calendar days.
     # --------------------------------------------------------
 
     latest_allowed_oldest_date = (
         inception_date
-        + timedelta(days=1)
+        + timedelta(
+            days=MAX_INCEPTION_DELAY_DAYS
+        )
     )
 
     if oldest_date < inception_date:
 
-        raise RuntimeError(
-            "Historical PruAccess data contains "
-            "an observation earlier than the "
-            "official Prudential inception date. "
+        raise ValueError(
+            "Historical PruAccess data contains an observation "
+            "before the official Prudential inception date. "
             f"Inception={format_pruaccess_date(inception_date)}, "
             f"oldest={format_pruaccess_date(oldest_date)}"
         )
 
     if oldest_date > latest_allowed_oldest_date:
 
-        raise RuntimeError(
-            "Historical PruAccess data does not "
-            "reach the Prudential inception date "
-            "within the permitted +1 calendar day. "
-            f"Inception="
-            f"{format_pruaccess_date(inception_date)}, "
-            f"oldest="
-            f"{format_pruaccess_date(oldest_date)}"
+        raise ValueError(
+            "Historical PruAccess data does not reach the "
+            "Prudential inception date within the permitted "
+            f"+{MAX_INCEPTION_DELAY_DAYS} calendar days. "
+            f"Inception={format_pruaccess_date(inception_date)}, "
+            f"oldest={format_pruaccess_date(oldest_date)}"
         )
-
-    # --------------------------------------------------------
-    # Newest historical observation must not be after the
-    # requested Singapore end date.
-    # --------------------------------------------------------
 
     if newest_date > end_date:
 
-        raise RuntimeError(
-            "Historical PruAccess data contains "
-            "an observation later than the requested "
-            f"end date {format_pruaccess_date(end_date)}."
+        raise ValueError(
+            "Historical PruAccess data contains an observation "
+            "after the requested historical end date. "
+            f"End={format_pruaccess_date(end_date)}, "
+            f"newest={format_pruaccess_date(newest_date)}"
         )
 
     # --------------------------------------------------------
-    # Chronological ordering.
+    # Chronological ordering validation.
     # --------------------------------------------------------
 
     for index in range(
@@ -2593,13 +2455,15 @@ def validate_full_history_to_inception(
             < parsed_dates[index - 1]
         ):
 
-            raise RuntimeError(
-                "Historical BID reconstruction "
-                "is not chronological."
+            raise ValueError(
+                "Historical BID observations are not "
+                "chronologically ordered."
             )
 
     # --------------------------------------------------------
-    # Date gaps are deliberately NOT treated as errors.
+    # Date gaps are allowed.
+    #
+    # We record them for diagnostics but NEVER fill them.
     # --------------------------------------------------------
 
     date_gaps = []
@@ -2609,13 +2473,13 @@ def validate_full_history_to_inception(
         len(parsed_dates),
     ):
 
-        previous_date = parsed_dates[
-            index - 1
-        ]
+        previous_date = (
+            parsed_dates[index - 1]
+        )
 
-        current_date = parsed_dates[
-            index
-        ]
+        current_date = (
+            parsed_dates[index]
+        )
 
         gap_days = (
             current_date
@@ -2627,19 +2491,32 @@ def validate_full_history_to_inception(
             date_gaps.append(
                 {
                     "fromDate":
-                        format_pruaccess_date(
-                            previous_date
-                        ),
+                        previous_date,
 
                     "toDate":
-                        format_pruaccess_date(
-                            current_date
-                        ),
+                        current_date,
 
                     "missingCalendarDays":
                         gap_days - 1,
                 }
             )
+
+    inception_delay_days = (
+        oldest_date
+        - inception_date
+    ).days
+
+    if inception_delay_days == 0:
+
+        inception_coverage = "exact"
+
+    else:
+
+        inception_coverage = (
+            f"inception+"
+            f"{inception_delay_days}"
+            f"-days"
+        )
 
     return {
         "status":
@@ -2665,12 +2542,14 @@ def validate_full_history_to_inception(
                 latest_allowed_oldest_date
             ),
 
+        "maximumAllowedDaysAfterInception":
+            MAX_INCEPTION_DELAY_DAYS,
+
         "inceptionCoverage":
-            (
-                "exact"
-                if oldest_date == inception_date
-                else "inception+1-day"
-            ),
+            inception_coverage,
+
+        "inceptionDelayDays":
+            inception_delay_days,
 
         "observationCount":
             len(
@@ -2697,60 +2576,60 @@ def validate_full_history_to_inception(
 # ============================================================
 
 def validate_window_coverage(
-    window: dict,
-    observations: list[dict],
-) -> dict:
+    window: dict[str, Any],
+    observations: list[dict[str, Any]],
+) -> dict[str, Any]:
 
     if not observations:
 
-        raise RuntimeError(
-            f"Window {window['windowNumber']} "
-            "contains no observations."
+        raise ValueError(
+            f"Historical window "
+            f"{window['windowNumber']} returned no observations."
         )
 
-    window_start = window[
-        "startDate"
-    ]
+    window_start = (
+        window["startDate"]
+    )
 
-    window_end = window[
-        "endDate"
-    ]
+    window_end = (
+        window["endDate"]
+    )
 
     parsed_dates = []
 
     for observation in observations:
 
-        observation_date = (
-            parse_pruaccess_date(
-                observation["date"]
-            )
+        observation_date = parse_pruaccess_date(
+            observation["date"]
         )
 
-        if observation_date < window_start:
+        if (
+            observation_date
+            < window_start
+        ):
 
-            raise RuntimeError(
-                f"Window {window['windowNumber']} "
-                "contains an observation before "
-                "its requested start date: "
-                f"{observation['date']}"
+            raise ValueError(
+                f"Observation date "
+                f"{format_pruaccess_date(observation_date)} "
+                f"is before requested window start "
+                f"{format_pruaccess_date(window_start)}."
             )
 
-        if observation_date > window_end:
+        if (
+            observation_date
+            > window_end
+        ):
 
-            raise RuntimeError(
-                f"Window {window['windowNumber']} "
-                "contains an observation after "
-                "its requested end date: "
-                f"{observation['date']}"
+            raise ValueError(
+                f"Observation date "
+                f"{format_pruaccess_date(observation_date)} "
+                f"is after requested window end "
+                f"{format_pruaccess_date(window_end)}."
             )
 
         parsed_dates.append(
             observation_date
         )
-
-    # --------------------------------------------------------
-    # Duplicate detection within the window.
-    # --------------------------------------------------------
 
     duplicate_dates = (
         find_duplicate_dates(
@@ -2760,42 +2639,38 @@ def validate_window_coverage(
 
     if duplicate_dates:
 
-        dates = ", ".join(
-            item["date"]
-            for item in duplicate_dates
-        )
-
-        raise RuntimeError(
-            f"Window {window['windowNumber']} "
-            "contains duplicate historical "
-            f"BID dates: {dates}"
+        raise ValueError(
+            f"Duplicate dates found inside window "
+            f"{window['windowNumber']}: "
+            f"{len(duplicate_dates)}."
         )
 
     return {
         "status":
             "passed",
 
-        "windowNumber":
-            window["windowNumber"],
-
         "requestedStartDate":
-            window["startDateText"],
+            format_pruaccess_date(
+                window_start
+            ),
 
         "requestedEndDate":
-            window["endDateText"],
+            format_pruaccess_date(
+                window_end
+            ),
 
         "oldestObservation":
-            min(
-                parsed_dates
-            ).strftime(
-                "%d-%b-%Y"
+            format_pruaccess_date(
+                min(
+                    parsed_dates
+                )
             ),
 
         "newestObservation":
-            max(
-                parsed_dates
-            ).strftime(
-                "%d-%b-%Y"
+            format_pruaccess_date(
+                max(
+                    parsed_dates
+                )
             ),
 
         "observationCount":
@@ -2815,37 +2690,30 @@ def validate_window_coverage(
 async def extract_single_fund(
     context: BrowserContext,
     page: Page,
-    excel_fund: dict,
-    pruaccess_options: list[dict],
-) -> dict:
+    excel_fund: dict[str, Any],
+    pruaccess_options: list[dict[str, str]],
+) -> dict[str, Any]:
 
-    excel_row = excel_fund[
-        "excelRow"
-    ]
-
-    prudential_url = excel_fund[
-        "prudentialUrl"
-    ]
-
-    excel_pruaccess_name = excel_fund[
-        "pruAccessName"
-    ]
-
-    print(
-        "\n\n"
-        "################################################################"
+    excel_row = (
+        excel_fund[
+            "excelRow"
+        ]
     )
 
-    print(
-        f"PROCESSING EXCEL ROW {excel_row}"
+    prudential_url = (
+        excel_fund[
+            "prudentialUrl"
+        ]
     )
 
-    print(
-        "################################################################"
+    excel_pruaccess_name = (
+        excel_fund[
+            "pruAccessName"
+        ]
     )
 
     # ========================================================
-    # PRUDENTIAL
+    # PRUDENTIAL FUND DATA
     # ========================================================
 
     prudential = (
@@ -2856,15 +2724,12 @@ async def extract_single_fund(
     )
 
     print(
-        "\nPrudential fund:"
+        f"\nPrudential fund: "
+        f"{prudential['fundName']}"
     )
 
     print(
-        prudential["fundName"]
-    )
-
-    print(
-        f"Identifier: "
+        f"Fund identifier: "
         f"{prudential['fundIdentifier']}"
     )
 
@@ -2883,38 +2748,16 @@ async def extract_single_fund(
         f"{prudential['inceptionDate']}"
     )
 
-    # ========================================================
-    # DATES
-    # ========================================================
-
-    inception_datetime = (
-        parse_prudential_date(
-            prudential["inceptionDate"]
-        )
-    )
-
-    inception_date = (
-        inception_datetime.date()
+    inception_date = parse_prudential_date(
+        prudential[
+            "inceptionDate"
+        ]
     )
 
     end_date = singapore_today()
 
-    print(
-        "\nHistorical extraction:"
-    )
-
-    print(
-        f"Inception: "
-        f"{format_pruaccess_date(inception_date)}"
-    )
-
-    print(
-        f"End: "
-        f"{format_pruaccess_date(end_date)}"
-    )
-
     # ========================================================
-    # AUTOMATIC DATE WINDOWS
+    # DATE WINDOWS
     # ========================================================
 
     windows = build_date_windows(
@@ -2923,14 +2766,14 @@ async def extract_single_fund(
     )
 
     print(
-        f"\nPruAccess windows required: "
-        f"{len(windows)}"
+        "\nHistorical windows:"
     )
 
     for window in windows:
 
         print(
-            f"  Window {window['windowNumber']}: "
+            f"Window "
+            f"{window['windowNumber']}: "
             f"{window['startDateText']} -> "
             f"{window['endDateText']} "
             f"({window['calendarDays']} calendar days)"
@@ -2940,32 +2783,34 @@ async def extract_single_fund(
     # EXACT PRUACCESS MATCH
     # ========================================================
 
-    selected = (
-        find_exact_pruaccess_match(
-            pruaccess_options,
-            excel_pruaccess_name,
-        )
+    selected = find_exact_pruaccess_match(
+        pruaccess_options,
+        excel_pruaccess_name,
     )
 
     fund_id = clean_text(
-        selected.get(
+        selected[
             "value"
-        )
+        ]
     )
 
     if not fund_id:
 
-        raise RuntimeError(
-            "Matched PruAccess fund "
-            "has no fund ID."
+        raise ValueError(
+            "Exact PruAccess fund match was found, "
+            "but its fund ID/value is empty."
         )
 
     print(
-        "\nMatched PruAccess fund:"
+        "\nExact PruAccess match:"
     )
 
     print(
-        selected
+        f"Name: {selected['text']}"
+    )
+
+    print(
+        f"Fund ID: {fund_id}"
     )
 
     # ========================================================
@@ -2976,25 +2821,32 @@ async def extract_single_fund(
 
     window_diagnostics = []
 
-    request_context = context.request
+    request_context = (
+        context.request
+    )
 
     for window in windows:
 
-        window_number = window[
-            "windowNumber"
-        ]
+        window_number = (
+            window[
+                "windowNumber"
+            ]
+        )
 
-        start_date = window[
-            "startDateText"
-        ]
+        start_date = (
+            window[
+                "startDateText"
+            ]
+        )
 
-        end_date_text = window[
-            "endDateText"
-        ]
+        end_date_text = (
+            window[
+                "endDateText"
+            ]
+        )
 
         print(
-            "\n\n"
-            "------------------------------------------------------------"
+            "\n============================================================"
         )
 
         print(
@@ -4099,7 +3951,7 @@ async def main():
                     True,
 
                 "maximumAllowedDaysAfterInception":
-                    1,
+                    MAX_INCEPTION_DELAY_DAYS,
 
                 "dateGapsAllowed":
                     True,
@@ -4270,7 +4122,10 @@ async def main():
             "fullHistoryToInceptionValidation":
                 True,
 
-            "firstObservationMayBeOneDayAfterInception":
+            "maximumInceptionDelayDays":
+                MAX_INCEPTION_DELAY_DAYS,
+
+            "firstObservationMayBeUpToSevenDaysAfterInception":
                 True,
 
             "dateGapsAllowed":
@@ -4355,7 +4210,7 @@ async def main():
     )
 
     print(
-        " - Inception + 1 calendar day: PASS"
+        " - Up to +7 calendar days after inception: PASS"
     )
 
     print(
