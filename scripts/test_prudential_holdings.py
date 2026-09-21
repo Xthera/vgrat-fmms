@@ -21,22 +21,48 @@ PURPOSE
 Extract official Prudential Top Holdings from EVERY fund listed in
 Excel Column A.
 
-The script supports the different PDF layouts used by Prudential,
-including:
+IMPORTANT DESIGN PRINCIPLE
+==========================
 
-    1. Rank + holding name + percentage on one line
+This extractor is deliberately CONSERVATIVE.
 
-    2. Rank + multi-line holding name + percentage
+Wrong holding data is worse than missing holding data.
 
-    3. Rank on its own line
-       holding name on one or more lines
-       percentage on a later line
+Therefore:
 
-    4. Holding name and percentage separated by PDF table extraction
+- Official Prudential factsheet only.
+- No third-party holdings.
+- No inferred holdings.
+- No fabricated holdings.
+- No fabricated percentages.
+- No calculated percentages.
+- No forced 10 holdings.
+- Multi-line holding names are supported.
+- Holdings without published percentages are allowed.
+- If the parser cannot establish that a name belongs to the
+  Top Holdings table, it is NOT accepted.
+- If the parser cannot reliably identify holdings, the fund FAILS.
+- Raw PDF text and the detected Top Holdings section are retained
+  for auditing.
 
-    5. Holdings published without percentages
+The extractor supports common Prudential PDF layouts including:
 
-No holding percentage is invented when Prudential does not publish one.
+    1. Rank + name + percentage on one line
+
+    2. Rank + multi-line name + percentage
+
+    3. Rank on separate line
+       name on one or more lines
+       percentage on separate line
+
+    4. Name + percentage separated by PDF extraction
+
+    5. Published holding names without percentages
+
+    6. PDFs where pypdf produces different reading orders
+
+It deliberately DOES NOT try to "guess" a holding when the PDF
+structure is ambiguous.
 
 
 HARD RULES
@@ -52,21 +78,23 @@ HARD RULES
 - No fabricated holdings.
 - No fabricated percentages.
 - No forced 10 holdings.
-- If Prudential publishes fewer than 10 holdings, store exactly that count.
-- Holdings are stored in the order published by Prudential.
-- Multi-line holding names are preserved and joined into one name.
-- A holding percentage may be null when Prudential does not publish
-  a percentage for that holding.
-- No percentage is calculated from other holdings.
+- If Prudential publishes fewer than 10 holdings, store exactly
+  that published count.
+- Holdings are stored in published order whenever that order can
+  be established.
+- Multi-line names are joined only when they belong to the same
+  detected holding row.
+- Holding percentage may be null when Prudential does not publish it.
+- No percentage is calculated.
 - No percentage is inferred.
-- If a Top Holdings section exists but contains no identifiable
-  holding names, the fund is FAILED.
-- If a Top Holdings section exists and names are identifiable but
-  Prudential does not publish percentages, the fund is SUCCESS with
-  null weights.
-- If a factsheet has no Top Holdings section at all, the fund is
-  marked NO_HOLDINGS_SECTION.
-- Failed funds do not get fabricated holdings.
+- If a Top Holdings section exists but no reliable holding rows can
+  be established, the fund is FAILED.
+- If a Top Holdings section exists and reliable names are published
+  without percentages, the fund is SUCCESS with null weights.
+- If no Top Holdings section exists, status is NO_HOLDINGS_SECTION.
+- Duplicate ranks are never silently deduplicated.
+- Duplicate names at different published ranks are retained and
+  flagged as a warning.
 - The script never changes PruAccess settings.
 - This script does NOT modify test_pruaccess.py.
 - This script does NOT create data.json.
@@ -101,11 +129,13 @@ import re
 import sys
 import time
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
 from openpyxl import load_workbook
 from pypdf import PdfReader
+
 from playwright.sync_api import (
     TimeoutError as PlaywrightTimeoutError,
     sync_playwright,
@@ -137,9 +167,9 @@ RUN_SUMMARY_FILE = (
 )
 
 
-# ---------------------------------------------------------------------------
-# Browser
-# ---------------------------------------------------------------------------
+# =============================================================================
+# BROWSER
+# =============================================================================
 
 BROWSER_HEADLESS = True
 
@@ -154,16 +184,16 @@ RETRY_COUNT = 3
 RETRY_DELAY_SECONDS = 3.0
 
 
-# ---------------------------------------------------------------------------
-# Holdings
-# ---------------------------------------------------------------------------
+# =============================================================================
+# HOLDINGS
+# =============================================================================
 
 MAX_HOLDINGS = 10
 
 
-# ---------------------------------------------------------------------------
-# Only official Prudential Singapore URLs are accepted.
-# ---------------------------------------------------------------------------
+# =============================================================================
+# OFFICIAL PRUDENTIAL HOSTS
+# =============================================================================
 
 PRUDENTIAL_HOSTS = {
     "prudential.com.sg",
@@ -175,12 +205,7 @@ PRUDENTIAL_HOSTS = {
 # GENERAL HELPERS
 # =============================================================================
 
-def clean_text(
-    value,
-) -> str:
-    """
-    Normalize whitespace while preserving meaningful text.
-    """
+def clean_text(value) -> str:
 
     if value is None:
         return ""
@@ -202,6 +227,11 @@ def clean_text(
         "",
     )
 
+    text = text.replace(
+        "\u00ad",
+        "",
+    )
+
     text = re.sub(
         r"\s+",
         " ",
@@ -211,9 +241,7 @@ def clean_text(
     return text.strip()
 
 
-def normalize_text(
-    value,
-) -> str:
+def normalize_text(value) -> str:
 
     text = clean_text(
         value
@@ -271,9 +299,7 @@ def save_json(
     )
 
 
-def safe_filename(
-    value,
-) -> str:
+def safe_filename(value) -> str:
 
     text = clean_text(
         value
@@ -334,7 +360,6 @@ def ensure_prudential_url(
     )
 
     if not url:
-
         raise RuntimeError(
             "URL is empty."
         )
@@ -342,7 +367,6 @@ def ensure_prudential_url(
     if not is_prudential_url(
         url
     ):
-
         raise RuntimeError(
             "Non-Prudential URL rejected: "
             f"{url}"
@@ -415,14 +439,9 @@ def read_excel_funds() -> list[dict]:
 
         funds.append(
             {
-                "excelRow":
-                    row_number,
-
-                "prudentialUrl":
-                    prudential_url,
-
-                "pruAccessName":
-                    pruaccess_name,
+                "excelRow": row_number,
+                "prudentialUrl": prudential_url,
+                "pruAccessName": pruaccess_name,
             }
         )
 
@@ -443,7 +462,7 @@ def read_excel_funds() -> list[dict]:
 
 
 # =============================================================================
-# FIND FACTSHEET LINK
+# FACTSHEET LINK
 # =============================================================================
 
 def find_factsheet_url(
@@ -506,38 +525,25 @@ def find_factsheet_url(
 
         score = 0
 
-        if (
-            "fund factsheet"
-            in text_lower
-        ):
+        if "fund factsheet" in text_lower:
             score += 200
 
-        elif (
-            "factsheet"
-            in text_lower
-        ):
+        elif "factsheet" in text_lower:
             score += 150
 
         if "factsheet" in href_lower:
             score += 100
 
-        if href_lower.endswith(
-            ".pdf"
-        ):
+        if href_lower.endswith(".pdf"):
             score += 50
 
         if score > 0:
 
             candidates.append(
                 {
-                    "score":
-                        score,
-
-                    "url":
-                        absolute_url,
-
-                    "text":
-                        anchor_text,
+                    "score": score,
+                    "url": absolute_url,
+                    "text": anchor_text,
                 }
             )
 
@@ -571,14 +577,12 @@ def find_factsheet_url(
 
 
 # =============================================================================
-# PDF TEXT
+# PDF EXTRACTION
 # =============================================================================
 
-def extract_pdf_text(
+def extract_pdf_text_variants(
     pdf_bytes: bytes,
-) -> tuple[str, int]:
-
-    from io import BytesIO
+) -> tuple[list[dict], int]:
 
     reader = PdfReader(
         BytesIO(
@@ -596,7 +600,44 @@ def extract_pdf_text(
             "Factsheet PDF has zero pages."
         )
 
-    pages = []
+    variants = [
+        {
+            "name":
+                "default",
+
+            "pages":
+                [],
+        }
+    ]
+
+    has_layout_mode = True
+
+    try:
+        # Check whether the installed pypdf supports extraction_mode.
+        reader.pages[0].extract_text(
+            extraction_mode="layout"
+        )
+
+    except TypeError:
+
+        has_layout_mode = False
+
+    except Exception:
+
+        # Layout extraction exists but may not work on this PDF.
+        has_layout_mode = True
+
+    if has_layout_mode:
+
+        variants.append(
+            {
+                "name":
+                    "layout",
+
+                "pages":
+                    [],
+            }
+        )
 
     for page_index, pdf_page in enumerate(
         reader.pages,
@@ -605,7 +646,7 @@ def extract_pdf_text(
 
         try:
 
-            page_text = (
+            default_text = (
                 pdf_page.extract_text()
                 or ""
             )
@@ -617,30 +658,85 @@ def extract_pdf_text(
                 f"from page {page_index}: {error}"
             ) from error
 
-        pages.append(
-            page_text
+        variants[0][
+            "pages"
+        ].append(
+            default_text
         )
 
-    full_text = "\n".join(
-        pages
-    )
+        if has_layout_mode:
 
-    if not clean_text(
-        full_text
-    ):
+            try:
+
+                layout_text = (
+                    pdf_page.extract_text(
+                        extraction_mode="layout"
+                    )
+                    or ""
+                )
+
+            except Exception:
+
+                layout_text = ""
+
+            variants[1][
+                "pages"
+            ].append(
+                layout_text
+            )
+
+    output = []
+
+    for variant in variants:
+
+        full_text = "\n".join(
+            variant["pages"]
+        )
+
+        if clean_text(
+            full_text
+        ):
+
+            output.append(
+                {
+                    "name":
+                        variant["name"],
+
+                    "text":
+                        full_text,
+                }
+            )
+
+    if not output:
 
         raise RuntimeError(
             "Factsheet PDF contains no extractable text."
         )
 
     return (
-        full_text,
+        output,
+        page_count,
+    )
+
+
+def extract_pdf_text(
+    pdf_bytes: bytes,
+) -> tuple[str, int]:
+
+    variants, page_count = (
+        extract_pdf_text_variants(
+            pdf_bytes
+        )
+    )
+
+    return (
+        variants[0]["text"],
         page_count,
     )
 
 
 # =============================================================================
-# PDF LINE CLEANING
+# PDF LINES
 # =============================================================================
 
 def pdf_lines(
@@ -666,7 +762,7 @@ def pdf_lines(
 
 
 # =============================================================================
-# FACTSHEET DATE EXTRACTION
+# FACTSHEET DATES
 # =============================================================================
 
 def extract_data_as_at(
@@ -724,10 +820,6 @@ def extract_data_as_at(
     return None
 
 
-# =============================================================================
-# FACTSHEET DOCUMENT DATE
-# =============================================================================
-
 def extract_document_date(
     text: str,
 ) -> str | None:
@@ -736,7 +828,7 @@ def extract_document_date(
         text
     )
 
-    month_year_pattern = re.compile(
+    pattern = re.compile(
         r"""
         \b
         (
@@ -763,10 +855,8 @@ def extract_document_date(
 
     for line in lines[:50]:
 
-        match = (
-            month_year_pattern.search(
-                line
-            )
+        match = pattern.search(
+            line
         )
 
         if match:
@@ -779,8 +869,43 @@ def extract_document_date(
 
 
 # =============================================================================
-# HOLDINGS SECTION BOUNDARIES
+# HOLDINGS SECTION DETECTION
 # =============================================================================
+
+HOLDINGS_SECTION_PATTERNS = [
+    re.compile(
+        r"^\s*top\s+10\s+holdings\s*$",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"^\s*top\s+ten\s+holdings\s*$",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"^\s*top\s+holdings\s*$",
+        re.IGNORECASE,
+    ),
+]
+
+
+def is_exact_holdings_heading(
+    line: str,
+) -> bool:
+
+    normalized = normalize_text(
+        line
+    )
+
+    for pattern in HOLDINGS_SECTION_PATTERNS:
+
+        if pattern.fullmatch(
+            normalized
+        ):
+
+            return True
+
+    return False
+
 
 def find_holdings_start(
     lines: list[str],
@@ -790,19 +915,8 @@ def find_holdings_start(
         lines
     ):
 
-        normalized = normalize_text(
+        if is_exact_holdings_heading(
             line
-        )
-
-        if (
-            "top 10 holdings"
-            in normalized
-            or
-            "top ten holdings"
-            in normalized
-            or
-            "top holdings"
-            in normalized
         ):
 
             return index
@@ -818,38 +932,26 @@ def is_holdings_end(
         line
     )
 
-    endings = (
-
+    exact_endings = {
         "source",
-
         "source:",
-
         "inception date",
-
         "important information",
-
         "important information:",
-
         "disclaimer",
-
         "past performance",
-
         "portfolio characteristics",
-
         "asset allocation",
-
         "sector allocation",
-
         "geographical allocation",
-
         "country allocation",
-
         "currency allocation",
-
         "risk profile",
-    )
+        "fund performance",
+        "fund information",
+    }
 
-    if normalized in endings:
+    if normalized in exact_endings:
         return True
 
     if normalized.startswith(
@@ -867,6 +969,11 @@ def is_holdings_end(
     ):
         return True
 
+    if normalized.startswith(
+        "disclaimer"
+    ):
+        return True
+
     if re.fullmatch(
         r"page\s+\d+(\s+of\s+\d+)?",
         normalized,
@@ -878,10 +985,7 @@ def is_holdings_end(
 
 def extract_holdings_section(
     text: str,
-) -> tuple[
-    str,
-    str,
-]:
+) -> tuple[str, str]:
 
     lines = pdf_lines(
         text
@@ -913,11 +1017,225 @@ def extract_holdings_section(
             line
         )
 
+    section_text = "\n".join(
+        section
+    )
+
+    if not clean_text(
+        section_text
+    ):
+
+        return (
+            "",
+            "published_empty",
+        )
+
     return (
-        "\n".join(
-            section
-        ),
+        section_text,
         "published",
+    )
+
+
+# =============================================================================
+# HOLDINGS TABLE HEADERS
+# =============================================================================
+
+HEADER_WORDS = {
+    "top 10 holdings",
+    "top ten holdings",
+    "top holdings",
+    "holding",
+    "holdings",
+    "name",
+    "security",
+    "security name",
+    "weight",
+    "weight %",
+    "weight (%)",
+    "percentage",
+    "% of net assets",
+    "% of portfolio",
+    "portfolio holdings",
+}
+
+
+def looks_like_holdings_header(
+    line: str,
+) -> bool:
+
+    normalized = normalize_text(
+        line
+    )
+
+    if normalized in HEADER_WORDS:
+        return True
+
+    if (
+        "holding" in normalized
+        and (
+            "weight" in normalized
+            or "percentage" in normalized
+            or "%" in normalized
+        )
+    ):
+        return True
+
+    return False
+
+
+# =============================================================================
+# RANK DETECTION
+# =============================================================================
+
+RANK_RE = re.compile(
+    r"""
+    ^
+    (?:
+        rank
+        \s*
+    )?
+    (\d{1,2})
+    (?:
+        [.)]
+        |
+        (?=\s)
+        |
+        $
+    )
+    \s*
+    (.*)
+    $
+    """,
+    re.IGNORECASE
+    | re.VERBOSE,
+)
+
+
+def extract_rank(
+    line: str,
+) -> tuple[int | None, str]:
+
+    original = clean_text(
+        line
+    )
+
+    if not original:
+        return (
+            None,
+            "",
+        )
+
+    match = RANK_RE.match(
+        original
+    )
+
+    if not match:
+
+        return (
+            None,
+            original,
+        )
+
+    rank = int(
+        match.group(1)
+    )
+
+    if (
+        rank < 1
+        or rank > MAX_HOLDINGS
+    ):
+
+        return (
+            None,
+            original,
+        )
+
+    remainder = clean_text(
+        match.group(2)
+    )
+
+    return (
+        rank,
+        remainder,
+    )
+
+
+# =============================================================================
+# PERCENTAGE
+# =============================================================================
+
+PERCENT_RE = re.compile(
+    r"""
+    (?<![\d.])
+    ([0-9]+(?:\.[0-9]+)?)
+    \s*%
+    """,
+    re.VERBOSE,
+)
+
+
+def extract_percentage_from_line(
+    value: str,
+) -> tuple[float | None, str, str | None]:
+
+    text = clean_text(
+        value
+    )
+
+    if not text:
+
+        return (
+            None,
+            "",
+            None,
+        )
+
+    matches = list(
+        PERCENT_RE.finditer(
+            text
+        )
+    )
+
+    if not matches:
+
+        return (
+            None,
+            text,
+            None,
+        )
+
+    match = matches[0]
+
+    percentage = float(
+        match.group(1)
+    )
+
+    if (
+        percentage < 0
+        or percentage > 100
+    ):
+
+        return (
+            None,
+            text,
+            None,
+        )
+
+    raw_percentage = (
+        match.group(0)
+        .strip()
+    )
+
+    remaining = clean_text(
+        text[:match.start()]
+        + " "
+        + text[match.end():]
+    )
+
+    return (
+        percentage,
+        remaining,
+        raw_percentage,
     )
 
 
@@ -947,16 +1265,12 @@ def clean_holding_name(
         name,
     )
 
-    name = name.strip()
-
-    # Remove accidental leading rank.
     name = re.sub(
         r"^\d{1,2}[.)]\s+",
         "",
         name,
     )
 
-    # Remove a standalone rank.
     name = re.sub(
         r"^\d{1,2}\s+",
         "",
@@ -991,7 +1305,10 @@ def clean_holding_name(
         "portfolio holdings",
         "weight",
         "weight %",
+        "weight (%)",
+        "percentage",
         "%",
+        "rank",
     }:
 
         return ""
@@ -1000,333 +1317,234 @@ def clean_holding_name(
 
 
 # =============================================================================
-# RANK DETECTION
+# CANDIDATE NAME VALIDATION
 # =============================================================================
 
-def extract_rank(
-    line: str,
-) -> tuple[
-    int | None,
-    str,
-]:
-    """
-    Detect a published holding rank.
-
-    Supported examples:
-
-        1
-        1.
-        1)
-        1. FUND NAME
-        1 FUND NAME
-    """
-
-    original = clean_text(
-        line
-    )
-
-    if not original:
-        return (
-            None,
-            "",
-        )
-
-    match = re.match(
-        r"""
-        ^
-        (\d{1,2})
-        (?:
-            [.)]
-            |
-            (?=\s)
-            |
-            $
-        )
-        \s*
-        (.*)
-        $
-        """,
-        original,
-        re.VERBOSE,
-    )
-
-    if not match:
-        return (
-            None,
-            original,
-        )
-
-    rank = int(
-        match.group(1)
-    )
-
-    remainder = clean_text(
-        match.group(2)
-    )
-
-    if rank < 1 or rank > MAX_HOLDINGS:
-        return (
-            None,
-            original,
-        )
-
-    return (
-        rank,
-        remainder,
-    )
-
-
-# =============================================================================
-# PERCENTAGE PARSING
-# =============================================================================
-
-def extract_percentage_from_line(
-    value: str,
-) -> tuple[
-    float | None,
-    str,
-]:
-    """
-    Extract a percentage from anywhere in a line.
-
-    Returns:
-
-        percentage
-        remaining text
-
-    Examples:
-
-        "ABC FUND 38.8%"
-        -> 38.8, "ABC FUND"
-
-        "38.8%"
-        -> 38.8, ""
-
-        "ABC FUND 38.8% 2025"
-        -> 38.8, "ABC FUND 2025"
-    """
-
-    if value is None:
-        return (
-            None,
-            "",
-        )
-
-    text = clean_text(
-        value
-    )
-
-    matches = list(
-        re.finditer(
-            r"(?<![\d.])"
-            r"([0-9]+(?:\.[0-9]+)?)"
-            r"\s*%",
-            text,
-        )
-    )
-
-    if not matches:
-        return (
-            None,
-            text,
-        )
-
-    # Use the first published percentage in the line.
-    match = matches[0]
-
-    percentage = float(
-        match.group(1)
-    )
-
-    if (
-        percentage < 0
-        or percentage > 100
-    ):
-
-        return (
-            None,
-            text,
-        )
-
-    remaining = (
-        text[:match.start()]
-        + " "
-        + text[match.end():]
-    )
-
-    remaining = clean_text(
-        remaining
-    )
-
-    return (
-        percentage,
-        remaining,
-    )
-
-
-def parse_percentage(
-    value: str,
-) -> float | None:
-
-    if value is None:
-        return None
-
-    text = clean_text(
-        value
-    )
-
-    match = re.fullmatch(
-        r"([0-9]+(?:\.[0-9]+)?)\s*%",
-        text,
-    )
-
-    if not match:
-        return None
-
-    percentage = float(
-        match.group(1)
-    )
-
-    if (
-        percentage < 0
-        or percentage > 100
-    ):
-        return None
-
-    return percentage
-
-
-# =============================================================================
-# HEADER / NON-HOLDING DETECTION
-# =============================================================================
-
-def looks_like_holdings_header(
-    line: str,
+def looks_like_number_or_metadata(
+    text: str,
 ) -> bool:
 
     normalized = normalize_text(
-        line
+        text
     )
 
-    headers = {
-        "top 10 holdings",
-        "top ten holdings",
-        "top holdings",
-        "holding",
-        "holdings",
-        "name",
-        "security",
-        "security name",
-        "weight",
-        "weight %",
-        "weight (%)",
-        "percentage",
-        "% of net assets",
-        "% of portfolio",
-        "portfolio holdings",
-    }
-
-    if normalized in headers:
+    if not normalized:
         return True
 
-    if (
-        "holding"
-        in normalized
-        and
-        (
-            "weight"
-            in normalized
-            or
-            "percentage"
-            in normalized
-            or
-            "%"
-            in normalized
-        )
+    if re.fullmatch(
+        r"[\d.,%+\-/]+",
+        normalized,
     ):
         return True
+
+    metadata_patterns = [
+        r"^as\s+at\b",
+        r"^data\s+as\s+at\b",
+        r"^date\b",
+        r"^page\s+\d+",
+        r"^source\b",
+        r"^isin\b",
+        r"^sedol\b",
+        r"^isin\s*:",
+        r"^fund\s+price\b",
+        r"^fund\s+size\b",
+        r"^nav\b",
+        r"^currency\b",
+        r"^asset\s+class\b",
+        r"^risk\b",
+        r"^inception\b",
+        r"^performance\b",
+        r"^return\b",
+        r"^returns\b",
+        r"^important\s+information\b",
+        r"^disclaimer\b",
+    ]
+
+    for pattern in metadata_patterns:
+
+        if re.search(
+            pattern,
+            normalized,
+        ):
+            return True
 
     return False
 
 
-# =============================================================================
-# RANKED HOLDINGS PARSER
-# =============================================================================
+def is_plausible_holding_name(
+    name: str,
+) -> bool:
 
-def parse_ranked_holdings(
-    section_text: str,
-) -> tuple[
-    list[dict],
-    dict,
-]:
-    """
-    Robust parser for Prudential PDF holdings tables.
-
-    It understands multi-line holding names.
-
-    Example:
-
-        1
-        JPMORGAN
-        FUNDS
-        EMERGING MARKETS
-        14.7%
-
-    becomes:
-
-        rank = 1
-        name = "JPMORGAN FUNDS EMERGING MARKETS"
-        weight = 14.7
-
-    It also supports holdings with no published percentage:
-
-        1
-        FUND NAME
-
-        2
-        ANOTHER FUND
-
-    In that case weightPercent is null.
-
-    IMPORTANT:
-
-    No percentage is calculated or inferred.
-    """
-
-    lines = pdf_lines(
-        section_text
+    name = clean_holding_name(
+        name
     )
 
-    if not lines:
+    if not name:
+        return False
 
-        raise RuntimeError(
-            "Top Holdings section is empty."
-        )
+    if looks_like_number_or_metadata(
+        name
+    ):
+        return False
 
-    # -------------------------------------------------------------------------
-    # Remove obvious table headers.
-    # -------------------------------------------------------------------------
+    # A holding name should contain at least one alphabetic character.
+    if not re.search(
+        r"[A-Za-z]",
+        name,
+    ):
+        return False
 
-    cleaned_lines = []
+    # Avoid obvious table/document fragments.
+    normalized = normalize_text(
+        name
+    )
+
+    bad_exact = {
+        "none",
+        "n/a",
+        "na",
+        "not available",
+        "not applicable",
+        "total",
+        "total holdings",
+        "weight",
+        "weights",
+        "portfolio",
+        "portfolio characteristics",
+        "asset allocation",
+        "sector allocation",
+        "country allocation",
+        "currency allocation",
+        "geographical allocation",
+    }
+
+    if normalized in bad_exact:
+        return False
+
+    # A single very short word is usually a PDF header, not a security.
+    if len(name) < 3:
+        return False
+
+    return True
+
+
+# =============================================================================
+# ROW / BLOCK UTILITIES
+# =============================================================================
+
+def extract_percentage_from_block(
+    lines: list[str],
+) -> tuple[
+    float | None,
+    str | None,
+    list[str],
+]:
+
+    percentage = None
+    percentage_text = None
+    remaining_lines = []
 
     for line in lines:
 
-        if looks_like_holdings_header(
-            line
-        ):
-            continue
+        line_percentage, remaining, raw = (
+            extract_percentage_from_line(
+                line
+            )
+        )
 
-        cleaned_lines.append(
+        if (
+            percentage is None
+            and line_percentage is not None
+        ):
+
+            percentage = line_percentage
+            percentage_text = raw
+
+        if clean_text(
+            remaining
+        ):
+
+            remaining_lines.append(
+                clean_text(
+                    remaining
+                )
+            )
+
+    return (
+        percentage,
+        percentage_text,
+        remaining_lines,
+    )
+
+
+def make_holding(
+    rank: int,
+    name_lines: list[str],
+    percentage: float | None,
+    percentage_text: str | None,
+) -> dict | None:
+
+    cleaned_parts = []
+
+    for line in name_lines:
+
+        candidate = clean_holding_name(
             line
         )
 
-    lines = cleaned_lines
+        if not candidate:
+            continue
 
-    # -------------------------------------------------------------------------
-    # Build ranked blocks.
-    #
-    # A new rank starts a new holding.
-    # -------------------------------------------------------------------------
+        if looks_like_holdings_header(
+            candidate
+        ):
+            continue
+
+        if looks_like_number_or_metadata(
+            candidate
+        ):
+            continue
+
+        cleaned_parts.append(
+            candidate
+        )
+
+    if not cleaned_parts:
+        return None
+
+    name = clean_holding_name(
+        " ".join(
+            cleaned_parts
+        )
+    )
+
+    if not is_plausible_holding_name(
+        name
+    ):
+        return None
+
+    return {
+        "rank":
+            rank,
+
+        "name":
+            name,
+
+        "weightPercent":
+            percentage,
+
+        "weightText":
+            percentage_text,
+    }
+
+
+# =============================================================================
+# RANKED BLOCK PARSER
+# =============================================================================
+
+def parse_ranked_candidate(
+    lines: list[str],
+) -> tuple[list[dict], dict]:
 
     blocks = []
 
@@ -1334,16 +1552,29 @@ def parse_ranked_holdings(
 
     for line in lines:
 
+        line = clean_text(
+            line
+        )
+
+        if not line:
+            continue
+
+        if is_holdings_end(
+            line
+        ):
+            break
+
+        if looks_like_holdings_header(
+            line
+        ):
+            continue
+
         rank, remainder = extract_rank(
             line
         )
 
         if rank is not None:
 
-            # A new rank before the previous rank is completed is not
-            # automatically an error anymore. It can happen when the
-            # previous holding has a multi-line name and its percentage
-            # appears in a different PDF text column.
             if current is not None:
 
                 blocks.append(
@@ -1351,8 +1582,11 @@ def parse_ranked_holdings(
                 )
 
             current = {
-                "rank": rank,
-                "lines": [],
+                "rank":
+                    rank,
+
+                "lines":
+                    [],
             }
 
             if remainder:
@@ -1379,36 +1613,102 @@ def parse_ranked_holdings(
             current
         )
 
+    holdings = []
+
+    diagnostics = {
+        "parser":
+            "ranked_block_parser",
+
+        "rankedBlockCount":
+            len(blocks),
+
+        "discardedBlocks":
+            [],
+
+        "orphanPercentages":
+            0,
+    }
+
     # -------------------------------------------------------------------------
-    # If no ranks were found, use a second non-ranked parser.
+    # Critical protection:
+    #
+    # A ranked table should normally start at rank 1.
+    # If the first detected rank is something else, it is much more likely
+    # that unrelated numbered PDF content has been captured.
     # -------------------------------------------------------------------------
 
     if not blocks:
 
         return (
-            parse_non_ranked_holdings(
-                lines
-            ),
-            {
-                "parser":
-                    "non_ranked_fallback",
+            [],
+            diagnostics,
+        )
 
-                "rankedBlocks":
-                    0,
-            },
+    ranks = [
+        block["rank"]
+        for block
+        in blocks
+    ]
+
+    if 1 not in ranks:
+
+        diagnostics[
+            "reason"
+        ] = (
+            "Ranked content did not contain "
+            "a rank-1 row."
+        )
+
+        return (
+            [],
+            diagnostics,
         )
 
     # -------------------------------------------------------------------------
-    # Validate and parse each ranked block.
+    # Only use the first rank-1 occurrence as the beginning of the table.
     # -------------------------------------------------------------------------
 
-    holdings = []
+    first_rank_one_index = ranks.index(
+        1
+    )
+
+    blocks = blocks[
+        first_rank_one_index:
+    ]
+
+    previous_rank = None
 
     for block in blocks:
 
         rank = block[
             "rank"
         ]
+
+        # A rank going backwards is strong evidence that PDF columns or
+        # another table have been mixed into the section.
+        if (
+            previous_rank is not None
+            and rank <= previous_rank
+        ):
+
+            diagnostics[
+                "discardedBlocks"
+            ].append(
+                {
+                    "rank":
+                        rank,
+
+                    "reason":
+                        "rank_not_increasing",
+
+                    "lines":
+                        block["lines"],
+                }
+            )
+
+            continue
+
+        previous_rank = rank
 
         block_lines = [
             clean_text(
@@ -1423,146 +1723,56 @@ def parse_ranked_holdings(
             )
         ]
 
-        if rank < 1 or rank > MAX_HOLDINGS:
-            continue
-
-        # ---------------------------------------------------------------------
-        # Stop if this is clearly outside the holdings table.
-        # ---------------------------------------------------------------------
-
-        useful_lines = []
-
-        for line in block_lines:
-
-            if is_holdings_end(
-                line
-            ):
-                break
-
-            useful_lines.append(
-                line
-            )
-
-        block_lines = useful_lines
-
         if not block_lines:
+
+            diagnostics[
+                "discardedBlocks"
+            ].append(
+                {
+                    "rank":
+                        rank,
+
+                    "reason":
+                        "empty_block",
+                }
+            )
+
             continue
 
-        # ---------------------------------------------------------------------
-        # Extract all percentages in the block.
-        #
-        # Normally there is zero or one.
-        #
-        # If several percentages appear because of PDF extraction artifacts,
-        # use the first percentage associated with the block.
-        # ---------------------------------------------------------------------
-
-        percentage = None
-
-        name_parts = []
-
-        for line in block_lines:
-
-            line_percentage, remaining = (
-                extract_percentage_from_line(
-                    line
-                )
-            )
-
-            if (
-                percentage is None
-                and
-                line_percentage is not None
-            ):
-
-                percentage = line_percentage
-
-            remaining = clean_text(
-                remaining
-            )
-
-            if remaining:
-
-                name_parts.append(
-                    remaining
-                )
-
-        # ---------------------------------------------------------------------
-        # If a percentage line contained only the percentage, it contributes
-        # nothing to the name.
-        # ---------------------------------------------------------------------
-
-        name = clean_holding_name(
-            " ".join(
-                name_parts
+        percentage, percentage_text, name_lines = (
+            extract_percentage_from_block(
+                block_lines
             )
         )
 
-        # ---------------------------------------------------------------------
-        # Some PDF layouts put the percentage before the holding name.
-        # Try to recover the name from the non-percentage text.
-        # ---------------------------------------------------------------------
+        holding = make_holding(
+            rank,
+            name_lines,
+            percentage,
+            percentage_text,
+        )
 
-        if not name:
+        if holding is None:
 
-            non_percentage_lines = []
+            diagnostics[
+                "discardedBlocks"
+            ].append(
+                {
+                    "rank":
+                        rank,
 
-            for line in block_lines:
+                    "reason":
+                        "no_plausible_name",
 
-                stripped = re.sub(
-                    r"[0-9]+(?:\.[0-9]+)?\s*%",
-                    " ",
-                    line,
-                )
-
-                stripped = clean_text(
-                    stripped
-                )
-
-                if stripped:
-
-                    non_percentage_lines.append(
-                        stripped
-                    )
-
-            name = clean_holding_name(
-                " ".join(
-                    non_percentage_lines
-                )
+                    "lines":
+                        block_lines,
+                }
             )
 
-        # ---------------------------------------------------------------------
-        # Header-like content is not a holding.
-        # ---------------------------------------------------------------------
-
-        if looks_like_holdings_header(
-            name
-        ):
-            name = ""
-
-        if not name:
-
-            # Do not silently create a fabricated holding.
             continue
 
         holdings.append(
-            {
-                "rank":
-                    rank,
-
-                "name":
-                    name,
-
-                "weightPercent":
-                    percentage,
-
-                "weightText":
-                    (
-                        f"{percentage:g}%"
-                        if percentage is not None
-                        else None
-                    ),
-            }
+            holding
         )
 
         if len(
@@ -1572,188 +1782,120 @@ def parse_ranked_holdings(
             break
 
     # -------------------------------------------------------------------------
-    # Sort by published rank.
-    # -------------------------------------------------------------------------
-
-    holdings.sort(
-        key=lambda item: item[
-            "rank"
-        ]
-    )
-
-    # -------------------------------------------------------------------------
-    # Remove exact duplicate ranks caused by PDF extraction artifacts.
-    # Keep first occurrence.
-    # -------------------------------------------------------------------------
-
-    unique_by_rank = []
-
-    seen_ranks = set()
-
-    for item in holdings:
-
-        rank = item[
-            "rank"
-        ]
-
-        if rank in seen_ranks:
-            continue
-
-        seen_ranks.add(
-            rank
-        )
-
-        unique_by_rank.append(
-            item
-        )
-
-    holdings = unique_by_rank
-
-    # -------------------------------------------------------------------------
-    # If ranked parsing found names, use them.
-    # -------------------------------------------------------------------------
-
-    if holdings:
-
-        # Renumber only if Prudential's actual ranks are sequential.
-        #
-        # We do NOT invent ranks. The original published rank is retained.
-        #
-        # For normal Prudential tables this should be 1..N.
-
-        return (
-            holdings,
-            {
-                "parser":
-                    "ranked_block_parser",
-
-                "rankedBlocks":
-                    len(blocks),
-
-                "publishedPercentages":
-                    sum(
-                        1
-                        for item
-                        in holdings
-                        if item[
-                            "weightPercent"
-                        ] is not None
-                    ),
-
-                "holdingsWithoutPercentage":
-                    sum(
-                        1
-                        for item
-                        in holdings
-                        if item[
-                            "weightPercent"
-                        ] is None
-                    ),
-            },
-        )
-
-    # -------------------------------------------------------------------------
-    # No ranked names were recoverable.
+    # Strong structural validation.
     #
-    # Try the non-ranked fallback before declaring failure.
+    # The detected ranks should correspond to 1..N without unexplained
+    # backward jumps. Missing ranks are allowed only when the PDF extraction
+    # genuinely omitted a row, but we record that diagnostic.
     # -------------------------------------------------------------------------
 
-    fallback = parse_non_ranked_holdings(
-        lines
-    )
+    extracted_ranks = [
+        item["rank"]
+        for item
+        in holdings
+    ]
 
-    if fallback:
-
-        return (
-            fallback,
-            {
-                "parser":
-                    "non_ranked_fallback_after_ranked_failure",
-
-                "rankedBlocks":
-                    len(blocks),
-            },
+    expected_ranks = list(
+        range(
+            1,
+            len(
+                extracted_ranks
+            ) + 1,
         )
+    )
 
-    raise RuntimeError(
-        "Top Holdings section was found, but no holding names "
-        "could be parsed from the PDF text."
+    diagnostics[
+        "extractedRanks"
+    ] = extracted_ranks
+
+    diagnostics[
+        "expectedRanksForCount"
+    ] = expected_ranks
+
+    diagnostics[
+        "missingRanks"
+    ] = [
+        rank
+        for rank in range(
+            1,
+            MAX_HOLDINGS + 1,
+        )
+        if rank in ranks
+        and rank not in extracted_ranks
+    ]
+
+    diagnostics[
+        "publishedPercentages"
+    ] = sum(
+        1
+        for item
+        in holdings
+        if item.get(
+            "weightPercent"
+        ) is not None
+    )
+
+    diagnostics[
+        "namesWithoutPercentage"
+    ] = sum(
+        1
+        for item
+        in holdings
+        if item.get(
+            "weightPercent"
+        ) is None
+    )
+
+    return (
+        holdings,
+        diagnostics,
     )
 
 
 # =============================================================================
-# NON-RANKED FALLBACK
+# TABLE-STYLE NON-RANKED PARSER
 # =============================================================================
 
-def parse_non_ranked_holdings(
+def parse_table_rows_candidate(
     lines: list[str],
-) -> list[dict]:
-    """
-    Fallback for PDFs where the PDF text extraction removes the visible
-    holding rank.
+) -> tuple[list[dict], dict]:
 
-    Supports:
+    diagnostics = {
+        "parser":
+            "table_row_parser",
 
-        NAME
-        38.8%
+        "candidateLines":
+            len(lines),
 
-    and:
+        "discardedLines":
+            [],
 
-        NAME 38.8%
+        "percentageLines":
+            0,
+    }
 
-    It also supports multi-line names.
-    """
+    rows = []
 
-    holdings = []
+    # -------------------------------------------------------------------------
+    # First attempt:
+    #
+    # A line containing a percentage is treated as the end of a row.
+    # Text immediately preceding it becomes the holding name.
+    #
+    # This is deliberately conservative. We do NOT combine arbitrary text
+    # after a percentage with the next holding.
+    # -------------------------------------------------------------------------
 
-    current_name_parts = []
-
-    current_percentage = None
-
-    def flush_current():
-
-        nonlocal current_name_parts
-        nonlocal current_percentage
-
-        if not current_name_parts:
-            current_percentage = None
-            return
-
-        name = clean_holding_name(
-            " ".join(
-                current_name_parts
-            )
-        )
-
-        if not name:
-            current_name_parts = []
-            current_percentage = None
-            return
-
-        holdings.append(
-            {
-                "rank":
-                    len(holdings) + 1,
-
-                "name":
-                    name,
-
-                "weightPercent":
-                    current_percentage,
-
-                "weightText":
-                    (
-                        f"{current_percentage:g}%"
-                        if current_percentage is not None
-                        else None
-                    ),
-            }
-        )
-
-        current_name_parts = []
-        current_percentage = None
+    pending_name_parts = []
 
     for line in lines:
+
+        line = clean_text(
+            line
+        )
+
+        if not line:
+            continue
 
         if is_holdings_end(
             line
@@ -1765,47 +1907,80 @@ def parse_non_ranked_holdings(
         ):
             continue
 
-        percentage, remaining = (
+        percentage, remaining, percentage_text = (
             extract_percentage_from_line(
                 line
             )
         )
 
-        remaining = clean_text(
-            remaining
-        )
-
         if percentage is not None:
 
-            # If we already have a name, this percentage completes it.
-            if current_name_parts:
+            diagnostics[
+                "percentageLines"
+            ] += 1
 
-                current_percentage = percentage
+            if remaining:
 
-                if remaining:
+                pending_name_parts.append(
+                    remaining
+                )
 
-                    current_name_parts.append(
-                        remaining
+            if pending_name_parts:
+
+                name = clean_holding_name(
+                    " ".join(
+                        pending_name_parts
+                    )
+                )
+
+                if is_plausible_holding_name(
+                    name
+                ):
+
+                    rows.append(
+                        {
+                            "rank":
+                                len(rows) + 1,
+
+                            "name":
+                                name,
+
+                            "weightPercent":
+                                percentage,
+
+                            "weightText":
+                                percentage_text,
+                        }
                     )
 
-                flush_current()
+                else:
 
-                if len(
-                    holdings
-                ) >= MAX_HOLDINGS:
+                    diagnostics[
+                        "discardedLines"
+                    ].append(
+                        {
+                            "text":
+                                name,
 
-                    break
+                            "reason":
+                                "not_plausible_name",
+                        }
+                    )
 
-                continue
+            pending_name_parts = []
 
-            # If no name is pending, this cannot safely become a holding.
+            if len(
+                rows
+            ) >= MAX_HOLDINGS:
+
+                break
+
             continue
 
         # ---------------------------------------------------------------------
-        # No percentage.
+        # Lines without a percentage.
         #
-        # If a new plausible name arrives, append it to the current multi-line
-        # name. The next percentage will complete the holding.
+        # These can be name continuations.
         # ---------------------------------------------------------------------
 
         candidate = clean_holding_name(
@@ -1815,19 +1990,318 @@ def parse_non_ranked_holdings(
         if not candidate:
             continue
 
-        current_name_parts.append(
+        if looks_like_number_or_metadata(
+            candidate
+        ):
+            continue
+
+        pending_name_parts.append(
             candidate
         )
 
-    # -------------------------------------------------------------------------
-    # If the final holding has a name but no percentage, retain it.
-    # -------------------------------------------------------------------------
+    diagnostics[
+        "namesWithoutPercentage"
+    ] = 0
 
-    if current_name_parts:
+    return (
+        rows[:MAX_HOLDINGS],
+        diagnostics,
+    )
 
-        flush_current()
 
-    return holdings[:MAX_HOLDINGS]
+# =============================================================================
+# NAMES-ONLY PARSER
+# =============================================================================
+
+def parse_names_only_candidate(
+    lines: list[str],
+) -> tuple[list[dict], dict]:
+
+    """
+    Used ONLY when the factsheet genuinely publishes holding names without
+    percentages.
+
+    This parser is intentionally stricter than the old fallback.
+
+    It requires explicit ranked rows.
+
+    We do NOT guess arbitrary unranked lines as holdings.
+    """
+
+    diagnostics = {
+        "parser":
+            "names_only_ranked_parser",
+
+        "rankedRows":
+            0,
+
+        "discardedRows":
+            [],
+    }
+
+    blocks = []
+
+    current = None
+
+    for line in lines:
+
+        line = clean_text(
+            line
+        )
+
+        if not line:
+            continue
+
+        if is_holdings_end(
+            line
+        ):
+            break
+
+        if looks_like_holdings_header(
+            line
+        ):
+            continue
+
+        rank, remainder = extract_rank(
+            line
+        )
+
+        if rank is not None:
+
+            if current is not None:
+
+                blocks.append(
+                    current
+                )
+
+            current = {
+                "rank":
+                    rank,
+
+                "lines":
+                    [],
+            }
+
+            if remainder:
+
+                current[
+                    "lines"
+                ].append(
+                    remainder
+                )
+
+            continue
+
+        if current is not None:
+
+            current[
+                "lines"
+            ].append(
+                line
+            )
+
+    if current is not None:
+
+        blocks.append(
+            current
+        )
+
+    if not blocks:
+
+        return (
+            [],
+            diagnostics,
+        )
+
+    ranks = [
+        block["rank"]
+        for block
+        in blocks
+    ]
+
+    if 1 not in ranks:
+
+        return (
+            [],
+            diagnostics,
+        )
+
+    first = ranks.index(
+        1
+    )
+
+    blocks = blocks[
+        first:
+    ]
+
+    previous_rank = None
+
+    for block in blocks:
+
+        rank = block[
+            "rank"
+        ]
+
+        if (
+            previous_rank is not None
+            and rank <= previous_rank
+        ):
+            continue
+
+        previous_rank = rank
+
+        name_parts = []
+
+        for line in block[
+            "lines"
+        ]:
+
+            candidate = clean_holding_name(
+                line
+            )
+
+            if not candidate:
+                continue
+
+            if looks_like_holdings_header(
+                candidate
+            ):
+                continue
+
+            if looks_like_number_or_metadata(
+                candidate
+            ):
+                continue
+
+            name_parts.append(
+                candidate
+            )
+
+        name = clean_holding_name(
+            " ".join(
+                name_parts
+            )
+        )
+
+        if not is_plausible_holding_name(
+            name
+        ):
+            continue
+
+        # If the block contains an actual percentage, this is not a
+        # names-only table; leave percentage parsing to the ranked parser.
+        block_percentage_found = any(
+            PERCENT_RE.search(
+                line
+            )
+            for line
+            in block[
+                "lines"
+            ]
+        )
+
+        if block_percentage_found:
+            continue
+
+        rows = {
+            "rank":
+                rank,
+
+            "name":
+                name,
+
+            "weightPercent":
+                None,
+
+            "weightText":
+                None,
+        }
+
+        blocks_count = len(
+            blocks
+        )
+
+        if blocks_count:
+            diagnostics[
+                "rankedRows"
+            ] += 1
+
+        if diagnostics[
+            "rankedRows"
+        ] >= MAX_HOLDINGS:
+            break
+
+        # Store temporarily.
+        if "holdings" not in diagnostics:
+            diagnostics[
+                "holdings"
+            ] = []
+
+        diagnostics[
+            "holdings"
+        ].append(
+            rows
+        )
+
+    holdings = diagnostics.pop(
+        "holdings",
+        [],
+    )
+
+    return (
+        holdings[:MAX_HOLDINGS],
+        diagnostics,
+    )
+
+
+# =============================================================================
+# DUPLICATE WARNING
+# =============================================================================
+
+def duplicate_name_warnings(
+    holdings: list[dict],
+) -> list[str]:
+
+    seen = {}
+
+    for holding in holdings:
+
+        normalized = normalize_text(
+            holding.get(
+                "name"
+            )
+            or ""
+        )
+
+        if not normalized:
+            continue
+
+        seen.setdefault(
+            normalized,
+            [],
+        ).append(
+            holding.get(
+                "rank"
+            )
+        )
+
+    warnings = []
+
+    for normalized_name, ranks in seen.items():
+
+        if len(
+            ranks
+        ) > 1:
+
+            warnings.append(
+                (
+                    f"Duplicate published holding name "
+                    f"at ranks {', '.join(map(str, ranks))}: "
+                    f"{normalized_name}"
+                )
+            )
+
+    return warnings
 
 
 # =============================================================================
@@ -1836,12 +2310,13 @@ def parse_non_ranked_holdings(
 
 def validate_holdings(
     holdings: list[dict],
-) -> None:
+    require_rank_one: bool = True,
+) -> dict:
 
     if not holdings:
 
         raise RuntimeError(
-            "No holding names could be extracted."
+            "No reliable holding rows could be extracted."
         )
 
     if len(
@@ -1851,10 +2326,6 @@ def validate_holdings(
         raise RuntimeError(
             "Parser produced more than 10 holdings."
         )
-
-    # -------------------------------------------------------------------------
-    # Ranks must be valid.
-    # -------------------------------------------------------------------------
 
     ranks = []
 
@@ -1875,8 +2346,7 @@ def validate_holdings(
 
         if (
             rank < 1
-            or
-            rank > MAX_HOLDINGS
+            or rank > MAX_HOLDINGS
         ):
 
             raise RuntimeError(
@@ -1887,9 +2357,48 @@ def validate_holdings(
             rank
         )
 
-    # -------------------------------------------------------------------------
-    # Duplicate ranks are not allowed.
-    # -------------------------------------------------------------------------
+        name = clean_holding_name(
+            holding.get(
+                "name"
+            )
+            or ""
+        )
+
+        if not is_plausible_holding_name(
+            name
+        ):
+
+            raise RuntimeError(
+                "Invalid holding name: "
+                f"{name}"
+            )
+
+        weight = holding.get(
+            "weightPercent"
+        )
+
+        if weight is not None:
+
+            if not isinstance(
+                weight,
+                (
+                    int,
+                    float,
+                ),
+            ):
+
+                raise RuntimeError(
+                    "Holding percentage is not numeric."
+                )
+
+            if (
+                weight < 0
+                or weight > 100
+            ):
+
+                raise RuntimeError(
+                    f"Invalid holding weight: {weight}"
+                )
 
     if len(
         ranks
@@ -1903,109 +2412,45 @@ def validate_holdings(
             "Duplicate holding ranks detected."
         )
 
-    # -------------------------------------------------------------------------
-    # Holding names must exist.
-    # -------------------------------------------------------------------------
-
-    names = []
-
-    for holding in holdings:
-
-        name = clean_holding_name(
-            holding.get(
-                "name"
-            )
-            or ""
-        )
-
-        if not name:
-
-            raise RuntimeError(
-                "A published holding rank was found "
-                "but no holding name could be extracted."
-            )
-
-        names.append(
-            normalize_text(
-                name
-            )
-        )
-
-    # -------------------------------------------------------------------------
-    # Exact duplicate names are treated as a parser problem.
-    #
-    # This protects against the same PDF table being captured twice.
-    # -------------------------------------------------------------------------
-
-    duplicates = {}
-
-    for name in names:
-
-        duplicates[name] = (
-            duplicates.get(
-                name,
-                0,
-            )
-            + 1
-        )
-
-    duplicate_names = [
-        name
-        for name, count
-        in duplicates.items()
-        if count > 1
-    ]
-
-    if duplicate_names:
+    if require_rank_one and 1 not in ranks:
 
         raise RuntimeError(
-            "Duplicate holding name detected: "
-            + ", ".join(
-                duplicate_names
-            )
+            "Reliable Top Holdings table could not be established "
+            "because rank 1 was not detected."
         )
 
-    # -------------------------------------------------------------------------
-    # Percentage validation.
-    #
-    # None is explicitly allowed because some official Prudential factsheets
-    # publish holding names without holding percentages.
-    # -------------------------------------------------------------------------
+    warnings = duplicate_name_warnings(
+        holdings
+    )
 
-    for holding in holdings:
+    return {
+        "duplicateNameWarnings":
+            warnings,
 
-        weight = holding.get(
-            "weightPercent"
-        )
-
-        if weight is None:
-            continue
-
-        if not isinstance(
-            weight,
-            (
-                int,
-                float,
+        "publishedPercentageCount":
+            sum(
+                1
+                for holding
+                in holdings
+                if holding.get(
+                    "weightPercent"
+                ) is not None
             ),
-        ):
 
-            raise RuntimeError(
-                "Holding percentage is not numeric."
-            )
-
-        if (
-            weight < 0
-            or
-            weight > 100
-        ):
-
-            raise RuntimeError(
-                f"Invalid holding weight: {weight}"
-            )
+        "missingPercentageCount":
+            sum(
+                1
+                for holding
+                in holdings
+                if holding.get(
+                    "weightPercent"
+                ) is None
+            ),
+    }
 
 
 # =============================================================================
-# HOLDINGS PARSER
+# MASTER HOLDINGS PARSER
 # =============================================================================
 
 def parse_holdings(
@@ -2023,20 +2468,308 @@ def parse_holdings(
             "Top Holdings section is empty."
         )
 
-    holdings, parser_info = (
-        parse_ranked_holdings(
-            section_text
+    lines = pdf_lines(
+        section_text
+    )
+
+    if not lines:
+
+        raise RuntimeError(
+            "Top Holdings section contains no usable text."
+        )
+
+    candidates = []
+
+    # -------------------------------------------------------------------------
+    # Candidate 1: ranked parser
+    # -------------------------------------------------------------------------
+
+    ranked_holdings, ranked_info = (
+        parse_ranked_candidate(
+            lines
         )
     )
 
-    validate_holdings(
-        holdings
+    if ranked_holdings:
+
+        try:
+
+            validation = validate_holdings(
+                ranked_holdings,
+                require_rank_one=True,
+            )
+
+            candidates.append(
+                {
+                    "holdings":
+                        ranked_holdings,
+
+                    "parser":
+                        ranked_info,
+
+                    "validation":
+                        validation,
+
+                    "score":
+                        score_candidate(
+                            ranked_holdings,
+                            ranked_info,
+                            validation,
+                        ),
+                }
+            )
+
+        except Exception:
+            pass
+
+    # -------------------------------------------------------------------------
+    # Candidate 2: table-row parser
+    # -------------------------------------------------------------------------
+
+    table_holdings, table_info = (
+        parse_table_rows_candidate(
+            lines
+        )
     )
+
+    if table_holdings:
+
+        try:
+
+            validation = validate_holdings(
+                table_holdings,
+                require_rank_one=False,
+            )
+
+            candidates.append(
+                {
+                    "holdings":
+                        table_holdings,
+
+                    "parser":
+                        table_info,
+
+                    "validation":
+                        validation,
+
+                    "score":
+                        score_candidate(
+                            table_holdings,
+                            table_info,
+                            validation,
+                        ),
+                }
+            )
+
+        except Exception:
+            pass
+
+    # -------------------------------------------------------------------------
+    # Candidate 3: explicit names-only ranked parser
+    # -------------------------------------------------------------------------
+
+    names_only_holdings, names_only_info = (
+        parse_names_only_candidate(
+            lines
+        )
+    )
+
+    if names_only_holdings:
+
+        try:
+
+            validation = validate_holdings(
+                names_only_holdings,
+                require_rank_one=True,
+            )
+
+            candidates.append(
+                {
+                    "holdings":
+                        names_only_holdings,
+
+                    "parser":
+                        names_only_info,
+
+                    "validation":
+                        validation,
+
+                    "score":
+                        score_candidate(
+                            names_only_holdings,
+                            names_only_info,
+                            validation,
+                        ),
+                }
+            )
+
+        except Exception:
+            pass
+
+    if not candidates:
+
+        raise RuntimeError(
+            "Top Holdings section was found, but no reliable "
+            "holding rows could be established from the PDF text."
+        )
+
+    # -------------------------------------------------------------------------
+    # Select the strongest structurally valid candidate.
+    #
+    # We do NOT simply choose the candidate with the most rows.
+    # Structural evidence is weighted first.
+    # -------------------------------------------------------------------------
+
+    candidates.sort(
+        key=lambda candidate: candidate[
+            "score"
+        ],
+        reverse=True,
+    )
+
+    selected = candidates[0]
+
+    holdings = selected[
+        "holdings"
+    ]
+
+    parser_info = selected[
+        "parser"
+    ]
+
+    validation = selected[
+        "validation"
+    ]
+
+    parser_info = dict(
+        parser_info
+    )
+
+    parser_info[
+        "selectionScore"
+    ] = selected[
+        "score"
+    ]
+
+    parser_info[
+        "candidateCount"
+    ] = len(
+        candidates
+    )
+
+    parser_info[
+        "duplicateNameWarnings"
+    ] = validation[
+        "duplicateNameWarnings"
+    ]
+
+    parser_info[
+        "publishedPercentages"
+    ] = validation[
+        "publishedPercentageCount"
+    ]
+
+    parser_info[
+        "namesWithoutPercentage"
+    ] = validation[
+        "missingPercentageCount"
+    ]
 
     return (
         holdings,
         parser_info,
     )
+
+
+# =============================================================================
+# CANDIDATE SCORING
+# =============================================================================
+
+def score_candidate(
+    holdings: list[dict],
+    parser_info: dict,
+    validation: dict,
+) -> int:
+
+    if not holdings:
+        return -100000
+
+    score = 0
+
+    parser_name = parser_info.get(
+        "parser"
+    )
+
+    # Explicit ranked parsing is preferred.
+    if parser_name == "ranked_block_parser":
+        score += 100
+
+    elif parser_name == "names_only_ranked_parser":
+        score += 90
+
+    elif parser_name == "table_row_parser":
+        score += 40
+
+    # Rank 1 is strong evidence.
+    ranks = [
+        item.get(
+            "rank"
+        )
+        for item
+        in holdings
+    ]
+
+    if 1 in ranks:
+        score += 50
+
+    # Sequential ranks are stronger than arbitrary ranks.
+    if ranks:
+
+        expected = list(
+            range(
+                1,
+                len(ranks) + 1,
+            )
+        )
+
+        if ranks == expected:
+            score += 80
+
+        else:
+            score -= 20
+
+    # More holdings can be evidence, but not overwhelmingly so.
+    score += min(
+        len(holdings) * 5,
+        50,
+    )
+
+    # Published percentages are useful evidence.
+    percentage_count = sum(
+        1
+        for item
+        in holdings
+        if item.get(
+            "weightPercent"
+        ) is not None
+    )
+
+    score += min(
+        percentage_count * 3,
+        30,
+    )
+
+    # Penalize duplicate names slightly, but do not discard them.
+    duplicate_warnings = validation.get(
+        "duplicateNameWarnings",
+        [],
+    )
+
+    score -= len(
+        duplicate_warnings
+    ) * 5
+
+    return score
 
 
 # =============================================================================
@@ -2263,44 +2996,70 @@ def extract_single_fund(
     )
 
     # -------------------------------------------------------------------------
-    # PDF extraction.
+    # PDF extraction variants.
     # -------------------------------------------------------------------------
 
     (
-        full_text,
+        text_variants,
         pdf_page_count,
-    ) = extract_pdf_text(
+    ) = extract_pdf_text_variants(
         factsheet_bytes
     )
 
-    # -------------------------------------------------------------------------
-    # Factsheet dates.
-    # -------------------------------------------------------------------------
+    primary_text = text_variants[0][
+        "text"
+    ]
 
     data_as_at = (
         extract_data_as_at(
-            full_text
+            primary_text
         )
     )
 
     document_date = (
         extract_document_date(
-            full_text
+            primary_text
         )
     )
 
     # -------------------------------------------------------------------------
-    # Top holdings section.
+    # Try every available PDF extraction layout.
+    #
+    # This is important because pypdf's normal text order and layout order
+    # can produce completely different table structures.
     # -------------------------------------------------------------------------
 
-    (
-        section_text,
-        section_status,
-    ) = extract_holdings_section(
-        full_text
-    )
+    published_sections = []
 
-    if section_status == "not_published":
+    for variant in text_variants:
+
+        (
+            section_text,
+            section_status,
+        ) = extract_holdings_section(
+            variant["text"]
+        )
+
+        if section_status == "published":
+
+            published_sections.append(
+                {
+                    "extractionMode":
+                        variant["name"],
+
+                    "fullText":
+                        variant["text"],
+
+                    "sectionText":
+                        section_text,
+                }
+            )
+
+    # -------------------------------------------------------------------------
+    # No section at all.
+    # -------------------------------------------------------------------------
+
+    if not published_sections:
 
         return {
             "status":
@@ -2348,47 +3107,151 @@ def extract_single_fund(
             "holdingsParser":
                 None,
 
-            "rules": {
-                "officialPrudentialSourceOnly":
-                    True,
-
-                "maximumHoldings":
-                    MAX_HOLDINGS,
-
-                "publishedCountUsedExactly":
-                    True,
-
-                "fewerThanTenAllowed":
-                    True,
-
-                "noForcedTenEntries":
-                    True,
-
-                "noInferredHoldings":
-                    True,
-
-                "noFabricatedPercentages":
-                    True,
-
-                "nullWeightAllowedWhenNotPublished":
-                    True,
-            },
+            "rules":
+                rules_payload(),
         }
 
     # -------------------------------------------------------------------------
-    # Top Holdings section exists.
+    # Parse every extraction mode.
     # -------------------------------------------------------------------------
 
-    (
-        holdings,
-        parser_info,
-    ) = parse_holdings(
-        section_text
+    successful_candidates = []
+
+    parser_errors = []
+
+    for published_section in published_sections:
+
+        try:
+
+            (
+                holdings,
+                parser_info,
+            ) = parse_holdings(
+                published_section[
+                    "sectionText"
+                ]
+            )
+
+            successful_candidates.append(
+                {
+                    "holdings":
+                        holdings,
+
+                    "parser":
+                        parser_info,
+
+                    "extractionMode":
+                        published_section[
+                            "extractionMode"
+                        ],
+
+                    "sectionText":
+                        published_section[
+                            "sectionText"
+                        ],
+
+                    "fullText":
+                        published_section[
+                            "fullText"
+                        ],
+                }
+            )
+
+        except Exception as error:
+
+            parser_errors.append(
+                {
+                    "extractionMode":
+                        published_section[
+                            "extractionMode"
+                        ],
+
+                    "error":
+                        clean_text(
+                            str(error)
+                        ),
+                }
+            )
+
+    if not successful_candidates:
+
+        raise RuntimeError(
+            "Top Holdings section was found, but no reliable "
+            "holding rows could be established. "
+            f"Parser diagnostics: {parser_errors}"
+        )
+
+    # -------------------------------------------------------------------------
+    # Select the best extraction-mode result.
+    # -------------------------------------------------------------------------
+
+    def candidate_score(
+        candidate
+    ):
+
+        holdings = candidate[
+            "holdings"
+        ]
+
+        parser_info = candidate[
+            "parser"
+        ]
+
+        validation = {
+            "duplicateNameWarnings":
+                parser_info.get(
+                    "duplicateNameWarnings",
+                    [],
+                ),
+        }
+
+        return score_candidate(
+            holdings,
+            parser_info,
+            validation,
+        )
+
+    successful_candidates.sort(
+        key=candidate_score,
+        reverse=True,
     )
 
-    published_percentage_count = sum(
+    selected = successful_candidates[0]
+
+    holdings = selected[
+        "holdings"
+    ]
+
+    parser_info = dict(
+        selected[
+            "parser"
+        ]
+    )
+
+    parser_info[
+        "extractionMode"
+    ] = selected[
+        "extractionMode"
+    ]
+
+    parser_info[
+        "alternativeParserErrors"
+    ] = parser_errors
+
+    parser_info[
+        "availableExtractionModes"
+    ] = [
+        item[
+            "extractionMode"
+        ]
+        for item
+        in published_sections
+    ]
+
+    percentage_count = sum(
         1
-        for holding in holdings
+        for holding
+        in holdings
         if holding.get(
             "weightPercent"
         ) is not None
@@ -2399,8 +3262,27 @@ def extract_single_fund(
             holdings
         )
         -
-        published_percentage_count
+        percentage_count
     )
+
+    duplicate_warnings = (
+        duplicate_name_warnings(
+            holdings
+        )
+    )
+
+    parser_info[
+        "duplicateNameWarnings"
+    ] = duplicate_warnings
+
+    # -------------------------------------------------------------------------
+    # IMPORTANT:
+    #
+    # Duplicate names are NOT automatically failures.
+    #
+    # The published rank is the authoritative row identity. If Prudential
+    # legitimately publishes the same name more than once, we preserve it.
+    # -------------------------------------------------------------------------
 
     return {
         "status":
@@ -2445,7 +3327,7 @@ def extract_single_fund(
             ),
 
         "publishedHoldingPercentageCount":
-            published_percentage_count,
+            percentage_count,
 
         "holdingsWithoutPublishedPercentage":
             missing_percentage_count,
@@ -2456,31 +3338,59 @@ def extract_single_fund(
         "holdingsParser":
             parser_info,
 
-        "rules": {
-            "officialPrudentialSourceOnly":
-                True,
+        "rules":
+            rules_payload(),
+    }
 
-            "maximumHoldings":
-                MAX_HOLDINGS,
 
-            "publishedCountUsedExactly":
-                True,
+# =============================================================================
+# RULES
+# =============================================================================
 
-            "fewerThanTenAllowed":
-                True,
+def rules_payload() -> dict:
 
-            "noForcedTenEntries":
-                True,
+    return {
+        "officialPrudentialSourceOnly":
+            True,
 
-            "noInferredHoldings":
-                True,
+        "maximumHoldings":
+            MAX_HOLDINGS,
 
-            "noFabricatedPercentages":
-                True,
+        "publishedCountUsedExactly":
+            True,
 
-            "nullWeightAllowedWhenNotPublished":
-                True,
-        },
+        "fewerThanTenAllowed":
+            True,
+
+        "noForcedTenEntries":
+            True,
+
+        "noInferredHoldings":
+            True,
+
+        "noFabricatedHoldings":
+            True,
+
+        "noFabricatedPercentages":
+            True,
+
+        "noCalculatedPercentages":
+            True,
+
+        "nullWeightAllowedWhenNotPublished":
+            True,
+
+        "ambiguousRowsFail":
+            True,
+
+        "duplicateRanksFail":
+            True,
+
+        "duplicateNamesAreWarnings":
+            True,
+
+        "thirdPartyHoldings":
+            False,
     }
 
 
@@ -2501,17 +3411,17 @@ def save_success_result(
         ]
     )
 
-    identifier = (
-        safe_filename(
+    identifier = ""
+
+    if result.get(
+        "fundIdentifier"
+    ):
+
+        identifier = safe_filename(
             result.get(
                 "fundIdentifier"
             )
         )
-        if result.get(
-            "fundIdentifier"
-        )
-        else ""
-    )
 
     if not identifier:
 
@@ -2932,11 +3842,9 @@ def main() -> int:
                     continue
 
                 # -----------------------------------------------------------------
-                # SUCCESS
+                # Final verification.
                 #
-                # The factsheet bytes and parsed text are already available from
-                # extract_single_fund(). Downloading the same PDF again is not
-                # necessary.
+                # Download the official PDF again and independently parse it.
                 # -----------------------------------------------------------------
 
                 try:
@@ -2951,36 +3859,98 @@ def main() -> int:
                     )
 
                     (
-                        full_text,
-                        _page_count,
-                    ) = extract_pdf_text(
+                        text_variants,
+                        verification_page_count,
+                    ) = extract_pdf_text_variants(
                         factsheet_bytes
                     )
 
-                    (
-                        section_text,
-                        section_status,
-                    ) = extract_holdings_section(
-                        full_text
-                    )
+                    verification_candidates = []
 
-                    if (
-                        section_status
-                        !=
-                        "published"
-                    ):
+                    for variant in text_variants:
 
-                        raise RuntimeError(
-                            "Factsheet holdings section "
-                            "disappeared during final verification."
+                        (
+                            section_text,
+                            section_status,
+                        ) = extract_holdings_section(
+                            variant[
+                                "text"
+                            ]
                         )
 
-                    (
-                        verified_holdings,
-                        verified_parser_info,
-                    ) = parse_holdings(
-                        section_text
+                        if section_status != "published":
+                            continue
+
+                        try:
+
+                            (
+                                verified_holdings,
+                                verified_parser_info,
+                            ) = parse_holdings(
+                                section_text
+                            )
+
+                            verification_candidates.append(
+                                {
+                                    "holdings":
+                                        verified_holdings,
+
+                                    "parser":
+                                        verified_parser_info,
+
+                                    "extractionMode":
+                                        variant[
+                                            "name"
+                                        ],
+
+                                    "fullText":
+                                        variant[
+                                            "text"
+                                        ],
+
+                                    "sectionText":
+                                        section_text,
+                                }
+                            )
+
+                        except Exception:
+                            continue
+
+                    if not verification_candidates:
+
+                        raise RuntimeError(
+                            "Final verification could not establish "
+                            "reliable Top Holdings rows."
+                        )
+
+                    verification_candidates.sort(
+                        key=lambda candidate:
+                            score_candidate(
+                                candidate[
+                                    "holdings"
+                                ],
+                                candidate[
+                                    "parser"
+                                ],
+                                {
+                                    "duplicateNameWarnings":
+                                        duplicate_name_warnings(
+                                            candidate[
+                                                "holdings"
+                                            ]
+                                        ),
+                                },
+                            ),
+                        reverse=True,
                     )
+
+                    verified = (
+                        verification_candidates[0]
+                    )
+
+                    verified_holdings = verified[
+                        "holdings"
+                    ]
 
                     if len(
                         verified_holdings
@@ -2990,7 +3960,9 @@ def main() -> int:
 
                         raise RuntimeError(
                             "Holding count changed during "
-                            "final verification."
+                            "final verification: "
+                            f"initial={result['topHoldingsCount']} "
+                            f"verified={len(verified_holdings)}"
                         )
 
                     result[
@@ -3005,7 +3977,25 @@ def main() -> int:
 
                     result[
                         "holdingsParser"
-                    ] = verified_parser_info
+                    ] = verified[
+                        "parser"
+                    ]
+
+                    result[
+                        "holdingsParser"
+                    ] = dict(
+                        result[
+                            "holdingsParser"
+                        ]
+                    )
+
+                    result[
+                        "holdingsParser"
+                    ][
+                        "verificationExtractionMode"
+                    ] = verified[
+                        "extractionMode"
+                    ]
 
                     result[
                         "publishedHoldingPercentageCount"
@@ -3033,8 +4023,12 @@ def main() -> int:
                         save_success_result(
                             result,
                             factsheet_bytes,
-                            full_text,
-                            section_text,
+                            verified[
+                                "fullText"
+                            ],
+                            verified[
+                                "sectionText"
+                            ],
                         )
                     )
 
@@ -3085,8 +4079,7 @@ def main() -> int:
                 )
 
                 print(
-                    "\n"
-                    "SUCCESS"
+                    "\nSUCCESS"
                 )
 
                 print(
@@ -3142,6 +4135,30 @@ def main() -> int:
                         f"{weight_text}"
                     )
 
+                duplicate_warnings = (
+                    result.get(
+                        "holdingsParser",
+                        {}
+                    ).get(
+                        "duplicateNameWarnings",
+                        [],
+                    )
+                )
+
+                if duplicate_warnings:
+
+                    print(
+                        "\n"
+                        "WARNING - DUPLICATE PUBLISHED "
+                        "HOLDING NAMES:"
+                    )
+
+                    for warning in duplicate_warnings:
+
+                        print(
+                            f"  {warning}"
+                        )
+
         finally:
 
             context.close()
@@ -3149,7 +4166,7 @@ def main() -> int:
             browser.close()
 
     # =========================================================================
-    # ALL-HOLDINGS CONSOLIDATED FILE
+    # CONSOLIDATED OUTPUT
     # =========================================================================
 
     completed_at = utc_now_iso()
@@ -3195,38 +4212,8 @@ def main() -> int:
                 failed
             ),
 
-        "rules": {
-
-            "excelColumnAControlsUniverse":
-                True,
-
-            "officialPrudentialOnly":
-                True,
-
-            "maximumHoldings":
-                MAX_HOLDINGS,
-
-            "publishedCountUsedExactly":
-                True,
-
-            "fewerThanTenAllowed":
-                True,
-
-            "noForcedTenEntries":
-                True,
-
-            "noInferredHoldings":
-                True,
-
-            "noFabricatedPercentages":
-                True,
-
-            "nullWeightAllowedWhenNotPublished":
-                True,
-
-            "thirdPartyHoldings":
-                False,
-        },
+        "rules":
+            rules_payload(),
 
         "funds":
             all_results,
@@ -3241,7 +4228,7 @@ def main() -> int:
     )
 
     # =========================================================================
-    # RUN SUMMARY
+    # SUMMARY
     # =========================================================================
 
     total_holdings = sum(
@@ -3279,6 +4266,39 @@ def main() -> int:
         for item
         in successful
     )
+
+    duplicate_warning_funds = []
+
+    for item in successful:
+
+        warnings = (
+            item.get(
+                "holdingsParser",
+                {}
+            ).get(
+                "duplicateNameWarnings",
+                [],
+            )
+        )
+
+        if warnings:
+
+            duplicate_warning_funds.append(
+                {
+                    "excelRow":
+                        item.get(
+                            "excelRow"
+                        ),
+
+                    "fundName":
+                        item.get(
+                            "fundName"
+                        ),
+
+                    "warnings":
+                        warnings,
+                }
+            )
 
     run_summary = {
         "status":
@@ -3327,6 +4347,9 @@ def main() -> int:
 
         "totalHoldingsWithoutPublishedPercentage":
             total_without_percentages,
+
+        "duplicateHoldingNameWarningFunds":
+            duplicate_warning_funds,
 
         "successfulFundsDetail":
             [
@@ -3407,38 +4430,8 @@ def main() -> int:
         "failedFundsDetail":
             failed,
 
-        "rules": {
-
-            "excelColumnAControlsUniverse":
-                True,
-
-            "officialPrudentialFactsheetOnly":
-                True,
-
-            "maximumHoldings":
-                MAX_HOLDINGS,
-
-            "publishedHoldingCountUsedExactly":
-                True,
-
-            "fewerThanTenHoldingsAllowed":
-                True,
-
-            "noForcedTenEntries":
-                True,
-
-            "noInferredHoldings":
-                True,
-
-            "noFabricatedHoldingWeights":
-                True,
-
-            "nullWeightAllowedWhenNotPublished":
-                True,
-
-            "noThirdPartyHoldings":
-                True,
-        },
+        "rules":
+            rules_payload(),
     }
 
     save_json(
@@ -3496,6 +4489,11 @@ def main() -> int:
     print(
         f"Holdings without published percentage: "
         f"{total_without_percentages}"
+    )
+
+    print(
+        f"Funds with duplicate-name warnings: "
+        f"{len(duplicate_warning_funds)}"
     )
 
     print(
