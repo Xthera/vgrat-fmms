@@ -3,24 +3,42 @@
 """
 VGrat FMS production fund-data builder.
 
+LOCATION
+========
+
+This file is intended to live in the repository root:
+
+    build_fund_data.py
+
+The tested extraction engine lives in:
+
+    scripts/test_pruaccess.py
+
+The Prudential capture/debug test lives in:
+
+    scripts/test_prudential_fund.py
+
+
 PRODUCTION WORKFLOW
 ===================
 
 1. Read the Excel master universe from Funds Links.xlsm.
-2. Use test_pruaccess.py's already-tested Prudential extraction.
-3. Use test_pruaccess.py's already-tested PruAccess extraction.
-4. Process every Excel-master fund independently.
-5. A successful fund immediately replaces its previous production data.
-6. A failed fund retains its previous valid production data.
-7. Failed funds are flagged in the production run metadata.
-8. Every production fund contains a freshness/status flag.
-9. Mixed current and retained data is allowed.
-10. No email system is used.
+2. Import the already-tested extraction/validation engine from
+   scripts/test_pruaccess.py.
+3. Process every Excel-master fund independently.
+4. A successful fund immediately replaces its previous production
+   data for that fund.
+5. A failed fund retains its previous valid production data.
+6. Processing continues after a fund failure.
+7. Successful and retained/stale funds may coexist in production.
+8. Every production fund has explicit freshness metadata.
+9. No email system is used.
+
 
 FRESHNESS RULE
 ==============
 
-SUCCESSFUL CURRENT-RUN FUND:
+CURRENT-RUN SUCCESS:
 
     productionStatus:
         "updated"
@@ -31,11 +49,14 @@ SUCCESSFUL CURRENT-RUN FUND:
     dataFreshness.isStale:
         false
 
+    dataFreshness.currentRunUpdated:
+        true
+
     dataFreshness.lastSuccessfulUpdateUtc:
-        current successful extraction timestamp
+        current successful run timestamp
 
 
-FAILED FUND WITH PREVIOUS DATA:
+FAILED FUND WITH PREVIOUS VALID DATA:
 
     productionStatus:
         "retained_previous"
@@ -46,11 +67,14 @@ FAILED FUND WITH PREVIOUS DATA:
     dataFreshness.isStale:
         true
 
+    dataFreshness.currentRunUpdated:
+        false
+
     dataFreshness.lastSuccessfulUpdateUtc:
-        previous successful extraction timestamp
+        last successful extraction timestamp
 
 
-FAILED FUND WITH NO PREVIOUS DATA:
+FAILED FUND WITH NO PREVIOUS VALID DATA:
 
     productionStatus:
         "unavailable"
@@ -61,17 +85,20 @@ FAILED FUND WITH NO PREVIOUS DATA:
     dataFreshness.isStale:
         true
 
+    dataFreshness.currentRunUpdated:
+        false
+
     dataFreshness.lastSuccessfulUpdateUtc:
         null
 
 
-IMPORTANT
-=========
+IMPORTANT DATA RULES
+====================
 
-Freshness is a metadata flag only.
+Freshness is metadata only.
 
-The actual historical BID data is NEVER modified to make it
-appear current.
+The actual historical BID data is NEVER modified merely to make
+it appear fresh.
 
 No missing dates are fabricated.
 
@@ -81,12 +108,13 @@ No prices are estimated.
 
 No carry-forward values are written into raw historical data.
 
-The actual extraction and validation rules remain in:
+The extraction and validation rules remain in:
 
-    test_pruaccess.py
+    scripts/test_pruaccess.py
 
 This production script imports those tested functions rather than
-rewriting them.
+rewriting the extraction engine.
+
 
 EXIT STATUS
 ===========
@@ -95,9 +123,9 @@ EXIT STATUS
     All Excel-master funds passed.
 
 1:
-    One or more funds failed.
+    One or more Excel-master funds failed.
 
-A failed fund does NOT stop the processing of the remaining funds.
+A failed fund does NOT stop the remaining funds from processing.
 """
 
 
@@ -111,7 +139,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from test_pruaccess import (
+
+# ============================================================
+# IMPORT TESTED EXTRACTION ENGINE
+# ============================================================
+
+from scripts.test_pruaccess import (
     EXCEL_FILE,
     OUTPUT_DIR,
     BROWSER_HEADLESS,
@@ -215,6 +248,10 @@ def load_json_file(
     )
 
 
+# ============================================================
+# FIND FUND DIRECTORY
+# ============================================================
+
 def find_fund_directory_by_excel_row(
     base_directory: Path,
     excel_row: int,
@@ -234,6 +271,7 @@ def find_fund_directory_by_excel_row(
         if path.is_dir()
         and path.name.startswith(prefix)
         and not path.name.endswith("_failed")
+        and not path.name.startswith("_")
     ]
 
     if not matches:
@@ -252,31 +290,26 @@ def find_fund_directory_by_excel_row(
 # FRESHNESS HELPERS
 # ============================================================
 
-def utc_now_iso_fallback() -> str:
-
-    return (
-        datetime.now(
-            timezone.utc
-        )
-        .isoformat()
-    )
-
-
 def get_previous_successful_update_time(
     directory: Path,
 ) -> str | None:
 
     """
-    Retrieve the previous successful extraction timestamp.
+    Read the last successful production update timestamp.
 
-    Newer production folders contain:
+    New production data:
 
         production_metadata.json
 
-    Older folders may not contain that file.
+    Older production/test data:
 
-    In that case, fall back to the summary generatedAtUtc value
-    where available.
+        summary.json
+
+    Fallback priority:
+
+        production_metadata.json
+        summary.lastSuccessfulUpdateUtc
+        summary.generatedAtUtc
     """
 
     metadata_file = (
@@ -292,18 +325,25 @@ def get_previous_successful_update_time(
                 metadata_file
             )
 
-            value = clean_text(
-                metadata.get(
-                    "dataFreshness",
-                    {}
-                ).get(
-                    "lastSuccessfulUpdateUtc"
-                )
+            freshness = metadata.get(
+                "dataFreshness",
+                {}
             )
 
-            if value:
+            if isinstance(
+                freshness,
+                dict,
+            ):
 
-                return value
+                value = clean_text(
+                    freshness.get(
+                        "lastSuccessfulUpdateUtc"
+                    )
+                )
+
+                if value:
+
+                    return value
 
         except Exception:
 
@@ -366,6 +406,9 @@ def build_current_freshness_metadata(
         "currentRunUpdated":
             True,
 
+        "staleSinceRunUtc":
+            None,
+
         "reason":
             "Fund data was successfully extracted and validated "
             "during the current production run.",
@@ -420,9 +463,67 @@ def build_unavailable_freshness_metadata(
             failure_utc,
 
         "reason":
-            "The fund has no previous valid production data "
+            "The fund has no valid previous production data "
             "available.",
     }
+
+
+def write_production_metadata(
+    directory: Path,
+    production_status: str,
+    freshness: dict[str, Any],
+) -> None:
+
+    directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    save_json(
+        directory
+        / "production_metadata.json",
+        {
+            "productionStatus":
+                production_status,
+
+            "dataFreshness":
+                freshness,
+        },
+    )
+
+
+def mark_existing_fund_stale(
+    directory: Path,
+    failure_utc: str,
+) -> dict[str, Any]:
+
+    """
+    Update ONLY production metadata.
+
+    The actual Prudential data, PruAccess BID history, window
+    results, and validation files are left untouched.
+    """
+
+    last_successful_update_utc = (
+        get_previous_successful_update_time(
+            directory
+        )
+    )
+
+    freshness = (
+        build_stale_freshness_metadata(
+            last_successful_update_utc,
+            failure_utc,
+        )
+    )
+
+    write_production_metadata(
+        directory,
+        "retained_previous",
+        freshness,
+    )
+
+    return freshness
 
 
 # ============================================================
@@ -575,6 +676,43 @@ def save_fund_result_directory(
 
 
 # ============================================================
+# LOAD PRODUCTION METADATA
+# ============================================================
+
+def load_production_metadata(
+    directory: Path,
+) -> dict[str, Any] | None:
+
+    metadata_file = (
+        directory
+        / "production_metadata.json"
+    )
+
+    if not metadata_file.exists():
+
+        return None
+
+    try:
+
+        metadata = load_json_file(
+            metadata_file
+        )
+
+    except Exception:
+
+        return None
+
+    if not isinstance(
+        metadata,
+        dict,
+    ):
+
+        return None
+
+    return metadata
+
+
+# ============================================================
 # LOAD PREVIOUS PRODUCTION FUND
 # ============================================================
 
@@ -641,12 +779,6 @@ def load_previous_fund(
         / "summary.json"
     )
 
-    last_successful_update = (
-        get_previous_successful_update_time(
-            directory
-        )
-    )
-
     pruaccess = {
         "fundName":
             summary.get(
@@ -687,14 +819,74 @@ def load_previous_fund(
             ),
     }
 
-    freshness = build_stale_freshness_metadata(
-        last_successful_update,
-        utc_now_iso(),
+    metadata = (
+        load_production_metadata(
+            directory
+        )
     )
+
+    if metadata:
+
+        production_status = (
+            clean_text(
+                metadata.get(
+                    "productionStatus"
+                )
+            )
+        )
+
+        data_freshness = (
+            metadata.get(
+                "dataFreshness"
+            )
+        )
+
+        if not isinstance(
+            data_freshness,
+            dict,
+        ):
+
+            data_freshness = None
+
+    else:
+
+        # Legacy/test data has no production metadata.
+        # Treat it as previous/stale until successfully updated
+        # by the current production run.
+
+        production_status = (
+            "retained_previous"
+        )
+
+        data_freshness = (
+            build_stale_freshness_metadata(
+                get_previous_successful_update_time(
+                    directory
+                ),
+                utc_now_iso(),
+            )
+        )
+
+    if not production_status:
+
+        production_status = (
+            "retained_previous"
+        )
+
+    if data_freshness is None:
+
+        data_freshness = (
+            build_stale_freshness_metadata(
+                get_previous_successful_update_time(
+                    directory
+                ),
+                utc_now_iso(),
+            )
+        )
 
     return {
         "status":
-            "retained_previous",
+            production_status,
 
         "excelRow":
             excel_fund[
@@ -736,10 +928,10 @@ def load_previous_fund(
             bid_history,
 
         "productionStatus":
-            "retained_previous",
+            production_status,
 
         "dataFreshness":
-            freshness,
+            data_freshness,
     }
 
 
@@ -789,6 +981,7 @@ def publish_successful_fund(
             f"{row_prefix}*"
         )
         if path.is_dir()
+        and not path.name.startswith("_")
     ]
 
     backup_directories = []
@@ -872,13 +1065,12 @@ def seed_production_from_legacy(
 ) -> dict[int, str]:
 
     """
-    Seed existing validated test data into production.
+    Copy previously validated test output into the initial
+    production dataset when no production data exists yet.
 
-    This is only used when production data does not already
-    exist for an Excel-master fund.
-
-    Legacy data is treated as retained/previous data until that
-    fund successfully passes the current production run.
+    Seeded legacy data is explicitly marked as previous/stale.
+    A successful current production run will immediately replace
+    it and mark it current.
     """
 
     seeded = {}
@@ -930,6 +1122,30 @@ def seed_production_from_legacy(
             destination,
         )
 
+        # ----------------------------------------------------
+        # Seeded legacy data is NOT current production data.
+        # Mark it stale immediately.
+        # ----------------------------------------------------
+
+        last_successful_update_utc = (
+            get_previous_successful_update_time(
+                destination
+            )
+        )
+
+        freshness = (
+            build_stale_freshness_metadata(
+                last_successful_update_utc,
+                utc_now_iso(),
+            )
+        )
+
+        write_production_metadata(
+            destination,
+            "retained_previous",
+            freshness,
+        )
+
         seeded[
             row
         ] = legacy.name
@@ -946,6 +1162,7 @@ def build_failure_record(
     error_text: str,
     previous_directory: Path | None,
     failure_utc: str,
+    freshness: dict[str, Any],
 ) -> dict[str, Any]:
 
     previous_data_available = (
@@ -956,7 +1173,6 @@ def build_failure_record(
     fund_name = None
     fund_identifier = None
     fund_code = None
-    last_successful_update_utc = None
 
     if previous_directory:
 
@@ -987,24 +1203,11 @@ def build_failure_record(
                 )
             )
 
-            last_successful_update_utc = (
-                get_previous_successful_update_time(
-                    previous_directory
-                )
-            )
-
         except Exception:
 
             pass
 
     if previous_data_available:
-
-        freshness = (
-            build_stale_freshness_metadata(
-                last_successful_update_utc,
-                failure_utc,
-            )
-        )
 
         production_status = (
             "retained_previous"
@@ -1012,14 +1215,14 @@ def build_failure_record(
 
     else:
 
+        production_status = (
+            "unavailable"
+        )
+
         freshness = (
             build_unavailable_freshness_metadata(
                 failure_utc
             )
-        )
-
-        production_status = (
-            "unavailable"
         )
 
     return {
@@ -1077,164 +1280,6 @@ def build_failure_record(
 
 
 # ============================================================
-# COLLECT CURRENT PRODUCTION DATASET
-# ============================================================
-
-def collect_current_production_funds(
-    excel_funds: list[dict[str, Any]],
-) -> tuple[
-    list[dict[str, Any]],
-    list[dict[str, Any]],
-]:
-
-    production_funds = []
-    missing_or_invalid = []
-
-    for excel_fund in excel_funds:
-
-        row = excel_fund[
-            "excelRow"
-        ]
-
-        directory = (
-            find_fund_directory_by_excel_row(
-                PRODUCTION_FUNDS_DIR,
-                row,
-            )
-        )
-
-        if not directory:
-
-            missing_or_invalid.append(
-                {
-                    "excelRow":
-                        row,
-
-                    "status":
-                        "unavailable",
-
-                    "reason":
-                        "No valid production fund data "
-                        "is available.",
-                }
-            )
-
-            continue
-
-        try:
-
-            production_result = (
-                load_previous_fund(
-                    directory,
-                    excel_fund,
-                )
-            )
-
-        except Exception as error:
-
-            missing_or_invalid.append(
-                {
-                    "excelRow":
-                        row,
-
-                    "status":
-                        "unavailable",
-
-                    "reason":
-                        str(error),
-
-                    "directory":
-                        str(directory),
-                }
-            )
-
-            continue
-
-        if production_result is None:
-
-            missing_or_invalid.append(
-                {
-                    "excelRow":
-                        row,
-
-                    "status":
-                        "unavailable",
-
-                    "reason":
-                        "Production fund directory is incomplete.",
-
-                    "directory":
-                        str(directory),
-                }
-            )
-
-            continue
-
-        # ----------------------------------------------------
-        # IMPORTANT:
-        #
-        # load_previous_fund() returns retained_previous by
-        # default. We must recover the actual freshness state
-        # stored in production_metadata.json where available.
-        # ----------------------------------------------------
-
-        metadata_file = (
-            directory
-            / "production_metadata.json"
-        )
-
-        if metadata_file.exists():
-
-            try:
-
-                metadata = load_json_file(
-                    metadata_file
-                )
-
-                stored_status = (
-                    clean_text(
-                        metadata.get(
-                            "productionStatus"
-                        )
-                    )
-                )
-
-                stored_freshness = (
-                    metadata.get(
-                        "dataFreshness"
-                    )
-                )
-
-                if stored_status:
-
-                    production_result[
-                        "productionStatus"
-                    ] = stored_status
-
-                if isinstance(
-                    stored_freshness,
-                    dict,
-                ):
-
-                    production_result[
-                        "dataFreshness"
-                    ] = stored_freshness
-
-            except Exception:
-
-                pass
-
-        production_funds.append(
-            production_result
-        )
-
-    return (
-        production_funds,
-        missing_or_invalid,
-    )
-
-
-# ============================================================
 # MAIN
 # ============================================================
 
@@ -1255,7 +1300,9 @@ async def main():
     run_started = utc_now_iso()
 
     run_id = (
-        datetime.utcnow()
+        datetime.now(
+            timezone.utc
+        )
         .strftime(
             "%Y%m%d_%H%M%S"
         )
@@ -1320,7 +1367,7 @@ async def main():
     )
 
     # ========================================================
-    # SEED FIRST PRODUCTION RUN
+    # SEED INITIAL PRODUCTION DATA
     # ========================================================
 
     seeded = seed_production_from_legacy(
@@ -1332,7 +1379,7 @@ async def main():
         print()
         print(
             "Existing validated test data seeded into "
-            "production for:"
+            "production as previous/stale data:"
         )
 
         for row, directory_name in seeded.items():
@@ -1458,7 +1505,7 @@ async def main():
                 )
 
                 # ------------------------------------------------
-                # SUCCESSFUL CURRENT-RUN DATA
+                # SUCCESSFUL CURRENT-RUN FUND
                 # ------------------------------------------------
 
                 successful_update_utc = (
@@ -1478,7 +1525,10 @@ async def main():
                 )
 
                 # ------------------------------------------------
-                # SAVE ONLY AFTER SUCCESSFUL VALIDATION
+                # PUBLISH IMMEDIATELY
+                #
+                # Mixed current/previous data is intentionally
+                # allowed.
                 # ------------------------------------------------
 
                 published_directory = (
@@ -1522,6 +1572,10 @@ async def main():
                 )
 
                 print(
+                    "Production status: updated"
+                )
+
+                print(
                     "Freshness: current"
                 )
 
@@ -1556,11 +1610,42 @@ async def main():
                     )
                 )
 
+                previous_data_available = (
+                    previous_directory
+                    is not None
+                )
+
+                # ------------------------------------------------
+                # MARK RETAINED DATA AS STALE
+                #
+                # This changes only production_metadata.json.
+                # The actual fund data and historical BID history
+                # remain untouched.
+                # ------------------------------------------------
+
+                if previous_data_available:
+
+                    freshness = (
+                        mark_existing_fund_stale(
+                            previous_directory,
+                            failure_utc,
+                        )
+                    )
+
+                else:
+
+                    freshness = (
+                        build_unavailable_freshness_metadata(
+                            failure_utc
+                        )
+                    )
+
                 failure = build_failure_record(
                     excel_fund,
                     error_text,
                     previous_directory,
                     failure_utc,
+                    freshness,
                 )
 
                 failed_funds.append(
@@ -1588,11 +1673,7 @@ async def main():
                     failure,
                 )
 
-                if (
-                    failure[
-                        "previousProductionDataRetained"
-                    ]
-                ):
+                if previous_data_available:
 
                     retained_funds.append(
                         {
@@ -1623,14 +1704,12 @@ async def main():
                                 "retained_previous",
 
                             "dataFreshness":
-                                failure[
-                                    "dataFreshness"
-                                ],
+                                freshness,
 
                             "directory":
-                                failure[
-                                    "previousProductionDirectory"
-                                ],
+                                str(
+                                    previous_directory
+                                ),
 
                             "reason":
                                 error_text,
@@ -1642,11 +1721,7 @@ async def main():
                     "============================================================"
                 )
 
-                if (
-                    failure[
-                        "previousProductionDataRetained"
-                    ]
-                ):
+                if previous_data_available:
 
                     print(
                         "FUND FAILED - PREVIOUS DATA RETAINED"
@@ -1684,22 +1759,18 @@ async def main():
 
                 print(
                     f"Freshness: "
-                    f"{failure['dataFreshness']['status']}"
+                    f"{freshness['status']}"
                 )
 
                 print(
                     f"Last successful update: "
-                    f"{failure['dataFreshness']['lastSuccessfulUpdateUtc']}"
+                    f"{freshness['lastSuccessfulUpdateUtc']}"
                 )
 
                 print(
                     f"Previous data retained: "
-                    f"{failure['previousProductionDataRetained']}"
+                    f"{previous_data_available}"
                 )
-
-                # ------------------------------------------------
-                # CONTINUE TO NEXT FUND
-                # ------------------------------------------------
 
                 continue
 
@@ -1742,7 +1813,9 @@ async def main():
 
                     "dataFreshness":
                         build_unavailable_freshness_metadata(
-                            utc_now_iso()
+                            run_finished
+                            if "run_finished" in locals()
+                            else utc_now_iso()
                         ),
                 }
             )
@@ -1785,50 +1858,6 @@ async def main():
 
                 continue
 
-            # ------------------------------------------------
-            # Recover stored production metadata.
-            # ------------------------------------------------
-
-            metadata_file = (
-                directory
-                / "production_metadata.json"
-            )
-
-            if metadata_file.exists():
-
-                try:
-
-                    metadata = load_json_file(
-                        metadata_file
-                    )
-
-                    if metadata.get(
-                        "productionStatus"
-                    ):
-
-                        production_result[
-                            "productionStatus"
-                        ] = metadata[
-                            "productionStatus"
-                        ]
-
-                    if isinstance(
-                        metadata.get(
-                            "dataFreshness"
-                        ),
-                        dict,
-                    ):
-
-                        production_result[
-                            "dataFreshness"
-                        ] = metadata[
-                            "dataFreshness"
-                        ]
-
-                except Exception:
-
-                    pass
-
             production_funds.append(
                 production_result
             )
@@ -1869,6 +1898,12 @@ async def main():
             )
 
     # ========================================================
+    # FINAL RUN TIME
+    # ========================================================
+
+    run_finished = utc_now_iso()
+
+    # ========================================================
     # BID HISTORY TOTALS
     # ========================================================
 
@@ -1883,14 +1918,6 @@ async def main():
     unavailable_count = len(
         unavailable_production_funds
     )
-
-    updated_row_set = {
-        item[
-            "excelRow"
-        ]
-        for item
-        in successful_funds
-    }
 
     for fund in production_funds:
 
@@ -1974,8 +2001,6 @@ async def main():
     # FINAL RUN STATUS
     # ========================================================
 
-    run_finished = utc_now_iso()
-
     if failed_funds:
 
         run_status = (
@@ -2017,8 +2042,8 @@ async def main():
             None,
 
         "note":
-            "Freshness is currently based on successful current-run "
-            "status rather than an arbitrary number-of-days threshold.",
+            "Freshness is based on current-run extraction success "
+            "rather than an arbitrary number-of-days threshold.",
     }
 
     # ========================================================
@@ -2067,9 +2092,7 @@ async def main():
             ),
 
         "unavailableProductionFundCount":
-            len(
-                unavailable_production_funds
-            ),
+            unavailable_count,
 
         "totalWindows":
             total_windows,
@@ -2122,6 +2145,9 @@ async def main():
                     False,
 
                 "estimationAllowed":
+                    False,
+
+                "carryForwardRawDataAllowed":
                     False,
             },
 
@@ -2233,9 +2259,7 @@ async def main():
             ),
 
         "unavailableProductionFundCount":
-            len(
-                unavailable_production_funds
-            ),
+            unavailable_count,
 
         "freshness":
             freshness_summary,
@@ -2338,9 +2362,7 @@ async def main():
             ),
 
         "unavailableProductionFunds":
-            len(
-                unavailable_production_funds
-            ),
+            unavailable_count,
 
         "totalHistoricalBidObservations":
             total_observations,
@@ -2369,6 +2391,9 @@ async def main():
                     True,
 
                 "noEstimation":
+                    True,
+
+                "noCarryForwardRawData":
                     True,
 
                 "chronologicalReconstruction":
@@ -2412,6 +2437,9 @@ async def main():
 
                 "rawDataChangedForFreshness":
                     False,
+
+                "emailEnabled":
+                    False,
             },
 
         "failedFundsDetail":
@@ -2428,6 +2456,38 @@ async def main():
         run_directory
         / "validation.json",
         validation_summary,
+    )
+
+    # ========================================================
+    # FRESHNESS CONSOLE SUMMARY
+    # ========================================================
+
+    print()
+    print(
+        "============================================================"
+    )
+
+    print(
+        "FRESHNESS SUMMARY"
+    )
+
+    print(
+        "============================================================"
+    )
+
+    print(
+        f"Current: "
+        f"{current_fresh_count}"
+    )
+
+    print(
+        f"Stale: "
+        f"{stale_fresh_count}"
+    )
+
+    print(
+        f"Unavailable: "
+        f"{unavailable_count}"
     )
 
     # ========================================================
@@ -2458,21 +2518,6 @@ async def main():
     )
 
     print(
-        f"Current funds: "
-        f"{current_fresh_count}"
-    )
-
-    print(
-        f"Stale funds: "
-        f"{stale_fresh_count}"
-    )
-
-    print(
-        f"Unavailable funds: "
-        f"{unavailable_count}"
-    )
-
-    print(
         f"Previous data retained: "
         f"{len(retained_funds)}"
     )
@@ -2500,34 +2545,6 @@ async def main():
     print(
         f"Run diagnostics: "
         f"{run_directory}"
-    )
-
-    # ========================================================
-    # FRESHNESS DETAILS
-    # ========================================================
-
-    print()
-    print(
-        "FRESHNESS"
-    )
-
-    print(
-        "------------------------------------------------------------"
-    )
-
-    print(
-        f"Current: "
-        f"{current_fresh_count}"
-    )
-
-    print(
-        f"Stale: "
-        f"{stale_fresh_count}"
-    )
-
-    print(
-        f"Unavailable: "
-        f"{unavailable_count}"
     )
 
     # ========================================================
@@ -2600,7 +2617,7 @@ async def main():
         )
 
         print(
-            "Freshness flags were updated."
+            "Freshness metadata was updated."
         )
 
         print(
