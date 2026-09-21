@@ -1,15 +1,16 @@
-name: Test Prudential Top Holdings - All Funds
+name: Test Prudential Holdings
 
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   test-prudential-holdings:
-
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -17,25 +18,32 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: scripts/requirements.txt
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r scripts/requirements.txt
+          python -m pip install -r scripts/requirements.txt
 
-      - name: Install Playwright Chromium
+      - name: Verify installed dependencies
         run: |
-          playwright install --with-deps chromium
+          python -c "import requests; print('requests:', requests.__version__)"
+          python -c "import openpyxl; print('openpyxl:', openpyxl.__version__)"
+          python -c "import bs4; print('beautifulsoup4: OK')"
+          python -c "import pypdf; print('pypdf:', pypdf.__version__)"
 
-      - name: Run all-fund Prudential Top Holdings extraction
+      - name: Run Prudential holdings extractor
         run: |
           python -u scripts/test_prudential_holdings.py
 
-      - name: Upload all-fund holdings test output
+      - name: Upload holdings output
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: prudential-top-holdings-all-funds-${{ github.run_number }}
-          path: |
-            output_holdings/
+          name: prudential-holdings-output
+          path: output_holdings/
           if-no-files-found: warn
