@@ -25,14 +25,32 @@ PRODUCTION WORKFLOW
 1. Read the Excel master universe from Funds Links.xlsm.
 2. Import the already-tested extraction/validation engine from
    scripts/test_pruaccess.py.
-3. Process every Excel-master fund independently.
-4. A successful fund immediately replaces its previous production
+3. Open PruAccess and wait for its Fund Name options to load.
+4. Process every Excel-master fund independently.
+5. A successful fund immediately replaces its previous production
    data for that fund.
-5. A failed fund retains its previous valid production data.
-6. Processing continues after a fund failure.
-7. Successful and retained/stale funds may coexist in production.
-8. Every production fund has explicit freshness metadata.
-9. No email system is used.
+6. A failed fund retains its previous valid production data.
+7. Processing continues after a fund failure.
+8. Successful and retained/stale funds may coexist in production.
+9. Every production fund has explicit freshness metadata.
+10. No email system is used.
+
+
+PRUACCESS OPTIONS
+=================
+
+PruAccess may load its Fund Name <option> elements asynchronously.
+
+The tested test_pruaccess.py get_fund_options() function is NOT changed.
+
+Instead, this production builder:
+
+    1. Navigates to the PruAccess Fund Performance page.
+    2. Waits for #fundName to contain at least one <option>.
+    3. Calls the existing tested get_fund_options() function.
+
+This keeps test_pruaccess.py unchanged while making the production
+builder robust on GitHub-hosted runners.
 
 
 FRESHNESS RULE
@@ -157,6 +175,8 @@ from scripts.test_pruaccess import (
     read_excel_funds,
     save_json,
     utc_now_iso,
+    PRUACCESS_URL,
+    INITIAL_PAGE_TIMEOUT_MS,
 )
 
 
@@ -192,6 +212,19 @@ LEGACY_FUNDS_DIR = (
 FRESHNESS_CURRENT = "current"
 FRESHNESS_STALE = "stale"
 FRESHNESS_UNAVAILABLE = "unavailable"
+
+
+# ============================================================
+# PRUACCESS OPTIONS WAITING
+# ============================================================
+
+# The tested test_pruaccess.py remains unchanged.
+# The production builder waits for the dynamically populated
+# PruAccess Fund Name options before calling get_fund_options().
+
+PRUACCESS_OPTIONS_WAIT_MS = 60000
+
+PRUACCESS_OPTIONS_POLL_MS = 500
 
 
 # ============================================================
@@ -524,6 +557,92 @@ def mark_existing_fund_stale(
     )
 
     return freshness
+
+
+# ============================================================
+# PRUACCESS OPTIONS WAIT
+# ============================================================
+
+async def wait_for_pruaccess_fund_options(
+    page,
+) -> int:
+
+    """
+    Wait for the PruAccess Fund Name selector to be populated.
+
+    This function exists in build_fund_data.py intentionally so
+    test_pruaccess.py remains unchanged.
+
+    Returns:
+        Number of available Fund Name options.
+    """
+
+    fund_name_locator = page.locator(
+        "#fundName"
+    )
+
+    selector_count = await fund_name_locator.count()
+
+    if selector_count == 0:
+
+        raise RuntimeError(
+            "PruAccess #fundName selector was not found "
+            "after opening the Fund Performance page."
+        )
+
+    if selector_count != 1:
+
+        raise RuntimeError(
+            "PruAccess #fundName selector is not unique. "
+            f"Matched {selector_count} elements."
+        )
+
+    option_locator = page.locator(
+        "#fundName option"
+    )
+
+    print()
+    print(
+        "Waiting for PruAccess Fund Name options..."
+    )
+
+    elapsed_ms = 0.0
+
+    loop = asyncio.get_running_loop()
+
+    started = loop.time()
+
+    while True:
+
+        option_count = await option_locator.count()
+
+        if option_count > 0:
+
+            print(
+                f"PruAccess Fund Name options detected: "
+                f"{option_count}"
+            )
+
+            return option_count
+
+        elapsed_ms = (
+            loop.time()
+            - started
+        ) * 1000.0
+
+        if (
+            elapsed_ms
+            >= PRUACCESS_OPTIONS_WAIT_MS
+        ):
+
+            raise RuntimeError(
+                "PruAccess Fund Name options did not load "
+                f"within {PRUACCESS_OPTIONS_WAIT_MS} ms."
+            )
+
+        await page.wait_for_timeout(
+            PRUACCESS_OPTIONS_POLL_MS
+        )
 
 
 # ============================================================
@@ -1122,10 +1241,7 @@ def seed_production_from_legacy(
             destination,
         )
 
-        # ----------------------------------------------------
-        # Seeded legacy data is NOT current production data.
-        # Mark it stale immediately.
-        # ----------------------------------------------------
+        # Seeded legacy data is explicitly previous/stale.
 
         last_successful_update_utc = (
             get_previous_successful_update_time(
@@ -1424,7 +1540,15 @@ async def main():
         page = await context.new_page()
 
         # ====================================================
-        # LOAD PRUACCESS OPTIONS
+        # OPEN PRUACCESS AND WAIT FOR OPTIONS
+        #
+        # IMPORTANT:
+        #
+        # test_pruaccess.py is intentionally NOT changed.
+        #
+        # We open the PruAccess page here, wait for the
+        # dynamically populated Fund Name options, and then
+        # call the existing tested get_fund_options().
         # ====================================================
 
         print()
@@ -1440,11 +1564,41 @@ async def main():
             "============================================================"
         )
 
+        print(
+            "Opening PruAccess:"
+        )
+
+        print(
+            PRUACCESS_URL
+        )
+
+        await page.goto(
+            PRUACCESS_URL,
+            wait_until="domcontentloaded",
+            timeout=INITIAL_PAGE_TIMEOUT_MS,
+        )
+
+        await wait_for_pruaccess_fund_options(
+            page
+        )
+
         pruaccess_options = (
             await get_fund_options(
                 page
             )
         )
+
+        print(
+            f"PruAccess options returned by tested function: "
+            f"{len(pruaccess_options)}"
+        )
+
+        if not pruaccess_options:
+
+            raise RuntimeError(
+                "PruAccess returned no fund options "
+                "after the production wait."
+            )
 
         save_json(
             run_directory
@@ -1452,6 +1606,9 @@ async def main():
             {
                 "source":
                     "PruAccess",
+
+                "url":
+                    PRUACCESS_URL,
 
                 "retrievedAtUtc":
                     utc_now_iso(),
@@ -1813,9 +1970,7 @@ async def main():
 
                     "dataFreshness":
                         build_unavailable_freshness_metadata(
-                            run_finished
-                            if "run_finished" in locals()
-                            else utc_now_iso()
+                            utc_now_iso()
                         ),
                 }
             )
@@ -2106,7 +2261,7 @@ async def main():
         "freshness":
             freshness_summary,
 
-        "publicationRule":
+        "productionRules":
             {
                 "successfulFundReplacesPrevious":
                     True,
@@ -2149,6 +2304,24 @@ async def main():
 
                 "carryForwardRawDataAllowed":
                     False,
+            },
+
+        "pruAccessOptions":
+            {
+                "source":
+                    PRUACCESS_URL,
+
+                "waitBeforeExtraction":
+                    True,
+
+                "waitTimeoutMs":
+                    PRUACCESS_OPTIONS_WAIT_MS,
+
+                "pollIntervalMs":
+                    PRUACCESS_OPTIONS_POLL_MS,
+
+                "optionCount":
+                    None,
             },
 
         "successfulFunds":
@@ -2205,6 +2378,14 @@ async def main():
         "unavailableProductionFunds":
             unavailable_production_funds,
     }
+
+    run_summary[
+        "pruAccessOptions"
+    ][
+        "optionCount"
+    ] = len(
+        pruaccess_options
+    )
 
     save_json(
         PRODUCTION_DIR
@@ -2440,6 +2621,12 @@ async def main():
 
                 "emailEnabled":
                     False,
+
+                "testPruaccessChanged":
+                    False,
+
+                "productionWaitsForPruAccessOptions":
+                    True,
             },
 
         "failedFundsDetail":
@@ -2530,6 +2717,21 @@ async def main():
     print(
         f"Production funds available: "
         f"{len(production_funds)}"
+    )
+
+    print(
+        f"Current funds: "
+        f"{current_fresh_count}"
+    )
+
+    print(
+        f"Stale funds: "
+        f"{stale_fresh_count}"
+    )
+
+    print(
+        f"Unavailable funds: "
+        f"{unavailable_count}"
     )
 
     print(
