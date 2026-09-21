@@ -27,16 +27,194 @@ jobs:
         run: |
           playwright install --with-deps chromium
 
+      - name: Diagnose PruAccess
+        run: |
+          python - <<'PY'
+          import asyncio
+          from pathlib import Path
+          from playwright.async_api import async_playwright
+
+          URL = "https://pruaccess.prudential.com.sg/prulinkfund/viewFundPerformance.do"
+
+          DEBUG_DIR = Path("pruaccess_debug")
+          DEBUG_DIR.mkdir(parents=True, exist_ok=True)
+
+          async def main():
+              async with async_playwright() as p:
+
+                  browser = await p.chromium.launch(
+                      headless=True
+                  )
+
+                  page = await browser.new_page(
+                      viewport={
+                          "width": 1440,
+                          "height": 1000,
+                      }
+                  )
+
+                  print("Opening PruAccess:")
+                  print(URL)
+
+                  try:
+                      response = await page.goto(
+                          URL,
+                          wait_until="domcontentloaded",
+                          timeout=120000,
+                      )
+
+                      print()
+                      print("INITIAL RESPONSE")
+                      print("----------------")
+                      print(
+                          "HTTP status:",
+                          response.status if response else None
+                      )
+                      print(
+                          "Response URL:",
+                          response.url if response else None
+                      )
+
+                  except Exception as error:
+                      print()
+                      print("PAGE.GOTO ERROR")
+                      print("----------------")
+                      print(type(error).__name__)
+                      print(str(error))
+
+                  await page.wait_for_timeout(10000)
+
+                  print()
+                  print("PAGE INFORMATION")
+                  print("----------------")
+                  print("URL:", page.url)
+                  print("Title:", await page.title())
+
+                  fund_select = page.locator(
+                      "#fundName"
+                  )
+
+                  try:
+                      print(
+                          "Fund select count:",
+                          await fund_select.count()
+                      )
+                  except Exception as error:
+                      print(
+                          "Fund select error:",
+                          repr(error)
+                      )
+
+                  try:
+                      options = page.locator(
+                          "#fundName option"
+                      )
+
+                      option_count = await options.count()
+
+                      print(
+                          "Fund option count:",
+                          option_count
+                      )
+
+                      for index in range(
+                          min(option_count, 10)
+                      ):
+                          option = options.nth(index)
+
+                          print(
+                              f"Option {index}: "
+                              f"value={await option.get_attribute('value')!r} "
+                              f"text={(await option.inner_text())!r}"
+                          )
+
+                  except Exception as error:
+                      print(
+                          "Option extraction error:",
+                          repr(error)
+                      )
+
+                  try:
+                      visible_text = await page.locator(
+                          "body"
+                      ).inner_text()
+
+                      print()
+                      print("VISIBLE PAGE TEXT")
+                      print("-----------------")
+                      print(
+                          visible_text[:10000]
+                      )
+
+                      (
+                          DEBUG_DIR
+                          / "visible_text.txt"
+                      ).write_text(
+                          visible_text,
+                          encoding="utf-8"
+                      )
+
+                  except Exception as error:
+                      print(
+                          "Visible text error:",
+                          repr(error)
+                      )
+
+                  try:
+                      html = await page.content()
+
+                      (
+                          DEBUG_DIR
+                          / "rendered.html"
+                      ).write_text(
+                          html,
+                          encoding="utf-8"
+                      )
+
+                  except Exception as error:
+                      print(
+                          "HTML capture error:",
+                          repr(error)
+                      )
+
+                  try:
+                      await page.screenshot(
+                          path=str(
+                              DEBUG_DIR
+                              / "pruaccess.png"
+                          ),
+                          full_page=True
+                      )
+
+                      print(
+                          "Screenshot saved:"
+                          " pruaccess_debug/pruaccess.png"
+                      )
+
+                  except Exception as error:
+                      print(
+                          "Screenshot error:",
+                          repr(error)
+                      )
+
+                  await browser.close()
+
+          asyncio.run(main())
+          PY
+
       - name: Run production fund-data builder
         run: |
-          python build_fund_data.py
+          python -u build_fund_data.py 2>&1 | tee build_fund_data.log
+          exit ${PIPESTATUS[0]}
 
-      - name: Upload production output
+      - name: Upload diagnostics and production output
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vgrat-fms-build-${{ github.run_number }}
           path: |
+            pruaccess_debug/
+            build_fund_data.log
             output_pruaccess/production/
             output_pruaccess/runs/
           if-no-files-found: warn
