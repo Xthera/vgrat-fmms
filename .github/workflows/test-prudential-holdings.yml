@@ -1,4 +1,4 @@
-name: Test Prudential Top Holdings
+name: Test Prudential Top Holdings - All Funds
 
 on:
   workflow_dispatch:
@@ -27,15 +27,15 @@ jobs:
         run: |
           playwright install --with-deps chromium
 
-      - name: Run Prudential Top Holdings test
+      - name: Run all-fund Prudential Top Holdings extraction
         run: |
           python -u scripts/test_prudential_holdings.py
 
-      - name: Upload holdings test output
+      - name: Upload all-fund holdings test output
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: prudential-top-holdings-test-${{ github.run_number }}
+          name: prudential-top-holdings-all-funds-${{ github.run_number }}
           path: |
-            scripts/output_holdings/
+            output_holdings/
           if-no-files-found: warn
