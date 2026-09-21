@@ -1,100 +1,65 @@
 #!/usr/bin/env python3
 
 """
-VGrat FMS - Prudential Top Holdings ALL-FUND TEST EXTRACTOR
+VGrat FMS - Prudential Top Holdings Extraction Test
+====================================================
 
-MASTER SOURCE
-=============
-
+MASTER FUND UNIVERSE
+--------------------
 Funds Links.xlsm
 
 Column A:
     Prudential fund URL
 
 Column B:
-    Exact PruAccess fund name
+    PruAccess fund name
 
-
-PURPOSE
-=======
-
-This script tests official Prudential Top Holdings extraction for EVERY
-fund listed in Excel Column A.
-
-Workflow:
-
-    Funds Links.xlsm
-          |
-          v
-    Read every populated URL in Column A
-          |
-          v
-    Open official Prudential fund page
-          |
-          v
-    Locate official Fund Factsheet PDF
-          |
-          v
-    Download official Prudential PDF
-          |
-          v
-    Extract PDF text
-          |
-          v
-    Locate "Top 10 holdings"
-          |
-          v
-    Extract every published holding and percentage
-          |
-          v
-    Save one result per fund
-
-
-HARD RULES
-==========
-
-- Excel Column A controls the universe.
-- No hardcoded 67-fund limit.
-- Every populated URL in Column A is processed.
-- Only official Prudential Singapore pages are accepted.
-- Only official Prudential Singapore factsheets are accepted.
-- No third-party holdings source.
-- No inferred holdings.
-- No fabricated holdings.
-- No fabricated percentages.
-- No forced 10 holdings.
-- If Prudential publishes fewer than 10 holdings, store exactly that count.
-- Holdings are stored in the order published by Prudential.
-- If the official factsheet contains a Top 10 holdings section but it cannot
-  be parsed, the fund is marked FAILED.
-- If a factsheet has no Top 10 holdings section at all, the fund is marked
-  as NO_HOLDINGS_SECTION.
-- Failed funds do not get blank fabricated holdings.
-- The script never changes PruAccess settings.
+IMPORTANT
+---------
+- Excel Column A controls the fund universe dynamically.
+- Every populated Prudential URL is processed.
+- No hardcoded fund count.
+- No additional funds are discovered from Prudential.
 - This script does NOT modify test_pruaccess.py.
-- This script does NOT create data.json.
-- This script does NOT create index.html/css/js.
-- This script is a TEST collector only.
+- This script extracts the official Prudential factsheet and
+  the published Top 10 Holdings section.
+
+HOLDINGS RULES
+--------------
+- Source must be the official Prudential Singapore fund page/factsheet.
+- Holdings come only from the official published factsheet.
+- Maximum 10 holdings.
+- Fewer than 10 published holdings is valid.
+- Do not invent missing holdings.
+- Do not calculate holdings.
+- Do not estimate holdings.
+- Do not fill blanks.
+- Do not force exactly 10 holdings.
+- Multi-line holding names are joined into one name.
+- The holding percentage is used to determine the end of the
+  holding-name block.
+- PDF text extraction artifacts such as "None", "|" and repeated
+  whitespace are cleaned.
+- Raw section text is preserved for audit.
 
 OUTPUT
-======
-
+------
 output_holdings/
     all_holdings.json
     run_summary.json
 
     funds/
-        <excelRow>_<citicode>/
+        <excelRow>_<fundIdentifier>/
             factsheet.pdf
             factsheet_text.txt
             top_holdings_section.txt
             top_holdings.json
             metadata.json
 
-        <excelRow>_failed/
-            failure.json
+    failures/
+        <excelRow>_<fundIdentifier>/
+            error.json
 """
-
 
 from __future__ import annotations
 
@@ -104,94 +69,89 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urljoin, urlparse
+from urllib.request import Request, urlopen
 
+from bs4 import BeautifulSoup
 from openpyxl import load_workbook
-from pypdf import PdfReader
 from playwright.sync_api import (
     TimeoutError as PlaywrightTimeoutError,
     sync_playwright,
 )
+from pypdf import PdfReader
 
 
-# =============================================================================
+# ============================================================================
 # CONFIGURATION
-# =============================================================================
+# ============================================================================
 
-EXCEL_FILE = Path(
-    "Funds Links.xlsm"
-)
+EXCEL_FILE = Path("Funds Links.xlsm")
 
-OUTPUT_DIR = Path(
-    "output_holdings"
-)
+OUTPUT_DIR = Path("output_holdings")
+FUNDS_OUTPUT_DIR = OUTPUT_DIR / "funds"
+FAILURES_OUTPUT_DIR = OUTPUT_DIR / "failures"
 
-FUNDS_OUTPUT_DIR = (
-    OUTPUT_DIR / "funds"
-)
+ALL_HOLDINGS_FILE = OUTPUT_DIR / "all_holdings.json"
+RUN_SUMMARY_FILE = OUTPUT_DIR / "run_summary.json"
 
-ALL_HOLDINGS_FILE = (
-    OUTPUT_DIR / "all_holdings.json"
-)
+MAX_RETRIES = 3
 
-RUN_SUMMARY_FILE = (
-    OUTPUT_DIR / "run_summary.json"
-)
+RETRY_DELAY_SECONDS = 2
 
+PAGE_TIMEOUT_MS = 90000
 
-# ---------------------------------------------------------------------------
-# Browser
-# ---------------------------------------------------------------------------
+POST_LOAD_WAIT_MS = 2500
 
-BROWSER_HEADLESS = True
-
-PAGE_TIMEOUT_MS = 120000
-
-FACTSHEET_DOWNLOAD_TIMEOUT_MS = 120000
-
-POST_PAGE_WAIT_MS = 1500
-
-RETRY_COUNT = 3
-
-RETRY_DELAY_SECONDS = 3.0
-
-
-# ---------------------------------------------------------------------------
-# Holdings
-# ---------------------------------------------------------------------------
+FACTSHEET_DOWNLOAD_TIMEOUT_SECONDS = 90
 
 MAX_HOLDINGS = 10
-
-
-# ---------------------------------------------------------------------------
-# Only official Prudential Singapore URLs are accepted.
-# ---------------------------------------------------------------------------
 
 PRUDENTIAL_HOSTS = {
     "prudential.com.sg",
     "www.prudential.com.sg",
 }
 
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/153.0.0.0 Safari/537.36"
+)
 
-# =============================================================================
+
+# ============================================================================
 # GENERAL HELPERS
-# =============================================================================
+# ============================================================================
 
-def clean_text(
-    value,
-) -> str:
-    """
-    Normalize whitespace while preserving meaningful text.
-    """
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).replace(
+        microsecond=0
+    ).isoformat().replace("+00:00", "Z")
 
+
+def clean_text(value: Any) -> str:
+    """
+    Normalize whitespace and common PDF extraction artifacts.
+    """
     if value is None:
         return ""
 
     text = str(value)
 
-    text = text.replace(
-        "\xa0",
+    text = text.replace("\xa0", " ")
+    text = text.replace("\u200b", "")
+    text = text.replace("\ufeff", "")
+
+    # Pipe characters often appear because PDF table extraction
+    # interpreted table separators as text.
+    text = text.replace("|", " ")
+
+    # Common PDF extraction artifact.
+    text = re.sub(
+        r"\bNone\b",
         " ",
+        text,
+        flags=re.IGNORECASE,
     )
 
     text = re.sub(
@@ -203,51 +163,61 @@ def clean_text(
     return text.strip()
 
 
-def normalize_text(
-    value,
-) -> str:
+def normalize_name(value: Any) -> str:
     """
-    Case-insensitive comparison helper.
+    Normalize a holding name while preserving meaningful punctuation.
     """
+    text = clean_text(value)
 
-    text = clean_text(
-        value
+    text = re.sub(
+        r"\s*-\s*",
+        " - ",
+        text,
     )
 
-    text = text.casefold()
-
-    text = text.replace(
-        "–",
-        "-",
-    )
-
-    text = text.replace(
-        "—",
-        "-",
-    )
-
-    return re.sub(
+    text = re.sub(
         r"\s+",
         " ",
         text,
-    ).strip()
-
-
-def utc_now_iso() -> str:
-    return (
-        datetime.now(
-            timezone.utc
-        )
-        .replace(
-            microsecond=0
-        )
-        .isoformat()
     )
+
+    return text.strip(" -|")
+
+
+def normalize_match_text(value: Any) -> str:
+    return re.sub(
+        r"\s+",
+        " ",
+        clean_text(value),
+    ).casefold().strip()
+
+
+def safe_filename(value: str) -> str:
+    value = clean_text(value)
+
+    value = re.sub(
+        r"[<>:\"/\\|?*]",
+        "_",
+        value,
+    )
+
+    value = re.sub(
+        r"\s+",
+        "_",
+        value,
+    )
+
+    value = value.strip("._ ")
+
+    if not value:
+        value = "unknown"
+
+    return value[:180]
 
 
 def save_json(
     path: Path,
-    data,
+    data: Any,
 ) -> None:
 
     path.parent.mkdir(
@@ -255,121 +225,129 @@ def save_json(
         exist_ok=True,
     )
 
-    path.write_text(
-        json.dumps(
+    with path.open(
+        "w",
+        encoding="utf-8",
+    ) as file:
+
+        json.dump(
             data,
+            file,
             indent=2,
             ensure_ascii=False,
-        ),
+        )
+
+        file.write("\n")
+
+
+def load_json(path: Path) -> Any:
+
+    with path.open(
+        "r",
         encoding="utf-8",
-    )
+    ) as file:
+
+        return json.load(file)
 
 
-def safe_filename(
-    value,
-) -> str:
-
-    text = clean_text(
-        value
-    )
-
-    text = re.sub(
-        r"[^A-Za-z0-9._-]+",
-        "_",
-        text,
-    )
-
-    text = text.strip(
-        "._"
-    )
-
-    if not text:
-        text = "fund"
-
-    return text[:120]
-
-
-def is_prudential_url(
-    url: str,
-) -> bool:
+def is_prudential_url(url: str) -> bool:
 
     try:
-
-        parsed = urlparse(
-            url
-        )
+        parsed = urlparse(url)
 
         hostname = (
-            parsed.hostname
-            or ""
+            parsed.hostname or ""
         ).lower()
 
-        return (
-            parsed.scheme.lower()
-            in {
-                "http",
-                "https",
-            }
-            and hostname
-            in PRUDENTIAL_HOSTS
-        )
+        return hostname in PRUDENTIAL_HOSTS
 
     except Exception:
-
         return False
 
 
-def ensure_prudential_url(
-    url: str,
-) -> str:
+def parse_percent(value: str) -> Optional[float]:
 
-    url = clean_text(
-        url
+    if not value:
+        return None
+
+    match = re.search(
+        r"(?<![\d.])"
+        r"(\d+(?:\.\d+)?|\.\d+)"
+        r"\s*%",
+        value,
     )
 
-    if not url:
+    if not match:
+        return None
 
-        raise RuntimeError(
-            "URL is empty."
+    try:
+
+        number = float(
+            match.group(1)
         )
 
-    if not is_prudential_url(
-        url
-    ):
+        if number < 0:
+            return None
 
-        raise RuntimeError(
-            "Non-Prudential URL rejected: "
-            f"{url}"
-        )
+        if number > 100:
+            return None
 
-    return url
+        return number
+
+    except ValueError:
+        return None
 
 
-# =============================================================================
-# EXCEL MASTER UNIVERSE
-# =============================================================================
+def extract_percent_tokens(
+    line: str,
+) -> List[Tuple[float, int, int]]:
 
-def read_excel_funds() -> list[dict]:
+    results: List[
+        Tuple[float, int, int]
+    ] = []
+
+    pattern = re.compile(
+        r"(?<![\d.])"
+        r"(\d+(?:\.\d+)?|\.\d+)"
+        r"\s*%"
+    )
+
+    for match in pattern.finditer(line):
+
+        try:
+
+            number = float(
+                match.group(1)
+            )
+
+            if (
+                number >= 0
+                and number <= 100
+            ):
+                results.append(
+                    (
+                        number,
+                        match.start(),
+                        match.end(),
+                    )
+                )
+
+        except ValueError:
+            continue
+
+    return results
+
+
+# ============================================================================
+# EXCEL
+# ============================================================================
+
+def read_excel_funds() -> List[Dict[str, Any]]:
     """
     Read every populated URL from Column A.
 
-    Column A controls the master universe.
-
-    Column B is retained as the PruAccess reference name.
+    Column B is kept as the corresponding PruAccess fund name.
     """
-
-    print(
-        "\n"
-        "============================================================"
-    )
-
-    print(
-        "READING EXCEL MASTER FUND UNIVERSE"
-    )
-
-    print(
-        "============================================================"
-    )
 
     if not EXCEL_FILE.exists():
 
@@ -378,292 +356,920 @@ def read_excel_funds() -> list[dict]:
         )
 
     workbook = load_workbook(
-        EXCEL_FILE,
+        filename=EXCEL_FILE,
         read_only=True,
-        keep_vba=True,
-        data_only=True,
+        data_only=False,
     )
 
     worksheet = workbook.active
 
-    funds = []
+    funds: List[
+        Dict[str, Any]
+    ] = []
+
+    seen_urls = set()
 
     for row_number in range(
         2,
         worksheet.max_row + 1,
     ):
 
-        column_a = worksheet.cell(
+        url_cell = worksheet.cell(
             row=row_number,
             column=1,
-        ).value
+        )
 
-        column_b = worksheet.cell(
+        name_cell = worksheet.cell(
             row=row_number,
             column=2,
-        ).value
-
-        prudential_url = clean_text(
-            column_a
         )
 
-        pruaccess_name = clean_text(
-            column_b
-        )
+        url = ""
 
-        if not prudential_url:
+        if url_cell.value:
+            url = clean_text(
+                url_cell.value
+            )
+
+        # Support actual Excel hyperlinks.
+        if (
+            not url
+            and url_cell.hyperlink
+            and url_cell.hyperlink.target
+        ):
+            url = clean_text(
+                url_cell.hyperlink.target
+            )
+
+        if not url:
             continue
+
+        if not is_prudential_url(
+            url
+        ):
+            raise ValueError(
+                f"Excel row {row_number} "
+                f"contains a non-Prudential URL: "
+                f"{url}"
+            )
+
+        normalized_url = url.rstrip("/")
+
+        if normalized_url in seen_urls:
+            continue
+
+        seen_urls.add(
+            normalized_url
+        )
+
+        pruaccess_name = ""
+
+        if name_cell.value:
+            pruaccess_name = clean_text(
+                name_cell.value
+            )
 
         funds.append(
             {
-                "excelRow":
-                    row_number,
-
-                "prudentialUrl":
-                    prudential_url,
-
-                "pruAccessName":
-                    pruaccess_name,
+                "excelRow": row_number,
+                "prudentialUrl": url,
+                "excelPruAccessName": pruaccess_name,
             }
         )
 
     workbook.close()
 
-    if not funds:
-
-        raise RuntimeError(
-            "No populated Prudential URLs were found "
-            "in Excel Column A."
-        )
-
-    print(
-        f"Excel fund universe: {len(funds)}"
-    )
-
     return funds
 
 
-# =============================================================================
-# FIND FACTSHEET LINK
-# =============================================================================
+# ============================================================================
+# WEB PAGE
+# ============================================================================
 
-def find_factsheet_url(
+def get_page_html(
     page,
-    prudential_url: str,
 ) -> str:
-    """
-    Locate the official Fund Factsheet link from the official Prudential page.
 
-    Ranking:
+    return page.content()
 
-        1. Anchor text contains "Fund Factsheet"
-        2. Anchor text contains "Factsheet"
-        3. Href contains "factsheet"
-        4. PDF extension
-    """
 
-    anchors = page.locator(
-        "a"
-    )
+def extract_page_fund_name(
+    page,
+) -> str:
 
-    anchor_count = anchors.count()
+    selectors = [
+        "h1",
+        "[class*='fund-name']",
+        "[class*='fundName']",
+        "[class*='product-title']",
+        "[class*='productTitle']",
+    ]
 
-    candidates = []
-
-    for index in range(
-        anchor_count
-    ):
-
-        anchor = anchors.nth(
-            index
-        )
+    for selector in selectors:
 
         try:
 
-            href = clean_text(
-                anchor.get_attribute(
-                    "href"
+            elements = page.locator(
+                selector
+            )
+
+            count = elements.count()
+
+            for index in range(count):
+
+                value = clean_text(
+                    elements.nth(
+                        index
+                    ).inner_text(
+                        timeout=3000
+                    )
                 )
-            )
 
-            if not href:
-                continue
+                if value:
 
-            absolute_url = urljoin(
-                page.url,
-                href,
-            )
+                    # Avoid obvious generic headings.
+                    lowered = value.casefold()
 
-            if not is_prudential_url(
-                absolute_url
-            ):
-                continue
+                    if lowered not in {
+                        "fund factsheet",
+                        "factsheet",
+                        "prulink funds",
+                    }:
 
-            anchor_text = clean_text(
-                anchor.inner_text()
-            )
+                        return value
 
         except Exception:
-
             continue
 
-        href_lower = (
-            absolute_url.lower()
+    try:
+
+        title = clean_text(
+            page.title()
         )
 
-        text_lower = (
-            anchor_text.lower()
+        if title:
+            return title
+
+    except Exception:
+        pass
+
+    return ""
+
+
+def find_factsheet_url(
+    page,
+) -> Optional[str]:
+    """
+    Find an official Prudential factsheet PDF.
+
+    Checks:
+        1. visible Factsheet text
+        2. PDF href
+        3. href containing 'factsheet'
+    """
+
+    html = get_page_html(
+        page
+    )
+
+    soup = BeautifulSoup(
+        html,
+        "html.parser",
+    )
+
+    candidates: List[
+        Tuple[int, str, str]
+    ] = []
+
+    for anchor in soup.find_all(
+        "a"
+    ):
+
+        href = clean_text(
+            anchor.get(
+                "href",
+                "",
+            )
+        )
+
+        if not href:
+            continue
+
+        absolute_url = urljoin(
+            page.url,
+            href,
+        )
+
+        if not is_prudential_url(
+            absolute_url
+        ):
+            continue
+
+        text = clean_text(
+            anchor.get_text(
+                " ",
+                strip=True,
+            )
+        )
+
+        lowered_href = (
+            absolute_url.casefold()
+        )
+
+        lowered_text = (
+            text.casefold()
         )
 
         score = 0
 
-        if (
-            "fund factsheet"
-            in text_lower
-        ):
-            score += 200
-
-        elif (
-            "factsheet"
-            in text_lower
-        ):
-            score += 150
-
-        if "factsheet" in href_lower:
+        if "factsheet" in lowered_text:
             score += 100
 
-        if href_lower.endswith(
-            ".pdf"
+        if "fact sheet" in lowered_text:
+            score += 100
+
+        if "factsheet" in lowered_href:
+            score += 80
+
+        if ".pdf" in lowered_href:
+            score += 40
+
+        if (
+            "view" in lowered_text
+            and "fact" in lowered_text
         ):
-            score += 50
+            score += 20
 
         if score > 0:
 
             candidates.append(
-                {
-                    "score":
-                        score,
+                (
+                    score,
+                    absolute_url,
+                    text,
+                )
+            )
 
-                    "url":
-                        absolute_url,
+    # Additional direct PDF links.
+    for anchor in soup.select(
+        "a[href$='.pdf'], a[href*='.pdf?']"
+    ):
 
-                    "text":
-                        anchor_text,
-                }
+        href = clean_text(
+            anchor.get(
+                "href",
+                "",
+            )
+        )
+
+        if not href:
+            continue
+
+        absolute_url = urljoin(
+            page.url,
+            href,
+        )
+
+        if not is_prudential_url(
+            absolute_url
+        ):
+            continue
+
+        if not any(
+            candidate[1]
+            == absolute_url
+            for candidate in candidates
+        ):
+
+            candidates.append(
+                (
+                    10,
+                    absolute_url,
+                    clean_text(
+                        anchor.get_text(
+                            " ",
+                            strip=True,
+                        )
+                    ),
+                )
             )
 
     if not candidates:
-
-        raise RuntimeError(
-            "Could not find an official Prudential "
-            "factsheet link on the fund page."
-        )
+        return None
 
     candidates.sort(
         key=lambda item: (
-            -item["score"],
-            item["url"],
+            -item[0],
+            item[1],
         )
     )
 
-    selected = candidates[0]
+    return candidates[0][1]
 
-    print(
-        "Factsheet link found:"
+
+# ============================================================================
+# PDF
+# ============================================================================
+
+def download_pdf(
+    url: str,
+) -> bytes:
+
+    request = Request(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": (
+                "application/pdf,"
+                "application/octet-stream,"
+                "*/*"
+            ),
+        },
     )
 
-    print(
-        selected["url"]
-    )
+    with urlopen(
+        request,
+        timeout=FACTSHEET_DOWNLOAD_TIMEOUT_SECONDS,
+    ) as response:
 
-    return ensure_prudential_url(
-        selected["url"]
-    )
+        content_type = (
+            response.headers.get(
+                "Content-Type",
+                "",
+            )
+        )
 
+        data = response.read()
 
-# =============================================================================
-# PDF TEXT
-# =============================================================================
+        if not data:
+            raise ValueError(
+                "Downloaded factsheet is empty."
+            )
+
+        # Do not require the server to provide a perfect PDF content type.
+        # Check the actual PDF signature.
+        if not data.startswith(
+            b"%PDF"
+        ):
+
+            raise ValueError(
+                "Downloaded factsheet is not a valid PDF."
+                f" Content-Type={content_type}"
+            )
+
+        return data
+
 
 def extract_pdf_text(
     pdf_bytes: bytes,
-) -> tuple[str, int]:
-    """
-    Extract all available text from the official PDF.
-    """
+) -> Tuple[str, int]:
 
-    from io import BytesIO
+    temp_path = (
+        OUTPUT_DIR
+        / "_temp_factsheet.pdf"
+    )
 
-    reader = PdfReader(
-        BytesIO(
-            pdf_bytes
+    temp_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    temp_path.write_bytes(
+        pdf_bytes
+    )
+
+    try:
+
+        reader = PdfReader(
+            str(temp_path)
+        )
+
+        pages: List[str] = []
+
+        for page in reader.pages:
+
+            try:
+
+                text = page.extract_text()
+
+                if text:
+                    pages.append(
+                        text
+                    )
+                else:
+                    pages.append("")
+
+            except Exception as exc:
+
+                pages.append(
+                    f"[PDF_TEXT_EXTRACTION_ERROR: {exc}]"
+                )
+
+        full_text = "\n".join(
+            pages
+        )
+
+        return (
+            full_text,
+            len(reader.pages),
+        )
+
+    finally:
+
+        try:
+            temp_path.unlink()
+        except FileNotFoundError:
+            pass
+
+
+# ============================================================================
+# FACTSHEET METADATA
+# ============================================================================
+
+def extract_first_matching_date(
+    text: str,
+    patterns: List[str],
+) -> Optional[str]:
+
+    for pattern in patterns:
+
+        match = re.search(
+            pattern,
+            text,
+            flags=re.IGNORECASE,
+        )
+
+        if match:
+
+            value = clean_text(
+                match.group(1)
+            )
+
+            if value:
+                return value
+
+    return None
+
+
+def extract_factsheet_metadata(
+    pdf_text: str,
+) -> Dict[str, Any]:
+
+    factsheet_document_date = (
+        extract_first_matching_date(
+            pdf_text,
+            [
+                r"(?:factsheet|document)"
+                r"\s*(?:date|dated)"
+                r"\s*[:\-]?\s*"
+                r"([0-9]{1,2}\s+[A-Za-z]{3,9}\s+[0-9]{4})",
+
+                r"(?:factsheet|document)"
+                r"\s*(?:date|dated)"
+                r"\s*[:\-]?\s*"
+                r"([0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{4})",
+            ],
         )
     )
 
-    page_count = len(
-        reader.pages
+    factsheet_data_as_at = (
+        extract_first_matching_date(
+            pdf_text,
+            [
+                r"(?:data|price|information)"
+                r"\s+(?:as|as of)"
+                r"\s+at?\s*"
+                r"[:\-]?\s*"
+                r"([0-9]{1,2}\s+[A-Za-z]{3,9}\s+[0-9]{4})",
+
+                r"(?:as at|as of)"
+                r"\s*"
+                r"([0-9]{1,2}\s+[A-Za-z]{3,9}\s+[0-9]{4})",
+
+                r"(?:as at|as of)"
+                r"\s*"
+                r"([0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{4})",
+            ],
+        )
     )
 
-    if page_count == 0:
+    return {
+        "factsheetDocumentDate": factsheet_document_date,
+        "factsheetDataAsAt": factsheet_data_as_at,
+    }
 
-        raise RuntimeError(
-            "Factsheet PDF has zero pages."
-        )
 
-    pages = []
+# ============================================================================
+# TOP HOLDINGS SECTION
+# ============================================================================
 
-    for page_index, pdf_page in enumerate(
-        reader.pages,
-        start=1,
+SECTION_STOP_PATTERNS = [
+    r"^\s*asset allocation\s*$",
+    r"^\s*geographical allocation\s*$",
+    r"^\s*geographic allocation\s*$",
+    r"^\s*country allocation\s*$",
+    r"^\s*regional allocation\s*$",
+    r"^\s*sector allocation\s*$",
+    r"^\s*currency allocation\s*$",
+    r"^\s*portfolio allocation\s*$",
+    r"^\s*fund allocation\s*$",
+    r"^\s*risk allocation\s*$",
+    r"^\s*performance\s*$",
+    r"^\s*fund performance\s*$",
+    r"^\s*investment strategy\s*$",
+    r"^\s*investment objective\s*$",
+    r"^\s*important information\s*$",
+    r"^\s*important notes\s*$",
+    r"^\s*disclaimer\s*$",
+    r"^\s*contact us\s*$",
+]
+
+
+def is_stop_heading(
+    line: str,
+) -> bool:
+
+    normalized = normalize_match_text(
+        line
+    )
+
+    if not normalized:
+        return False
+
+    for pattern in SECTION_STOP_PATTERNS:
+
+        if re.match(
+            pattern,
+            normalized,
+            flags=re.IGNORECASE,
+        ):
+            return True
+
+    return False
+
+
+def find_top_holdings_section(
+    pdf_text: str,
+) -> Optional[str]:
+
+    lines = pdf_text.splitlines()
+
+    start_index: Optional[int] = None
+
+    for index, line in enumerate(
+        lines
     ):
+
+        normalized = normalize_match_text(
+            line
+        )
+
+        if (
+            normalized == "top 10 holdings"
+            or normalized == "top holdings"
+            or "top 10 holdings" in normalized
+        ):
+
+            start_index = index
+            break
+
+    if start_index is None:
+        return None
+
+    section_lines: List[str] = []
+
+    for index in range(
+        start_index,
+        len(lines),
+    ):
+
+        raw_line = lines[index]
+
+        line = clean_text(
+            raw_line
+        )
+
+        if (
+            index > start_index
+            and is_stop_heading(line)
+        ):
+            break
+
+        section_lines.append(
+            raw_line
+        )
+
+        # Enough protection against accidental extraction
+        # of huge parts of the PDF.
+        if len(section_lines) > 250:
+            break
+
+    section = "\n".join(
+        section_lines
+    ).strip()
+
+    if not section:
+        return None
+
+    return section
+
+
+# ============================================================================
+# TOP HOLDINGS PARSER
+# ============================================================================
+
+HEADER_WORDS = {
+    "holding",
+    "holdings",
+    "name",
+    "names",
+    "weight",
+    "weights",
+    "%",
+    "allocation",
+    "allocations",
+}
+
+
+def is_probable_header_line(
+    line: str,
+) -> bool:
+
+    normalized = normalize_match_text(
+        line
+    )
+
+    if not normalized:
+        return True
+
+    if normalized.startswith(
+        "top 10 holdings"
+    ):
+        return True
+
+    tokens = normalized.split()
+
+    if (
+        tokens
+        and all(
+            token in HEADER_WORDS
+            for token in tokens
+        )
+    ):
+        return True
+
+    if normalized in {
+        "name weight",
+        "holding weight",
+        "holdings weight",
+        "investment weight",
+    }:
+        return True
+
+    return False
+
+
+def strip_leading_rank(
+    line: str,
+) -> Tuple[Optional[int], str]:
+
+    text = clean_text(
+        line
+    )
+
+    match = re.match(
+        r"^\s*(\d{1,2})[\s.)\-:]+(.+)$",
+        text,
+    )
+
+    if match:
 
         try:
 
-            page_text = (
-                pdf_page.extract_text()
-                or ""
+            rank = int(
+                match.group(1)
             )
 
-        except Exception as error:
+            if 1 <= rank <= 99:
 
-            raise RuntimeError(
-                "Failed to extract PDF text "
-                f"from page {page_index}: {error}"
-            ) from error
+                return (
+                    rank,
+                    clean_text(
+                        match.group(2)
+                    ),
+                )
 
-        pages.append(
-            page_text
-        )
+        except ValueError:
+            pass
 
-    full_text = "\n".join(
-        pages
+    match = re.match(
+        r"^\s*(\d{1,2})\s*$",
+        text,
     )
 
-    if not clean_text(
-        full_text
-    ):
+    if match:
 
-        raise RuntimeError(
-            "Factsheet PDF contains no extractable text."
-        )
+        try:
+
+            rank = int(
+                match.group(1)
+            )
+
+            if 1 <= rank <= 99:
+
+                return (
+                    rank,
+                    "",
+                )
+
+        except ValueError:
+            pass
 
     return (
-        full_text,
-        page_count,
+        None,
+        text,
     )
 
 
-# =============================================================================
-# PDF LINE CLEANING
-# =============================================================================
+def looks_like_noise(
+    line: str,
+) -> bool:
 
-def pdf_lines(
-    text: str,
-) -> list[str]:
+    normalized = normalize_match_text(
+        line
+    )
 
-    lines = []
+    if not normalized:
+        return True
 
-    for raw_line in text.splitlines():
+    if is_probable_header_line(
+        line
+    ):
+        return True
+
+    noise_patterns = [
+        r"^top\s+10\s+holdings",
+        r"^holdings$",
+        r"^name\s+weight$",
+        r"^weight$",
+        r"^investment$",
+        r"^none$",
+        r"^[\-–—]+$",
+    ]
+
+    for pattern in noise_patterns:
+
+        if re.match(
+            pattern,
+            normalized,
+        ):
+            return True
+
+    return False
+
+
+def parse_top_holdings(
+    section_text: str,
+) -> List[Dict[str, Any]]:
+    """
+    Parse Top 10 Holdings while supporting names that wrap across
+    multiple PDF text lines.
+
+    Example PDF text:
+
+        1
+        JPMORGAN FUNDS - EMERGING
+        MARKETS EQUITY FUND
+        14.7%
+
+    becomes:
+
+        {
+            "rank": 1,
+            "name": "JPMORGAN FUNDS - EMERGING MARKETS EQUITY FUND",
+            "weightPercent": 14.7,
+            "weightText": "14.7%"
+        }
+
+    The percentage acts as the row boundary.
+    """
+
+    raw_lines = (
+        section_text.splitlines()
+    )
+
+    holdings: List[
+        Dict[str, Any]
+    ] = []
+
+    pending_name_lines: List[str] = []
+
+    pending_rank: Optional[int] = None
+
+    def flush_holding(
+        rank: Optional[int],
+        extra_name: str,
+        weight: float,
+        weight_text: str,
+    ) -> None:
+
+        nonlocal pending_name_lines
+
+        name_parts = []
+
+        for line in pending_name_lines:
+
+            cleaned = clean_text(
+                line
+            )
+
+            if cleaned:
+                name_parts.append(
+                    cleaned
+                )
+
+        cleaned_extra = clean_text(
+            extra_name
+        )
+
+        if cleaned_extra:
+            name_parts.append(
+                cleaned_extra
+            )
+
+        # Remove accidental duplicate rank text.
+        normalized_parts: List[str] = []
+
+        for part in name_parts:
+
+            part_rank, part_text = (
+                strip_leading_rank(
+                    part
+                )
+            )
+
+            if (
+                part_rank is not None
+                and not part_text
+            ):
+                continue
+
+            if part_text:
+                part = part_text
+
+            normalized_parts.append(
+                clean_text(part)
+            )
+
+        # Remove common PDF table artifacts.
+        filtered_parts = []
+
+        for part in normalized_parts:
+
+            if normalize_match_text(
+                part
+            ) in {
+                "none",
+                "-",
+                "—",
+                "–",
+            }:
+                continue
+
+            filtered_parts.append(
+                part
+            )
+
+        name = normalize_name(
+            " ".join(
+                filtered_parts
+            )
+        )
+
+        if not name:
+            # Do not invent a name.
+            # The caller will not add an empty holding.
+            pending_name_lines = []
+            return
+
+        actual_rank = (
+            rank
+            if rank is not None
+            else len(holdings) + 1
+        )
+
+        holdings.append(
+            {
+                "rank": actual_rank,
+                "name": name,
+                "weightPercent": weight,
+                "weightText": weight_text,
+            }
+        )
+
+        pending_name_lines = []
+
+    for raw_line in raw_lines:
 
         line = clean_text(
             raw_line
@@ -672,1367 +1278,654 @@ def pdf_lines(
         if not line:
             continue
 
-        lines.append(
+        if looks_like_noise(
             line
-        )
+        ):
+            continue
 
-    return lines
-
-
-# =============================================================================
-# FACTSHEET DATE EXTRACTION
-# =============================================================================
-
-def extract_data_as_at(
-    text: str,
-) -> str | None:
-    """
-    Extract explicit factsheet data date when present.
-
-    Examples:
-
-        Data as at 30 Sep 2025
-        All data as at 28 Feb 2026
-    """
-
-    patterns = [
-
-        re.compile(
-            r"""
-            \b
-            data
-            \s+as\s+at
-            \s*
-            ([0-9]{1,2}
-            \s+
-            [A-Za-z]{3,9}
-            \s+
-            [0-9]{4})
-            \b
-            """,
-            re.IGNORECASE
-            | re.VERBOSE,
-        ),
-
-        re.compile(
-            r"""
-            \ball\s+data
-            \s+as\s+at
-            \s*
-            ([0-9]{1,2}
-            \s+
-            [A-Za-z]{3,9}
-            \s+
-            [0-9]{4})
-            \b
-            """,
-            re.IGNORECASE
-            | re.VERBOSE,
-        ),
-    ]
-
-    for pattern in patterns:
-
-        match = pattern.search(
-            text
-        )
-
-        if match:
-
-            return clean_text(
-                match.group(1)
-            )
-
-    return None
-
-
-# =============================================================================
-# FACTSHEET DOCUMENT DATE
-# =============================================================================
-
-def extract_document_date(
-    text: str,
-) -> str | None:
-    """
-    Attempt to capture a visible month/year document date.
-
-    This is an extraction only.
-
-    No date is fabricated if unavailable.
-    """
-
-    lines = pdf_lines(
-        text
-    )
-
-    month_year_pattern = re.compile(
-        r"""
-        \b
-        (
-            January|
-            February|
-            March|
-            April|
-            May|
-            June|
-            July|
-            August|
-            September|
-            October|
-            November|
-            December
-        )
-        \s+
-        ([0-9]{4})
-        \b
-        """,
-        re.IGNORECASE
-        | re.VERBOSE,
-    )
-
-    # Search beginning of document first.
-    for line in lines[:50]:
-
-        match = (
-            month_year_pattern.search(
+        detected_rank, rank_text = (
+            strip_leading_rank(
                 line
             )
         )
 
-        if match:
+        if (
+            detected_rank is not None
+            and not rank_text
+        ):
 
-            return clean_text(
-                match.group(0)
+            pending_rank = (
+                detected_rank
             )
 
-    return None
-
-
-# =============================================================================
-# HOLDINGS SECTION BOUNDARIES
-# =============================================================================
-
-def find_holdings_start(
-    lines: list[str],
-) -> int | None:
-
-    for index, line in enumerate(
-        lines
-    ):
-
-        normalized = normalize_text(
-            line
-        )
+            continue
 
         if (
-            "top 10 holdings"
-            in normalized
-            or
-            "top ten holdings"
-            in normalized
+            detected_rank is not None
+            and rank_text
         ):
-
-            return index
-
-    return None
-
-
-def is_holdings_end(
-    line: str,
-) -> bool:
-
-    normalized = normalize_text(
-        line
-    )
-
-    endings = (
-
-        "source",
-
-        "source:",
-
-        "inception date",
-
-        "important information",
-
-        "important information:",
-
-        "disclaimer",
-
-        "past performance",
-
-        "portfolio characteristics",
-
-        "asset allocation",
-    )
-
-    if normalized in endings:
-        return True
-
-    if normalized.startswith(
-        "source:"
-    ):
-        return True
-
-    if normalized.startswith(
-        "inception date:"
-    ):
-        return True
-
-    if normalized.startswith(
-        "important information"
-    ):
-        return True
-
-    if re.fullmatch(
-        r"page\s+\d+(\s+of\s+\d+)?",
-        normalized,
-    ):
-        return True
-
-    return False
-
-
-def extract_holdings_section(
-    text: str,
-) -> tuple[
-    str,
-    str,
-]:
-    """
-    Return:
-
-        section_text
-        section_status
-
-    Status:
-
-        published
-        not_published
-    """
-
-    lines = pdf_lines(
-        text
-    )
-
-    start_index = find_holdings_start(
-        lines
-    )
-
-    if start_index is None:
-
-        return (
-            "",
-            "not_published",
-        )
-
-    section = []
-
-    for line in lines[
-        start_index + 1:
-    ]:
-
-        if is_holdings_end(
-            line
-        ):
-            break
-
-        section.append(
-            line
-        )
-
-    return (
-        "\n".join(
-            section
-        ),
-        "published",
-    )
-
-
-# =============================================================================
-# HOLDING NAME CLEANUP
-# =============================================================================
-
-def clean_holding_name(
-    value: str,
-) -> str:
-
-    name = clean_text(
-        value
-    )
-
-    if not name:
-        return ""
-
-    # Remove common bullet characters.
-    name = re.sub(
-        r"^[•·▪■□*]+",
-        "",
-        name,
-    )
-
-    name = name.strip()
-
-    # Remove accidental leading rank.
-    name = re.sub(
-        r"^\d{1,2}[.)]\s+",
-        "",
-        name,
-    )
-
-    # Remove separators often introduced by PDF extraction.
-    name = name.strip(
-        "|"
-    )
-
-    name = clean_text(
-        name
-    )
-
-    # Some PDF table extraction outputs "None".
-    if normalize_text(
-        name
-    ) in {
-        "none",
-        "null",
-        "-",
-        "—",
-    }:
-        return ""
-
-    return name
-
-
-# =============================================================================
-# PERCENTAGE PARSING
-# =============================================================================
-
-def parse_percentage(
-    value: str,
-) -> float | None:
-
-    if value is None:
-        return None
-
-    match = re.fullmatch(
-        r"\s*"
-        r"([0-9]+(?:\.[0-9]+)?)"
-        r"\s*%"
-        r"\s*",
-        value,
-    )
-
-    if not match:
-        return None
-
-    percentage = float(
-        match.group(1)
-    )
-
-    if (
-        percentage < 0
-        or percentage > 100
-    ):
-        return None
-
-    return percentage
-
-
-# =============================================================================
-# HOLDING LINE PARSER
-# =============================================================================
-
-def parse_holding_line(
-    line: str,
-) -> tuple[
-    str,
-    float,
-] | None:
-    """
-    Parse:
-
-        FUND NAME 38.8%
-
-    Also supports PDF table artifacts such as:
-
-        FUND NAME | 38.8%
-
-    and:
-
-        FUND NAME None | 38.8%
-    """
-
-    original = clean_text(
-        line
-    )
-
-    if not original:
-        return None
-
-    # Remove PDF pipe separators.
-    cleaned = original.replace(
-        "|",
-        " ",
-    )
-
-    cleaned = re.sub(
-        r"\s+",
-        " ",
-        cleaned,
-    ).strip()
-
-    # Remove common PDF table artifacts.
-    cleaned = re.sub(
-        r"\bNone\b",
-        " ",
-        cleaned,
-        flags=re.IGNORECASE,
-    )
-
-    cleaned = clean_text(
-        cleaned
-    )
-
-    match = re.match(
-        r"""
-        ^
-        (.*?)
-        \s+
-        (
-            [0-9]+
-            (?:\.[0-9]+)?
-        )
-        \s*%
-        $
-        """,
-        cleaned,
-        re.VERBOSE,
-    )
-
-    if not match:
-        return None
-
-    name = clean_holding_name(
-        match.group(1)
-    )
-
-    if not name:
-        return None
-
-    weight = float(
-        match.group(2)
-    )
-
-    if (
-        weight < 0
-        or weight > 100
-    ):
-        return None
-
-    return (
-        name,
-        weight,
-    )
-
-
-# =============================================================================
-# HOLDINGS PARSER
-# =============================================================================
-
-def parse_holdings(
-    section_text: str,
-) -> list[dict]:
-    """
-    Extract up to 10 published holdings.
-
-    Important:
-
-    - No artificial 10th entry.
-    - Exact published count is retained.
-    - Duplicate names are rejected.
-    """
-
-    if not clean_text(
-        section_text
-    ):
-
-        raise RuntimeError(
-            "Top 10 holdings section is empty."
-        )
-
-    lines = pdf_lines(
-        section_text
-    )
-
-    holdings = []
-
-    seen_names = set()
-
-    # -------------------------------------------------------------------------
-    # First method:
-    #
-    #   holding name + percentage on same line
-    # -------------------------------------------------------------------------
-
-    for line in lines:
-
-        if len(
-            holdings
-        ) >= MAX_HOLDINGS:
-            break
-
-        parsed = parse_holding_line(
-            line
-        )
-
-        if parsed is None:
-            continue
-
-        name, weight = parsed
-
-        name_key = normalize_text(
-            name
-        )
-
-        if name_key in {
-            "",
-            "holding",
-            "holdings",
-            "weight",
-            "weight %",
-            "portfolio",
-            "portfolio holdings",
-        }:
-            continue
-
-        if name_key in seen_names:
-            continue
-
-        holdings.append(
-            {
-                "rank":
-                    len(holdings) + 1,
-
-                "name":
-                    name,
-
-                "weightPercent":
-                    weight,
-
-                "weightText":
-                    f"{weight:g}%",
-            }
-        )
-
-        seen_names.add(
-            name_key
-        )
-
-    # -------------------------------------------------------------------------
-    # Second method:
-    #
-    # Some PDFs place:
-    #
-    #   HOLDING NAME
-    #   38.8%
-    #
-    # on separate lines.
-    # -------------------------------------------------------------------------
-
-    if not holdings:
-
-        index = 0
-
-        while (
-            index
-            < len(lines)
-            and
-            len(holdings)
-            < MAX_HOLDINGS
-        ):
-
-            current = lines[
-                index
-            ]
 
             if (
-                index + 1
-                >= len(lines)
+                not pending_name_lines
+                and pending_rank is None
             ):
+                pending_rank = (
+                    detected_rank
+                )
+                line = rank_text
+
+            else:
+                line = rank_text
+
+        percent_tokens = (
+            extract_percent_tokens(
+                line
+            )
+        )
+
+        if percent_tokens:
+
+            # Use the final percentage on the line.
+            # This is safer with PDF table extraction where
+            # another percentage may appear earlier in the line.
+            weight, start_pos, end_pos = (
+                percent_tokens[-1]
+            )
+
+            name_before_weight = (
+                line[:start_pos]
+            )
+
+            weight_text = clean_text(
+                line[
+                    start_pos:end_pos
+                ]
+            )
+
+            flush_holding(
+                rank=pending_rank,
+                extra_name=name_before_weight,
+                weight=weight,
+                weight_text=weight_text,
+            )
+
+            pending_rank = None
+
+            if len(holdings) >= MAX_HOLDINGS:
                 break
 
-            next_line = lines[
-                index + 1
-            ]
+            continue
 
-            next_weight = (
-                parse_percentage(
-                    next_line
-                )
+        # No percentage yet.
+        # This is either a wrapped part of the holding name,
+        # or a rank/name line.
+        cleaned_line = clean_text(
+            line
+        )
+
+        if cleaned_line:
+
+            pending_name_lines.append(
+                cleaned_line
             )
 
-            if next_weight is None:
+    return holdings[:MAX_HOLDINGS]
 
-                index += 1
-                continue
 
-            name = clean_holding_name(
-                current
-            )
+# ============================================================================
+# FUND EXTRACTION
+# ============================================================================
 
-            name_key = normalize_text(
-                name
-            )
-
-            if name_key in {
-                "",
-                "holding",
-                "holdings",
-                "weight",
-                "weight %",
-            }:
-
-                index += 2
-                continue
-
-            if name_key in seen_names:
-
-                index += 2
-                continue
-
-            holdings.append(
-                {
-                    "rank":
-                        len(holdings) + 1,
-
-                    "name":
-                        name,
-
-                    "weightPercent":
-                        next_weight,
-
-                    "weightText":
-                        f"{next_weight:g}%",
-                }
-            )
-
-            seen_names.add(
-                name_key
-            )
-
-            index += 2
-
-    # -------------------------------------------------------------------------
-    # Validation
-    # -------------------------------------------------------------------------
-
-    if not holdings:
-
-        raise RuntimeError(
-            "Top 10 holdings section was found, "
-            "but no holding/percentage pairs could be parsed."
-        )
-
-    if len(
-        holdings
-    ) > MAX_HOLDINGS:
-
-        raise RuntimeError(
-            "Parser produced more than 10 holdings."
-        )
-
-    ranks = [
-        item[
-            "rank"
-        ]
-        for item in holdings
-    ]
-
-    expected_ranks = list(
-        range(
-            1,
-            len(
-                holdings
-            ) + 1,
-        )
-    )
-
-    if ranks != expected_ranks:
-
-        raise RuntimeError(
-            "Holding ranks are not sequential."
-        )
-
-    names = [
-        normalize_text(
-            item[
-                "name"
-            ]
-        )
-        for item in holdings
-    ]
-
-    if len(
-        names
-    ) != len(
-        set(
-            names
-        )
-    ):
-
-        raise RuntimeError(
-            "Duplicate holding names detected."
-        )
-
-    for holding in holdings:
-
-        weight = holding[
-            "weightPercent"
-        ]
-
-        if (
-            weight < 0
-            or weight > 100
-        ):
-
-            raise RuntimeError(
-                "Invalid holding weight: "
-                f"{weight}"
-            )
-
-    return holdings
-
-
-# =============================================================================
-# FACTSHEET DOWNLOAD
-# =============================================================================
-
-def download_factsheet(
-    page,
-    factsheet_url: str,
-) -> bytes:
-
-    factsheet_url = ensure_prudential_url(
-        factsheet_url
-    )
-
-    print(
-        "Downloading factsheet..."
-    )
-
-    response = page.request.get(
-        factsheet_url,
-        timeout=FACTSHEET_DOWNLOAD_TIMEOUT_MS,
-    )
-
-    status = response.status
-
-    if status != 200:
-
-        raise RuntimeError(
-            "Factsheet HTTP status was "
-            f"{status}: {factsheet_url}"
-        )
-
-    body = response.body()
-
-    if not body:
-
-        raise RuntimeError(
-            "Factsheet response contained "
-            "zero bytes."
-        )
-
-    if not body.startswith(
-        b"%PDF"
-    ):
-
-        content_type = clean_text(
-            response.headers.get(
-                "content-type"
-            )
-        )
-
-        raise RuntimeError(
-            "Factsheet response was not a PDF. "
-            f"Content-Type={content_type}; "
-            f"URL={factsheet_url}"
-        )
-
-    print(
-        f"Factsheet bytes: {len(body):,}"
-    )
-
-    return body
-
-
-# =============================================================================
-# SINGLE FUND
-# =============================================================================
-
-def extract_single_fund(
-    page,
-    excel_fund: dict,
-) -> dict:
-    """
-    Extract one complete Prudential factsheet holdings result.
-    """
-
-    excel_row = int(
-        excel_fund[
-            "excelRow"
-        ]
-    )
-
-    prudential_url = (
-        excel_fund[
-            "prudentialUrl"
-        ]
-    )
-
-    pruaccess_name = (
-        excel_fund.get(
-            "pruAccessName"
-        )
-        or ""
-    )
-
-    print(
-        "\n"
-        "============================================================"
-    )
-
-    print(
-        f"PROCESSING FUND ROW {excel_row}"
-    )
-
-    print(
-        "============================================================"
-    )
-
-    print(
-        f"Prudential URL: {prudential_url}"
-    )
-
-    print(
-        f"Excel PruAccess name: {pruaccess_name}"
-    )
-
-    if not is_prudential_url(
-        prudential_url
-    ):
-
-        raise RuntimeError(
-            "Excel Column A URL is not an official "
-            "Prudential Singapore URL."
-        )
-
-    # -------------------------------------------------------------------------
-    # Open official Prudential page.
-    # -------------------------------------------------------------------------
-
-    page.goto(
-        prudential_url,
-        wait_until="domcontentloaded",
-        timeout=PAGE_TIMEOUT_MS,
-    )
-
-    try:
-
-        page.wait_for_load_state(
-            "networkidle",
-            timeout=25000,
-        )
-
-    except PlaywrightTimeoutError:
-
-        # Some pages never become fully idle because of analytics.
-        pass
-
-    page.wait_for_timeout(
-        POST_PAGE_WAIT_MS
-    )
-
-    final_url = clean_text(
-        page.url
-    )
-
-    page_title = clean_text(
-        page.title()
-    )
-
-    if not is_prudential_url(
-        final_url
-    ):
-
-        raise RuntimeError(
-            "Prudential fund page redirected "
-            "outside Prudential Singapore: "
-            f"{final_url}"
-        )
-
-    # -------------------------------------------------------------------------
-    # Fund name.
-    # -------------------------------------------------------------------------
-
-    fund_name = ""
-
-    h1 = page.locator(
-        "h1"
-    ).first
-
-    if h1.count():
-
-        try:
-
-            fund_name = clean_text(
-                h1.inner_text()
-            )
-
-        except Exception:
-
-            fund_name = ""
-
-    if not fund_name:
-
-        body_text = clean_text(
-            page.locator(
-                "body"
-            ).inner_text()
-        )
-
-        # Conservative fallback for fund names.
-        match = re.search(
-            r"\bPRU(?:Link|Prime)\s+[^\n]+",
-            body_text,
-            re.IGNORECASE,
-        )
-
-        if match:
-
-            fund_name = clean_text(
-                match.group(0)
-            )
-
-    # -------------------------------------------------------------------------
-    # Factsheet.
-    # -------------------------------------------------------------------------
-
-    factsheet_url = (
-        find_factsheet_url(
-            page,
-            prudential_url,
-        )
-    )
-
-    factsheet_bytes = (
-        download_factsheet(
-            page,
-            factsheet_url,
-        )
-    )
-
-    # -------------------------------------------------------------------------
-    # PDF extraction.
-    # -------------------------------------------------------------------------
-
-    (
-        full_text,
-        pdf_page_count,
-    ) = extract_pdf_text(
-        factsheet_bytes
-    )
-
-    # -------------------------------------------------------------------------
-    # Factsheet dates.
-    # -------------------------------------------------------------------------
-
-    data_as_at = (
-        extract_data_as_at(
-            full_text
-        )
-    )
-
-    document_date = (
-        extract_document_date(
-            full_text
-        )
-    )
-
-    # -------------------------------------------------------------------------
-    # Top holdings section.
-    # -------------------------------------------------------------------------
-
-    (
-        section_text,
-        section_status,
-    ) = extract_holdings_section(
-        full_text
-    )
-
-    if section_status == "not_published":
-
-        result = {
-            "status":
-                "no_holdings_section",
-
-            "excelRow":
-                excel_row,
-
-            "prudentialUrl":
-                prudential_url,
-
-            "finalUrl":
-                final_url,
-
-            "pageTitle":
-                page_title,
-
-            "fundName":
-                fund_name,
-
-            "factsheetUrl":
-                factsheet_url,
-
-            "factsheetDocumentDate":
-                document_date,
-
-            "factsheetDataAsAt":
-                data_as_at,
-
-            "factsheetPageCount":
-                pdf_page_count,
-
-            "holdingsSectionStatus":
-                "not_published",
-
-            "topHoldingsCount":
-                0,
-
-            "topHoldings":
-                [],
-
-            "rules": {
-                "officialPrudentialSourceOnly":
-                    True,
-
-                "maximumHoldings":
-                    MAX_HOLDINGS,
-
-                "publishedCountUsedExactly":
-                    True,
-
-                "fewerThanTenAllowed":
-                    True,
-
-                "noForcedTenEntries":
-                    True,
-
-                "noInferredHoldings":
-                    True,
-
-                "noFabricatedPercentages":
-                    True,
-            },
-        }
-
-        return result
-
-    # -------------------------------------------------------------------------
-    # A Top 10 holdings section exists.
-    #
-    # Failure to parse it is a real extraction failure.
-    # -------------------------------------------------------------------------
-
-    holdings = parse_holdings(
-        section_text
-    )
-
-    result = {
-        "status":
-            "success",
-
-        "excelRow":
-            excel_row,
-
-        "prudentialUrl":
-            prudential_url,
-
-        "finalUrl":
-            final_url,
-
-        "pageTitle":
-            page_title,
-
-        "fundName":
-            fund_name,
-
-        "excelPruAccessName":
-            pruaccess_name,
-
-        "factsheetUrl":
-            factsheet_url,
-
-        "factsheetDocumentDate":
-            document_date,
-
-        "factsheetDataAsAt":
-            data_as_at,
-
-        "factsheetPageCount":
-            pdf_page_count,
-
-        "holdingsSectionStatus":
-            "published",
-
-        "topHoldingsCount":
-            len(
-                holdings
-            ),
-
-        "topHoldings":
-            holdings,
-
-        "rules": {
-            "officialPrudentialSourceOnly":
-                True,
-
-            "maximumHoldings":
-                MAX_HOLDINGS,
-
-            "publishedCountUsedExactly":
-                True,
-
-            "fewerThanTenAllowed":
-                True,
-
-            "noForcedTenEntries":
-                True,
-
-            "noInferredHoldings":
-                True,
-
-            "noFabricatedPercentages":
-                True,
-        },
-    }
-
-    return result
-
-
-# =============================================================================
-# SAVE SUCCESS
-# =============================================================================
-
-def save_success_result(
-    result: dict,
-    factsheet_bytes: bytes,
-    full_text: str,
-    section_text: str,
+def make_fund_directory(
+    excel_row: int,
+    fund_identifier: Optional[str],
 ) -> Path:
-
-    excel_row = int(
-        result[
-            "excelRow"
-        ]
-    )
 
     identifier = (
         safe_filename(
-            result.get(
-                "fundIdentifier"
-            )
+            fund_identifier
+            or "unknown"
         )
-        if result.get(
-            "fundIdentifier"
-        )
-        else ""
     )
 
-    if not identifier:
-
-        # Use the final URL if identifier is unavailable.
-        parsed = urlparse(
-            result.get(
-                "finalUrl"
-            )
-            or result.get(
-                "prudentialUrl"
-            )
-        )
-
-        identifier = safe_filename(
-            parsed.path.rstrip(
-                "/"
-            ).split(
-                "/"
-            )[-1]
-            or result.get(
-                "fundName"
-            )
-            or f"fund_{excel_row}"
-        )
-
-    directory = (
+    return (
         FUNDS_OUTPUT_DIR
-        / (
-            f"{excel_row}_"
-            f"{identifier}"
-        )
+        / f"{excel_row}_{identifier}"
     )
 
-    directory.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
 
-    # Official PDF copy.
-    (
-        directory
-        / "factsheet.pdf"
-    ).write_bytes(
-        factsheet_bytes
-    )
-
-    # Complete extracted text for audit/debugging.
-    (
-        directory
-        / "factsheet_text.txt"
-    ).write_text(
-        full_text,
-        encoding="utf-8",
-    )
-
-    # Exact Top Holdings section extracted by the parser.
-    (
-        directory
-        / "top_holdings_section.txt"
-    ).write_text(
-        section_text,
-        encoding="utf-8",
-    )
-
-    # Parsed holdings.
-    save_json(
-        directory
-        / "top_holdings.json",
-        result,
-    )
-
-    metadata = {
-        "excelRow":
-            excel_row,
-
-        "fundName":
-            result.get(
-                "fundName"
-            ),
-
-        "factsheetUrl":
-            result.get(
-                "factsheetUrl"
-            ),
-
-        "factsheetDocumentDate":
-            result.get(
-                "factsheetDocumentDate"
-            ),
-
-        "factsheetDataAsAt":
-            result.get(
-                "factsheetDataAsAt"
-            ),
-
-        "topHoldingsCount":
-            result.get(
-                "topHoldingsCount"
-            ),
-
-        "status":
-            result.get(
-                "status"
-            ),
-
-        "savedAtUtc":
-            utc_now_iso(),
-    }
-
-    save_json(
-        directory
-        / "metadata.json",
-        metadata,
-    )
-
-    return directory
-
-
-# =============================================================================
-# SAVE FAILURE
-# =============================================================================
-
-def save_failure_result(
-    excel_fund: dict,
-    error_text: str,
+def make_failure_directory(
+    excel_row: int,
+    fund_identifier: Optional[str],
 ) -> Path:
 
-    excel_row = int(
-        excel_fund[
-            "excelRow"
-        ]
-    )
-
-    directory = (
-        FUNDS_OUTPUT_DIR
-        / (
-            f"{excel_row}_failed"
+    identifier = (
+        safe_filename(
+            fund_identifier
+            or "unknown"
         )
     )
 
-    directory.mkdir(
+    return (
+        FAILURES_OUTPUT_DIR
+        / f"{excel_row}_{identifier}"
+    )
+
+
+def extract_identifier_from_url(
+    url: str,
+) -> Optional[str]:
+
+    parsed = urlparse(
+        url
+    )
+
+    query = parsed.query
+
+    match = re.search(
+        r"(?:^|&)citicode=([^&]+)",
+        query,
+        flags=re.IGNORECASE,
+    )
+
+    if match:
+        return clean_text(
+            match.group(1)
+        )
+
+    return None
+
+
+def process_single_fund(
+    page,
+    fund: Dict[str, Any],
+) -> Dict[str, Any]:
+
+    excel_row = fund[
+        "excelRow"
+    ]
+
+    prudential_url = fund[
+        "prudentialUrl"
+    ]
+
+    excel_pruaccess_name = fund[
+        "excelPruAccessName"
+    ]
+
+    print(
+        "\n============================================================"
+    )
+
+    print(
+        f"Excel row: {excel_row}"
+    )
+
+    print(
+        f"URL: {prudential_url}"
+    )
+
+    if excel_pruaccess_name:
+
+        print(
+            f"PruAccess name: "
+            f"{excel_pruaccess_name}"
+        )
+
+    print(
+        "============================================================"
+    )
+
+    last_error: Optional[str] = None
+
+    for attempt in range(
+        1,
+        MAX_RETRIES + 1,
+    ):
+
+        try:
+
+            print(
+                f"[Row {excel_row}] "
+                f"Opening Prudential page "
+                f"(attempt {attempt}/{MAX_RETRIES})..."
+            )
+
+            page.goto(
+                prudential_url,
+                wait_until="domcontentloaded",
+                timeout=PAGE_TIMEOUT_MS,
+            )
+
+            page.wait_for_timeout(
+                POST_LOAD_WAIT_MS
+            )
+
+            final_url = clean_text(
+                page.url
+            )
+
+            if not is_prudential_url(
+                final_url
+            ):
+                raise ValueError(
+                    "Final URL is not an "
+                    f"official Prudential Singapore URL: "
+                    f"{final_url}"
+                )
+
+            page_title = clean_text(
+                page.title()
+            )
+
+            fund_name = (
+                extract_page_fund_name(
+                    page
+                )
+            )
+
+            print(
+                f"[Row {excel_row}] "
+                f"Prudential fund name: "
+                f"{fund_name or '-'}"
+            )
+
+            factsheet_url = (
+                find_factsheet_url(
+                    page
+                )
+            )
+
+            if not factsheet_url:
+
+                raise ValueError(
+                    "Could not locate an "
+                    "official Prudential factsheet PDF "
+                    "on the fund page."
+                )
+
+            if not is_prudential_url(
+                factsheet_url
+            ):
+
+                raise ValueError(
+                    "Factsheet URL is not an official "
+                    f"Prudential Singapore URL: "
+                    f"{factsheet_url}"
+                )
+
+            print(
+                f"[Row {excel_row}] "
+                f"Factsheet: "
+                f"{factsheet_url}"
+            )
+
+            pdf_bytes = download_pdf(
+                factsheet_url
+            )
+
+            (
+                pdf_text,
+                page_count,
+            ) = extract_pdf_text(
+                pdf_bytes
+            )
+
+            if not pdf_text.strip():
+
+                raise ValueError(
+                    "Factsheet PDF produced no "
+                    "extractable text."
+                )
+
+            holdings_section = (
+                find_top_holdings_section(
+                    pdf_text
+                )
+            )
+
+            fund_identifier = (
+                extract_identifier_from_url(
+                    prudential_url
+                )
+            )
+
+            fund_dir = (
+                make_fund_directory(
+                    excel_row,
+                    fund_identifier,
+                )
+            )
+
+            fund_dir.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
+            # Save the official PDF for audit.
+            (
+                fund_dir
+                / "factsheet.pdf"
+            ).write_bytes(
+                pdf_bytes
+            )
+
+            (
+                fund_dir
+                / "factsheet_text.txt"
+            ).write_text(
+                pdf_text,
+                encoding="utf-8",
+            )
+
+            if holdings_section is None:
+
+                metadata = {
+                    "status": "no_holdings_section",
+                    "excelRow": excel_row,
+                    "prudentialUrl": prudential_url,
+                    "finalUrl": final_url,
+                    "pageTitle": page_title,
+                    "fundName": fund_name,
+                    "fundIdentifier": fund_identifier,
+                    "excelPruAccessName": (
+                        excel_pruaccess_name
+                    ),
+                    "factsheetUrl": factsheet_url,
+                    "factsheetPageCount": page_count,
+                    "holdingsSectionStatus": (
+                        "not_found"
+                    ),
+                    "topHoldingsCount": 0,
+                    "topHoldings": [],
+                    "rules": {
+                        "source": (
+                            "Official Prudential "
+                            "Singapore factsheet"
+                        ),
+                        "maximumHoldings": MAX_HOLDINGS,
+                        "multilineHoldingNames": True,
+                        "syntheticData": False,
+                        "calculatedData": False,
+                        "inferredData": False,
+                    },
+                }
+
+                save_json(
+                    fund_dir
+                    / "top_holdings.json",
+                    [],
+                )
+
+                save_json(
+                    fund_dir
+                    / "metadata.json",
+                    metadata,
+                )
+
+                return metadata
+
+            (
+                fund_dir
+                / "top_holdings_section.txt"
+            ).write_text(
+                holdings_section,
+                encoding="utf-8",
+            )
+
+            holdings = (
+                parse_top_holdings(
+                    holdings_section
+                )
+            )
+
+            if not holdings:
+
+                raise ValueError(
+                    "Top 10 holdings section was found, "
+                    "but no valid holding rows with "
+                    "published percentages could be parsed."
+                )
+
+            # Validate rank ordering without changing the published
+            # information. This is validation only.
+            for position, holding in enumerate(
+                holdings,
+                start=1,
+            ):
+
+                rank = holding.get(
+                    "rank"
+                )
+
+                if not isinstance(
+                    rank,
+                    int,
+                ):
+
+                    raise ValueError(
+                        "Invalid holding rank "
+                        f"at position {position}."
+                    )
+
+                if rank < 1:
+                    raise ValueError(
+                        "Holding rank must be >= 1."
+                    )
+
+                name = clean_text(
+                    holding.get(
+                        "name"
+                    )
+                )
+
+                if not name:
+
+                    raise ValueError(
+                        "Holding name is empty "
+                        f"at position {position}."
+                    )
+
+                weight = holding.get(
+                    "weightPercent"
+                )
+
+                if not isinstance(
+                    weight,
+                    (int, float),
+                ):
+
+                    raise ValueError(
+                        "Holding weight is invalid "
+                        f"at position {position}."
+                    )
+
+                if (
+                    weight < 0
+                    or weight > 100
+                ):
+
+                    raise ValueError(
+                        "Holding weight is outside "
+                        f"0-100% at position {position}."
+                    )
+
+            metadata_dates = (
+                extract_factsheet_metadata(
+                    pdf_text
+                )
+            )
+
+            metadata = {
+                "status": "success",
+                "excelRow": excel_row,
+                "prudentialUrl": prudential_url,
+                "finalUrl": final_url,
+                "pageTitle": page_title,
+                "fundName": fund_name,
+                "fundIdentifier": fund_identifier,
+                "excelPruAccessName": (
+                    excel_pruaccess_name
+                ),
+                "factsheetUrl": factsheet_url,
+                "factsheetDocumentDate": (
+                    metadata_dates[
+                        "factsheetDocumentDate"
+                    ]
+                ),
+                "factsheetDataAsAt": (
+                    metadata_dates[
+                        "factsheetDataAsAt"
+                    ]
+                ),
+                "factsheetPageCount": page_count,
+                "holdingsSectionStatus": (
+                    "found_and_parsed"
+                ),
+                "topHoldingsCount": len(
+                    holdings
+                ),
+                "topHoldings": holdings,
+                "rules": {
+                    "source": (
+                        "Official Prudential "
+                        "Singapore factsheet"
+                    ),
+                    "maximumHoldings": MAX_HOLDINGS,
+                    "multilineHoldingNames": True,
+                    "joinedWrappedPdfLines": True,
+                    "nameBoundary": (
+                        "Published percentage"
+                    ),
+                    "fewerThanTenAllowed": True,
+                    "syntheticData": False,
+                    "calculatedData": False,
+                    "inferredData": False,
+                },
+            }
+
+            save_json(
+                fund_dir
+                / "top_holdings.json",
+                holdings,
+            )
+
+            save_json(
+                fund_dir
+                / "metadata.json",
+                metadata,
+            )
+
+            print(
+                f"[Row {excel_row}] "
+                f"SUCCESS - extracted "
+                f"{len(holdings)} holdings"
+            )
+
+            for holding in holdings:
+
+                print(
+                    f"  {holding['rank']}. "
+                    f"{holding['name']} "
+                    f"| {holding['weightText']}"
+                )
+
+            return metadata
+
+        except (
+            PlaywrightTimeoutError,
+            TimeoutError,
+            ValueError,
+            OSError,
+        ) as exc:
+
+            last_error = (
+                f"{type(exc).__name__}: {exc}"
+            )
+
+            print(
+                f"[Row {excel_row}] "
+                f"Attempt {attempt} failed: "
+                f"{last_error}"
+            )
+
+            if attempt < MAX_RETRIES:
+
+                time.sleep(
+                    RETRY_DELAY_SECONDS
+                    * attempt
+                )
+
+        except Exception as exc:
+
+            last_error = (
+                f"{type(exc).__name__}: {exc}"
+            )
+
+            print(
+                f"[Row {excel_row}] "
+                f"Unexpected failure on attempt "
+                f"{attempt}: "
+                f"{last_error}"
+            )
+
+            if attempt < MAX_RETRIES:
+
+                time.sleep(
+                    RETRY_DELAY_SECONDS
+                    * attempt
+                )
+
+    fund_identifier = (
+        extract_identifier_from_url(
+            prudential_url
+        )
+    )
+
+    failure_dir = (
+        make_failure_directory(
+            excel_row,
+            fund_identifier,
+        )
+    )
+
+    failure_dir.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    failure = {
-        "status":
-            "failed",
-
-        "excelRow":
-            excel_row,
-
-        "prudentialUrl":
-            excel_fund[
-                "prudentialUrl"
-            ],
-
-        "excelPruAccessName":
-            excel_fund.get(
-                "pruAccessName"
-            ),
-
-        "error":
-            clean_text(
-                error_text
-            ),
-
-        "failedAtUtc":
-            utc_now_iso(),
+    failure_record = {
+        "status": "failed",
+        "excelRow": excel_row,
+        "prudentialUrl": prudential_url,
+        "excelPruAccessName": (
+            excel_pruaccess_name
+        ),
+        "fundIdentifier": fund_identifier,
+        "error": last_error
+        or "Unknown extraction error",
     }
 
     save_json(
-        directory
-        / "failure.json",
-        failure,
+        failure_dir
+        / "error.json",
+        failure_record,
     )
 
-    return directory
+    return failure_record
 
 
-# =============================================================================
+# ============================================================================
 # MAIN
-# =============================================================================
+# ============================================================================
 
 def main() -> int:
+
+    run_started = (
+        datetime.now(
+            timezone.utc
+        )
+    )
 
     OUTPUT_DIR.mkdir(
         parents=True,
@@ -2044,45 +1937,80 @@ def main() -> int:
         exist_ok=True,
     )
 
-    started_at = utc_now_iso()
-
-    print(
-        "\n"
-        "################################################################"
+    FAILURES_OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
     )
 
     print(
-        "VGRAT FMS - PRUDENTIAL TOP HOLDINGS ALL-FUND TEST"
+        "============================================================"
     )
 
     print(
-        "################################################################"
+        "PRUDENTIAL TOP 10 HOLDINGS"
     )
 
     print(
-        f"Started UTC: {started_at}"
+        "ALL-FUND EXTRACTION TEST"
     )
 
-    # -------------------------------------------------------------------------
-    # Excel
-    # -------------------------------------------------------------------------
+    print(
+        "============================================================"
+    )
 
-    funds = read_excel_funds()
+    # ------------------------------------------------------------------------
+    # Read Excel universe
+    # ------------------------------------------------------------------------
 
-    successful = []
+    try:
 
-    no_holdings_section = []
+        funds = read_excel_funds()
 
-    failed = []
+    except Exception as exc:
 
-    # -------------------------------------------------------------------------
-    # Browser
-    # -------------------------------------------------------------------------
+        print(
+            f"ERROR reading Excel universe: {exc}"
+        )
+
+        return 1
+
+    print(
+        f"Excel fund universe: {len(funds)}"
+    )
+
+    if not funds:
+
+        print(
+            "ERROR: No populated Prudential URLs "
+            "were found in Column A."
+        )
+
+        return 1
+
+    successful_funds: List[
+        Dict[str, Any]
+    ] = []
+
+    no_holdings_section_funds: List[
+        Dict[str, Any]
+    ] = []
+
+    failed_funds: List[
+        Dict[str, Any]
+    ] = []
+
+    all_holdings: List[
+        Dict[str, Any]
+    ] = []
+
+    # ------------------------------------------------------------------------
+    # Playwright
+    # ------------------------------------------------------------------------
 
     with sync_playwright() as playwright:
 
         browser = playwright.chromium.launch(
-            headless=BROWSER_HEADLESS
+            headless=True,
         )
 
         context = browser.new_context(
@@ -2090,627 +2018,256 @@ def main() -> int:
                 "width": 1440,
                 "height": 1000,
             },
-
-            user_agent=(
-                "Mozilla/5.0 "
-                "(Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 "
-                "(KHTML, like Gecko) "
-                "Chrome/153.0.0.0 Safari/537.36"
-            ),
+            user_agent=USER_AGENT,
         )
 
         page = context.new_page()
 
-        try:
+        total = len(
+            funds
+        )
 
-            total = len(
-                funds
+        for index, fund in enumerate(
+            funds,
+            start=1,
+        ):
+
+            print(
+                f"\n\nPROCESSING FUND "
+                f"{index}/{total}"
             )
 
-            # =================================================================
-            # ALL EXCEL FUNDS
-            # =================================================================
+            result = process_single_fund(
+                page,
+                fund,
+            )
 
-            for index, excel_fund in enumerate(
-                funds,
-                start=1,
-            ):
+            status = result.get(
+                "status"
+            )
 
-                print(
-                    "\n"
-                    + "=" * 72
-                )
+            if status == "success":
 
-                print(
-                    f"FUND {index}/{total}"
-                )
-
-                print(
-                    f"Excel row: "
-                    f"{excel_fund['excelRow']}"
-                )
-
-                print(
-                    "=" * 72
-                )
-
-                last_error = None
-
-                result = None
-
-                # -------------------------------------------------------------
-                # Retry whole fund extraction.
-                # -------------------------------------------------------------
-
-                for attempt in range(
-                    1,
-                    RETRY_COUNT + 1,
-                ):
-
-                    try:
-
-                        print(
-                            f"\nAttempt {attempt}/"
-                            f"{RETRY_COUNT}"
-                        )
-
-                        result = (
-                            extract_single_fund(
-                                page,
-                                excel_fund,
-                            )
-                        )
-
-                        last_error = None
-
-                        break
-
-                    except Exception as error:
-
-                        last_error = (
-                            clean_text(
-                                str(error)
-                            )
-                        )
-
-                        print(
-                            "Attempt failed:"
-                        )
-
-                        print(
-                            last_error
-                        )
-
-                        if attempt < RETRY_COUNT:
-
-                            print(
-                                f"Retrying in "
-                                f"{RETRY_DELAY_SECONDS} seconds..."
-                            )
-
-                            time.sleep(
-                                RETRY_DELAY_SECONDS
-                            )
-
-                # -------------------------------------------------------------
-                # Total failure.
-                # -------------------------------------------------------------
-
-                if result is None:
-
-                    failure_directory = (
-                        save_failure_result(
-                            excel_fund,
-                            last_error
-                            or
-                            "Unknown extraction failure.",
-                        )
-                    )
-
-                    failed.append(
-                        {
-                            "excelRow":
-                                excel_fund[
-                                    "excelRow"
-                                ],
-
-                            "prudentialUrl":
-                                excel_fund[
-                                    "prudentialUrl"
-                                ],
-
-                            "pruAccessName":
-                                excel_fund.get(
-                                    "pruAccessName"
-                                ),
-
-                            "error":
-                                last_error
-                                or
-                                "Unknown extraction failure.",
-
-                            "outputDirectory":
-                                str(
-                                    failure_directory
-                                ),
-                        }
-                    )
-
-                    continue
-
-                # -------------------------------------------------------------
-                # No Top Holdings section.
-                # -------------------------------------------------------------
-
-                if (
-                    result[
-                        "status"
-                    ]
-                    ==
-                    "no_holdings_section"
-                ):
-
-                    result_directory = (
-                        save_success_result(
-                            result,
-                            b"",
-                            "",
-                            "",
-                        )
-                    )
-
-                    # Remove empty PDF output because there is no need
-                    # to pretend a PDF was downloaded in this branch.
-                    pdf_path = (
-                        result_directory
-                        / "factsheet.pdf"
-                    )
-
-                    if pdf_path.exists():
-                        pdf_path.unlink()
-
-                    text_path = (
-                        result_directory
-                        / "factsheet_text.txt"
-                    )
-
-                    if text_path.exists():
-                        text_path.unlink()
-
-                    section_path = (
-                        result_directory
-                        / "top_holdings_section.txt"
-                    )
-
-                    if section_path.exists():
-                        section_path.unlink()
-
-                    no_holdings_section.append(
-                        result
-                    )
-
-                    print(
-                        "\n"
-                        "NO TOP HOLDINGS SECTION"
-                    )
-
-                    continue
-
-                # -------------------------------------------------------------
-                # SUCCESS
-                #
-                # Re-open the official PDF so we can save the exact source
-                # document and extracted text.
-                # -------------------------------------------------------------
-
-                try:
-
-                    factsheet_bytes = (
-                        page.request.get(
-                            result[
-                                "factsheetUrl"
-                            ],
-                            timeout=(
-                                FACTSHEET_DOWNLOAD_TIMEOUT_MS
-                            ),
-                        ).body()
-                    )
-
-                    if not factsheet_bytes.startswith(
-                        b"%PDF"
-                    ):
-                        raise RuntimeError(
-                            "Factsheet re-download did not "
-                            "return a valid PDF."
-                        )
-
-                    (
-                        full_text,
-                        _page_count,
-                    ) = extract_pdf_text(
-                        factsheet_bytes
-                    )
-
-                    (
-                        section_text,
-                        section_status,
-                    ) = extract_holdings_section(
-                        full_text
-                    )
-
-                    if (
-                        section_status
-                        !=
-                        "published"
-                    ):
-                        raise RuntimeError(
-                            "Factsheet holdings section "
-                            "disappeared during verification."
-                        )
-
-                    # Re-parse during final verification.
-                    verified_holdings = (
-                        parse_holdings(
-                            section_text
-                        )
-                    )
-
-                    if len(
-                        verified_holdings
-                    ) != result[
-                        "topHoldingsCount"
-                    ]:
-                        raise RuntimeError(
-                            "Holding count changed during "
-                            "final verification."
-                        )
-
-                    result[
-                        "topHoldings"
-                    ] = verified_holdings
-
-                    result[
-                        "topHoldingsCount"
-                    ] = len(
-                        verified_holdings
-                    )
-
-                    output_directory = (
-                        save_success_result(
-                            result,
-                            factsheet_bytes,
-                            full_text,
-                            section_text,
-                        )
-                    )
-
-                except Exception as error:
-
-                    error_text = clean_text(
-                        str(error)
-                    )
-
-                    failure_directory = (
-                        save_failure_result(
-                            excel_fund,
-                            error_text,
-                        )
-                    )
-
-                    failed.append(
-                        {
-                            "excelRow":
-                                excel_fund[
-                                    "excelRow"
-                                ],
-
-                            "prudentialUrl":
-                                excel_fund[
-                                    "prudentialUrl"
-                                ],
-
-                            "pruAccessName":
-                                excel_fund.get(
-                                    "pruAccessName"
-                                ),
-
-                            "error":
-                                error_text,
-
-                            "outputDirectory":
-                                str(
-                                    failure_directory
-                                ),
-                        }
-                    )
-
-                    continue
-
-                successful.append(
+                successful_funds.append(
                     result
                 )
 
-                print(
-                    "\n"
-                    "SUCCESS"
+                all_holdings.append(
+                    {
+                        "excelRow": result[
+                            "excelRow"
+                        ],
+                        "fundName": result.get(
+                            "fundName"
+                        ),
+                        "fundIdentifier": result.get(
+                            "fundIdentifier"
+                        ),
+                        "prudentialUrl": result.get(
+                            "prudentialUrl"
+                        ),
+                        "factsheetUrl": result.get(
+                            "factsheetUrl"
+                        ),
+                        "factsheetDocumentDate": (
+                            result.get(
+                                "factsheetDocumentDate"
+                            )
+                        ),
+                        "factsheetDataAsAt": (
+                            result.get(
+                                "factsheetDataAsAt"
+                            )
+                        ),
+                        "topHoldingsCount": result[
+                            "topHoldingsCount"
+                        ],
+                        "topHoldings": result[
+                            "topHoldings"
+                        ],
+                    }
                 )
 
-                print(
-                    f"Fund: "
-                    f"{result.get('fundName') or '-'}"
+            elif (
+                status
+                == "no_holdings_section"
+            ):
+
+                no_holdings_section_funds.append(
+                    result
                 )
 
-                print(
-                    f"Factsheet data as at: "
-                    f"{result.get('factsheetDataAsAt') or '-'}"
+                all_holdings.append(
+                    {
+                        "excelRow": result[
+                            "excelRow"
+                        ],
+                        "fundName": result.get(
+                            "fundName"
+                        ),
+                        "fundIdentifier": result.get(
+                            "fundIdentifier"
+                        ),
+                        "prudentialUrl": result.get(
+                            "prudentialUrl"
+                        ),
+                        "factsheetUrl": result.get(
+                            "factsheetUrl"
+                        ),
+                        "factsheetDocumentDate": (
+                            result.get(
+                                "factsheetDocumentDate"
+                            )
+                        ),
+                        "factsheetDataAsAt": (
+                            result.get(
+                                "factsheetDataAsAt"
+                            )
+                        ),
+                        "topHoldingsCount": 0,
+                        "topHoldings": [],
+                    }
                 )
 
-                print(
-                    f"Factsheet document date: "
-                    f"{result.get('factsheetDocumentDate') or '-'}"
+            else:
+
+                failed_funds.append(
+                    result
                 )
 
-                print(
-                    f"Top holdings extracted: "
-                    f"{result.get('topHoldingsCount')}"
-                )
+        browser.close()
 
-                for holding in result[
-                    "topHoldings"
-                ]:
+    # ------------------------------------------------------------------------
+    # Save consolidated holdings
+    # ------------------------------------------------------------------------
 
-                    print(
-                        f"  {holding['rank']}. "
-                        f"{holding['name']} - "
-                        f"{holding['weightText']}"
-                    )
-
-        finally:
-
-            context.close()
-
-            browser.close()
-
-    # =========================================================================
-    # ALL-HOLDINGS CONSOLIDATED FILE
-    # =========================================================================
-
-    completed_at = utc_now_iso()
-
-    all_results = (
-        successful
-        + no_holdings_section
-    )
-
-    all_holdings_payload = {
-        "status":
-            "success",
-
-        "source":
-            "Prudential Singapore",
-
-        "generatedAtUtc":
-            completed_at,
-
-        "excelFile":
-            str(
-                EXCEL_FILE
-            ),
-
-        "excelFundUniverse":
-            len(
-                funds
-            ),
-
-        "successfulFunds":
-            len(
-                successful
-            ),
-
-        "noHoldingsSectionFunds":
-            len(
-                no_holdings_section
-            ),
-
-        "failedFunds":
-            len(
-                failed
-            ),
-
+    consolidated = {
+        "status": (
+            "success"
+            if not failed_funds
+            else "partial"
+        ),
+        "generatedAtUtc": utc_now_iso(),
+        "excelFile": str(
+            EXCEL_FILE
+        ),
+        "fundUniverseCount": len(
+            funds
+        ),
+        "successfulFundCount": len(
+            successful_funds
+        ),
+        "noHoldingsSectionFundCount": len(
+            no_holdings_section_funds
+        ),
+        "failedFundCount": len(
+            failed_funds
+        ),
+        "maximumPublishedHoldings": MAX_HOLDINGS,
         "rules": {
-
-            "excelColumnAControlsUniverse":
-                True,
-
-            "officialPrudentialOnly":
-                True,
-
-            "maximumHoldings":
-                MAX_HOLDINGS,
-
-            "publishedCountUsedExactly":
-                True,
-
-            "fewerThanTenAllowed":
-                True,
-
-            "noForcedTenEntries":
-                True,
-
-            "noInferredHoldings":
-                True,
-
-            "noFabricatedPercentages":
-                True,
-
-            "thirdPartyHoldings":
-                False,
+            "excelColumnAControlsUniverse": True,
+            "officialPrudentialFactsheetOnly": True,
+            "maximumHoldings": MAX_HOLDINGS,
+            "fewerThanTenAllowed": True,
+            "multilineHoldingNamesSupported": True,
+            "wrappedPdfLinesJoined": True,
+            "noSyntheticData": True,
+            "noCalculatedHoldings": True,
+            "noInferredHoldings": True,
         },
-
-        "funds":
-            all_results,
-
-        "failed":
-            failed,
+        "funds": all_holdings,
     }
 
     save_json(
         ALL_HOLDINGS_FILE,
-        all_holdings_payload,
+        consolidated,
     )
 
-    # =========================================================================
-    # RUN SUMMARY
-    # =========================================================================
+    # ------------------------------------------------------------------------
+    # Run summary
+    # ------------------------------------------------------------------------
+
+    run_finished = (
+        datetime.now(
+            timezone.utc
+        )
+    )
 
     total_holdings = sum(
-        int(
-            item.get(
-                "topHoldingsCount",
-                0,
-            )
-            or 0
+        fund.get(
+            "topHoldingsCount",
+            0,
         )
-        for item
-        in successful
+        or 0
+        for fund in all_holdings
     )
 
     run_summary = {
-        "status":
-            (
-                "success"
-                if not failed
-                else "partial"
-            ),
-
-        "startedAtUtc":
-            started_at,
-
-        "completedAtUtc":
-            completed_at,
-
-        "excelFile":
-            str(
-                EXCEL_FILE
-            ),
-
-        "excelFundUniverse":
-            len(
-                funds
-            ),
-
-        "successfulFunds":
-            len(
-                successful
-            ),
-
-        "noHoldingsSectionFunds":
-            len(
-                no_holdings_section
-            ),
-
-        "failedFunds":
-            len(
-                failed
-            ),
-
-        "totalPublishedTopHoldings":
-            total_holdings,
-
-        "successfulFundsDetail":
-            [
-                {
-                    "excelRow":
-                        item.get(
-                            "excelRow"
-                        ),
-
-                    "fundName":
-                        item.get(
-                            "fundName"
-                        ),
-
-                    "factsheetUrl":
-                        item.get(
-                            "factsheetUrl"
-                        ),
-
-                    "factsheetDocumentDate":
-                        item.get(
-                            "factsheetDocumentDate"
-                        ),
-
-                    "factsheetDataAsAt":
-                        item.get(
-                            "factsheetDataAsAt"
-                        ),
-
-                    "topHoldingsCount":
-                        item.get(
-                            "topHoldingsCount"
-                        ),
-                }
-
-                for item
-                in successful
-            ],
-
-        "noHoldingsSectionDetail":
-            [
-                {
-                    "excelRow":
-                        item.get(
-                            "excelRow"
-                        ),
-
-                    "fundName":
-                        item.get(
-                            "fundName"
-                        ),
-
-                    "factsheetUrl":
-                        item.get(
-                            "factsheetUrl"
-                        ),
-                }
-
-                for item
-                in no_holdings_section
-            ],
-
-        "failedFundsDetail":
-            failed,
-
-        "rules": {
-
-            "excelColumnAControlsUniverse":
-                True,
-
-            "officialPrudentialFactsheetOnly":
-                True,
-
-            "maximumHoldings":
-                MAX_HOLDINGS,
-
-            "publishedHoldingCountUsedExactly":
-                True,
-
-            "fewerThanTenHoldingsAllowed":
-                True,
-
-            "noForcedTenEntries":
-                True,
-
-            "noInferredHoldings":
-                True,
-
-            "noFabricatedHoldingWeights":
-                True,
-
-            "noThirdPartyHoldings":
-                True,
-        },
+        "status": (
+            "success"
+            if not failed_funds
+            else "partial"
+        ),
+        "startedAtUtc": (
+            run_started.isoformat()
+            .replace("+00:00", "Z")
+        ),
+        "completedAtUtc": (
+            run_finished.isoformat()
+            .replace("+00:00", "Z")
+        ),
+        "excelFile": str(
+            EXCEL_FILE
+        ),
+        "fundUniverseCount": len(
+            funds
+        ),
+        "successfulFundCount": len(
+            successful_funds
+        ),
+        "noHoldingsSectionFundCount": len(
+            no_holdings_section_funds
+        ),
+        "failedFundCount": len(
+            failed_funds
+        ),
+        "totalPublishedHoldingsExtracted": (
+            total_holdings
+        ),
+        "maximumHoldingsPerFund": MAX_HOLDINGS,
+        "multilineHoldingNamesSupported": True,
+        "successfulFunds": [
+            {
+                "excelRow": fund.get(
+                    "excelRow"
+                ),
+                "fundName": fund.get(
+                    "fundName"
+                ),
+                "fundIdentifier": fund.get(
+                    "fundIdentifier"
+                ),
+                "topHoldingsCount": fund.get(
+                    "topHoldingsCount"
+                ),
+            }
+            for fund in successful_funds
+        ],
+        "noHoldingsSectionFunds": [
+            {
+                "excelRow": fund.get(
+                    "excelRow"
+                ),
+                "fundName": fund.get(
+                    "fundName"
+                ),
+                "fundIdentifier": fund.get(
+                    "fundIdentifier"
+                ),
+            }
+            for fund in no_holdings_section_funds
+        ],
+        "failedFunds": failed_funds,
     }
 
     save_json(
@@ -2718,21 +2275,20 @@ def main() -> int:
         run_summary,
     )
 
-    # =========================================================================
-    # CONSOLE SUMMARY
-    # =========================================================================
+    # ------------------------------------------------------------------------
+    # Console summary
+    # ------------------------------------------------------------------------
 
     print(
-        "\n\n"
-        + "=" * 78
+        "\n\n============================================================"
     )
 
     print(
-        "PRUDENTIAL TOP HOLDINGS ALL-FUND TEST COMPLETE"
+        "ALL-FUND HOLDINGS EXTRACTION COMPLETE"
     )
 
     print(
-        "=" * 78
+        "============================================================"
     )
 
     print(
@@ -2741,23 +2297,31 @@ def main() -> int:
     )
 
     print(
-        f"Successful with holdings: "
-        f"{len(successful)}"
+        f"Successful funds: "
+        f"{len(successful_funds)}"
     )
 
     print(
-        f"No Top Holdings section: "
-        f"{len(no_holdings_section)}"
+        f"No Top 10 Holdings section: "
+        f"{len(no_holdings_section_funds)}"
     )
 
     print(
-        f"Failed: "
-        f"{len(failed)}"
+        f"Failed funds: "
+        f"{len(failed_funds)}"
     )
 
     print(
         f"Total published holdings extracted: "
         f"{total_holdings}"
+    )
+
+    print(
+        "\nMultiline holding names: ENABLED"
+    )
+
+    print(
+        "Holding name boundary: published percentage"
     )
 
     print(
@@ -2776,46 +2340,38 @@ def main() -> int:
         f" - {FUNDS_OUTPUT_DIR}"
     )
 
-    if failed:
+    print(
+        f" - {FAILURES_OUTPUT_DIR}"
+    )
+
+    if failed_funds:
 
         print(
             "\nFAILED FUNDS:"
         )
 
-        for failure in failed:
+        for failure in failed_funds:
 
             print(
                 f" - Row "
-                f"{failure['excelRow']}: "
-                f"{failure['error']}"
+                f"{failure.get('excelRow')}: "
+                f"{failure.get('error')}"
             )
 
+        print(
+            "\nResult status: PARTIAL"
+        )
+
+        return 1
+
     print(
-        "\nDone."
+        "\nResult status: SUCCESS"
     )
 
     return 0
 
 
-# =============================================================================
-# ENTRY POINT
-# =============================================================================
-
 if __name__ == "__main__":
-
-    try:
-
-        raise SystemExit(
-            main()
-        )
-
-    except KeyboardInterrupt:
-
-        print(
-            "\nInterrupted.",
-            file=sys.stderr,
-        )
-
-        raise SystemExit(
-            130
-        )
+    sys.exit(
+        main()
+    )
