@@ -10,87 +10,83 @@ PRODUCTION WORKFLOW
 2. Use test_pruaccess.py's already-tested Prudential extraction.
 3. Use test_pruaccess.py's already-tested PruAccess extraction.
 4. Process every Excel-master fund independently.
-5. A fund is published only after that fund passes all validation.
-6. A failed fund NEVER overwrites its previous valid production data.
+5. A successful fund immediately replaces its previous production data.
+6. A failed fund retains its previous valid production data.
 7. Failed funds are flagged in the production run metadata.
-8. If one or more funds fail, send ONE Outlook/Microsoft Graph email.
-9. If no funds fail, send NO email.
-10. Successful funds are still published even if other funds fail.
-11. The production dataset therefore remains usable even when
-    individual funds fail.
+8. Every production fund contains a freshness/status flag.
+9. Mixed current and retained data is allowed.
+10. No email system is used.
+
+FRESHNESS RULE
+==============
+
+SUCCESSFUL CURRENT-RUN FUND:
+
+    productionStatus:
+        "updated"
+
+    dataFreshness.status:
+        "current"
+
+    dataFreshness.isStale:
+        false
+
+    dataFreshness.lastSuccessfulUpdateUtc:
+        current successful extraction timestamp
+
+
+FAILED FUND WITH PREVIOUS DATA:
+
+    productionStatus:
+        "retained_previous"
+
+    dataFreshness.status:
+        "stale"
+
+    dataFreshness.isStale:
+        true
+
+    dataFreshness.lastSuccessfulUpdateUtc:
+        previous successful extraction timestamp
+
+
+FAILED FUND WITH NO PREVIOUS DATA:
+
+    productionStatus:
+        "unavailable"
+
+    dataFreshness.status:
+        "unavailable"
+
+    dataFreshness.isStale:
+        true
+
+    dataFreshness.lastSuccessfulUpdateUtc:
+        null
+
 
 IMPORTANT
 =========
+
+Freshness is a metadata flag only.
+
+The actual historical BID data is NEVER modified to make it
+appear current.
+
+No missing dates are fabricated.
+
+No prices are interpolated.
+
+No prices are estimated.
+
+No carry-forward values are written into raw historical data.
 
 The actual extraction and validation rules remain in:
 
     test_pruaccess.py
 
-This production script intentionally imports those tested functions
-rather than rewriting them.
-
-This means:
-
-    test_pruaccess.py
-        =
-    extraction + validation engine
-
-    build_fund_data.py
-        =
-    production publication + failure handling + notification
-
-PRODUCTION RULE
-===============
-
-PASS:
-    New fund data replaces the previous production data for that fund.
-
-FAIL:
-    Previous production data is retained.
-
-NO PREVIOUS DATA:
-    Fund is flagged as failed and remains absent from the valid
-    production fund dataset.
-
-EMAIL
-=====
-
-An Outlook/Microsoft Graph failure email is sent ONLY when one or
-more funds fail.
-
-No failure:
-    No email.
-
-One or more failures:
-    One email containing every failed fund.
-
-ENVIRONMENT VARIABLES
-=====================
-
-For Outlook/Microsoft Graph email:
-
-    OUTLOOK_TENANT_ID
-    OUTLOOK_CLIENT_ID
-    OUTLOOK_CLIENT_SECRET
-    OUTLOOK_SENDER
-    OUTLOOK_RECIPIENTS
-
-OUTLOOK_RECIPIENTS may contain multiple addresses separated by commas.
-
-Example:
-
-    OUTLOOK_RECIPIENTS=you@example.com,backup@example.com
-
-The email is sent through:
-
-    Microsoft Graph
-    https://graph.microsoft.com/v1.0/users/{sender}/sendMail
-
-The email system is intentionally independent from the fund-data
-publication gate.
-
-If email fails, the fund-data results are NOT rolled back.
-The email failure is recorded in the run summary.
+This production script imports those tested functions rather than
+rewriting them.
 
 EXIT STATUS
 ===========
@@ -101,26 +97,23 @@ EXIT STATUS
 1:
     One or more funds failed.
 
-The production dataset is still updated for every fund that passed.
+A failed fund does NOT stop the processing of the remaining funds.
 """
+
 
 from __future__ import annotations
 
+import asyncio
 import json
-import os
 import shutil
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
 
 from test_pruaccess import (
     EXCEL_FILE,
     OUTPUT_DIR,
-    FUNDS_OUTPUT_DIR,
     BROWSER_HEADLESS,
     BrowserContext,
     Browser,
@@ -160,26 +153,12 @@ LEGACY_FUNDS_DIR = (
 
 
 # ============================================================
-# OUTLOOK / MICROSOFT GRAPH
+# FRESHNESS STATUS VALUES
 # ============================================================
 
-GRAPH_TOKEN_URL_TEMPLATE = (
-    "https://login.microsoftonline.com/"
-    "{tenant_id}/oauth2/v2.0/token"
-)
-
-GRAPH_SEND_MAIL_URL_TEMPLATE = (
-    "https://graph.microsoft.com/v1.0/users/"
-    "{sender}/sendMail"
-)
-
-GRAPH_SCOPE = (
-    "https://graph.microsoft.com/.default"
-)
-
-EMAIL_SUBJECT_PREFIX = (
-    "VGrat FMS - Fund Data Update Failure"
-)
+FRESHNESS_CURRENT = "current"
+FRESHNESS_STALE = "stale"
+FRESHNESS_UNAVAILABLE = "unavailable"
 
 
 # ============================================================
@@ -225,6 +204,17 @@ def copy_directory(
     )
 
 
+def load_json_file(
+    path: Path,
+) -> Any:
+
+    return json.loads(
+        path.read_text(
+            encoding="utf-8"
+        )
+    )
+
+
 def find_fund_directory_by_excel_row(
     base_directory: Path,
     excel_row: int,
@@ -256,6 +246,183 @@ def find_fund_directory_by_excel_row(
     )
 
     return matches[0]
+
+
+# ============================================================
+# FRESHNESS HELPERS
+# ============================================================
+
+def utc_now_iso_fallback() -> str:
+
+    return (
+        datetime.now(
+            timezone.utc
+        )
+        .isoformat()
+    )
+
+
+def get_previous_successful_update_time(
+    directory: Path,
+) -> str | None:
+
+    """
+    Retrieve the previous successful extraction timestamp.
+
+    Newer production folders contain:
+
+        production_metadata.json
+
+    Older folders may not contain that file.
+
+    In that case, fall back to the summary generatedAtUtc value
+    where available.
+    """
+
+    metadata_file = (
+        directory
+        / "production_metadata.json"
+    )
+
+    if metadata_file.exists():
+
+        try:
+
+            metadata = load_json_file(
+                metadata_file
+            )
+
+            value = clean_text(
+                metadata.get(
+                    "dataFreshness",
+                    {}
+                ).get(
+                    "lastSuccessfulUpdateUtc"
+                )
+            )
+
+            if value:
+
+                return value
+
+        except Exception:
+
+            pass
+
+    summary_file = (
+        directory
+        / "summary.json"
+    )
+
+    if summary_file.exists():
+
+        try:
+
+            summary = load_json_file(
+                summary_file
+            )
+
+            value = clean_text(
+                summary.get(
+                    "lastSuccessfulUpdateUtc"
+                )
+            )
+
+            if value:
+
+                return value
+
+            value = clean_text(
+                summary.get(
+                    "generatedAtUtc"
+                )
+            )
+
+            if value:
+
+                return value
+
+        except Exception:
+
+            pass
+
+    return None
+
+
+def build_current_freshness_metadata(
+    successful_update_utc: str,
+) -> dict[str, Any]:
+
+    return {
+        "status":
+            FRESHNESS_CURRENT,
+
+        "isStale":
+            False,
+
+        "lastSuccessfulUpdateUtc":
+            successful_update_utc,
+
+        "currentRunUpdated":
+            True,
+
+        "reason":
+            "Fund data was successfully extracted and validated "
+            "during the current production run.",
+    }
+
+
+def build_stale_freshness_metadata(
+    last_successful_update_utc: str | None,
+    failure_utc: str,
+) -> dict[str, Any]:
+
+    return {
+        "status":
+            FRESHNESS_STALE,
+
+        "isStale":
+            True,
+
+        "lastSuccessfulUpdateUtc":
+            last_successful_update_utc,
+
+        "currentRunUpdated":
+            False,
+
+        "staleSinceRunUtc":
+            failure_utc,
+
+        "reason":
+            "The fund failed the current production run and "
+            "its previous valid production data was retained.",
+    }
+
+
+def build_unavailable_freshness_metadata(
+    failure_utc: str,
+) -> dict[str, Any]:
+
+    return {
+        "status":
+            FRESHNESS_UNAVAILABLE,
+
+        "isStale":
+            True,
+
+        "lastSuccessfulUpdateUtc":
+            None,
+
+        "currentRunUpdated":
+            False,
+
+        "staleSinceRunUtc":
+            failure_utc,
+
+        "reason":
+            "The fund has no previous valid production data "
+            "available.",
+    }
 
 
 # ============================================================
@@ -299,8 +466,6 @@ def production_fund_directory(
         or "unknown"
     )
 
-    # Use the same safe_filename logic as the tested
-    # extractor, but avoid importing additional internals.
     safe_name = (
         safe_name
         .replace("/", "_")
@@ -321,7 +486,7 @@ def production_fund_directory(
 
 
 # ============================================================
-# SAVE COMPLETE FUND RESULT TO DIRECTORY
+# SAVE COMPLETE FUND RESULT
 # ============================================================
 
 def save_fund_result_directory(
@@ -392,21 +557,26 @@ def save_fund_result_directory(
         ],
     )
 
+    save_json(
+        directory
+        / "production_metadata.json",
+        {
+            "productionStatus":
+                result.get(
+                    "productionStatus"
+                ),
+
+            "dataFreshness":
+                result.get(
+                    "dataFreshness"
+                ),
+        },
+    )
+
 
 # ============================================================
 # LOAD PREVIOUS PRODUCTION FUND
 # ============================================================
-
-def load_json_file(
-    path: Path,
-) -> Any:
-
-    return json.loads(
-        path.read_text(
-            encoding="utf-8"
-        )
-    )
-
 
 def load_previous_fund(
     directory: Path,
@@ -471,6 +641,12 @@ def load_previous_fund(
         / "summary.json"
     )
 
+    last_successful_update = (
+        get_previous_successful_update_time(
+            directory
+        )
+    )
+
     pruaccess = {
         "fundName":
             summary.get(
@@ -510,6 +686,11 @@ def load_previous_fund(
                 "historicalObservationCount"
             ),
     }
+
+    freshness = build_stale_freshness_metadata(
+        last_successful_update,
+        utc_now_iso(),
+    )
 
     return {
         "status":
@@ -556,6 +737,9 @@ def load_previous_fund(
 
         "productionStatus":
             "retained_previous",
+
+        "dataFreshness":
+            freshness,
     }
 
 
@@ -595,12 +779,6 @@ def publish_successful_fund(
         staging_directory,
     )
 
-    # --------------------------------------------------------
-    # Find all previous production directories for this
-    # Excel row. This allows a fund identifier/name to change
-    # without leaving stale folders behind.
-    # --------------------------------------------------------
-
     row_prefix = (
         f"{result['excelRow']}_"
     )
@@ -616,10 +794,6 @@ def publish_successful_fund(
     backup_directories = []
 
     try:
-
-        # ----------------------------------------------------
-        # Move old directories out of the way.
-        # ----------------------------------------------------
 
         for old_directory in old_directories:
 
@@ -645,19 +819,11 @@ def publish_successful_fund(
                 )
             )
 
-        # ----------------------------------------------------
-        # Move newly validated fund into production.
-        # ----------------------------------------------------
-
         staging_directory.rename(
             target_directory
         )
 
     except Exception:
-
-        # ----------------------------------------------------
-        # Restore old production data if publication failed.
-        # ----------------------------------------------------
 
         if target_directory.exists():
 
@@ -683,10 +849,6 @@ def publish_successful_fund(
 
         raise
 
-    # --------------------------------------------------------
-    # Publication succeeded.
-    # --------------------------------------------------------
-
     for (
         _old_directory,
         backup_directory,
@@ -710,19 +872,13 @@ def seed_production_from_legacy(
 ) -> dict[int, str]:
 
     """
-    The old test extractor writes successful funds to:
+    Seed existing validated test data into production.
 
-        output_pruaccess/funds/
+    This is only used when production data does not already
+    exist for an Excel-master fund.
 
-    The new production dataset lives at:
-
-        output_pruaccess/production/funds/
-
-    On the first production run, seed any existing valid legacy
-    fund folders into production.
-
-    This allows a newly failed fund to retain the last successful
-    test dataset instead of starting with no previous data.
+    Legacy data is treated as retained/previous data until that
+    fund successfully passes the current production run.
     """
 
     seeded = {}
@@ -782,407 +938,58 @@ def seed_production_from_legacy(
 
 
 # ============================================================
-# BUILD FAILURE EMAIL
+# BUILD FAILURE RECORD
 # ============================================================
 
-def build_failure_email(
-    run_summary: dict[str, Any],
-) -> tuple[str, str]:
-
-    failed_funds = (
-        run_summary[
-            "failedFunds"
-        ]
-    )
-
-    subject = (
-        f"{EMAIL_SUBJECT_PREFIX}"
-        f" ({len(failed_funds)})"
-    )
-
-    lines = []
-
-    lines.append(
-        "VGrat FMS Fund Data Update"
-    )
-
-    lines.append(
-        "========================================"
-    )
-
-    lines.append(
-        f"Run status: {run_summary['status']}"
-    )
-
-    lines.append(
-        f"Run completed: {run_summary['completedAtUtc']}"
-    )
-
-    lines.append(
-        ""
-    )
-
-    lines.append(
-        f"Excel fund universe: "
-        f"{run_summary['fundUniverseCount']}"
-    )
-
-    lines.append(
-        f"Successful updates: "
-        f"{run_summary['successfulFundCount']}"
-    )
-
-    lines.append(
-        f"Failed funds: "
-        f"{run_summary['failedFundCount']}"
-    )
-
-    lines.append(
-        ""
-    )
-
-    lines.append(
-        "FAILED FUNDS"
-    )
-
-    lines.append(
-        "----------------------------------------"
-    )
-
-    for index, failure in enumerate(
-        failed_funds,
-        start=1,
-    ):
-
-        lines.append(
-            f"{index}. "
-            f"Excel row: "
-            f"{failure['excelRow']}"
-        )
-
-        lines.append(
-            f"   Fund: "
-            f"{failure.get('fundName') or 'Unknown'}"
-        )
-
-        lines.append(
-            f"   Excel PruAccess name: "
-            f"{failure.get('excelPruAccessName') or 'Unknown'}"
-        )
-
-        lines.append(
-            f"   Fund identifier: "
-            f"{failure.get('fundIdentifier') or 'Unknown'}"
-        )
-
-        lines.append(
-            f"   Fund code: "
-            f"{failure.get('fundCode') or 'Unknown'}"
-        )
-
-        lines.append(
-            f"   Reason: "
-            f"{failure['error']}"
-        )
-
-        lines.append(
-            f"   Previous production data retained: "
-            f"{failure['previousProductionDataRetained']}"
-        )
-
-        lines.append(
-            ""
-        )
-
-    lines.append(
-        "IMPORTANT"
-    )
-
-    lines.append(
-        "----------------------------------------"
-    )
-
-    lines.append(
-        "Successful funds were updated."
-    )
-
-    lines.append(
-        "Failed funds were not overwritten."
-    )
-
-    lines.append(
-        "Their previous valid production data was retained "
-        "where available."
-    )
-
-    return (
-        subject,
-        "\n".join(
-            lines
-        ),
-    )
-
-
-# ============================================================
-# MICROSOFT GRAPH TOKEN
-# ============================================================
-
-def get_graph_access_token() -> str:
-
-    tenant_id = clean_text(
-        os.getenv(
-            "OUTLOOK_TENANT_ID"
-        )
-    )
-
-    client_id = clean_text(
-        os.getenv(
-            "OUTLOOK_CLIENT_ID"
-        )
-    )
-
-    client_secret = os.getenv(
-        "OUTLOOK_CLIENT_SECRET"
-    )
-
-    if not tenant_id:
-
-        raise RuntimeError(
-            "OUTLOOK_TENANT_ID is not configured."
-        )
-
-    if not client_id:
-
-        raise RuntimeError(
-            "OUTLOOK_CLIENT_ID is not configured."
-        )
-
-    if not client_secret:
-
-        raise RuntimeError(
-            "OUTLOOK_CLIENT_SECRET is not configured."
-        )
-
-    token_url = (
-        GRAPH_TOKEN_URL_TEMPLATE.format(
-            tenant_id=tenant_id
-        )
-    )
-
-    body = urlencode(
-        {
-            "client_id":
-                client_id,
-
-            "client_secret":
-                client_secret,
-
-            "scope":
-                GRAPH_SCOPE,
-
-            "grant_type":
-                "client_credentials",
-        }
-    ).encode(
-        "utf-8"
-    )
-
-    request = Request(
-        token_url,
-        data=body,
-        headers={
-            "Content-Type":
-                "application/x-www-form-urlencoded"
-        },
-        method="POST",
-    )
-
-    try:
-
-        with urlopen(
-            request,
-            timeout=60,
-        ) as response:
-
-            payload = json.loads(
-                response.read().decode(
-                    "utf-8"
-                )
-            )
-
-    except HTTPError as error:
-
-        body_text = ""
-
-        try:
-
-            body_text = (
-                error.read()
-                .decode(
-                    "utf-8",
-                    errors="replace",
-                )
-            )
-
-        except Exception:
-
-            pass
-
-        raise RuntimeError(
-            "Microsoft Graph token request failed: "
-            f"HTTP {error.code} "
-            f"{body_text}"
-        ) from error
-
-    except URLError as error:
-
-        raise RuntimeError(
-            "Microsoft Graph token request failed: "
-            f"{error}"
-        ) from error
-
-    token = clean_text(
-        payload.get(
-            "access_token"
-        )
-    )
-
-    if not token:
-
-        raise RuntimeError(
-            "Microsoft Graph token response did not "
-            "contain access_token."
-        )
-
-    return token
-
-
-# ============================================================
-# SEND OUTLOOK EMAIL
-# ============================================================
-
-def send_outlook_failure_email(
-    subject: str,
-    body: str,
+def build_failure_record(
+    excel_fund: dict[str, Any],
+    error_text: str,
+    previous_directory: Path | None,
+    failure_utc: str,
 ) -> dict[str, Any]:
 
-    sender = clean_text(
-        os.getenv(
-            "OUTLOOK_SENDER"
-        )
+    previous_data_available = (
+        previous_directory
+        is not None
     )
 
-    recipient_text = clean_text(
-        os.getenv(
-            "OUTLOOK_RECIPIENTS"
-        )
-    )
+    fund_name = None
+    fund_identifier = None
+    fund_code = None
+    last_successful_update_utc = None
 
-    if not sender:
-
-        raise RuntimeError(
-            "OUTLOOK_SENDER is not configured."
-        )
-
-    if not recipient_text:
-
-        raise RuntimeError(
-            "OUTLOOK_RECIPIENTS is not configured."
-        )
-
-    recipients = [
-        clean_text(
-            address
-        )
-        for address
-        in recipient_text.split(",")
-        if clean_text(
-            address
-        )
-    ]
-
-    if not recipients:
-
-        raise RuntimeError(
-            "OUTLOOK_RECIPIENTS contains no valid recipients."
-        )
-
-    token = get_graph_access_token()
-
-    send_url = (
-        GRAPH_SEND_MAIL_URL_TEMPLATE.format(
-            sender=sender
-        )
-    )
-
-    payload = {
-        "message": {
-            "subject":
-                subject,
-
-            "body": {
-                "contentType":
-                    "Text",
-
-                "content":
-                    body,
-            },
-
-            "toRecipients": [
-                {
-                    "emailAddress": {
-                        "address":
-                            address,
-                    }
-                }
-                for address
-                in recipients
-            ],
-        },
-
-        "saveToSentItems":
-            True,
-    }
-
-    request = Request(
-        send_url,
-        data=json.dumps(
-            payload
-        ).encode(
-            "utf-8"
-        ),
-        headers={
-            "Authorization":
-                f"Bearer {token}",
-
-            "Content-Type":
-                "application/json",
-        },
-        method="POST",
-    )
-
-    try:
-
-        with urlopen(
-            request,
-            timeout=60,
-        ) as response:
-
-            status_code = (
-                response.status
-            )
-
-    except HTTPError as error:
-
-        body_text = ""
+    if previous_directory:
 
         try:
 
-            body_text = (
-                error.read()
-                .decode(
-                    "utf-8",
-                    errors="replace",
+            previous_prudential = (
+                load_json_file(
+                    previous_directory
+                    / "prudential_fund.json"
+                )
+            )
+
+            fund_name = clean_text(
+                previous_prudential.get(
+                    "fundName"
+                )
+            )
+
+            fund_identifier = clean_text(
+                previous_prudential.get(
+                    "fundIdentifier"
+                )
+            )
+
+            fund_code = clean_text(
+                previous_prudential.get(
+                    "fundCode"
+                )
+            )
+
+            last_successful_update_utc = (
+                get_previous_successful_update_time(
+                    previous_directory
                 )
             )
 
@@ -1190,63 +997,98 @@ def send_outlook_failure_email(
 
             pass
 
-        raise RuntimeError(
-            "Microsoft Graph sendMail failed: "
-            f"HTTP {error.code} "
-            f"{body_text}"
-        ) from error
+    if previous_data_available:
 
-    except URLError as error:
+        freshness = (
+            build_stale_freshness_metadata(
+                last_successful_update_utc,
+                failure_utc,
+            )
+        )
 
-        raise RuntimeError(
-            "Microsoft Graph sendMail failed: "
-            f"{error}"
-        ) from error
+        production_status = (
+            "retained_previous"
+        )
 
-    if status_code != 202:
+    else:
 
-        raise RuntimeError(
-            "Microsoft Graph sendMail returned unexpected "
-            f"HTTP status {status_code}."
+        freshness = (
+            build_unavailable_freshness_metadata(
+                failure_utc
+            )
+        )
+
+        production_status = (
+            "unavailable"
         )
 
     return {
         "status":
-            "sent",
+            "failed",
 
-        "httpStatus":
-            status_code,
+        "excelRow":
+            excel_fund[
+                "excelRow"
+            ],
 
-        "recipientCount":
-            len(
-                recipients
+        "prudentialUrl":
+            excel_fund[
+                "prudentialUrl"
+            ],
+
+        "excelPruAccessName":
+            excel_fund[
+                "pruAccessName"
+            ],
+
+        "fundName":
+            fund_name,
+
+        "fundIdentifier":
+            fund_identifier,
+
+        "fundCode":
+            fund_code,
+
+        "error":
+            error_text,
+
+        "previousProductionDataRetained":
+            previous_data_available,
+
+        "previousProductionDirectory":
+            (
+                str(
+                    previous_directory
+                )
+                if previous_directory
+                else None
             ),
 
-        "sender":
-            sender,
+        "productionStatus":
+            production_status,
 
-        "recipients":
-            recipients,
+        "dataFreshness":
+            freshness,
 
-        "sentAtUtc":
-            utc_now_iso(),
+        "failedAtUtc":
+            failure_utc,
     }
 
 
 # ============================================================
-# LOAD PRODUCTION DATASET
+# COLLECT CURRENT PRODUCTION DATASET
 # ============================================================
 
-def collect_production_funds(
+def collect_current_production_funds(
     excel_funds: list[dict[str, Any]],
 ) -> tuple[
     list[dict[str, Any]],
-    dict[str, Any],
+    list[dict[str, Any]],
 ]:
 
     production_funds = []
-
-    failed_missing_previous = []
+    missing_or_invalid = []
 
     for excel_fund in excel_funds:
 
@@ -1263,20 +1105,17 @@ def collect_production_funds(
 
         if not directory:
 
-            failed_missing_previous.append(
+            missing_or_invalid.append(
                 {
                     "excelRow":
                         row,
 
-                    "prudentialUrl":
-                        excel_fund[
-                            "prudentialUrl"
-                        ],
+                    "status":
+                        "unavailable",
 
-                    "excelPruAccessName":
-                        excel_fund[
-                            "pruAccessName"
-                        ],
+                    "reason":
+                        "No valid production fund data "
+                        "is available.",
                 }
             )
 
@@ -1284,29 +1123,24 @@ def collect_production_funds(
 
         try:
 
-            previous = load_previous_fund(
-                directory,
-                excel_fund,
+            production_result = (
+                load_previous_fund(
+                    directory,
+                    excel_fund,
+                )
             )
 
         except Exception as error:
 
-            failed_missing_previous.append(
+            missing_or_invalid.append(
                 {
                     "excelRow":
                         row,
 
-                    "prudentialUrl":
-                        excel_fund[
-                            "prudentialUrl"
-                        ],
+                    "status":
+                        "unavailable",
 
-                    "excelPruAccessName":
-                        excel_fund[
-                            "pruAccessName"
-                        ],
-
-                    "error":
+                    "reason":
                         str(error),
 
                     "directory":
@@ -1316,22 +1150,18 @@ def collect_production_funds(
 
             continue
 
-        if previous is None:
+        if production_result is None:
 
-            failed_missing_previous.append(
+            missing_or_invalid.append(
                 {
                     "excelRow":
                         row,
 
-                    "prudentialUrl":
-                        excel_fund[
-                            "prudentialUrl"
-                        ],
+                    "status":
+                        "unavailable",
 
-                    "excelPruAccessName":
-                        excel_fund[
-                            "pruAccessName"
-                        ],
+                    "reason":
+                        "Production fund directory is incomplete.",
 
                     "directory":
                         str(directory),
@@ -1340,16 +1170,67 @@ def collect_production_funds(
 
             continue
 
+        # ----------------------------------------------------
+        # IMPORTANT:
+        #
+        # load_previous_fund() returns retained_previous by
+        # default. We must recover the actual freshness state
+        # stored in production_metadata.json where available.
+        # ----------------------------------------------------
+
+        metadata_file = (
+            directory
+            / "production_metadata.json"
+        )
+
+        if metadata_file.exists():
+
+            try:
+
+                metadata = load_json_file(
+                    metadata_file
+                )
+
+                stored_status = (
+                    clean_text(
+                        metadata.get(
+                            "productionStatus"
+                        )
+                    )
+                )
+
+                stored_freshness = (
+                    metadata.get(
+                        "dataFreshness"
+                    )
+                )
+
+                if stored_status:
+
+                    production_result[
+                        "productionStatus"
+                    ] = stored_status
+
+                if isinstance(
+                    stored_freshness,
+                    dict,
+                ):
+
+                    production_result[
+                        "dataFreshness"
+                    ] = stored_freshness
+
+            except Exception:
+
+                pass
+
         production_funds.append(
-            previous
+            production_result
         )
 
     return (
         production_funds,
-        {
-            "missingPreviousData":
-                failed_missing_previous
-        },
+        missing_or_invalid,
     )
 
 
@@ -1418,6 +1299,12 @@ async def main():
         f"{total_funds}"
     )
 
+    if total_funds == 0:
+
+        raise RuntimeError(
+            "Excel master fund universe is empty."
+        )
+
     # ========================================================
     # ENSURE PRODUCTION DIRECTORIES
     # ========================================================
@@ -1433,7 +1320,7 @@ async def main():
     )
 
     # ========================================================
-    # SEED FIRST PRODUCTION RUN FROM EXISTING TEST OUTPUT
+    # SEED FIRST PRODUCTION RUN
     # ========================================================
 
     seeded = seed_production_from_legacy(
@@ -1460,18 +1347,8 @@ async def main():
     # ========================================================
 
     successful_funds = []
-
     retained_funds = []
-
     failed_funds = []
-
-    email_status = {
-        "required":
-            False,
-
-        "status":
-            "not_required",
-    }
 
     # ========================================================
     # PLAYWRIGHT
@@ -1581,10 +1458,27 @@ async def main():
                 )
 
                 # ------------------------------------------------
-                # THIS IS THE PRODUCTION GATE FOR THIS FUND.
-                #
-                # extract_single_fund() only returns when all
-                # windows and full-history validation have passed.
+                # SUCCESSFUL CURRENT-RUN DATA
+                # ------------------------------------------------
+
+                successful_update_utc = (
+                    utc_now_iso()
+                )
+
+                result[
+                    "productionStatus"
+                ] = "updated"
+
+                result[
+                    "dataFreshness"
+                ] = (
+                    build_current_freshness_metadata(
+                        successful_update_utc
+                    )
+                )
+
+                # ------------------------------------------------
+                # SAVE ONLY AFTER SUCCESSFUL VALIDATION
                 # ------------------------------------------------
 
                 published_directory = (
@@ -1593,10 +1487,6 @@ async def main():
                         run_staging_directory,
                     )
                 )
-
-                result[
-                    "productionStatus"
-                ] = "updated"
 
                 result[
                     "productionDirectory"
@@ -1632,6 +1522,15 @@ async def main():
                 )
 
                 print(
+                    "Freshness: current"
+                )
+
+                print(
+                    f"Last successful update: "
+                    f"{successful_update_utc}"
+                )
+
+                print(
                     f"Production directory: "
                     f"{published_directory}"
                 )
@@ -1642,8 +1541,10 @@ async def main():
                     str(error)
                 )
 
+                failure_utc = utc_now_iso()
+
                 # ------------------------------------------------
-                # Attempt to retain previous production data.
+                # FIND PREVIOUS PRODUCTION DATA
                 # ------------------------------------------------
 
                 previous_directory = (
@@ -1655,101 +1556,19 @@ async def main():
                     )
                 )
 
-                previous_data_available = (
-                    previous_directory
-                    is not None
+                failure = build_failure_record(
+                    excel_fund,
+                    error_text,
+                    previous_directory,
+                    failure_utc,
                 )
-
-                fund_name = None
-                fund_identifier = None
-                fund_code = None
-
-                if previous_directory:
-
-                    try:
-
-                        previous_prudential = (
-                            load_json_file(
-                                previous_directory
-                                / "prudential_fund.json"
-                            )
-                        )
-
-                        fund_name = clean_text(
-                            previous_prudential.get(
-                                "fundName"
-                            )
-                        )
-
-                        fund_identifier = clean_text(
-                            previous_prudential.get(
-                                "fundIdentifier"
-                            )
-                        )
-
-                        fund_code = clean_text(
-                            previous_prudential.get(
-                                "fundCode"
-                            )
-                        )
-
-                    except Exception:
-
-                        pass
-
-                failure = {
-                    "status":
-                        "failed",
-
-                    "excelRow":
-                        excel_fund[
-                            "excelRow"
-                        ],
-
-                    "prudentialUrl":
-                        excel_fund[
-                            "prudentialUrl"
-                        ],
-
-                    "excelPruAccessName":
-                        excel_fund[
-                            "pruAccessName"
-                        ],
-
-                    "fundName":
-                        fund_name,
-
-                    "fundIdentifier":
-                        fund_identifier,
-
-                    "fundCode":
-                        fund_code,
-
-                    "error":
-                        error_text,
-
-                    "previousProductionDataRetained":
-                        previous_data_available,
-
-                    "previousProductionDirectory":
-                        (
-                            str(
-                                previous_directory
-                            )
-                            if previous_directory
-                            else None
-                        ),
-
-                    "failedAtUtc":
-                        utc_now_iso(),
-                }
 
                 failed_funds.append(
                     failure
                 )
 
                 # ------------------------------------------------
-                # Save diagnostic failure record.
+                # SAVE FAILURE DIAGNOSTICS
                 # ------------------------------------------------
 
                 failure_directory = (
@@ -1769,7 +1588,11 @@ async def main():
                     failure,
                 )
 
-                if previous_data_available:
+                if (
+                    failure[
+                        "previousProductionDataRetained"
+                    ]
+                ):
 
                     retained_funds.append(
                         {
@@ -1779,21 +1602,35 @@ async def main():
                                 ],
 
                             "fundName":
-                                fund_name,
+                                failure[
+                                    "fundName"
+                                ],
 
                             "fundIdentifier":
-                                fund_identifier,
+                                failure[
+                                    "fundIdentifier"
+                                ],
 
                             "fundCode":
-                                fund_code,
+                                failure[
+                                    "fundCode"
+                                ],
 
                             "status":
                                 "retained_previous",
 
+                            "productionStatus":
+                                "retained_previous",
+
+                            "dataFreshness":
+                                failure[
+                                    "dataFreshness"
+                                ],
+
                             "directory":
-                                str(
-                                    previous_directory
-                                ),
+                                failure[
+                                    "previousProductionDirectory"
+                                ],
 
                             "reason":
                                 error_text,
@@ -1805,9 +1642,21 @@ async def main():
                     "============================================================"
                 )
 
-                print(
-                    "FUND FAILED - PREVIOUS DATA RETAINED"
-                )
+                if (
+                    failure[
+                        "previousProductionDataRetained"
+                    ]
+                ):
+
+                    print(
+                        "FUND FAILED - PREVIOUS DATA RETAINED"
+                    )
+
+                else:
+
+                    print(
+                        "FUND FAILED - NO PREVIOUS DATA"
+                    )
 
                 print(
                     "============================================================"
@@ -1829,16 +1678,27 @@ async def main():
                 )
 
                 print(
+                    f"Production status: "
+                    f"{failure['productionStatus']}"
+                )
+
+                print(
+                    f"Freshness: "
+                    f"{failure['dataFreshness']['status']}"
+                )
+
+                print(
+                    f"Last successful update: "
+                    f"{failure['dataFreshness']['lastSuccessfulUpdateUtc']}"
+                )
+
+                print(
                     f"Previous data retained: "
-                    f"{previous_data_available}"
+                    f"{failure['previousProductionDataRetained']}"
                 )
 
                 # ------------------------------------------------
-                # IMPORTANT:
-                #
-                # Do NOT stop the run.
-                #
-                # Continue processing every remaining fund.
+                # CONTINUE TO NEXT FUND
                 # ------------------------------------------------
 
                 continue
@@ -1846,12 +1706,11 @@ async def main():
         await browser.close()
 
     # ========================================================
-    # PRODUCTION DATASET COLLECTION
+    # LOAD FINAL PRODUCTION DATASET
     # ========================================================
 
     production_funds = []
-
-    retained_loaded_funds = []
+    unavailable_production_funds = []
 
     for excel_fund in funds:
 
@@ -1868,6 +1727,26 @@ async def main():
 
         if not directory:
 
+            unavailable_production_funds.append(
+                {
+                    "excelRow":
+                        row,
+
+                    "fundName":
+                        excel_fund[
+                            "pruAccessName"
+                        ],
+
+                    "productionStatus":
+                        "unavailable",
+
+                    "dataFreshness":
+                        build_unavailable_freshness_metadata(
+                            utc_now_iso()
+                        ),
+                }
+            )
+
             continue
 
         try:
@@ -1879,24 +1758,80 @@ async def main():
                 )
             )
 
-            if production_result:
+            if production_result is None:
 
-                production_funds.append(
-                    production_result
+                unavailable_production_funds.append(
+                    {
+                        "excelRow":
+                            row,
+
+                        "fundName":
+                            excel_fund[
+                                "pruAccessName"
+                            ],
+
+                        "productionStatus":
+                            "unavailable",
+
+                        "dataFreshness":
+                            build_unavailable_freshness_metadata(
+                                utc_now_iso()
+                            ),
+
+                        "directory":
+                            str(directory),
+                    }
                 )
 
-                if (
-                    row
-                    not in {
-                        item["excelRow"]
-                        for item
-                        in successful_funds
-                    }
-                ):
+                continue
 
-                    retained_loaded_funds.append(
-                        production_result
+            # ------------------------------------------------
+            # Recover stored production metadata.
+            # ------------------------------------------------
+
+            metadata_file = (
+                directory
+                / "production_metadata.json"
+            )
+
+            if metadata_file.exists():
+
+                try:
+
+                    metadata = load_json_file(
+                        metadata_file
                     )
+
+                    if metadata.get(
+                        "productionStatus"
+                    ):
+
+                        production_result[
+                            "productionStatus"
+                        ] = metadata[
+                            "productionStatus"
+                        ]
+
+                    if isinstance(
+                        metadata.get(
+                            "dataFreshness"
+                        ),
+                        dict,
+                    ):
+
+                        production_result[
+                            "dataFreshness"
+                        ] = metadata[
+                            "dataFreshness"
+                        ]
+
+                except Exception:
+
+                    pass
+
+            production_funds.append(
+                production_result
+            )
 
         except Exception as error:
 
@@ -1905,8 +1840,36 @@ async def main():
                 f"for Excel row {row}: {error}"
             )
 
+            unavailable_production_funds.append(
+                {
+                    "excelRow":
+                        row,
+
+                    "fundName":
+                        excel_fund[
+                            "pruAccessName"
+                        ],
+
+                    "productionStatus":
+                        "unavailable",
+
+                    "dataFreshness":
+                        build_unavailable_freshness_metadata(
+                            utc_now_iso()
+                        ),
+
+                    "error":
+                        clean_text(
+                            str(error)
+                        ),
+
+                    "directory":
+                        str(directory),
+                }
+            )
+
     # ========================================================
-    # BUILD CURRENT PRODUCTION BID HISTORY
+    # BID HISTORY TOTALS
     # ========================================================
 
     production_bid_history = {}
@@ -1914,6 +1877,20 @@ async def main():
     total_observations = 0
     total_windows = 0
     total_pages = 0
+
+    current_fresh_count = 0
+    stale_fresh_count = 0
+    unavailable_count = len(
+        unavailable_production_funds
+    )
+
+    updated_row_set = {
+        item[
+            "excelRow"
+        ]
+        for item
+        in successful_funds
+    }
 
     for fund in production_funds:
 
@@ -1976,6 +1953,23 @@ async def main():
             or 0
         )
 
+        freshness_status = (
+            fund.get(
+                "dataFreshness",
+                {}
+            ).get(
+                "status"
+            )
+        )
+
+        if freshness_status == FRESHNESS_CURRENT:
+
+            current_fresh_count += 1
+
+        elif freshness_status == FRESHNESS_STALE:
+
+            stale_fresh_count += 1
+
     # ========================================================
     # FINAL RUN STATUS
     # ========================================================
@@ -1993,6 +1987,39 @@ async def main():
         run_status = (
             "success"
         )
+
+    # ========================================================
+    # FRESHNESS SUMMARY
+    # ========================================================
+
+    freshness_summary = {
+        "currentFundCount":
+            current_fresh_count,
+
+        "staleFundCount":
+            stale_fresh_count,
+
+        "unavailableFundCount":
+            unavailable_count,
+
+        "currentDefinition":
+            "Fund successfully extracted and validated during "
+            "the current production run.",
+
+        "staleDefinition":
+            "Fund failed the current production run and previous "
+            "valid production data was retained.",
+
+        "unavailableDefinition":
+            "Fund has no valid production data available.",
+
+        "dayBasedStalenessThreshold":
+            None,
+
+        "note":
+            "Freshness is currently based on successful current-run "
+            "status rather than an arbitrary number-of-days threshold.",
+    }
 
     # ========================================================
     # RUN SUMMARY
@@ -2039,6 +2066,11 @@ async def main():
                 production_funds
             ),
 
+        "unavailableProductionFundCount":
+            len(
+                unavailable_production_funds
+            ),
+
         "totalWindows":
             total_windows,
 
@@ -2047,6 +2079,9 @@ async def main():
 
         "totalHistoricalBidObservations":
             total_observations,
+
+        "freshness":
+            freshness_summary,
 
         "publicationRule":
             {
@@ -2061,14 +2096,32 @@ async def main():
 
                 "failedFundContinuesProcessing":
                     True,
+
+                "mixedOldAndNewDataAllowed":
+                    True,
             },
 
-        "emailRule":
+        "freshnessRule":
             {
-                "sendOnlyWhenFailures":
-                    True,
+                "currentRunSuccess":
+                    "current",
 
-                "sendWhenNoFailures":
+                "failedWithPreviousData":
+                    "stale",
+
+                "failedWithoutPreviousData":
+                    "unavailable",
+
+                "rawHistoricalDataModifiedForFreshness":
+                    False,
+
+                "syntheticDataAllowed":
+                    False,
+
+                "interpolationAllowed":
+                    False,
+
+                "estimationAllowed":
                     False,
             },
 
@@ -2103,6 +2156,14 @@ async def main():
 
                     "status":
                         "updated",
+
+                    "productionStatus":
+                        "updated",
+
+                    "dataFreshness":
+                        fund[
+                            "dataFreshness"
+                        ],
                 }
 
                 for fund
@@ -2114,6 +2175,9 @@ async def main():
 
         "failedFunds":
             failed_funds,
+
+        "unavailableProductionFunds":
+            unavailable_production_funds,
     }
 
     save_json(
@@ -2168,11 +2232,22 @@ async def main():
                 failed_funds
             ),
 
+        "unavailableProductionFundCount":
+            len(
+                unavailable_production_funds
+            ),
+
+        "freshness":
+            freshness_summary,
+
         "funds":
             production_funds,
 
         "failedFunds":
             failed_funds,
+
+        "unavailableProductionFunds":
+            unavailable_production_funds,
     }
 
     save_json(
@@ -2211,6 +2286,9 @@ async def main():
 
         "totalHistoricalBidObservations":
             total_observations,
+
+        "freshness":
+            freshness_summary,
 
         "funds":
             production_bid_history,
@@ -2259,6 +2337,11 @@ async def main():
                 production_funds
             ),
 
+        "unavailableProductionFunds":
+            len(
+                unavailable_production_funds
+            ),
+
         "totalHistoricalBidObservations":
             total_observations,
 
@@ -2267,6 +2350,9 @@ async def main():
 
         "totalPages":
             total_pages,
+
+        "freshness":
+            freshness_summary,
 
         "rules":
             {
@@ -2311,6 +2397,21 @@ async def main():
 
                 "historicalPriceType":
                     "BID",
+
+                "mixedOldAndNewProductionDataAllowed":
+                    True,
+
+                "freshnessTracking":
+                    True,
+
+                "freshnessBasedOnCurrentRunSuccess":
+                    True,
+
+                "dayBasedStalenessThreshold":
+                    False,
+
+                "rawDataChangedForFreshness":
+                    False,
             },
 
         "failedFundsDetail":
@@ -2327,113 +2428,6 @@ async def main():
         run_directory
         / "validation.json",
         validation_summary,
-    )
-
-    # ========================================================
-    # FAILURE EMAIL
-    # ========================================================
-
-    if failed_funds:
-
-        email_status[
-            "required"
-        ] = True
-
-        subject, body = (
-            build_failure_email(
-                run_summary
-            )
-        )
-
-        try:
-
-            email_result = (
-                send_outlook_failure_email(
-                    subject,
-                    body,
-                )
-            )
-
-            email_status.update(
-                email_result
-            )
-
-            print()
-            print(
-                "============================================================"
-            )
-
-            print(
-                "OUTLOOK FAILURE EMAIL SENT"
-            )
-
-            print(
-                "============================================================"
-            )
-
-            print(
-                f"Recipients: "
-                f"{email_result['recipientCount']}"
-            )
-
-        except Exception as error:
-
-            email_status[
-                "status"
-            ] = "failed"
-
-            email_status[
-                "error"
-            ] = clean_text(
-                str(error)
-            )
-
-            print()
-            print(
-                "============================================================"
-            )
-
-            print(
-                "WARNING: OUTLOOK FAILURE EMAIL COULD NOT BE SENT"
-            )
-
-            print(
-                "============================================================"
-            )
-
-            print(
-                str(error)
-            )
-
-            print(
-                "Fund production data has NOT been rolled back."
-            )
-
-    else:
-
-        print()
-        print(
-            "No failed funds."
-        )
-
-        print(
-            "No Outlook email will be sent."
-        )
-
-    run_summary[
-        "email"
-    ] = email_status
-
-    save_json(
-        PRODUCTION_DIR
-        / "run_summary.json",
-        run_summary,
-    )
-
-    save_json(
-        run_directory
-        / "run_summary.json",
-        run_summary,
     )
 
     # ========================================================
@@ -2461,6 +2455,21 @@ async def main():
     print(
         f"New successful updates: "
         f"{len(successful_funds)}"
+    )
+
+    print(
+        f"Current funds: "
+        f"{current_fresh_count}"
+    )
+
+    print(
+        f"Stale funds: "
+        f"{stale_fresh_count}"
+    )
+
+    print(
+        f"Unavailable funds: "
+        f"{unavailable_count}"
     )
 
     print(
@@ -2494,6 +2503,34 @@ async def main():
     )
 
     # ========================================================
+    # FRESHNESS DETAILS
+    # ========================================================
+
+    print()
+    print(
+        "FRESHNESS"
+    )
+
+    print(
+        "------------------------------------------------------------"
+    )
+
+    print(
+        f"Current: "
+        f"{current_fresh_count}"
+    )
+
+    print(
+        f"Stale: "
+        f"{stale_fresh_count}"
+    )
+
+    print(
+        f"Unavailable: "
+        f"{unavailable_count}"
+    )
+
+    # ========================================================
     # FAILURE DETAILS
     # ========================================================
 
@@ -2521,8 +2558,18 @@ async def main():
             )
 
             print(
-                f"  Previous data retained: "
-                f"{failure['previousProductionDataRetained']}"
+                f"  Production status: "
+                f"{failure['productionStatus']}"
+            )
+
+            print(
+                f"  Freshness: "
+                f"{failure['dataFreshness']['status']}"
+            )
+
+            print(
+                f"  Last successful update: "
+                f"{failure['dataFreshness']['lastSuccessfulUpdateUtc']}"
             )
 
     # ========================================================
@@ -2553,11 +2600,11 @@ async def main():
         )
 
         print(
-            "The failed funds were flagged."
+            "Freshness flags were updated."
         )
 
         print(
-            "The Outlook failure notification was attempted."
+            "No email notification was configured."
         )
 
         raise SystemExit(1)
@@ -2581,7 +2628,11 @@ async def main():
     )
 
     print(
-        "No failure email was sent."
+        "All production funds are marked current."
+    )
+
+    print(
+        "No email notification is configured."
     )
 
     print(
@@ -2594,8 +2645,6 @@ async def main():
 # ============================================================
 
 if __name__ == "__main__":
-
-    import asyncio
 
     asyncio.run(
         main()
