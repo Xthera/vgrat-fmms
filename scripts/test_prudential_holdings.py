@@ -65,6 +65,9 @@ HARD RULES
 - No forced 10 holdings.
 - If Prudential publishes fewer than 10 holdings, store exactly that count.
 - Holdings are stored in the order published by Prudential.
+- Multi-line holding names are joined into one holding name.
+- Wrapped PDF text lines are treated as part of the same holding until the
+  published percentage is encountered.
 - If the official factsheet contains a Top 10 holdings section but it cannot
   be parsed, the fund is marked FAILED.
 - If a factsheet has no Top 10 holdings section at all, the fund is marked
@@ -139,9 +142,9 @@ RUN_SUMMARY_FILE = (
 )
 
 
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Browser
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 BROWSER_HEADLESS = True
 
@@ -156,16 +159,16 @@ RETRY_COUNT = 3
 RETRY_DELAY_SECONDS = 3.0
 
 
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Holdings
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 MAX_HOLDINGS = 10
 
 
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Only official Prudential Singapore URLs are accepted.
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 PRUDENTIAL_HOSTS = {
     "prudential.com.sg",
@@ -182,6 +185,13 @@ def clean_text(
 ) -> str:
     """
     Normalize whitespace while preserving meaningful text.
+
+    Common PDF extraction artifacts:
+        - non-breaking spaces
+        - repeated whitespace
+        - pipe separators
+        - the literal word "None"
+    are handled elsewhere where necessary.
     """
 
     if value is None:
@@ -980,16 +990,29 @@ def clean_holding_name(
         name,
     )
 
-    # Remove separators often introduced by PDF extraction.
-    name = name.strip(
-        "|"
+    # Remove pipe separators introduced by PDF table extraction.
+    name = name.replace(
+        "|",
+        " ",
+    )
+
+    # Remove the literal PDF artifact "None".
+    name = re.sub(
+        r"\bNone\b",
+        " ",
+        name,
+        flags=re.IGNORECASE,
     )
 
     name = clean_text(
         name
     )
 
-    # Some PDF table extraction outputs "None".
+    # Remove trailing separators.
+    name = name.strip(
+        " -|"
+    )
+
     if normalize_text(
         name
     ) in {
@@ -997,6 +1020,7 @@ def clean_holding_name(
         "null",
         "-",
         "—",
+        "",
     }:
         return ""
 
@@ -1038,100 +1062,271 @@ def parse_percentage(
     return percentage
 
 
-# =============================================================================
-# HOLDING LINE PARSER
-# =============================================================================
-
-def parse_holding_line(
+def find_percentage_in_line(
     line: str,
 ) -> tuple[
-    str,
     float,
+    str,
+    int,
+    int,
 ] | None:
     """
-    Parse:
+    Find a published percentage anywhere in a line.
 
-        FUND NAME 38.8%
+    Returns:
 
-    Also supports PDF table artifacts such as:
-
-        FUND NAME | 38.8%
-
-    and:
-
-        FUND NAME None | 38.8%
+        percentage
+        percentage_text
+        start_index
+        end_index
     """
 
-    original = clean_text(
-        line
-    )
-
-    if not original:
+    if not line:
         return None
 
-    # Remove PDF pipe separators.
-    cleaned = original.replace(
-        "|",
-        " ",
-    )
-
-    cleaned = re.sub(
-        r"\s+",
-        " ",
-        cleaned,
-    ).strip()
-
-    # Remove common PDF table artifacts.
-    cleaned = re.sub(
-        r"\bNone\b",
-        " ",
-        cleaned,
-        flags=re.IGNORECASE,
-    )
-
-    cleaned = clean_text(
-        cleaned
-    )
-
-    match = re.match(
+    match = re.search(
         r"""
-        ^
-        (.*?)
-        \s+
-        (
-            [0-9]+
-            (?:\.[0-9]+)?
-        )
+        (?<![\d.])
+        ([0-9]+(?:\.[0-9]+)?)
         \s*%
-        $
         """,
-        cleaned,
+        line,
         re.VERBOSE,
     )
 
     if not match:
         return None
 
-    name = clean_holding_name(
-        match.group(1)
-    )
+    try:
 
-    if not name:
+        percentage = float(
+            match.group(1)
+        )
+
+    except ValueError:
+
         return None
 
-    weight = float(
-        match.group(2)
-    )
-
     if (
-        weight < 0
-        or weight > 100
+        percentage < 0
+        or percentage > 100
     ):
+
         return None
 
     return (
-        name,
-        weight,
+        percentage,
+        clean_text(
+            match.group(0)
+        ),
+        match.start(),
+        match.end(),
+    )
+
+
+# =============================================================================
+# HOLDING RANK
+# =============================================================================
+
+def extract_leading_rank(
+    line: str,
+) -> tuple[
+    int | None,
+    str,
+]:
+    """
+    Extract a leading holding rank when present.
+
+    Supports:
+
+        1 NAME
+        1. NAME
+        1) NAME
+        1 - NAME
+        1: NAME
+        1
+    """
+
+    text = clean_text(
+        line
+    )
+
+    if not text:
+        return (
+            None,
+            "",
+        )
+
+    match = re.match(
+        r"^\s*(\d{1,2})(?:[.)\-:]|\s)\s*(.*)$",
+        text,
+    )
+
+    if not match:
+        return (
+            None,
+            text,
+        )
+
+    try:
+
+        rank = int(
+            match.group(1)
+        )
+
+    except ValueError:
+
+        return (
+            None,
+            text,
+        )
+
+    if rank < 1 or rank > 99:
+
+        return (
+            None,
+            text,
+        )
+
+    remainder = clean_text(
+        match.group(2)
+    )
+
+    return (
+        rank,
+        remainder,
+    )
+
+
+# =============================================================================
+# HOLDING LINE HELPERS
+# =============================================================================
+
+def is_holding_header_or_noise(
+    line: str,
+) -> bool:
+
+    normalized = normalize_text(
+        line
+    )
+
+    if not normalized:
+        return True
+
+    noise = {
+        "holding",
+        "holdings",
+        "name",
+        "names",
+        "weight",
+        "weights",
+        "allocation",
+        "allocations",
+        "%",
+        "portfolio holdings",
+        "top 10 holdings",
+    }
+
+    if normalized in noise:
+        return True
+
+    if normalized.startswith(
+        "top 10 holdings"
+    ):
+        return True
+
+    return False
+
+
+def clean_holding_fragment(
+    value: str,
+) -> str:
+    """
+    Clean one fragment of a potentially wrapped holding name.
+    """
+
+    fragment = clean_text(
+        value
+    )
+
+    if not fragment:
+        return ""
+
+    fragment = fragment.replace(
+        "|",
+        " ",
+    )
+
+    fragment = re.sub(
+        r"\bNone\b",
+        " ",
+        fragment,
+        flags=re.IGNORECASE,
+    )
+
+    fragment = re.sub(
+        r"^[•·▪■□*]+",
+        "",
+        fragment,
+    )
+
+    fragment = clean_text(
+        fragment
+    )
+
+    return fragment
+
+
+def combine_holding_name_fragments(
+    fragments: list[str],
+) -> str:
+    """
+    Join wrapped PDF lines into one clean holding name.
+    """
+
+    cleaned_fragments = []
+
+    for fragment in fragments:
+
+        fragment = clean_holding_fragment(
+            fragment
+        )
+
+        if not fragment:
+            continue
+
+        # Do not accidentally preserve standalone rank lines.
+        standalone_rank = re.fullmatch(
+            r"\d{1,2}",
+            fragment,
+        )
+
+        if standalone_rank:
+            continue
+
+        cleaned_fragments.append(
+            fragment
+        )
+
+    if not cleaned_fragments:
+        return ""
+
+    combined = " ".join(
+        cleaned_fragments
+    )
+
+    combined = re.sub(
+        r"\s+",
+        " ",
+        combined,
+    ).strip()
+
+    combined = combined.strip(
+        " -|"
+    )
+
+    return clean_holding_name(
+        combined
     )
 
 
@@ -1143,13 +1338,38 @@ def parse_holdings(
     section_text: str,
 ) -> list[dict]:
     """
-    Extract up to 10 published holdings.
+    Robust parser for Prudential Top Holdings sections.
 
-    Important:
+    IMPORTANT:
 
-    - No artificial 10th entry.
-    - Exact published count is retained.
-    - Duplicate names are rejected.
+    The parser DOES NOT assume that a holding fits on one PDF text line.
+
+    Example:
+
+        1
+        JPMORGAN FUNDS - EMERGING
+        MARKETS EQUITY FUND
+        14.7%
+
+    becomes:
+
+        rank = 1
+        name = "JPMORGAN FUNDS - EMERGING MARKETS EQUITY FUND"
+        weight = 14.7%
+
+    Also supports:
+
+        1 JPMORGAN FUNDS - EMERGING
+        MARKETS EQUITY FUND 14.7%
+
+    And:
+
+        JPMORGAN FUNDS - EMERGING
+        MARKETS EQUITY FUND | 14.7%
+
+    The percentage is used as the definitive boundary for the holding.
+
+    No holding is created until a published percentage is found.
     """
 
     if not clean_text(
@@ -1168,59 +1388,69 @@ def parse_holdings(
 
     seen_names = set()
 
-    # -------------------------------------------------------------------------
-    # First method:
-    #
-    #   holding name + percentage on same line
-    # -------------------------------------------------------------------------
+    pending_fragments: list[str] = []
 
-    for line in lines:
+    pending_rank: int | None = None
 
-        if len(
-            holdings
-        ) >= MAX_HOLDINGS:
-            break
+    def commit_pending(
+        percentage: float,
+        percentage_text: str,
+    ) -> None:
 
-        parsed = parse_holding_line(
-            line
+        nonlocal pending_fragments
+        nonlocal pending_rank
+
+        name = (
+            combine_holding_name_fragments(
+                pending_fragments
+            )
         )
 
-        if parsed is None:
-            continue
+        if not name:
 
-        name, weight = parsed
+            raise RuntimeError(
+                "A published holding percentage was found "
+                "but no holding name could be extracted."
+            )
 
         name_key = normalize_text(
             name
         )
 
-        if name_key in {
-            "",
-            "holding",
-            "holdings",
-            "weight",
-            "weight %",
-            "portfolio",
-            "portfolio holdings",
-        }:
-            continue
-
         if name_key in seen_names:
-            continue
+
+            raise RuntimeError(
+                "Duplicate holding name detected: "
+                f"{name}"
+            )
+
+        if len(
+            holdings
+        ) >= MAX_HOLDINGS:
+
+            raise RuntimeError(
+                "More than 10 published holdings were parsed."
+            )
+
+        rank = (
+            pending_rank
+            if pending_rank is not None
+            else len(holdings) + 1
+        )
 
         holdings.append(
             {
                 "rank":
-                    len(holdings) + 1,
+                    rank,
 
                 "name":
                     name,
 
                 "weightPercent":
-                    weight,
+                    percentage,
 
                 "weightText":
-                    f"{weight:g}%",
+                    percentage_text,
             }
         )
 
@@ -1228,102 +1458,155 @@ def parse_holdings(
             name_key
         )
 
+        pending_fragments = []
+
+        pending_rank = None
+
     # -------------------------------------------------------------------------
-    # Second method:
+    # Process sequentially.
     #
-    # Some PDFs place:
-    #
-    #   HOLDING NAME
-    #   38.8%
-    #
-    # on separate lines.
+    # The crucial change is that wrapped lines are accumulated until a
+    # percentage is encountered.
     # -------------------------------------------------------------------------
 
-    if not holdings:
+    for raw_line in lines:
 
-        index = 0
+        line = clean_text(
+            raw_line
+        )
 
-        while (
-            index
-            < len(lines)
-            and
-            len(holdings)
-            < MAX_HOLDINGS
+        if not line:
+            continue
+
+        if is_holding_header_or_noise(
+            line
         ):
 
-            current = lines[
-                index
-            ]
+            continue
+
+        # -------------------------------------------------------------
+        # Check if the line begins with a rank.
+        # -------------------------------------------------------------
+
+        detected_rank, remainder = (
+            extract_leading_rank(
+                line
+            )
+        )
+
+        if detected_rank is not None:
+
+            # A new rank appearing while the current holding has not yet
+            # received a percentage indicates a structure we cannot safely
+            # interpret.
+            if (
+                pending_fragments
+                and pending_rank is not None
+            ):
+
+                raise RuntimeError(
+                    "A new holding rank appeared before "
+                    "the previous holding received a published percentage. "
+                    f"Previous rank={pending_rank}, "
+                    f"new rank={detected_rank}."
+                )
 
             if (
-                index + 1
-                >= len(lines)
+                pending_fragments
+                and pending_rank is None
             ):
+
+                raise RuntimeError(
+                    "A new holding rank appeared before "
+                    "the previous holding received a published percentage."
+                )
+
+            pending_rank = (
+                detected_rank
+            )
+
+            line = remainder
+
+            # A standalone rank such as "1" carries no name.
+            if not line:
+                continue
+
+        # -------------------------------------------------------------
+        # Look for a percentage anywhere on the line.
+        # -------------------------------------------------------------
+
+        percentage_info = (
+            find_percentage_in_line(
+                line
+            )
+        )
+
+        if percentage_info is not None:
+
+            (
+                percentage,
+                percentage_text,
+                start_index,
+                _end_index,
+            ) = percentage_info
+
+            # Everything before the percentage belongs to the holding
+            # name. This may be only the final wrapped line, or the entire
+            # same-line name.
+            name_fragment = clean_text(
+                line[:start_index]
+            )
+
+            if name_fragment:
+
+                pending_fragments.append(
+                    name_fragment
+                )
+
+            commit_pending(
+                percentage=percentage,
+                percentage_text=percentage_text,
+            )
+
+            if len(
+                holdings
+            ) >= MAX_HOLDINGS:
+
                 break
 
-            next_line = lines[
-                index + 1
-            ]
+            continue
 
-            next_weight = (
-                parse_percentage(
-                    next_line
-                )
-            )
+        # -------------------------------------------------------------
+        # No percentage on this line.
+        #
+        # Therefore this is either:
+        #
+        #   - a wrapped holding-name line
+        #   - a PDF table artifact
+        # -------------------------------------------------------------
 
-            if next_weight is None:
+        fragment = clean_holding_fragment(
+            line
+        )
 
-                index += 1
-                continue
+        if not fragment:
+            continue
 
-            name = clean_holding_name(
-                current
-            )
+        # Ignore table column labels that survived PDF extraction.
+        if is_holding_header_or_noise(
+            fragment
+        ):
+            continue
 
-            name_key = normalize_text(
-                name
-            )
-
-            if name_key in {
-                "",
-                "holding",
-                "holdings",
-                "weight",
-                "weight %",
-            }:
-
-                index += 2
-                continue
-
-            if name_key in seen_names:
-
-                index += 2
-                continue
-
-            holdings.append(
-                {
-                    "rank":
-                        len(holdings) + 1,
-
-                    "name":
-                        name,
-
-                    "weightPercent":
-                        next_weight,
-
-                    "weightText":
-                        f"{next_weight:g}%",
-                }
-            )
-
-            seen_names.add(
-                name_key
-            )
-
-            index += 2
+        pending_fragments.append(
+            fragment
+        )
 
     # -------------------------------------------------------------------------
-    # Validation
+    # Any unfinished text is not a valid published holding because no
+    # published percentage was found.
+    #
+    # We deliberately do NOT fabricate or guess its weight.
     # -------------------------------------------------------------------------
 
     if not holdings:
@@ -1341,36 +1624,100 @@ def parse_holdings(
             "Parser produced more than 10 holdings."
         )
 
+    # -------------------------------------------------------------------------
+    # Validate published order.
+    # -------------------------------------------------------------------------
+
     ranks = [
-        item[
+        holding[
             "rank"
         ]
-        for item in holdings
+        for holding in holdings
     ]
 
-    expected_ranks = list(
-        range(
-            1,
-            len(
-                holdings
-            ) + 1,
+    # If Prudential provides explicit ranks, they must be sequential.
+    explicit_ranks_present = any(
+        holding[
+            "rank"
+        ] != position
+        for position, holding
+        in enumerate(
+            holdings,
+            start=1,
         )
     )
 
-    if ranks != expected_ranks:
+    if explicit_ranks_present:
 
-        raise RuntimeError(
-            "Holding ranks are not sequential."
+        expected_ranks = list(
+            range(
+                1,
+                len(
+                    holdings
+                ) + 1,
+            )
         )
 
-    names = [
-        normalize_text(
-            item[
+        if ranks != expected_ranks:
+
+            raise RuntimeError(
+                "Holding ranks are not sequential. "
+                f"Parsed={ranks}; "
+                f"Expected={expected_ranks}"
+            )
+
+    # -------------------------------------------------------------------------
+    # Validate names and weights.
+    # -------------------------------------------------------------------------
+
+    names = []
+
+    for holding in holdings:
+
+        name = clean_holding_name(
+            holding.get(
                 "name"
-            ]
+            )
         )
-        for item in holdings
-    ]
+
+        if not name:
+
+            raise RuntimeError(
+                "Holding name is empty."
+            )
+
+        weight = holding.get(
+            "weightPercent"
+        )
+
+        if not isinstance(
+            weight,
+            (int, float),
+        ):
+
+            raise RuntimeError(
+                "Holding weight is invalid."
+            )
+
+        if (
+            weight < 0
+            or weight > 100
+        ):
+
+            raise RuntimeError(
+                "Holding weight is outside 0-100%."
+            )
+
+        names.append(
+            normalize_text(
+                name
+            )
+        )
+
+        # Write back cleaned name only.
+        holding[
+            "name"
+        ] = name
 
     if len(
         names
@@ -1383,22 +1730,6 @@ def parse_holdings(
         raise RuntimeError(
             "Duplicate holding names detected."
         )
-
-    for holding in holdings:
-
-        weight = holding[
-            "weightPercent"
-        ]
-
-        if (
-            weight < 0
-            or weight > 100
-        ):
-
-            raise RuntimeError(
-                "Invalid holding weight: "
-                f"{weight}"
-            )
 
     return holdings
 
@@ -1733,6 +2064,12 @@ def extract_single_fund(
 
                 "noFabricatedPercentages":
                     True,
+
+                "multilineHoldingNamesSupported":
+                    True,
+
+                "wrappedPdfLinesJoined":
+                    True,
             },
         }
 
@@ -1813,6 +2150,15 @@ def extract_single_fund(
                 True,
 
             "noFabricatedPercentages":
+                True,
+
+            "multilineHoldingNamesSupported":
+                True,
+
+            "wrappedPdfLinesJoined":
+                True,
+
+            "percentageDefinesHoldingBoundary":
                 True,
         },
     }
@@ -2251,40 +2597,73 @@ def main() -> int:
                     "no_holdings_section"
                 ):
 
+                    # There is intentionally no fake PDF/text output in this
+                    # branch. The result itself records that Prudential did
+                    # not publish a Top Holdings section.
+
                     result_directory = (
-                        save_success_result(
-                            result,
-                            b"",
-                            "",
-                            "",
+                        FUNDS_OUTPUT_DIR
+                        /
+                        (
+                            f"{result['excelRow']}_"
+                            f"{safe_filename(result.get('fundName') or 'fund')}"
                         )
                     )
 
-                    # Remove empty PDF output because there is no need
-                    # to pretend a PDF was downloaded in this branch.
-                    pdf_path = (
-                        result_directory
-                        / "factsheet.pdf"
+                    result_directory.mkdir(
+                        parents=True,
+                        exist_ok=True,
                     )
 
-                    if pdf_path.exists():
-                        pdf_path.unlink()
-
-                    text_path = (
+                    save_json(
                         result_directory
-                        / "factsheet_text.txt"
+                        / "top_holdings.json",
+                        result,
                     )
 
-                    if text_path.exists():
-                        text_path.unlink()
+                    metadata = {
+                        "excelRow":
+                            result.get(
+                                "excelRow"
+                            ),
 
-                    section_path = (
+                        "fundName":
+                            result.get(
+                                "fundName"
+                            ),
+
+                        "factsheetUrl":
+                            result.get(
+                                "factsheetUrl"
+                            ),
+
+                        "factsheetDocumentDate":
+                            result.get(
+                                "factsheetDocumentDate"
+                            ),
+
+                        "factsheetDataAsAt":
+                            result.get(
+                                "factsheetDataAsAt"
+                            ),
+
+                        "topHoldingsCount":
+                            0,
+
+                        "status":
+                            result.get(
+                                "status"
+                            ),
+
+                        "savedAtUtc":
+                            utc_now_iso(),
+                    }
+
+                    save_json(
                         result_directory
-                        / "top_holdings_section.txt"
+                        / "metadata.json",
+                        metadata,
                     )
-
-                    if section_path.exists():
-                        section_path.unlink()
 
                     no_holdings_section.append(
                         result
@@ -2306,7 +2685,7 @@ def main() -> int:
 
                 try:
 
-                    factsheet_bytes = (
+                    factsheet_response = (
                         page.request.get(
                             result[
                                 "factsheetUrl"
@@ -2314,12 +2693,24 @@ def main() -> int:
                             timeout=(
                                 FACTSHEET_DOWNLOAD_TIMEOUT_MS
                             ),
-                        ).body()
+                        )
+                    )
+
+                    if factsheet_response.status != 200:
+
+                        raise RuntimeError(
+                            "Factsheet re-download returned "
+                            f"HTTP {factsheet_response.status}."
+                        )
+
+                    factsheet_bytes = (
+                        factsheet_response.body()
                     )
 
                     if not factsheet_bytes.startswith(
                         b"%PDF"
                     ):
+
                         raise RuntimeError(
                             "Factsheet re-download did not "
                             "return a valid PDF."
@@ -2344,6 +2735,7 @@ def main() -> int:
                         !=
                         "published"
                     ):
+
                         raise RuntimeError(
                             "Factsheet holdings section "
                             "disappeared during verification."
@@ -2361,6 +2753,7 @@ def main() -> int:
                     ) != result[
                         "topHoldingsCount"
                     ]:
+
                         raise RuntimeError(
                             "Holding count changed during "
                             "final verification."
@@ -2485,7 +2878,11 @@ def main() -> int:
 
     all_holdings_payload = {
         "status":
-            "success",
+            (
+                "success"
+                if not failed
+                else "partial"
+            ),
 
         "source":
             "Prudential Singapore",
@@ -2542,6 +2939,15 @@ def main() -> int:
                 True,
 
             "noFabricatedPercentages":
+                True,
+
+            "multilineHoldingNamesSupported":
+                True,
+
+            "wrappedPdfLinesJoined":
+                True,
+
+            "percentageDefinesHoldingBoundary":
                 True,
 
             "thirdPartyHoldings":
@@ -2710,6 +3116,15 @@ def main() -> int:
 
             "noThirdPartyHoldings":
                 True,
+
+            "multilineHoldingNamesSupported":
+                True,
+
+            "wrappedPdfLinesJoined":
+                True,
+
+            "percentageDefinesHoldingBoundary":
+                True,
         },
     }
 
@@ -2758,6 +3173,18 @@ def main() -> int:
     print(
         f"Total published holdings extracted: "
         f"{total_holdings}"
+    )
+
+    print(
+        "\nMultiline holding names: ENABLED"
+    )
+
+    print(
+        "Wrapped PDF lines: JOINED"
+    )
+
+    print(
+        "Holding boundary: PUBLISHED PERCENTAGE"
     )
 
     print(
