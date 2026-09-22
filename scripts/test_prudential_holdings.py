@@ -68,6 +68,8 @@ HARD RULES
 - Multi-line holding names are joined into one holding name.
 - Wrapped PDF text lines are treated as part of the same holding until the
   published percentage is encountered.
+- Duplicate holding names are allowed.
+- Duplicate holding percentages are allowed.
 - If the official factsheet contains a Top 10 holdings section but it cannot
   be parsed, the fund is marked FAILED.
 - If a factsheet has no Top 10 holdings section at all, the fund is marked
@@ -195,6 +197,7 @@ def clean_text(
     """
 
     if value is None:
+
         return ""
 
     text = str(value)
@@ -244,6 +247,7 @@ def normalize_text(
 
 
 def utc_now_iso() -> str:
+
     return (
         datetime.now(
             timezone.utc
@@ -294,6 +298,7 @@ def safe_filename(
     )
 
     if not text:
+
         text = "fund"
 
     return text[:120]
@@ -422,6 +427,7 @@ def read_excel_funds() -> list[dict]:
         )
 
         if not prudential_url:
+
             continue
 
         funds.append(
@@ -497,6 +503,7 @@ def find_factsheet_url(
             )
 
             if not href:
+
                 continue
 
             absolute_url = urljoin(
@@ -507,6 +514,7 @@ def find_factsheet_url(
             if not is_prudential_url(
                 absolute_url
             ):
+
                 continue
 
             anchor_text = clean_text(
@@ -531,20 +539,24 @@ def find_factsheet_url(
             "fund factsheet"
             in text_lower
         ):
+
             score += 200
 
         elif (
             "factsheet"
             in text_lower
         ):
+
             score += 150
 
         if "factsheet" in href_lower:
+
             score += 100
 
         if href_lower.endswith(
             ".pdf"
         ):
+
             score += 50
 
         if score > 0:
@@ -680,6 +692,7 @@ def pdf_lines(
         )
 
         if not line:
+
             continue
 
         lines.append(
@@ -877,27 +890,32 @@ def is_holdings_end(
     )
 
     if normalized in endings:
+
         return True
 
     if normalized.startswith(
         "source:"
     ):
+
         return True
 
     if normalized.startswith(
         "inception date:"
     ):
+
         return True
 
     if normalized.startswith(
         "important information"
     ):
+
         return True
 
     if re.fullmatch(
         r"page\s+\d+(\s+of\s+\d+)?",
         normalized,
     ):
+
         return True
 
     return False
@@ -945,6 +963,7 @@ def extract_holdings_section(
         if is_holdings_end(
             line
         ):
+
             break
 
         section.append(
@@ -972,6 +991,7 @@ def clean_holding_name(
     )
 
     if not name:
+
         return ""
 
     # Remove common bullet characters.
@@ -1022,6 +1042,7 @@ def clean_holding_name(
         "—",
         "",
     }:
+
         return ""
 
     return name
@@ -1036,6 +1057,7 @@ def parse_percentage(
 ) -> float | None:
 
     if value is None:
+
         return None
 
     match = re.fullmatch(
@@ -1047,6 +1069,7 @@ def parse_percentage(
     )
 
     if not match:
+
         return None
 
     percentage = float(
@@ -1057,6 +1080,7 @@ def parse_percentage(
         percentage < 0
         or percentage > 100
     ):
+
         return None
 
     return percentage
@@ -1082,6 +1106,7 @@ def find_percentage_in_line(
     """
 
     if not line:
+
         return None
 
     match = re.search(
@@ -1095,6 +1120,7 @@ def find_percentage_in_line(
     )
 
     if not match:
+
         return None
 
     try:
@@ -1152,6 +1178,7 @@ def extract_leading_rank(
     )
 
     if not text:
+
         return (
             None,
             "",
@@ -1163,6 +1190,7 @@ def extract_leading_rank(
     )
 
     if not match:
+
         return (
             None,
             text,
@@ -1211,6 +1239,7 @@ def is_holding_header_or_noise(
     )
 
     if not normalized:
+
         return True
 
     noise = {
@@ -1228,11 +1257,13 @@ def is_holding_header_or_noise(
     }
 
     if normalized in noise:
+
         return True
 
     if normalized.startswith(
         "top 10 holdings"
     ):
+
         return True
 
     return False
@@ -1250,6 +1281,7 @@ def clean_holding_fragment(
     )
 
     if not fragment:
+
         return ""
 
     fragment = fragment.replace(
@@ -1293,6 +1325,7 @@ def combine_holding_name_fragments(
         )
 
         if not fragment:
+
             continue
 
         # Do not accidentally preserve standalone rank lines.
@@ -1302,6 +1335,7 @@ def combine_holding_name_fragments(
         )
 
         if standalone_rank:
+
             continue
 
         cleaned_fragments.append(
@@ -1309,6 +1343,7 @@ def combine_holding_name_fragments(
         )
 
     if not cleaned_fragments:
+
         return ""
 
     combined = " ".join(
@@ -1370,6 +1405,10 @@ def parse_holdings(
     The percentage is used as the definitive boundary for the holding.
 
     No holding is created until a published percentage is found.
+
+    Duplicate holding names are explicitly allowed.
+
+    Duplicate holding percentages are explicitly allowed.
     """
 
     if not clean_text(
@@ -1385,8 +1424,6 @@ def parse_holdings(
     )
 
     holdings = []
-
-    seen_names = set()
 
     pending_fragments: list[str] = []
 
@@ -1411,17 +1448,6 @@ def parse_holdings(
             raise RuntimeError(
                 "A published holding percentage was found "
                 "but no holding name could be extracted."
-            )
-
-        name_key = normalize_text(
-            name
-        )
-
-        if name_key in seen_names:
-
-            raise RuntimeError(
-                "Duplicate holding name detected: "
-                f"{name}"
             )
 
         if len(
@@ -1454,10 +1480,6 @@ def parse_holdings(
             }
         )
 
-        seen_names.add(
-            name_key
-        )
-
         pending_fragments = []
 
         pending_rank = None
@@ -1465,8 +1487,11 @@ def parse_holdings(
     # -------------------------------------------------------------------------
     # Process sequentially.
     #
-    # The crucial change is that wrapped lines are accumulated until a
-    # percentage is encountered.
+    # Wrapped lines are accumulated until a percentage is encountered.
+    #
+    # IMPORTANT:
+    # Duplicate holding names are allowed.
+    # Duplicate percentages are allowed.
     # -------------------------------------------------------------------------
 
     for raw_line in lines:
@@ -1476,6 +1501,7 @@ def parse_holdings(
         )
 
         if not line:
+
             continue
 
         if is_holding_header_or_noise(
@@ -1529,6 +1555,7 @@ def parse_holdings(
 
             # A standalone rank such as "1" carries no name.
             if not line:
+
                 continue
 
         # -------------------------------------------------------------
@@ -1590,12 +1617,14 @@ def parse_holdings(
         )
 
         if not fragment:
+
             continue
 
         # Ignore table column labels that survived PDF extraction.
         if is_holding_header_or_noise(
             fragment
         ):
+
             continue
 
         pending_fragments.append(
@@ -1668,9 +1697,12 @@ def parse_holdings(
 
     # -------------------------------------------------------------------------
     # Validate names and weights.
+    #
+    # IMPORTANT:
+    # Duplicate names are allowed.
+    # Duplicate percentages are allowed.
+    # Only validity of each individual name and weight is checked.
     # -------------------------------------------------------------------------
-
-    names = []
 
     for holding in holdings:
 
@@ -1708,28 +1740,10 @@ def parse_holdings(
                 "Holding weight is outside 0-100%."
             )
 
-        names.append(
-            normalize_text(
-                name
-            )
-        )
-
         # Write back cleaned name only.
         holding[
             "name"
         ] = name
-
-    if len(
-        names
-    ) != len(
-        set(
-            names
-        )
-    ):
-
-        raise RuntimeError(
-            "Duplicate holding names detected."
-        )
 
     return holdings
 
@@ -2065,6 +2079,12 @@ def extract_single_fund(
                 "noFabricatedPercentages":
                     True,
 
+                "duplicateHoldingNamesAllowed":
+                    True,
+
+                "duplicateHoldingPercentagesAllowed":
+                    True,
+
                 "multilineHoldingNamesSupported":
                     True,
 
@@ -2150,6 +2170,12 @@ def extract_single_fund(
                 True,
 
             "noFabricatedPercentages":
+                True,
+
+            "duplicateHoldingNamesAllowed":
+                True,
+
+            "duplicateHoldingPercentagesAllowed":
                 True,
 
             "multilineHoldingNamesSupported":
@@ -2803,7 +2829,7 @@ def main() -> int:
                                     "prudentialUrl"
                                 ],
 
-                            "pruAccessName":
+                            "pruaccessName":
                                 excel_fund.get(
                                     "pruAccessName"
                                 ),
@@ -2939,6 +2965,12 @@ def main() -> int:
                 True,
 
             "noFabricatedPercentages":
+                True,
+
+            "duplicateHoldingNamesAllowed":
+                True,
+
+            "duplicateHoldingPercentagesAllowed":
                 True,
 
             "multilineHoldingNamesSupported":
@@ -3114,6 +3146,15 @@ def main() -> int:
             "noFabricatedHoldingWeights":
                 True,
 
+            "noDuplicateHoldingNameValidation":
+                True,
+
+            "duplicateHoldingNamesAllowed":
+                True,
+
+            "duplicateHoldingPercentagesAllowed":
+                True,
+
             "noThirdPartyHoldings":
                 True,
 
@@ -3181,6 +3222,14 @@ def main() -> int:
 
     print(
         "Wrapped PDF lines: JOINED"
+    )
+
+    print(
+        "Duplicate holding names: ALLOWED"
+    )
+
+    print(
+        "Duplicate holding percentages: ALLOWED"
     )
 
     print(
