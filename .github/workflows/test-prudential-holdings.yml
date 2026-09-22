@@ -1,16 +1,15 @@
-name: Test Prudential Holdings
+name: Test Prudential Top Holdings - All Funds
 
 on:
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
   test-prudential-holdings:
+
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -19,43 +18,24 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Show Python version
-        run: |
-          python --version
-          python -m pip --version
-
-      - name: Confirm requirements file exists
-        run: |
-          pwd
-          ls -la
-          ls -la scripts
-          test -f scripts/requirements.txt
-          echo "requirements.txt found:"
-          cat scripts/requirements.txt
-
-      - name: Upgrade pip
-        run: |
-          python -m pip install --upgrade pip
-
       - name: Install Python dependencies
         run: |
-          python -m pip install --no-cache-dir -r scripts/requirements.txt
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements.txt
 
-      - name: Verify installed dependencies
+      - name: Install Playwright Chromium
         run: |
-          python -c "import requests; print('requests:', requests.__version__)"
-          python -c "import openpyxl; print('openpyxl:', openpyxl.__version__)"
-          python -c "import bs4; print('beautifulsoup4: OK')"
-          python -c "import pypdf; print('pypdf:', pypdf.__version__)"
+          playwright install --with-deps chromium
 
-      - name: Run Prudential holdings extractor
+      - name: Run all-fund Prudential Top Holdings extraction
         run: |
           python -u scripts/test_prudential_holdings.py
 
-      - name: Upload holdings output
+      - name: Upload all-fund holdings test output
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: prudential-holdings-output
-          path: output_holdings/
+          name: prudential-top-holdings-all-funds-${{ github.run_number }}
+          path: |
+            output_holdings/
           if-no-files-found: warn
