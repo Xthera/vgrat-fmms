@@ -47,6 +47,10 @@ Workflow:
     Extract every published holding and percentage
           |
           v
+    If primary parsing fails, automatically retry the same official PDF
+    with the fallback parser
+          |
+          v
     Save one result per fund
 
 
@@ -70,8 +74,12 @@ HARD RULES
   published percentage is encountered.
 - Duplicate holding names are allowed.
 - Duplicate holding percentages are allowed.
-- If the official factsheet contains a Top 10 holdings section but it cannot
-  be parsed, the fund is marked FAILED.
+- If the primary parser fails, the same official factsheet section is retried
+  automatically with the fallback parser.
+- The fallback parser uses the LAST percentage on a logical line as the
+  portfolio weight, preserving earlier coupon/rate percentages inside the
+  security name.
+- If both parsers fail, the fund is marked FAILED.
 - If a factsheet has no Top 10 holdings section at all, the fund is marked
   as NO_HOLDINGS_SECTION.
 - Failed funds do not get blank fabricated holdings.
@@ -1095,18 +1103,15 @@ def find_percentage_in_line(
     int,
 ] | None:
     """
-    Find a published percentage anywhere in a line.
+    Find the FIRST published percentage candidate in a line.
 
-    Returns:
-
-        percentage
-        percentage_text
-        start_index
-        end_index
+    This is retained as the PRIMARY parser behavior.
+    The fallback parser below uses the LAST percentage on a logical line,
+    which is required for factsheets where security coupon rates appear
+    before the portfolio holding weight.
     """
 
     if not line:
-
         return None
 
     match = re.search(
@@ -1120,31 +1125,69 @@ def find_percentage_in_line(
     )
 
     if not match:
-
         return None
 
     try:
-
-        percentage = float(
-            match.group(1)
-        )
-
+        percentage = float(match.group(1))
     except ValueError:
-
         return None
 
-    if (
-        percentage < 0
-        or percentage > 100
-    ):
-
+    if percentage < 0 or percentage > 100:
         return None
 
     return (
         percentage,
-        clean_text(
-            match.group(0)
-        ),
+        clean_text(match.group(0)),
+        match.start(),
+        match.end(),
+    )
+
+
+def find_last_percentage_in_line(
+    line: str,
+) -> tuple[
+    float,
+    str,
+    int,
+    int,
+] | None:
+    """
+    Find the LAST percentage in a line.
+
+    Prudential fixed-income factsheets can contain security coupon/rate
+    percentages inside the holding description, followed by the actual
+    portfolio weight. Example:
+
+        INDIA (REPUBLIC OF) 7.09% 5-AUG-2054 2.7%
+
+    The final percentage is the portfolio holding weight. Earlier
+    percentages remain part of the security name.
+    """
+
+    if not line:
+        return None
+
+    matches = list(re.finditer(
+        r"(?<![\d.])([0-9]+(?:\.[0-9]+)?)\s*%",
+        line,
+    ))
+
+    if not matches:
+        return None
+
+    match = matches[-1]
+
+    try:
+        percentage = float(match.group(1))
+    except ValueError:
+        return None
+
+    if percentage < 0 or percentage > 100:
+        return None
+
+    return (
+        percentage,
+        clean_text(match.group(0)),
         match.start(),
         match.end(),
     )
@@ -1568,6 +1611,22 @@ def parse_holdings(
             )
         )
 
+        # If a logical line contains multiple percentages, the primary
+        # parser deliberately refuses to guess which one is the portfolio
+        # weight. This sends the fund to the automatic fallback parser,
+        # which uses the final percentage as the published holding weight.
+        percentage_candidates = re.findall(
+            r"(?<![\d.])([0-9]+(?:\.[0-9]+)?)\s*%",
+            line,
+        )
+
+        if len(percentage_candidates) > 1:
+            raise RuntimeError(
+                "Primary parser found multiple percentages on one logical "
+                "line and will not guess the holding weight. "
+                "Fallback parser required."
+            )
+
         if percentage_info is not None:
 
             (
@@ -1744,6 +1803,114 @@ def parse_holdings(
         holding[
             "name"
         ] = name
+
+    return holdings
+
+
+# =============================================================================
+# FALLBACK HOLDINGS PARSER
+# =============================================================================
+
+def parse_holdings_fallback(
+    section_text: str,
+) -> list[dict]:
+    """
+    Alternative parser used after the primary parser fails.
+
+    Key difference from the primary parser:
+    - uses the LAST percentage on each logical line;
+    - therefore preserves coupon/rate percentages embedded in fixed-income
+      security names and uses the final percentage as the portfolio weight;
+    - supports wrapped names and standalone weight lines;
+    - never fabricates a weight;
+    - duplicate names and duplicate percentages are allowed.
+    """
+
+    if not clean_text(section_text):
+        raise RuntimeError("Top 10 holdings section is empty.")
+
+    lines = pdf_lines(section_text)
+    holdings = []
+    pending_fragments: list[str] = []
+    pending_rank: int | None = None
+
+    def commit_pending(percentage: float, percentage_text: str) -> None:
+        nonlocal pending_fragments, pending_rank
+
+        name = combine_holding_name_fragments(pending_fragments)
+        if not name:
+            raise RuntimeError(
+                "Fallback parser found a published holding percentage "
+                "but no holding name could be extracted."
+            )
+
+        if len(holdings) >= MAX_HOLDINGS:
+            raise RuntimeError("Fallback parser produced more than 10 holdings.")
+
+        rank = pending_rank if pending_rank is not None else len(holdings) + 1
+        holdings.append({
+            "rank": rank,
+            "name": name,
+            "weightPercent": percentage,
+            "weightText": percentage_text,
+        })
+        pending_fragments = []
+        pending_rank = None
+
+    for raw_line in lines:
+        line = clean_text(raw_line)
+        if not line or is_holding_header_or_noise(line):
+            continue
+
+        detected_rank, remainder = extract_leading_rank(line)
+        if detected_rank is not None:
+            if pending_fragments:
+                raise RuntimeError(
+                    "Fallback parser encountered a new holding rank before "
+                    "the previous holding received a published percentage."
+                )
+            pending_rank = detected_rank
+            line = remainder
+            if not line:
+                continue
+
+        percentage_info = find_last_percentage_in_line(line)
+        if percentage_info is not None:
+            percentage, percentage_text, start_index, _end_index = percentage_info
+            name_fragment = clean_text(line[:start_index])
+            if name_fragment:
+                pending_fragments.append(name_fragment)
+            commit_pending(percentage, percentage_text)
+            if len(holdings) >= MAX_HOLDINGS:
+                break
+            continue
+
+        fragment = clean_holding_fragment(line)
+        if fragment and not is_holding_header_or_noise(fragment):
+            pending_fragments.append(fragment)
+
+    if not holdings:
+        raise RuntimeError(
+            "Fallback parser found the Top 10 holdings section but could not "
+            "extract any holding/percentage pairs."
+        )
+
+    ranks = [holding["rank"] for holding in holdings]
+    expected_ranks = list(range(1, len(holdings) + 1))
+    if ranks != expected_ranks:
+        raise RuntimeError(
+            "Fallback holding ranks are not sequential. "
+            f"Parsed={ranks}; Expected={expected_ranks}"
+        )
+
+    for holding in holdings:
+        name = clean_holding_name(holding.get("name"))
+        weight = holding.get("weightPercent")
+        if not name:
+            raise RuntimeError("Fallback holding name is empty.")
+        if not isinstance(weight, (int, float)) or weight < 0 or weight > 100:
+            raise RuntimeError("Fallback holding weight is invalid.")
+        holding["name"] = name
 
     return holdings
 
@@ -2098,12 +2265,21 @@ def extract_single_fund(
     # -------------------------------------------------------------------------
     # A Top 10 holdings section exists.
     #
-    # Failure to parse it is a real extraction failure.
+    # PRIMARY parser runs first. If it fails, automatically retry the SAME
+    # official factsheet section with the fallback parser.
     # -------------------------------------------------------------------------
 
-    holdings = parse_holdings(
-        section_text
-    )
+    parser_used = "primary"
+    primary_parser_error = None
+
+    try:
+        holdings = parse_holdings(section_text)
+    except Exception as primary_error:
+        primary_parser_error = clean_text(str(primary_error))
+        print("Primary holdings parser failed; running fallback parser...")
+        print(f"Primary parser error: {primary_parser_error}")
+        holdings = parse_holdings_fallback(section_text)
+        parser_used = "fallback"
 
     result = {
         "status":
@@ -2149,6 +2325,12 @@ def extract_single_fund(
 
         "topHoldings":
             holdings,
+
+        "holdingsParser":
+            parser_used,
+
+        "primaryParserError":
+            primary_parser_error,
 
         "rules": {
             "officialPrudentialSourceOnly":
@@ -2446,6 +2628,8 @@ def main() -> int:
     no_holdings_section = []
 
     failed = []
+
+    fallback_recovered = []
 
     # -------------------------------------------------------------------------
     # Browser
@@ -2767,12 +2951,26 @@ def main() -> int:
                             "disappeared during verification."
                         )
 
-                    # Re-parse during final verification.
-                    verified_holdings = (
-                        parse_holdings(
-                            section_text
-                        )
-                    )
+                    # Re-parse during final verification using the parser
+                    # selected during extraction. If the primary parser is
+                    # being verified and fails, retry with the fallback parser.
+                    verification_parser = result.get("holdingsParser") or "primary"
+
+                    if verification_parser == "fallback":
+                        verified_holdings = parse_holdings_fallback(section_text)
+                    else:
+                        try:
+                            verified_holdings = parse_holdings(section_text)
+                        except Exception as verification_primary_error:
+                            print(
+                                "Primary verification parser failed; "
+                                "running fallback parser..."
+                            )
+                            verified_holdings = parse_holdings_fallback(section_text)
+                            result["holdingsParser"] = "fallback"
+                            result["primaryParserError"] = clean_text(
+                                str(verification_primary_error)
+                            )
 
                     if len(
                         verified_holdings
@@ -2849,6 +3047,9 @@ def main() -> int:
                 successful.append(
                     result
                 )
+
+                if result.get("holdingsParser") == "fallback":
+                    fallback_recovered.append(result)
 
                 print(
                     "\n"
@@ -2941,6 +3142,11 @@ def main() -> int:
                 failed
             ),
 
+        "fallbackRecoveredFunds":
+            len(
+                fallback_recovered
+            ),
+
         "rules": {
 
             "excelColumnAControlsUniverse":
@@ -2980,6 +3186,12 @@ def main() -> int:
                 True,
 
             "percentageDefinesHoldingBoundary":
+                True,
+
+            "automaticFallbackParser":
+                True,
+
+            "fallbackUsesLastPercentageOnLogicalLine":
                 True,
 
             "thirdPartyHoldings":
@@ -3052,6 +3264,23 @@ def main() -> int:
             len(
                 failed
             ),
+
+        "fallbackRecoveredFunds":
+            len(
+                fallback_recovered
+            ),
+
+        "fallbackRecoveredFundsDetail":
+            [
+                {
+                    "excelRow": item.get("excelRow"),
+                    "fundName": item.get("fundName"),
+                    "primaryParserError": item.get("primaryParserError"),
+                    "factsheetUrl": item.get("factsheetUrl"),
+                    "topHoldingsCount": item.get("topHoldingsCount"),
+                }
+                for item in fallback_recovered
+            ],
 
         "totalPublishedTopHoldings":
             total_holdings,
@@ -3166,6 +3395,12 @@ def main() -> int:
 
             "percentageDefinesHoldingBoundary":
                 True,
+
+            "automaticFallbackParser":
+                True,
+
+            "fallbackUsesLastPercentageOnLogicalLine":
+                True,
         },
     }
 
@@ -3209,6 +3444,11 @@ def main() -> int:
     print(
         f"Failed: "
         f"{len(failed)}"
+    )
+
+    print(
+        f"Recovered by fallback parser: "
+        f"{len(fallback_recovered)}"
     )
 
     print(
