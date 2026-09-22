@@ -1204,9 +1204,9 @@ def extract_leading_rank(
     str,
 ]:
     """
-    Extract a leading holding rank when present.
+    Extract a leading holding rank when a real rank marker is present.
 
-    Supports:
+    Supported forms:
 
         1 NAME
         1. NAME
@@ -1214,59 +1214,51 @@ def extract_leading_rank(
         1 - NAME
         1: NAME
         1
+
+    IMPORTANT:
+    ---------
+    A percentage line such as ``5.5% 31-DEC-2079 2.5%`` must NOT be
+    interpreted as holding rank 5.  Therefore punctuation-based ranks
+    require whitespace after the punctuation, and whitespace-based ranks
+    require whitespace before the holding text.
     """
 
-    text = clean_text(
-        line
-    )
+    text = clean_text(line)
 
     if not text:
+        return None, ""
 
-        return (
-            None,
-            "",
-        )
+    # A standalone integer is a possible rank line.
+    standalone = re.fullmatch(r"(\d{1,2})", text)
+    if standalone:
+        rank = int(standalone.group(1))
+        if 1 <= rank <= 99:
+            return rank, ""
+        return None, text
 
+    # Explicit punctuation rank markers.  The required whitespace after the
+    # marker prevents decimal percentages such as ``5.5%`` from matching.
     match = re.match(
-        r"^\s*(\d{1,2})(?:[.)\-:]|\s)\s*(.*)$",
+        r"^\s*(\d{1,2})[.)\-:]\s+(.+)$",
         text,
     )
+    if match:
+        rank = int(match.group(1))
+        if 1 <= rank <= 99:
+            return rank, clean_text(match.group(2))
+        return None, text
 
-    if not match:
-
-        return (
-            None,
-            text,
-        )
-
-    try:
-
-        rank = int(
-            match.group(1)
-        )
-
-    except ValueError:
-
-        return (
-            None,
-            text,
-        )
-
-    if rank < 1 or rank > 99:
-
-        return (
-            None,
-            text,
-        )
-
-    remainder = clean_text(
-        match.group(2)
+    # Space-separated rank, e.g. ``1 INDIA ...``.
+    match = re.match(
+        r"^\s*(\d{1,2})\s+(.+)$",
+        text,
     )
+    if match:
+        rank = int(match.group(1))
+        if 1 <= rank <= 99:
+            return rank, clean_text(match.group(2))
 
-    return (
-        rank,
-        remainder,
-    )
+    return None, text
 
 
 # =============================================================================
