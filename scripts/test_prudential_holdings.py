@@ -1,3 +1,4 @@
+```python
 #!/usr/bin/env python3
 
 """
@@ -125,22 +126,30 @@ HARD RULES
 28. Fallback parser handles maturity/date fragments split across
     physical PDF lines.
 
-29. No synthetic holdings.
+29. A zero percentage is numerically valid.
+    0.00% must NOT automatically be rejected.
 
-30. No synthetic weights.
+30. When two percentages are directly adjacent with only whitespace or
+    table separators between them, the earlier percentage may be an
+    embedded security rate/coupon and the later percentage is the
+    portfolio weight.
 
-31. No interpolation.
+31. No synthetic holdings.
 
-32. No carry-forward.
+32. No synthetic weights.
 
-33. This script does NOT modify:
+33. No interpolation.
+
+34. No carry-forward.
+
+35. This script does NOT modify:
        test_pruaccess.py
        data.json
        index.html
        css
        js
 
-34. Output is written under:
+36. Output is written under:
 
        output_holdings/
 
@@ -151,7 +160,7 @@ HARD RULES
        output_holdings/funds/
        output_holdings/<row>_failed/
 
-35. Whenever this script is changed, replace the ENTIRE script with the
+37. Whenever this script is changed, replace the ENTIRE script with the
     complete version provided.
 
 
@@ -490,7 +499,6 @@ def clean_holding_name(
     )
 
     # Remove separators immediately before the portfolio weight.
-    # This does NOT remove hyphens inside dates/security names.
     name = re.sub(
         r"\s+[-–—:|]+\s*$",
         "",
@@ -613,18 +621,6 @@ def contains_year(
 def has_date_like_fragment(
     text: str,
 ) -> bool:
-    """
-    Detect maturity/date information.
-
-    Examples:
-
-        5-AUG-2054
-        31-DEC-2079
-        6-MAR2029
-        31-DEC2079
-        6-MAR
-        2029
-    """
 
     if not text:
         return False
@@ -651,13 +647,17 @@ def looks_like_portfolio_weight(
     value: float,
 ) -> bool:
     """
-    Only reject impossible percentages.
+    Validate only the mathematical range.
 
-    We intentionally do not impose a maximum such as 10%.
+    IMPORTANT:
+
+    0.0% is valid.
+
+    The parser must not reject zero merely because it is zero.
     """
 
     return (
-        value > 0
+        value >= 0
         and value <= 100
     )
 
@@ -721,7 +721,7 @@ def read_excel_funds() -> list[dict]:
                 {
                     "excelRow": row_number,
                     "prudentialUrl": url,
-                    "pruAccessName": (
+                    "pruaccessName": (
                         str(pruaccess_value).strip()
                         if pruaccess_value is not None
                         else ""
@@ -1101,14 +1101,6 @@ def extract_holdings_section(
 def build_primary_logical_lines(
     lines: list[str],
 ) -> list[str]:
-    """
-    Conservative parser preparation.
-
-    This parser deliberately does not try to understand complex
-    fixed-income lines.
-
-    The fallback parser is responsible for those cases.
-    """
 
     logical_lines = []
 
@@ -1194,12 +1186,6 @@ def build_primary_logical_lines(
 def parse_holdings_primary(
     lines: list[str],
 ) -> list[dict]:
-    """
-    Conservative parser.
-
-    If a logical line contains multiple percentages, fail intentionally
-    and allow the fallback parser to handle it.
-    """
 
     logical_lines = (
         build_primary_logical_lines(
@@ -1367,26 +1353,6 @@ def parse_holdings_primary(
 def flatten_holdings_section(
     lines: list[str],
 ) -> str:
-    """
-    Convert PDF physical lines into one ordered text stream.
-
-    This is intentional.
-
-    PDF extraction can produce:
-
-        CORPORACION ANDINA DE FOMENTO 7.7%
-        2029 - 1.7%
-
-    or:
-
-        BANGKOK ... 6.056% 25-MAR-2040 - 2.4%
-        NIPPON LIFE ... 5.95% 16-APR-2054 - 2.4%
-
-    The logical holding boundaries are determined by percentages and
-    maturity/date information, not by PDF line boundaries.
-
-    Therefore we flatten the section while preserving exact order.
-    """
 
     cleaned = []
 
@@ -1415,30 +1381,6 @@ def percentage_has_maturity_before_next_percentage(
     match,
     next_match,
 ) -> bool:
-    """
-    Determine whether the current percentage behaves like a fixed-income
-    coupon/rate.
-
-    Example:
-
-        7.09% 5-AUG-2054 - 2.7%
-
-    The text between the current percentage and the next percentage
-    contains a maturity date.
-
-    Therefore:
-
-        7.09%
-
-    is part of the security name and:
-
-        2.7%
-
-    is the portfolio weight.
-
-    This also handles split PDF lines because the section is flattened
-    before this test.
-    """
 
     if next_match is None:
 
@@ -1470,16 +1412,54 @@ def percentage_has_maturity_before_next_percentage(
     ):
         return True
 
-    # A split maturity can become:
-    #
-    #     2029
-    #
-    # on another PDF line.
-    #
-    # Since the entire section has been flattened, this becomes
-    # detectable here.
     if YEAR_ONLY_RE.search(
         following
+    ):
+        return True
+
+    return False
+
+
+def percentage_is_immediately_before_next_percentage(
+    text: str,
+    match,
+    next_match,
+) -> bool:
+    """
+    Detect percentages such as:
+
+        USA DL-Treasury Bills 2026(26) 0.00% 5.8%
+
+    Here the text between the two percentages is only whitespace/table
+    separation.
+
+    Therefore the first percentage is treated as an embedded security
+    rate and the second percentage is treated as the portfolio weight.
+
+    This is deliberately narrow so that normal same-line holdings such as:
+
+        SECURITY A 5.8% SECURITY B 4.2%
+
+    are NOT incorrectly merged.
+    """
+
+    if next_match is None:
+        return False
+
+    between = text[
+        match.end():
+        next_match.start()
+    ]
+
+    between = between.strip()
+
+    if not between:
+        return True
+
+    # Allow common PDF/table separators only.
+    if re.fullmatch(
+        r"[-–—:|;,/]+",
+        between,
     ):
         return True
 
@@ -1489,22 +1469,6 @@ def percentage_has_maturity_before_next_percentage(
 def strip_leading_table_rank(
     text: str,
 ) -> str:
-    """
-    Remove a PDF-extracted holding rank from the beginning of a
-    candidate holding.
-
-    Examples:
-
-        1 INDIA (REPUBLIC OF)
-        2 SINGAPORE TECHNOLOGIES...
-        10 FUKOKU MUTUAL...
-
-    become:
-
-        INDIA (REPUBLIC OF)
-        SINGAPORE TECHNOLOGIES...
-        FUKOKU MUTUAL...
-    """
 
     text = normalize_pdf_line(
         text
@@ -1531,10 +1495,6 @@ def strip_leading_table_rank(
 def remove_leading_holdings_headers(
     text: str,
 ) -> str:
-    """
-    Remove common table headings that PDF extraction can place before
-    the first holding.
-    """
 
     text = normalize_pdf_line(
         text
@@ -1579,12 +1539,6 @@ def commit_fallback_holding(
     candidate_name: str,
     weight: float,
 ) -> None:
-    """
-    Commit one holding only when a genuine portfolio-weight percentage
-    has been identified.
-
-    No holding is created from a coupon percentage alone.
-    """
 
     candidate_name = clean_holding_name(
         candidate_name
@@ -1627,14 +1581,30 @@ def parse_holdings_fallback(
     """
     Robust fallback parser.
 
-    Core rule:
+    Classification rules:
 
-        percentage + maturity/date + percentage
+    1. percentage + maturity/date + percentage
+       ->
+       first percentage = security coupon/rate
+       second percentage = portfolio weight
 
-    means:
+    2. percentage + percentage
+       with only whitespace/separators between them
+       ->
+       first percentage = embedded security rate
+       second percentage = portfolio weight
 
-        first percentage  = security coupon/rate
-        second percentage = portfolio weight
+    Example:
+
+        USA DL-Treasury Bills 2026(26) 0.00% 5.8%
+
+    becomes:
+
+        name:
+            USA DL-Treasury Bills 2026(26) 0.00%
+
+        weight:
+            5.8%
 
     Example:
 
@@ -1648,14 +1618,7 @@ def parse_holdings_fallback(
         weight:
             2.7%
 
-    Multiple holdings on one physical PDF line are also handled:
-
-        ... 2.4% NIPPON LIFE ... 5.95% 16-APR-2054 - 2.4%
-
-    becomes two holdings.
-
-    Physical PDF line breaks are deliberately ignored because they are
-    not reliable logical holding boundaries.
+    Multiple holdings on one physical PDF line are also handled.
     """
 
     text = flatten_holdings_section(
@@ -1721,6 +1684,20 @@ def parse_holdings_fallback(
                 f"{percentage_text}"
             ) from exc
 
+        # --------------------------------------------------------------
+        # RULE 1:
+        #
+        # Current percentage followed by a maturity/date and then
+        # another percentage.
+        #
+        # Example:
+        #
+        #     7.09% 5-AUG-2054 - 2.7%
+        #
+        # 7.09% is part of the security name.
+        # 2.7% is the portfolio weight.
+        # --------------------------------------------------------------
+
         is_coupon = (
             percentage_has_maturity_before_next_percentage(
                 text=text,
@@ -1729,9 +1706,35 @@ def parse_holdings_fallback(
             )
         )
 
+        # --------------------------------------------------------------
+        # RULE 2:
+        #
+        # Current percentage is immediately followed by another
+        # percentage.
+        #
+        # Example:
+        #
+        #     0.00% 5.8%
+        #
+        # The first percentage is embedded in the security name.
+        # The second is the portfolio weight.
+        #
+        # This specifically fixes fixed-income securities such as
+        # Treasury Bills where a coupon/rate can be 0.00%.
+        # --------------------------------------------------------------
+
+        if not is_coupon:
+
+            is_coupon = (
+                percentage_is_immediately_before_next_percentage(
+                    text=text,
+                    match=match,
+                    next_match=next_match,
+                )
+            )
+
         if is_coupon:
 
-            # Coupon/rate belongs to the security name.
             candidate_parts.append(
                 percentage_text
             )
@@ -1767,20 +1770,12 @@ def parse_holdings_fallback(
             weight=percentage_value,
         )
 
-        # Everything after the portfolio weight belongs to the next
-        # holding or continuation.
         candidate_parts = []
 
         cursor = match.end()
 
         if len(holdings) >= MAX_HOLDINGS:
             break
-
-    # ----------------------------------------------------------------------
-    # We intentionally stop after the first MAX_HOLDINGS extracted
-    # holdings. Anything after that belongs outside the requested
-    # Top 10 universe and is not needed.
-    # ----------------------------------------------------------------------
 
     if not holdings:
         raise RuntimeError(
@@ -1866,7 +1861,6 @@ def validate_holdings(
                 "Holding name became empty after cleaning."
             )
 
-        # Reject obvious parser artefacts.
         lowered = cleaned_name.lower()
 
         if lowered in {
@@ -1976,7 +1970,7 @@ def extract_single_fund(
     ]
 
     pruaccess_name = fund[
-        "pruAccessName"
+        "pruaccessName"
     ]
 
     print("")
@@ -2401,7 +2395,7 @@ def save_failure(
             "prudentialUrl"
         ],
         "excelPruAccessName": fund[
-            "pruAccessName"
+            "pruaccessName"
         ],
         "error": str(
             error
@@ -2577,19 +2571,11 @@ def main() -> int:
                             "result"
                         ]
 
-                        # --------------------------------------------------
-                        # Re-validate before saving.
-                        # --------------------------------------------------
-
                         validate_holdings(
                             result[
                                 "holdings"
                             ]
                         )
-
-                        # --------------------------------------------------
-                        # Save only after successful validation.
-                        # --------------------------------------------------
 
                         output_dir = save_success_result(
                             result=result,
@@ -2633,7 +2619,7 @@ def main() -> int:
                                     "prudentialUrl"
                                 ],
                                 "excelPruAccessName": fund[
-                                    "pruAccessName"
+                                    "pruaccessName"
                                 ],
                                 "error": (
                                     "Official Prudential factsheet "
@@ -2712,7 +2698,7 @@ def main() -> int:
                                 "prudentialUrl"
                             ],
                             "excelPruAccessName": fund[
-                                "pruAccessName"
+                                "pruaccessName"
                             ],
                             "error": str(
                                 last_error
@@ -2769,11 +2755,13 @@ def main() -> int:
             "allowDuplicateNames": True,
             "allowDuplicatePercentages": True,
             "fixedIncomeCouponPercentagesAllowedInNames": True,
+            "zeroPercentAllowed": True,
             "portfolioWeightUsesFinalRelevantPercentage": True,
             "multiLineHoldingsSupported": True,
             "multipleHoldingsPerPdfLineSupported": True,
             "maturityDateContinuationSupported": True,
             "fallbackUsesDateAwarePercentageClassification": True,
+            "fallbackHandlesAdjacentPercentages": True,
             "fallbackFlattensPhysicalPdfLines": True,
             "noSyntheticHoldings": True,
             "noSyntheticWeights": True,
@@ -2835,9 +2823,11 @@ def main() -> int:
             "preserveDuplicatePercentages": True,
             "doNotForceTenHoldings": True,
             "fixedIncomeCouponHandling": True,
+            "zeroPercentAllowed": True,
             "multipleHoldingsOnSamePdfLine": True,
             "multiLineSecurityNames": True,
             "maturityDateContinuation": True,
+            "adjacentPercentageHandling": True,
             "fallbackUsesDateAwarePercentageClassification": True,
             "fallbackFlattensPhysicalPdfLines": True,
         },
@@ -2931,3 +2921,17 @@ if __name__ == "__main__":
     sys.exit(
         main()
     )
+```
+
+This version specifically preserves your hard rule that **the official published security name must remain intact**, including a `0.00%` rate, while using the later `5.8%` as the portfolio weight.
+
+For your Row 23 example, the expected output is therefore:
+
+```text
+USA DL-Treasury Bills 2026(26) 0.00% - 5.8%
+USA DL-Treasury Bills 2025(26) 0.00% - 5.8%
+```
+
+with `weightPercent` equal to `5.8`, **not `0.00`**.
+
+Run this version against all 67 funds. If Row 23 then passes but another fund fails, send me the new `FAILED ROWS` output and we'll address that parser case without weakening the no-guessing rules.
