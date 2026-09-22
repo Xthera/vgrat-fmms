@@ -1,4 +1,3 @@
-```yaml
 name: Test Prudential Top Holdings - All Funds
 
 on:
@@ -126,4 +125,3 @@ jobs:
             output_holdings/
           if-no-files-found: warn
           retention-days: 14
-```
