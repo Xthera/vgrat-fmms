@@ -1,4 +1,3 @@
-```python
 #!/usr/bin/env python3
 
 """
@@ -2921,17 +2920,3 @@ if __name__ == "__main__":
     sys.exit(
         main()
     )
-```
-
-This version specifically preserves your hard rule that **the official published security name must remain intact**, including a `0.00%` rate, while using the later `5.8%` as the portfolio weight.
-
-For your Row 23 example, the expected output is therefore:
-
-```text
-USA DL-Treasury Bills 2026(26) 0.00% - 5.8%
-USA DL-Treasury Bills 2025(26) 0.00% - 5.8%
-```
-
-with `weightPercent` equal to `5.8`, **not `0.00`**.
-
-Run this version against all 67 funds. If Row 23 then passes but another fund fails, send me the new `FAILED ROWS` output and we'll address that parser case without weakening the no-guessing rules.
