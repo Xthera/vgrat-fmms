@@ -1,47 +1,65 @@
 #!/usr/bin/env python3
 
 """
-VGrat FMS - Prudential ALL-FUND FACTSHEET DOWNLOADER / TEXT EXTRACTOR
+VGrat FMS - Prudential ALL-FUND HOLDINGS TEST EXTRACTOR
 
 PURPOSE
 =======
 
-This is a diagnostic script.
+This is the first permanent Top Holdings testing stage.
 
-It does NOT extract Top Holdings yet.
+It:
 
-It only verifies that every Prudential fund listed in:
+1. Reads every populated Prudential fund URL from:
 
-    Funds Links.xlsm
+       Funds Links.xlsm
 
-can be mapped to an official Prudential Singapore Fund Factsheet PDF.
+2. Opens the official Prudential Singapore product page.
 
-WORKFLOW
-========
+3. Finds the official Prudential Fund Factsheet PDF.
+
+4. Downloads the PDF.
+
+5. Extracts ALL PDF text.
+
+6. Locates the official "Top 10 Holdings" section.
+
+7. Saves the RAW Top Holdings section exactly as extracted
+   from the PDF.
+
+IMPORTANT:
+
+This stage does NOT yet interpret portfolio percentages.
+
+It does NOT yet attempt to determine whether a percentage
+is:
+
+    - a portfolio weight
+    - a bond coupon
+    - a maturity-related percentage
+    - another security attribute
+
+That interpretation will be added only after the actual
+Prudential factsheet layouts have been tested.
+
+This script is now the permanent testing script.
+
+Whenever a holdings rule is proven correct, that rule should
+remain permanently in this same script.
+
+MASTER SOURCE
+=============
 
 Funds Links.xlsm
-        |
-        | Column A = Prudential fund URL
-        v
-Prudential fund product page
-        |
-        v
-Find official Fund Factsheet PDF
-        |
-        v
-Download PDF
-        |
-        v
-Extract ALL PDF text
-        |
-        v
-Save:
-    PDF
-    raw extracted text
-    metadata
 
-IMPORTANT RULES
-===============
+Column A:
+    Prudential fund URL
+
+Column B:
+    PruAccess fund name
+
+UNIVERSE RULES
+==============
 
 1. Excel Column A controls the universe.
 
@@ -55,29 +73,54 @@ IMPORTANT RULES
 
 6. Only official Prudential Singapore URLs are accepted.
 
-7. Only official Prudential Singapore PDF URLs are accepted.
+7. Only official Prudential Singapore factsheets are accepted.
 
-8. No third-party factsheets.
+8. No third-party holdings sources.
 
-9. No holdings parsing is performed.
+9. No inferred holdings.
 
-10. No percentages are interpreted.
+10. No fabricated holdings.
 
-11. No data is fabricated.
+11. No fabricated percentages.
 
-12. If PDF text extraction fails, the fund is marked FAILED.
+12. If the Top Holdings section cannot be located,
+    the fund is reported as "no_holdings_section".
 
-13. The original PDF is saved for manual inspection.
+13. The raw PDF is retained.
 
-14. The complete extracted PDF text is saved for later
-    holdings-parser development.
+14. The complete extracted PDF text is retained.
 
-15. This script does not modify:
+15. The raw extracted Top Holdings section is retained.
+
+16. This script does not modify:
+
        test_pruaccess.py
        data.json
        index.html
        css/style.css
        js/app.js
+
+
+CURRENT TEST STAGE
+==================
+
+Stage 1:
+    Factsheet discovery/download/text extraction       COMPLETE
+
+Stage 2:
+    Top Holdings section detection                     CURRENT
+
+Stage 3:
+    Holdings name/weight interpretation                NEXT
+
+Stage 4:
+    Fixed-income percentage handling                   NEXT
+
+Stage 5:
+    Wrapped holdings handling                           NEXT
+
+Stage 6:
+    Full 67-fund regression                            NEXT
 
 OUTPUT
 ======
@@ -87,31 +130,21 @@ output_factsheets/
     run_summary.json
 
     funds/
-        2_<identifier>/
+        <excelRow>_<identifier>/
             factsheet.pdf
             factsheet_text.txt
+            top_holdings_section.txt
             metadata.json
-
-        3_<identifier>/
-            factsheet.pdf
-            factsheet_text.txt
-            metadata.json
-
-        ...
 
     failed/
-        23_failed/
+        <excelRow>_failed/
             failure.json
 
 
 REQUIREMENTS
 ============
 
-Python packages:
-
     pip install openpyxl pypdf playwright
-
-Then:
 
     playwright install chromium
 """
@@ -196,7 +229,10 @@ def normalize_text(value) -> str:
 
 
 def save_json(path: Path, data) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
+    path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
     with path.open(
         "w",
@@ -210,7 +246,11 @@ def save_json(path: Path, data) -> None:
         )
 
 
-def safe_filename(value: str, fallback: str = "fund") -> str:
+def safe_filename(
+    value: str,
+    fallback: str = "fund",
+) -> str:
+
     text = clean_text(value)
 
     if not text:
@@ -241,7 +281,9 @@ def safe_filename(value: str, fallback: str = "fund") -> str:
 # ============================================================================
 
 def is_prudential_url(url: str) -> bool:
+
     try:
+
         parsed = urlparse(url)
 
         hostname = (
@@ -256,24 +298,31 @@ def is_prudential_url(url: str) -> bool:
 
         return (
             hostname in OFFICIAL_HOSTS
-            or hostname.endswith(".prudential.com.sg")
+            or hostname.endswith(
+                ".prudential.com.sg"
+            )
         )
 
     except Exception:
+
         return False
 
 
 def ensure_prudential_url(url: str) -> str:
+
     url = clean_text(url)
 
     if not url:
+
         raise ValueError(
             "Prudential URL is blank."
         )
 
     if not is_prudential_url(url):
+
         raise ValueError(
-            f"URL is not an official Prudential Singapore URL: {url}"
+            "URL is not an official "
+            f"Prudential Singapore URL: {url}"
         )
 
     return url
@@ -301,6 +350,7 @@ def read_excel_funds() -> list[dict]:
     """
 
     if not EXCEL_FILE.exists():
+
         raise FileNotFoundError(
             f"Excel file not found: {EXCEL_FILE}"
         )
@@ -312,6 +362,7 @@ def read_excel_funds() -> list[dict]:
     )
 
     try:
+
         worksheet = workbook.active
 
         funds = []
@@ -320,6 +371,7 @@ def read_excel_funds() -> list[dict]:
             2,
             worksheet.max_row + 1,
         ):
+
             prudential_url = clean_text(
                 worksheet.cell(
                     row=row_number,
@@ -348,6 +400,7 @@ def read_excel_funds() -> list[dict]:
         return funds
 
     finally:
+
         workbook.close()
 
 
@@ -360,15 +413,19 @@ def factsheet_link_score(
     href: str,
 ) -> int:
     """
-    Score an anchor to identify the most likely official Fund Factsheet.
+    Score an anchor to identify the most likely official
+    Fund Factsheet.
 
-    This does NOT download or parse the PDF.
-
-    Higher score = stronger factsheet candidate.
+    Higher score = stronger candidate.
     """
 
-    text = normalize_text(anchor_text)
-    href_normalized = normalize_text(href)
+    text = normalize_text(
+        anchor_text
+    )
+
+    href_normalized = normalize_text(
+        href
+    )
 
     score = 0
 
@@ -407,10 +464,7 @@ def find_factsheet_url(
     product_url: str,
 ) -> dict:
     """
-    Find an official Prudential Fund Factsheet link on the
-    currently loaded Prudential product page.
-
-    Returns diagnostic information rather than just the URL.
+    Find an official Prudential Fund Factsheet link.
     """
 
     candidates = []
@@ -420,11 +474,17 @@ def find_factsheet_url(
     count = anchors.count()
 
     for index in range(count):
+
         anchor = anchors.nth(index)
 
         try:
-            href = anchor.get_attribute("href")
+
+            href = anchor.get_attribute(
+                "href"
+            )
+
         except Exception:
+
             href = None
 
         if not href:
@@ -440,14 +500,19 @@ def find_factsheet_url(
             href,
         )
 
-        if not is_prudential_url(absolute_url):
+        if not is_prudential_url(
+            absolute_url
+        ):
             continue
 
         try:
+
             anchor_text = clean_text(
                 anchor.inner_text()
             )
+
         except Exception:
+
             anchor_text = ""
 
         score = factsheet_link_score(
@@ -467,9 +532,10 @@ def find_factsheet_url(
         )
 
     if not candidates:
+
         raise RuntimeError(
-            "No official Prudential Fund Factsheet link "
-            "was found on the product page."
+            "No official Prudential Fund Factsheet "
+            "link was found on the product page."
         )
 
     candidates.sort(
@@ -497,10 +563,7 @@ def download_factsheet(
     factsheet_url: str,
 ) -> bytes:
     """
-    Download the factsheet through Playwright's request context.
-
-    This keeps the download inside the same browser environment
-    used to inspect the official Prudential product page.
+    Download the official factsheet.
     """
 
     response = page.request.get(
@@ -511,6 +574,7 @@ def download_factsheet(
     status = response.status
 
     if status != 200:
+
         raise RuntimeError(
             f"Factsheet download returned HTTP {status}."
         )
@@ -518,15 +582,20 @@ def download_factsheet(
     pdf_bytes = response.body()
 
     if not pdf_bytes:
+
         raise RuntimeError(
             "Factsheet download returned an empty response."
         )
 
-    if not pdf_bytes.startswith(b"%PDF"):
+    if not pdf_bytes.startswith(
+        b"%PDF"
+    ):
+
         preview = pdf_bytes[:100]
 
         raise RuntimeError(
-            "Downloaded file does not appear to be a PDF. "
+            "Downloaded file does not appear "
+            "to be a PDF. "
             f"First bytes: {preview!r}"
         )
 
@@ -550,9 +619,12 @@ def extract_pdf_text(
         BytesIO(pdf_bytes)
     )
 
-    page_count = len(reader.pages)
+    page_count = len(
+        reader.pages
+    )
 
     if page_count == 0:
+
         raise RuntimeError(
             "PDF contains zero pages."
         )
@@ -563,12 +635,16 @@ def extract_pdf_text(
         reader.pages,
         start=1,
     ):
+
         try:
+
             text = pdf_page.extract_text()
+
         except Exception as exc:
+
             raise RuntimeError(
-                f"PDF text extraction failed on page "
-                f"{page_number}: {exc}"
+                "PDF text extraction failed "
+                f"on page {page_number}: {exc}"
             ) from exc
 
         if text is None:
@@ -595,6 +671,7 @@ def extract_pdf_text(
     full_text = full_text.strip()
 
     if not full_text:
+
         raise RuntimeError(
             "PDF contains no extractable text."
         )
@@ -608,32 +685,41 @@ def extract_pdf_text(
 
 def extract_page_fund_name(page) -> str:
     """
-    Try to obtain the fund name from the Prudential product page.
-
-    This is diagnostic only.
+    Try to obtain the fund name from the Prudential
+    product page.
     """
 
     try:
-        headings = page.locator("h1")
+
+        headings = page.locator(
+            "h1"
+        )
 
         if headings.count() > 0:
+
             for index in range(
                 headings.count()
             ):
+
                 try:
+
                     value = clean_text(
                         headings.nth(index).inner_text()
                     )
 
                     if value:
                         return value
+
                 except Exception:
+
                     continue
 
     except Exception:
+
         pass
 
     try:
+
         body_text = clean_text(
             page.locator("body").inner_text()
         )
@@ -645,14 +731,356 @@ def extract_page_fund_name(page) -> str:
         )
 
         if match:
+
             return clean_text(
                 match.group(0)
             )
 
     except Exception:
+
         pass
 
     return ""
+
+
+# ============================================================================
+# TOP HOLDINGS DETECTION
+# ============================================================================
+
+def is_top_holdings_header(
+    line: str,
+) -> bool:
+    """
+    Determine whether a PDF text line represents the
+    beginning of a Top Holdings section.
+
+    This stage deliberately uses conservative detection.
+
+    Accepted examples include:
+
+        Top 10 Holdings
+        Top Ten Holdings
+        Top 10 Holdings:
+        TOP 10 HOLDINGS
+
+    We do NOT yet interpret holdings or percentages.
+    """
+
+    normalized = normalize_text(
+        line
+    )
+
+    normalized = re.sub(
+        r"[:\-–—]+$",
+        "",
+        normalized,
+    ).strip()
+
+    accepted_headers = {
+        "top 10 holdings",
+        "top ten holdings",
+        "top 10 holding",
+        "top ten holding",
+    }
+
+    if normalized in accepted_headers:
+        return True
+
+    # Allow simple PDF extraction variations such as
+    # "Top 10 Holdings :" or similar whitespace.
+    if re.fullmatch(
+        r"top\s+(10|ten)\s+holdings?",
+        normalized,
+        flags=re.IGNORECASE,
+    ):
+        return True
+
+    return False
+
+
+def is_top_holdings_end(
+    line: str,
+) -> bool:
+    """
+    Conservative detection of lines that commonly indicate
+    the end of the Top Holdings section.
+
+    This function does NOT interpret portfolio percentages.
+    """
+
+    normalized = normalize_text(
+        line
+    )
+
+    if not normalized:
+        return False
+
+    # Common section boundaries.
+    exact_endings = {
+        "source",
+        "source:",
+        "inception date",
+        "inception date:",
+        "important information",
+        "important information:",
+        "disclaimer",
+        "disclaimer:",
+        "past performance",
+        "past performance:",
+        "portfolio characteristics",
+        "portfolio characteristics:",
+        "asset allocation",
+        "asset allocation:",
+    }
+
+    if normalized in exact_endings:
+        return True
+
+    # Page markers commonly inserted by PDF extraction.
+    if re.fullmatch(
+        r"page\s+\d+",
+        normalized,
+        flags=re.IGNORECASE,
+    ):
+        return True
+
+    if re.fullmatch(
+        r"page\s+\d+\s+of\s+\d+",
+        normalized,
+        flags=re.IGNORECASE,
+    ):
+        return True
+
+    return False
+
+
+def find_top_holdings_sections(
+    pdf_text: str,
+) -> list[dict]:
+    """
+    Find ALL Top Holdings sections in the extracted PDF text.
+
+    We intentionally collect every occurrence rather than
+    assuming there is only one.
+
+    This is important during testing because PDF extraction
+    can repeat headers across pages or contain multiple
+    relevant sections.
+    """
+
+    lines = pdf_text.splitlines()
+
+    sections = []
+
+    for index, raw_line in enumerate(
+        lines
+    ):
+
+        line = clean_text(
+            raw_line
+        )
+
+        if not is_top_holdings_header(
+            line
+        ):
+            continue
+
+        section_lines = []
+
+        start_line_number = index + 1
+
+        for following_index in range(
+            index + 1,
+            len(lines),
+        ):
+
+            following_line = clean_text(
+                lines[following_index]
+            )
+
+            if is_top_holdings_end(
+                following_line
+            ):
+                break
+
+            section_lines.append(
+                following_line
+            )
+
+        # Remove trailing empty lines.
+        while (
+            section_lines
+            and not section_lines[-1]
+        ):
+            section_lines.pop()
+
+        sections.append(
+            {
+                "header": line,
+                "startPdfTextLine": start_line_number,
+                "lineCount": len(
+                    section_lines
+                ),
+                "lines": section_lines,
+            }
+        )
+
+    return sections
+
+
+def select_top_holdings_section(
+    pdf_text: str,
+) -> dict:
+    """
+    Select the most useful Top Holdings section.
+
+    Current rule:
+
+    - If none exists -> no_holdings_section.
+    - If one exists -> use it.
+    - If multiple exist -> use the section containing
+      the most non-empty lines.
+
+    This selection rule is deliberately simple and will
+    remain subject to regression testing.
+    """
+
+    sections = find_top_holdings_sections(
+        pdf_text
+    )
+
+    if not sections:
+
+        return {
+            "status": "no_holdings_section",
+            "sectionCount": 0,
+            "selectedSection": None,
+            "sections": [],
+        }
+
+    selected = max(
+        sections,
+        key=lambda section: (
+            section["lineCount"],
+            section["startPdfTextLine"],
+        ),
+    )
+
+    raw_section = "\n".join(
+        selected["lines"]
+    ).strip()
+
+    return {
+        "status": "section_found",
+        "sectionCount": len(
+            sections
+        ),
+        "selectedSection": selected,
+        "rawSectionText": raw_section,
+        "sections": sections,
+    }
+
+
+# ============================================================================
+# TOP HOLDINGS DIAGNOSTIC ANALYSIS
+# ============================================================================
+
+PERCENTAGE_PATTERN = re.compile(
+    r"(?<![\d.])"
+    r"([0-9]+(?:\.[0-9]+)?)"
+    r"\s*%"
+)
+
+
+def analyze_top_holdings_section(
+    holdings_info: dict,
+) -> dict:
+    """
+    Diagnostic analysis only.
+
+    This does NOT decide which percentage is a portfolio
+    weight.
+
+    It simply reports what the raw section contains.
+
+    This allows the next permanent parser rules to be built
+    from actual Prudential examples.
+    """
+
+    if holdings_info.get(
+        "status"
+    ) != "section_found":
+
+        return {
+            "status": holdings_info.get(
+                "status"
+            ),
+            "lineCount": 0,
+            "percentageLineCount": 0,
+            "percentageOccurrences": 0,
+            "lines": [],
+        }
+
+    section_lines = holdings_info[
+        "selectedSection"
+    ]["lines"]
+
+    analyzed_lines = []
+
+    percentage_line_count = 0
+    percentage_occurrences = 0
+
+    for line_number, line in enumerate(
+        section_lines,
+        start=1,
+    ):
+
+        matches = list(
+            PERCENTAGE_PATTERN.finditer(
+                line
+            )
+        )
+
+        percentages = [
+            float(match.group(1))
+            for match in matches
+        ]
+
+        if percentages:
+            percentage_line_count += 1
+            percentage_occurrences += len(
+                percentages
+            )
+
+        analyzed_lines.append(
+            {
+                "lineNumber": line_number,
+                "text": line,
+                "percentageValues": percentages,
+                "percentageCount": len(
+                    percentages
+                ),
+            }
+        )
+
+    return {
+        "status": "section_found",
+        "lineCount": len(
+            section_lines
+        ),
+        "percentageLineCount": (
+            percentage_line_count
+        ),
+        "percentageOccurrences": (
+            percentage_occurrences
+        ),
+        "multiplePercentageLines": [
+            item
+            for item in analyzed_lines
+            if item["percentageCount"] > 1
+        ],
+        "lines": analyzed_lines,
+    }
 
 
 # ============================================================================
@@ -663,9 +1091,18 @@ def process_single_fund(
     browser_page,
     fund: dict,
 ) -> dict:
-    excel_row = fund["excelRow"]
-    product_url = fund["prudentialUrl"]
-    pruaccess_name = fund["pruAccessName"]
+
+    excel_row = fund[
+        "excelRow"
+    ]
+
+    product_url = fund[
+        "prudentialUrl"
+    ]
+
+    pruaccess_name = fund[
+        "pruAccessName"
+    ]
 
     product_url = ensure_prudential_url(
         product_url
@@ -687,14 +1124,18 @@ def process_single_fund(
     )
 
     try:
+
         browser_page.wait_for_load_state(
             "networkidle",
             timeout=30000,
         )
+
     except PlaywrightTimeoutError:
+
         pass
 
     if POST_PAGE_WAIT_MS > 0:
+
         browser_page.wait_for_timeout(
             POST_PAGE_WAIT_MS
         )
@@ -703,7 +1144,10 @@ def process_single_fund(
         browser_page.url
     )
 
-    if not is_prudential_url(final_url):
+    if not is_prudential_url(
+        final_url
+    ):
+
         raise RuntimeError(
             "Prudential product page redirected "
             f"to a non-Prudential URL: {final_url}"
@@ -714,7 +1158,8 @@ def process_single_fund(
     )
 
     print(
-        f"Fund name: {page_fund_name or '-'}"
+        f"Fund name: "
+        f"{page_fund_name or '-'}"
     )
 
     discovery = find_factsheet_url(
@@ -722,20 +1167,26 @@ def process_single_fund(
         final_url,
     )
 
-    selected = discovery["selected"]
+    selected = discovery[
+        "selected"
+    ]
 
-    factsheet_url = selected["url"]
+    factsheet_url = selected[
+        "url"
+    ]
 
     print(
-        f"Factsheet: {factsheet_url}"
+        f"Factsheet: "
+        f"{factsheet_url}"
     )
 
     print(
-        f"Factsheet score: {selected['score']}"
+        f"Factsheet score: "
+        f"{selected['score']}"
     )
 
     print(
-        f"Candidate factsheets found: "
+        "Candidate factsheets found: "
         f"{len(discovery['candidates'])}"
     )
 
@@ -753,8 +1204,81 @@ def process_single_fund(
     )
 
     print(
-        f"Extracted characters: {len(pdf_text)}"
+        f"Extracted characters: "
+        f"{len(pdf_text)}"
     )
+
+    # ------------------------------------------------------------------------
+    # TOP HOLDINGS DETECTION
+    # ------------------------------------------------------------------------
+
+    holdings_info = select_top_holdings_section(
+        pdf_text
+    )
+
+    holdings_analysis = analyze_top_holdings_section(
+        holdings_info
+    )
+
+    if holdings_info[
+        "status"
+    ] == "section_found":
+
+        print()
+        print(
+            "TOP HOLDINGS: FOUND"
+        )
+
+        print(
+            "Top Holdings sections found: "
+            f"{holdings_info['sectionCount']}"
+        )
+
+        print(
+            "Selected section lines: "
+            f"{holdings_info['selectedSection']['lineCount']}"
+        )
+
+        print(
+            "Percentage occurrences: "
+            f"{holdings_analysis['percentageOccurrences']}"
+        )
+
+        if holdings_analysis[
+            "multiplePercentageLines"
+        ]:
+
+            print(
+                "Lines containing multiple percentages: "
+                f"{len(holdings_analysis['multiplePercentageLines'])}"
+            )
+
+        print()
+        print(
+            "RAW TOP HOLDINGS SECTION"
+        )
+        print("-" * 80)
+
+        raw_section = holdings_info[
+            "rawSectionText"
+        ]
+
+        print(
+            raw_section
+        )
+
+        print("-" * 80)
+
+    else:
+
+        print()
+        print(
+            "TOP HOLDINGS: NOT FOUND"
+        )
+
+    # ------------------------------------------------------------------------
+    # OUTPUT DIRECTORY
+    # ------------------------------------------------------------------------
 
     identifier_source = (
         page_fund_name
@@ -787,25 +1311,71 @@ def process_single_fund(
         / "factsheet_text.txt"
     )
 
+    top_holdings_path = (
+        fund_output_dir
+        / "top_holdings_section.txt"
+    )
+
     metadata_path = (
         fund_output_dir
         / "metadata.json"
     )
 
+    # ------------------------------------------------------------------------
+    # SAVE ORIGINAL PDF
+    # ------------------------------------------------------------------------
+
     with pdf_path.open(
         "wb"
     ) as handle:
+
         handle.write(
             pdf_bytes
         )
+
+    # ------------------------------------------------------------------------
+    # SAVE COMPLETE PDF TEXT
+    # ------------------------------------------------------------------------
 
     with text_path.open(
         "w",
         encoding="utf-8",
     ) as handle:
+
         handle.write(
             pdf_text
         )
+
+    # ------------------------------------------------------------------------
+    # SAVE RAW TOP HOLDINGS SECTION
+    # ------------------------------------------------------------------------
+
+    if holdings_info[
+        "status"
+    ] == "section_found":
+
+        with top_holdings_path.open(
+            "w",
+            encoding="utf-8",
+        ) as handle:
+
+            handle.write(
+                holdings_info[
+                    "rawSectionText"
+                ]
+            )
+
+    else:
+
+        # Remove an old section file if a previous run
+        # happened to find one.
+        if top_holdings_path.exists():
+
+            top_holdings_path.unlink()
+
+    # ------------------------------------------------------------------------
+    # RESULT
+    # ------------------------------------------------------------------------
 
     result = {
         "status": "success",
@@ -814,6 +1384,7 @@ def process_single_fund(
         "finalProductUrl": final_url,
         "excelPruAccessName": pruaccess_name,
         "fundName": page_fund_name,
+
         "factsheetUrl": factsheet_url,
         "factsheetAnchorText": selected[
             "anchorText"
@@ -824,18 +1395,55 @@ def process_single_fund(
         "factsheetCandidates": discovery[
             "candidates"
         ],
+
         "pdfPageCount": page_count,
-        "pdfByteCount": len(pdf_bytes),
-        "extractedCharacterCount": len(pdf_text),
+        "pdfByteCount": len(
+            pdf_bytes
+        ),
+        "extractedCharacterCount": len(
+            pdf_text
+        ),
+
+        "topHoldingsStatus": holdings_info[
+            "status"
+        ],
+        "topHoldingsSectionCount": holdings_info[
+            "sectionCount"
+        ],
+
+        "topHoldingsSection": (
+            holdings_info.get(
+                "selectedSection"
+            )
+        ),
+
+        "topHoldingsRawText": holdings_info.get(
+            "rawSectionText",
+            "",
+        ),
+
+        "topHoldingsAnalysis": holdings_analysis,
+
         "outputDirectory": str(
             fund_output_dir
         ),
+
         "pdfFile": str(
             pdf_path
         ),
+
         "textFile": str(
             text_path
         ),
+
+        "topHoldingsFile": (
+            str(top_holdings_path)
+            if holdings_info[
+                "status"
+            ] == "section_found"
+            else None
+        ),
+
         "generatedAtUtc": utc_now_iso(),
     }
 
@@ -844,6 +1452,7 @@ def process_single_fund(
         result,
     )
 
+    print()
     print(
         f"Saved PDF: {pdf_path}"
     )
@@ -851,6 +1460,15 @@ def process_single_fund(
     print(
         f"Saved text: {text_path}"
     )
+
+    if holdings_info[
+        "status"
+    ] == "section_found":
+
+        print(
+            "Saved Top Holdings: "
+            f"{top_holdings_path}"
+        )
 
     return result
 
@@ -863,7 +1481,10 @@ def save_failure_result(
     fund: dict,
     error: Exception,
 ) -> dict:
-    excel_row = fund["excelRow"]
+
+    excel_row = fund[
+        "excelRow"
+    ]
 
     failed_dir = (
         FAILED_OUTPUT_DIR
@@ -905,8 +1526,8 @@ def main() -> int:
 
     print("=" * 80)
     print(
-        "VGrat FMS - PRUDENTIAL ALL-FUND "
-        "FACTSHEET DIAGNOSTIC"
+        "VGrat FMS - PRUDENTIAL "
+        "ALL-FUND HOLDINGS TEST EXTRACTOR"
     )
     print("=" * 80)
 
@@ -945,13 +1566,16 @@ def main() -> int:
     # ------------------------------------------------------------------------
 
     try:
+
         funds = read_excel_funds()
 
     except Exception as exc:
+
         print()
         print(
             "ERROR: Unable to read Excel."
         )
+
         print(
             str(exc)
         )
@@ -959,7 +1583,8 @@ def main() -> int:
         return 1
 
     print(
-        f"Excel fund universe: {len(funds)}"
+        f"Excel fund universe: "
+        f"{len(funds)}"
     )
 
     print(
@@ -967,14 +1592,17 @@ def main() -> int:
     )
 
     print(
-        "Every populated Column A row will be processed."
+        "Every populated Column A row "
+        "will be processed."
     )
 
     print()
 
     if not funds:
+
         print(
-            "ERROR: No populated URLs found in Column A."
+            "ERROR: No populated URLs "
+            "found in Column A."
         )
 
         return 1
@@ -1054,7 +1682,8 @@ def main() -> int:
                         )
 
                         print(
-                            f"  {type(exc).__name__}: "
+                            f"  "
+                            f"{type(exc).__name__}: "
                             f"{exc}"
                         )
 
@@ -1107,14 +1736,39 @@ def main() -> int:
 
     all_factsheets = {
         "generatedAtUtc": utc_now_iso(),
-        "excelFile": str(EXCEL_FILE),
-        "excelFundUniverse": len(funds),
+
+        "excelFile": str(
+            EXCEL_FILE
+        ),
+
+        "excelFundUniverse": len(
+            funds
+        ),
+
         "successfulFunds": len(
             successful
         ),
+
         "failedFunds": len(
             failed
         ),
+
+        "topHoldingsFound": sum(
+            1
+            for result in successful
+            if result.get(
+                "topHoldingsStatus"
+            ) == "section_found"
+        ),
+
+        "topHoldingsNotFound": sum(
+            1
+            for result in successful
+            if result.get(
+                "topHoldingsStatus"
+            ) == "no_holdings_section"
+        ),
+
         "results": all_results,
     }
 
@@ -1133,45 +1787,91 @@ def main() -> int:
             if not failed
             else "partial"
         ),
+
         "generatedAtUtc": utc_now_iso(),
+
         "excelFile": str(
             EXCEL_FILE
         ),
+
         "excelFundUniverse": len(
             funds
         ),
+
         "successfulFunds": len(
             successful
         ),
+
         "failedFunds": len(
             failed
         ),
+
+        "topHoldingsFound": sum(
+            1
+            for result in successful
+            if result.get(
+                "topHoldingsStatus"
+            ) == "section_found"
+        ),
+
+        "topHoldingsNotFound": sum(
+            1
+            for result in successful
+            if result.get(
+                "topHoldingsStatus"
+            ) == "no_holdings_section"
+        ),
+
         "successfulRows": [
             result["excelRow"]
             for result in successful
         ],
+
         "failedRows": [
             result["excelRow"]
             for result in failed
         ],
+
         "purpose": (
             "Download official Prudential "
-            "Fund Factsheets and extract "
-            "raw PDF text only."
+            "Fund Factsheets, extract raw PDF "
+            "text, and locate the raw Top "
+            "Holdings section."
         ),
+
         "rules": {
+
             "excelColumnAControlsUniverse": True,
+
             "processEveryPopulatedColumnAUrl": True,
+
             "hardcodedFundLimit": False,
+
             "duplicateUrlsPreserved": True,
+
             "officialPrudentialSingaporeOnly": True,
+
             "officialFactsheetsOnly": True,
+
             "thirdPartySources": False,
-            "holdingsParsingPerformed": False,
+
+            "holdingsSectionDetection": True,
+
+            "holdingsWeightInterpretation": False,
+
             "percentageInterpretationPerformed": False,
+
+            "holdingsNamesInferred": False,
+
             "fabricatedData": False,
+
             "syntheticData": False,
+
             "pypdfTextExtraction": True,
+
+            "rawTopHoldingsPreserved": True,
+
+            "fullPdfPreserved": True,
         },
     }
 
@@ -1193,15 +1893,28 @@ def main() -> int:
     print("=" * 80)
 
     print(
-        f"Excel fund universe : {len(funds)}"
+        f"Excel fund universe : "
+        f"{len(funds)}"
     )
 
     print(
-        f"Successful funds    : {len(successful)}"
+        f"Successful funds    : "
+        f"{len(successful)}"
     )
 
     print(
-        f"Failed funds        : {len(failed)}"
+        f"Failed funds        : "
+        f"{len(failed)}"
+    )
+
+    print(
+        f"Top Holdings found  : "
+        f"{sum(1 for result in successful if result.get('topHoldingsStatus') == 'section_found')}"
+    )
+
+    print(
+        f"Top Holdings missing: "
+        f"{sum(1 for result in successful if result.get('topHoldingsStatus') == 'no_holdings_section')}"
     )
 
     print()
@@ -1209,10 +1922,20 @@ def main() -> int:
     if successful:
 
         print(
-            "SUCCESSFUL ROWS:"
+            "FUND RESULTS:"
         )
 
         for result in successful:
+
+            holdings_status = result.get(
+                "topHoldingsStatus",
+                "-",
+            )
+
+            section_count = result.get(
+                "topHoldingsSectionCount",
+                0,
+            )
 
             print(
                 f"  Row "
@@ -1235,6 +1958,16 @@ def main() -> int:
                 f"{result['extractedCharacterCount']}"
             )
 
+            print(
+                f"    Top Holdings: "
+                f"{holdings_status}"
+            )
+
+            print(
+                f"    Sections found: "
+                f"{section_count}"
+            )
+
     print()
 
     if failed:
@@ -1252,6 +1985,7 @@ def main() -> int:
             )
 
     print()
+
     print(
         f"All results: "
         f"{ALL_FACTSHEETS_FILE}"
@@ -1265,12 +1999,13 @@ def main() -> int:
     print()
     print("=" * 80)
 
-    # Keep the baseline behavior of allowing the workflow to finish
-    # even if individual funds fail.
+    # Keep baseline behavior:
+    # workflow completes even if individual funds fail.
     return 0
 
 
 if __name__ == "__main__":
+
     sys.exit(
         main()
     )
