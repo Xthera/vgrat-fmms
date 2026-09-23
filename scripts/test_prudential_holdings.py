@@ -79,6 +79,8 @@ HARD RULES
 - The fallback parser uses the LAST percentage on a logical line as the
   portfolio weight, preserving earlier coupon/rate percentages inside the
   security name.
+- The spatial PDF fallback uses physical x/y positions to pair names and
+  weights only when the official PDF layout provides a defensible visual row.
 - If both parsers fail, the fund is marked FAILED.
 - If a factsheet has no Top 10 holdings section at all, the fund is marked
   as NO_HOLDINGS_SECTION.
@@ -902,6 +904,66 @@ def _spatial_column_boundary(
     )
 
 
+def _spatial_row_text(line: dict) -> str:
+    """Return the text from one physical left-column visual row."""
+
+    fragments = list(line.get("fragments", []))
+    fragments.sort(key=lambda item: item["x0"])
+
+    return clean_text(
+        " ".join(
+            fragment["text"]
+            for fragment in fragments
+        )
+    )
+
+
+def _is_spatial_nonholding_row(text: str) -> bool:
+    """
+    Reject obvious page/chart material from a spatial candidate.
+
+    This is deliberately conservative. A row is not rejected merely because
+    it contains a percentage; fixed-income holding rows legitimately contain
+    coupon percentages plus the final portfolio weight.
+    """
+
+    normalized = normalize_text(text)
+
+    if not normalized:
+        return True
+
+    if normalized in {
+        "date",
+        "frequency",
+        "dividend history",
+        "distribution history",
+        "performance",
+        "calendar year performance",
+        "year",
+        "fund",
+        "benchmark",
+        "holding",
+        "holdings",
+        "weight",
+        "weights",
+        "source",
+        "source:",
+        "important information",
+    }:
+        return True
+
+    if normalized.startswith("source:"):
+        return True
+
+    if normalized.startswith("important information"):
+        return True
+
+    if normalized.startswith("top 10 holdings"):
+        return True
+
+    return False
+
+
 def _build_spatial_holdings_section(
     page_lines: list[dict],
     heading: dict,
@@ -909,9 +971,18 @@ def _build_spatial_holdings_section(
 ) -> str:
     """
     Build a visual-order Top Holdings section from one page.
+
+    IMPORTANT:
+    ----------
+    This function only reconstructs the physical left-hand holdings column.
+    It does not parse or infer holdings itself.
     """
 
-    left_edge = max(0.0, heading["x0"] - 15.0)
+    left_edge = max(
+        0.0,
+        heading["x0"] - 15.0,
+    )
+
     right_edge = _spatial_column_boundary(
         page_lines,
         heading,
@@ -920,44 +991,63 @@ def _build_spatial_holdings_section(
 
     selected = []
 
-    # Text below the heading in PDF coordinates has a lower y value.
+    # PDF coordinates normally increase upward, so visible content below the
+    # heading has a smaller y coordinate.
     for line in page_lines:
         if line["y"] >= heading["y"] - 2.0:
             continue
 
-        if line["y"] < heading["y"] - 420.0:
-            continue
-
-        if line["x1"] < left_edge:
-            continue
-
-        if line["x0"] >= right_edge:
+        if line["y"] < heading["y"] - 520.0:
             continue
 
         cropped_fragments = []
+
         for fragment in line.get("fragments", []):
-            if fragment["x1"] < left_edge:
+            x0 = float(fragment.get("x0", 0.0))
+
+            if x0 < left_edge:
                 continue
-            if fragment["x0"] >= right_edge:
+
+            if x0 >= right_edge:
                 continue
-            cropped_fragments.append(fragment)
+
+            cropped_fragments.append(
+                fragment
+            )
 
         if not cropped_fragments:
             continue
 
-        cropped_fragments.sort(key=lambda item: item["x0"])
+        cropped_fragments.sort(
+            key=lambda item: item["x0"]
+        )
+
         cropped_text = clean_text(
-            " ".join(fragment["text"] for fragment in cropped_fragments)
+            " ".join(
+                fragment["text"]
+                for fragment in cropped_fragments
+            )
         )
 
         if not cropped_text:
             continue
 
-        normalized = normalize_text(cropped_text)
+        normalized = normalize_text(
+            cropped_text
+        )
 
-        # A second Top Holdings heading begins a separate visual candidate.
-        # This matters for factsheets where the normal PDF text order places
-        # the real holdings table before/after an unrelated chart section.
+        # A second visible Top Holdings heading means this candidate has
+        # reached another section on the same page.
+        if _is_spatial_top_holdings_heading(
+            cropped_text
+        ):
+            break
+
+        if is_holdings_end(
+            cropped_text
+        ):
+            break
+
         if normalized in {
             "dividend history",
             "distribution history",
@@ -966,41 +1056,321 @@ def _build_spatial_holdings_section(
         }:
             continue
 
-        if _is_spatial_top_holdings_heading(cropped_text):
-            break
-
-        if is_holdings_end(cropped_text):
-            break
-
         cropped_line = dict(line)
         cropped_line["text"] = cropped_text
         cropped_line["fragments"] = cropped_fragments
-        cropped_line["x0"] = min(fragment["x0"] for fragment in cropped_fragments)
-        cropped_line["x1"] = max(fragment["x1"] for fragment in cropped_fragments)
-        selected.append(cropped_line)
+        cropped_line["x0"] = min(
+            fragment["x0"]
+            for fragment in cropped_fragments
+        )
+        cropped_line["x1"] = max(
+            fragment["x0"]
+            for fragment in cropped_fragments
+        )
 
-    selected.sort(key=lambda item: -item["y"])
+        selected.append(
+            cropped_line
+        )
 
-    # Keep the section compact. Once ten visible weight-bearing rows have been
-    # encountered, subsequent chart/allocation material is not part of Top
-    # Holdings.
-    output = []
-    weight_rows = 0
+    selected.sort(
+        key=lambda item: -item["y"]
+    )
 
-    for line in selected:
-        text = clean_text(line["text"])
+    return "\n".join(
+        _spatial_row_text(line)
+        for line in selected
+        if _spatial_row_text(line)
+    )
+
+
+def _parse_spatial_holdings_rows(
+    section_lines: list[dict],
+) -> list[dict]:
+    """
+    Parse holdings directly from physical visual rows.
+
+    This is intentionally separate from ``parse_holdings_fallback``.
+    The text fallback cannot safely pair detached names and weights because
+    PDF object order may differ from visual order. The spatial parser instead
+    uses the row's physical y position and the left-column x position.
+
+    Supported layouts include:
+
+        COMPANY A                         1.7%
+        COMPANY B                         1.6%
+
+    and fixed-income rows such as:
+
+        SINGAPORE (REPUBLIC OF) 2.375% 1-JUL-2039 5.8%
+
+    If a name and weight are visually separated into adjacent rows, they may
+    be paired only when their physical y positions are within the strict
+    spatial tolerance below. No arbitrary name/weight pairing is performed.
+    """
+
+    holdings = []
+
+    pending_name_fragments: list[str] = []
+    pending_name_y: float | None = None
+
+    pending_weight: tuple[float, str, float] | None = None
+
+    y_tolerance = 12.0
+
+    def commit(
+        name: str,
+        percentage: float,
+        percentage_text: str,
+    ) -> None:
+        name = clean_holding_name(name)
+
+        if not name:
+            raise RuntimeError(
+                "Spatial parser found a published holding percentage "
+                "but no holding name could be extracted."
+            )
+
+        if len(holdings) >= MAX_HOLDINGS:
+            raise RuntimeError(
+                "Spatial parser produced more than 10 holdings."
+            )
+
+        holdings.append(
+            {
+                "rank": len(holdings) + 1,
+                "name": name,
+                "weightPercent": percentage,
+                "weightText": percentage_text,
+            }
+        )
+
+    def clear_name() -> None:
+        nonlocal pending_name_fragments, pending_name_y
+        pending_name_fragments = []
+        pending_name_y = None
+
+    def clear_weight() -> None:
+        nonlocal pending_weight
+        pending_weight = None
+
+    for line in sorted(
+        section_lines,
+        key=lambda item: -item["y"],
+    ):
+        text = clean_text(
+            line.get("text")
+            or _spatial_row_text(line)
+        )
+
         if not text:
             continue
 
-        output.append(text)
+        if _is_spatial_nonholding_row(text):
+            continue
 
-        if find_last_percentage_in_line(text) is not None:
-            weight_rows += 1
+        y = float(line["y"])
 
-        if weight_rows >= MAX_HOLDINGS:
+        matches = list(
+            re.finditer(
+                r"(?<![\d.])([0-9]+(?:\.[0-9]+)?)\s*%",
+                text,
+            )
+        )
+
+        # More than two percentages with no meaningful name is characteristic
+        # of chart axes, not a holding row. Do not turn chart labels into
+        # holdings.
+        if len(matches) > 2:
+            if not clean_text(
+                re.sub(
+                    r"(?<![\d.])([0-9]+(?:\.[0-9]+)?)\s*%",
+                    "",
+                    text,
+                )
+            ):
+                continue
+
+        if matches:
+            match = matches[-1]
+
+            percentage = float(
+                match.group(1)
+            )
+
+            if percentage < 0 or percentage > 100:
+                continue
+
+            percentage_text = clean_text(
+                match.group(0)
+            )
+
+            name_fragment = clean_text(
+                text[:match.start()]
+            )
+
+            # Direct visual row: name and final weight are together.
+            if name_fragment:
+                combined_name = name_fragment
+
+                if pending_name_fragments:
+                    combined_name = combine_holding_name_fragments(
+                        pending_name_fragments
+                        + [name_fragment]
+                    )
+
+                if pending_weight is not None:
+                    weight_value, weight_text, weight_y = pending_weight
+
+                    if abs(y - weight_y) <= y_tolerance:
+                        # A later name visually paired with an earlier detached
+                        # weight. The current row's own percentage takes
+                        # precedence only when it belongs to this same visual
+                        # row; therefore the detached weight is not reused.
+                        clear_weight()
+
+                commit(
+                    combined_name,
+                    percentage,
+                    percentage_text,
+                )
+                clear_name()
+                continue
+
+            # Percentage-only visual row. Store it until a nearby name-only
+            # row is encountered.
+            if len(matches) == 1:
+                if pending_name_fragments:
+                    name = combine_holding_name_fragments(
+                        pending_name_fragments
+                    )
+                    if name:
+                        commit(
+                            name,
+                            percentage,
+                            percentage_text,
+                        )
+                        clear_name()
+                        continue
+
+                pending_weight = (
+                    percentage,
+                    percentage_text,
+                    y,
+                )
+                continue
+
+            # Multiple percentages without a name are not a safe holding row.
+            continue
+
+        # No percentage on this row: it may be a wrapped holding name.
+        fragment = clean_holding_fragment(text)
+
+        if not fragment:
+            continue
+
+        # A nearby detached weight can be paired with a name only when the
+        # visual rows are physically adjacent. This is layout evidence, not
+        # an inferred fund-specific mapping.
+        if pending_weight is not None:
+            weight_value, weight_text, weight_y = pending_weight
+
+            if abs(y - weight_y) <= y_tolerance:
+                commit(
+                    fragment,
+                    weight_value,
+                    weight_text,
+                )
+                clear_weight()
+                clear_name()
+                continue
+
+            # A name too far from the pending weight means the PDF did not
+            # expose a defensible visual pairing.
+            raise RuntimeError(
+                "Spatial parser found a detached holding weight without a "
+                "visually adjacent holding name."
+            )
+
+        pending_name_fragments.append(
+            fragment
+        )
+
+        if pending_name_y is None:
+            pending_name_y = y
+
+        # A large vertical jump between name-only rows usually means the
+        # previous name is unrelated page/chart text. Keep only a small local
+        # wrapped-name group.
+        elif abs(y - pending_name_y) > 24.0:
+            pending_name_fragments = [
+                fragment
+            ]
+            pending_name_y = y
+
+        if len(holdings) >= MAX_HOLDINGS:
             break
 
-    return "\n".join(output)
+    if pending_weight is not None:
+        raise RuntimeError(
+            "Spatial parser found a published holding percentage but could "
+            "not match it to a visually adjacent holding name."
+        )
+
+    if pending_name_fragments and len(holdings) < MAX_HOLDINGS:
+        # A trailing unweighted name is not accepted. No percentage may be
+        # fabricated or borrowed from another row.
+        trailing_name = combine_holding_name_fragments(
+            pending_name_fragments
+        )
+        if trailing_name:
+            raise RuntimeError(
+                "Spatial parser found a holding name without a published "
+                "percentage."
+            )
+
+    if not holdings:
+        raise RuntimeError(
+            "Spatial parser found the Top 10 holdings area but could not "
+            "extract any holding/percentage pairs."
+        )
+
+    if len(holdings) > MAX_HOLDINGS:
+        raise RuntimeError(
+            "Spatial parser produced more than 10 holdings."
+        )
+
+    ranks = [
+        item["rank"]
+        for item in holdings
+    ]
+
+    expected = list(
+        range(
+            1,
+            len(holdings) + 1,
+        )
+    )
+
+    if ranks != expected:
+        raise RuntimeError(
+            "Spatial parser holding ranks are not sequential."
+        )
+
+    for holding in holdings:
+        if not holding["name"]:
+            raise RuntimeError(
+                "Spatial parser produced an empty holding name."
+            )
+
+        if not isinstance(
+            holding["weightPercent"],
+            (int, float),
+        ):
+            raise RuntimeError(
+                "Spatial parser produced an invalid holding weight."
+            )
+
+    return holdings
 
 
 def extract_holdings_spatial_fallback(
@@ -1010,14 +1380,14 @@ def extract_holdings_spatial_fallback(
     Recover Top Holdings from the physical PDF layout.
 
     This fallback scans every page containing a visible "Top 10 Holdings"
-    heading, reconstructs the left visual column, and then applies the
-    existing fallback parser to that reconstructed section.
-
-    A candidate is accepted only if the resulting holdings pass the same
-    strict validation as the normal parser. No names or weights are guessed.
+    heading, reconstructs the left visual column, and parses the physical rows
+    directly. It does NOT pass the reconstructed text through the ordinary
+    rank-based parser because PDF object order can detach names from weights.
     """
 
-    positioned = _positioned_pdf_lines(pdf_bytes)
+    positioned = _positioned_pdf_lines(
+        pdf_bytes
+    )
 
     if not positioned:
         raise RuntimeError(
@@ -1026,7 +1396,10 @@ def extract_holdings_spatial_fallback(
 
     candidates = []
 
-    pages = sorted({line["page"] for line in positioned})
+    pages = sorted({
+        line["page"]
+        for line in positioned
+    })
 
     for page_number in pages:
         page_lines = [
@@ -1038,14 +1411,28 @@ def extract_holdings_spatial_fallback(
         if not page_lines:
             continue
 
-        max_x = max(line["x1"] for line in page_lines)
-        min_x = min(line["x0"] for line in page_lines)
-        page_width = max(595.0, max_x + 20.0, min_x + 595.0)
+        max_x = max(
+            line["x1"]
+            for line in page_lines
+        )
+
+        min_x = min(
+            line["x0"]
+            for line in page_lines
+        )
+
+        page_width = max(
+            595.0,
+            max_x + 20.0,
+            min_x + 595.0,
+        )
 
         headings = [
             line
             for line in page_lines
-            if _is_spatial_top_holdings_heading(line["text"])
+            if _is_spatial_top_holdings_heading(
+                line["text"]
+            )
         ]
 
         for heading in headings:
@@ -1058,22 +1445,113 @@ def extract_holdings_spatial_fallback(
             if not clean_text(section):
                 continue
 
+            # Recover the exact visual rows again so the spatial parser can
+            # use y/x evidence rather than the flattened text representation.
+            left_edge = max(
+                0.0,
+                heading["x0"] - 15.0,
+            )
+
+            right_edge = _spatial_column_boundary(
+                page_lines,
+                heading,
+                page_width,
+            )
+
+            candidate_rows = []
+
+            for line in page_lines:
+                if line["y"] >= heading["y"] - 2.0:
+                    continue
+
+                if line["y"] < heading["y"] - 520.0:
+                    continue
+
+                fragments = []
+
+                for fragment in line.get("fragments", []):
+                    x0 = float(
+                        fragment.get(
+                            "x0",
+                            0.0,
+                        )
+                    )
+
+                    if x0 < left_edge:
+                        continue
+
+                    if x0 >= right_edge:
+                        continue
+
+                    fragments.append(
+                        fragment
+                    )
+
+                if not fragments:
+                    continue
+
+                fragments.sort(
+                    key=lambda item: item["x0"]
+                )
+
+                row_text = clean_text(
+                    " ".join(
+                        fragment["text"]
+                        for fragment in fragments
+                    )
+                )
+
+                if not row_text:
+                    continue
+
+                if _is_spatial_top_holdings_heading(
+                    row_text
+                ):
+                    break
+
+                if is_holdings_end(
+                    row_text
+                ):
+                    break
+
+                candidate_rows.append(
+                    {
+                        "page": page_number,
+                        "y": line["y"],
+                        "x0": min(
+                            fragment["x0"]
+                            for fragment in fragments
+                        ),
+                        "x1": max(
+                            fragment["x0"]
+                            for fragment in fragments
+                        ),
+                        "text": row_text,
+                        "fragments": fragments,
+                    }
+                )
+
+            candidate_rows.sort(
+                key=lambda item: -item["y"]
+            )
+
             try:
-                holdings = parse_holdings_fallback(section)
+                holdings = _parse_spatial_holdings_rows(
+                    candidate_rows
+                )
             except Exception as error:
                 candidates.append(
                     {
                         "page": page_number,
                         "section": section,
                         "holdings": None,
-                        "error": clean_text(str(error)),
+                        "error": clean_text(
+                            str(error)
+                        ),
                     }
                 )
                 continue
 
-            # A valid candidate is scored by published holding count and the
-            # presence of names/weights. We do not rank by fund-specific
-            # expectations.
             candidates.append(
                 {
                     "page": page_number,
@@ -1107,12 +1585,13 @@ def extract_holdings_spatial_fallback(
             f"{detail}"
         )
 
-    # Prefer the candidate with the most published holdings. If two candidates
-    # contain the same count, prefer the one with more substantial name text.
     valid.sort(
         key=lambda candidate: (
             len(candidate["holdings"]),
-            sum(len(item["name"]) for item in candidate["holdings"]),
+            sum(
+                len(item["name"])
+                for item in candidate["holdings"]
+            ),
         ),
         reverse=True,
     )
