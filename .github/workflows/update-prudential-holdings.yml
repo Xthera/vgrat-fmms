@@ -1,13 +1,13 @@
-name: Update Prudential Holdings
+name: Test Prudential Holdings Recovery
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  update-prudential-holdings:
+  recover-prudential-holdings:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,46 +28,56 @@ jobs:
         run: |
           python -m playwright install --with-deps chromium
 
-      - name: Run Prudential holdings recovery
+      - name: Run failed-fund recovery test
         run: |
           python -u scripts/update_prudential_holdings.py
 
-      - name: Show recovery results
+      - name: Show recovery summary
+        if: always()
         run: |
           echo "=========================================="
-          echo "PRUDENTIAL HOLDINGS RECOVERY COMPLETE"
+          echo "PRUDENTIAL HOLDINGS RECOVERY TEST"
           echo "=========================================="
 
-          if [ -f output_holdings/run_summary.json ]; then
+          if [ -f output_holdings_recovery/run_summary.json ]; then
             python - <<'PY'
           import json
 
-          with open("output_holdings/run_summary.json", encoding="utf-8") as f:
+          with open(
+              "output_holdings_recovery/run_summary.json",
+              encoding="utf-8"
+          ) as f:
               data = json.load(f)
 
           print("Status:", data.get("status"))
-          print("Successful:", data.get("successfulFunds"))
-          print("Failed:", data.get("failedFunds"))
+          print("Baseline failures:",
+                data.get("failedFundsFromBaseline"))
+          print("Recovery successful:",
+                data.get("successfulFunds"))
+          print("Recovery failed:",
+                data.get("failedFunds"))
 
-          print("\nFailed rows:")
+          print("\nRecovered:")
+          for item in data.get("recovered", []):
+              print(
+                  f" - Row {item.get('excelRow')}: "
+                  f"{item.get('fundName')} "
+                  f"({item.get('topHoldingsCount')} holdings)"
+              )
+
+          print("\nStill failed:")
           for item in data.get("failed", []):
               print(
                   f" - Row {item.get('excelRow')}: "
-                  f"{item.get('error', 'Unknown error')}"
+                  f"{item.get('error')}"
               )
           PY
           fi
 
-      - name: Commit recovered holdings
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add output_holdings/
-
-          if git diff --cached --quiet; then
-            echo "No output changes to commit."
-          else
-            git commit -m "Update Prudential holdings recovery"
-            git push
-          fi
+      - name: Upload recovery test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prudential-holdings-recovery
+          path: output_holdings_recovery/
+          if-no-files-found: warn
