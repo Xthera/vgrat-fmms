@@ -391,6 +391,34 @@ def is_prudential_url(
         return False
 
 
+class HoldingsParseFailure(RuntimeError):
+    """
+    Raised when both the primary and fallback holdings parsers fail
+    for a fund whose Top 10 holdings section WAS found.
+
+    Carries the raw section_text (and full factsheet text) that were
+    being parsed at the time of failure, so the caller can persist
+    them for debugging. Without this, a failed fund previously left
+    behind only an error message with no way to see the actual PDF
+    text that caused it.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        section_text: str = "",
+        full_text: str = "",
+    ) -> None:
+
+        super().__init__(
+            message
+        )
+
+        self.section_text = section_text
+
+        self.full_text = full_text
+
+
 def ensure_prudential_url(
     url: str,
 ) -> str:
@@ -2513,9 +2541,24 @@ def extract_single_fund(
             f"{primary_parser_error}"
         )
 
-        holdings = parse_holdings_fallback(
-            section_text
-        )
+        try:
+
+            holdings = parse_holdings_fallback(
+                section_text
+            )
+
+        except Exception as fallback_error:
+
+            # Both parsers failed. Attach the raw section/full text so
+            # the caller can persist it for debugging instead of losing
+            # it the moment this exception propagates up.
+            raise HoldingsParseFailure(
+                clean_text(
+                    str(fallback_error)
+                ),
+                section_text=section_text,
+                full_text=full_text,
+            ) from fallback_error
 
         parser_used = "fallback"
 
@@ -2775,6 +2818,8 @@ def save_success_result(
 def save_failure_result(
     excel_fund: dict,
     error_text: str,
+    section_text: str | None = None,
+    full_text: str | None = None,
 ) -> Path:
 
     excel_row = int(
@@ -2826,6 +2871,29 @@ def save_failure_result(
         / "failure.json",
         failure,
     )
+
+    # Persist whatever diagnostic text was available at the point of
+    # failure, so a failed fund can actually be debugged afterward
+    # instead of leaving only an error message behind.
+    if section_text:
+
+        (
+            directory
+            / "top_holdings_section.txt"
+        ).write_text(
+            section_text,
+            encoding="utf-8",
+        )
+
+    if full_text:
+
+        (
+            directory
+            / "factsheet_text.txt"
+        ).write_text(
+            full_text,
+            encoding="utf-8",
+        )
 
     return directory
 
@@ -2929,6 +2997,8 @@ def main() -> int:
 
                 last_error = None
 
+                last_exception = None
+
                 result = None
 
                 for attempt in range(
@@ -2952,6 +3022,8 @@ def main() -> int:
 
                         last_error = None
 
+                        last_exception = None
+
                         break
 
                     except Exception as error:
@@ -2959,6 +3031,8 @@ def main() -> int:
                         last_error = clean_text(
                             str(error)
                         )
+
+                        last_exception = error
 
                         print(
                             "Attempt failed:"
@@ -2987,6 +3061,16 @@ def main() -> int:
                             last_error
                             or
                             "Unknown extraction failure.",
+                            section_text=getattr(
+                                last_exception,
+                                "section_text",
+                                None,
+                            ),
+                            full_text=getattr(
+                                last_exception,
+                                "full_text",
+                                None,
+                            ),
                         )
                     )
 
@@ -3203,11 +3287,25 @@ def main() -> int:
                                 "running fallback parser..."
                             )
 
-                            verified_holdings = (
-                                parse_holdings_fallback(
-                                    section_text
+                            try:
+
+                                verified_holdings = (
+                                    parse_holdings_fallback(
+                                        section_text
+                                    )
                                 )
-                            )
+
+                            except Exception as verification_fallback_error:
+
+                                raise HoldingsParseFailure(
+                                    clean_text(
+                                        str(
+                                            verification_fallback_error
+                                        )
+                                    ),
+                                    section_text=section_text,
+                                    full_text=full_text,
+                                ) from verification_fallback_error
 
                             result[
                                 "holdingsParser"
@@ -3261,6 +3359,16 @@ def main() -> int:
                         save_failure_result(
                             excel_fund,
                             error_text,
+                            section_text=getattr(
+                                error,
+                                "section_text",
+                                None,
+                            ),
+                            full_text=getattr(
+                                error,
+                                "full_text",
+                                None,
+                            ),
                         )
                     )
 
