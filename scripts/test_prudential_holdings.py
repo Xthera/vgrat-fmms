@@ -1395,108 +1395,26 @@ def build_logical_holding_lines(
             continue
 
         # -------------------------------------------------------------
-        # Fixed-income wrapped security detection.
+        # NOTE: an earlier version of this function also tried to merge
+        # "current line ends with a percentage" + "next line contains a
+        # maturity date and another percentage" as if the current line
+        # must be a truncated bond coupon continuing onto the next line.
         #
-        # Example:
+        # That heuristic was REMOVED. In practice it could not tell a
+        # genuine split bond entry apart from two separate, complete,
+        # adjacent holdings where the second one simply happens to be a
+        # bond with its own date+weight (e.g. a complete equity/ETF
+        # holding immediately followed by a complete bond holding).
+        # It was wrongly fusing such pairs into a single holding and
+        # silently dropping a real holding each time it fired.
         #
-        # CORPORACION ANDINA DE FOMENTO 7.7%
-        # 6-MAR2029 1.7%
-        #
-        # Join them.
-        # -------------------------------------------------------------
-
-        if (
-            line_ends_with_percentage(
-                current
-            )
-            and index + 1 < len(lines)
-        ):
-
-            next_line = clean_text(
-                lines[index + 1]
-            )
-
-            if (
-                contains_maturity_date(
-                    next_line
-                )
-                and line_has_percentage(
-                    next_line
-                )
-            ):
-
-                merged = (
-                    current
-                    + " "
-                    + next_line
-                )
-
-                logical_lines.append(
-                    clean_text(
-                        merged
-                    )
-                )
-
-                index += 2
-                continue
-
-        # -------------------------------------------------------------
-        # Additional fixed-income PDF wrapping case:
-        #
-        # Current line contains a coupon.
-        # Next line is a maturity date fragment.
-        # Following line contains the final weight.
-        #
-        # Example:
-        #
-        # CORPORACION ANDINA DE FOMENTO 7.7%
-        # 6-MAR2029
-        # 1.7%
-        # -------------------------------------------------------------
-
-        if (
-            line_ends_with_percentage(
-                current
-            )
-            and index + 2 < len(lines)
-        ):
-
-            next_line = clean_text(
-                lines[index + 1]
-            )
-
-            weight_line = clean_text(
-                lines[index + 2]
-            )
-
-            if (
-                contains_maturity_date(
-                    next_line
-                )
-                and line_has_percentage(
-                    weight_line
-                )
-            ):
-
-                merged = (
-                    current
-                    + " "
-                    + next_line
-                    + " "
-                    + weight_line
-                )
-
-                logical_lines.append(
-                    clean_text(
-                        merged
-                    )
-                )
-
-                index += 3
-                continue
-
-        # -------------------------------------------------------------
-        # Default.
+        # The two wrap patterns that actually occur in practice are
+        # already handled without it:
+        #   - a bare name-only line (no %) followed by a coupon+date+
+        #     weight line: handled by the per-line fragment
+        #     accumulation in parse_holdings / parse_holdings_fallback.
+        #   - a mid-token hyphen break (e.g. "6-MAR-" / "2029"):
+        #     handled above by merge_hyphenated_line_breaks().
         # -------------------------------------------------------------
 
         logical_lines.append(
