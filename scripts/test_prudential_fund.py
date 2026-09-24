@@ -1,344 +1,819 @@
+#!/usr/bin/env python3
+
+"""
+VGrat FMS - Prudential Dividend ALL-FUND TEST EXTRACTOR
+========================================================
+
+MASTER SOURCE
+=============
+
+Funds Links.xlsm
+
+Column A:
+    Prudential fund URL
+
+Column B:
+    Exact PruAccess fund name
+
+
+PURPOSE
+=======
+
+Test official Prudential dividend extraction for EVERY fund listed
+in Excel Column A.
+
+Workflow:
+
+    Funds Links.xlsm
+          |
+          v
+    Read every populated URL
+          |
+          v
+    Open official Prudential fund page
+          |
+          v
+    Capture official ilpfunds.json
+          |
+          v
+    Find dividendRate
+          |
+          v
+    Parse published date=value pairs
+          |
+          v
+    Select latest published dividend
+          |
+          v
+    Save dividend record
+
+IMPORTANT RULES
+===============
+
+1. Only official Prudential ilpfunds.json data is used.
+
+2. dividendRate is the authoritative dividend history field.
+
+3. dividendRate has the format:
+
+       YYYYMMDD=value&YYYYMMDD=value&...
+
+4. The latest dividend is determined by the latest DATE,
+   not by assuming the JSON string is already ordered.
+
+5. The dividend unit is taken directly from Prudential:
+
+       "%"
+       "cent per unit"
+       etc.
+
+6. No conversion is performed.
+
+7. No dividend yield is calculated.
+
+8. No dividend is inferred from BID/offer prices.
+
+9. No synthetic, estimated, interpolated, or calculated values.
+
+10. If a fund has no usable dividendRate, NO DIVIDEND RECORD
+    is created for that fund.
+
+11. The fund remains represented in the run summary so that
+    the result can distinguish:
+
+       - dividend found
+       - no dividend
+       - extraction failed
+
+12. Funds Links.xlsm Column A controls the fund universe.
+    No hardcoded fund count is used.
+
+OUTPUT
+======
+
+output_dividend_test/
+    dividend_records.json
+    no_dividend.json
+    failed_funds.json
+    run_summary.json
+    raw/
+        <fund number>/
+            response_1.json
+            response_2.json
+            ...
+            rendered.html
+            visible_text.txt
+            requests.json
+            summary.json
+
+The main result is:
+
+    output_dividend_test/dividend_records.json
+
+Only funds with an actual published dividendRate appear
+in dividend_records.json.
+"""
+
 import asyncio
 import json
 import re
+import sys
+from datetime import datetime
 from pathlib import Path
-from playwright.async_api import async_playwright
+from urllib.parse import urljoin
+
+from openpyxl import load_workbook
+from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 
 
 # ============================================================
-# TEST URL
+# CONFIGURATION
 # ============================================================
 
-TEST_URL = (
-    "https://www.prudential.com.sg/content/"
-    "prudential-aem-lbu/pacs/en/products/wealth/ilp/"
-    "prulink-funds/"
-    "prulink-strategicinvest-income-fund-distribution.html"
-)
+EXCEL_FILE = Path("Funds Links.xlsm")
 
+OUTPUT_DIR = Path("output_dividend_test")
+RAW_DIR = OUTPUT_DIR / "raw"
 
-# ============================================================
-# OUTPUT
-# ============================================================
+DIVIDEND_RECORDS_FILE = OUTPUT_DIR / "dividend_records.json"
+NO_DIVIDEND_FILE = OUTPUT_DIR / "no_dividend.json"
+FAILED_FUNDS_FILE = OUTPUT_DIR / "failed_funds.json"
+RUN_SUMMARY_FILE = OUTPUT_DIR / "run_summary.json"
 
-OUTPUT_DIR = Path("output")
-OUTPUT_DIR.mkdir(
-    parents=True,
-    exist_ok=True
-)
-
-
-# ============================================================
-# EXISTING PRUDENTIAL JSON SOURCES
-#
-# DO NOT REMOVE OR CHANGE THESE.
-# ============================================================
-
+# Official Prudential JSON endpoint(s) of interest.
 IMPORTANT_PARTS = [
     "ilpfunds.json",
-    "ilpseries.json",
 ]
 
+# Browser settings
+PAGE_TIMEOUT_MS = 60000
+NETWORK_WAIT_MS = 8000
 
-# ============================================================
-# NEW:
-# DIVIDEND / DISTRIBUTION KEYWORDS
-# ============================================================
-
-DIVIDEND_KEYWORDS = [
-    "dividend",
-    "distribution",
-    "distributions",
-    "distributionrate",
-    "distribution_rate",
-    "dividendrate",
-    "dividend_rate",
-    "dividendamount",
-    "dividend_amount",
-    "distributionamount",
-    "distribution_amount",
-    "payout",
-    "payoutamount",
-    "payout_amount",
-    "distributiondate",
-    "distribution_date",
-    "dividenddate",
-    "dividend_date",
-    "exdate",
-    "ex_date",
-    "recorddate",
-    "record_date",
-    "paymentdate",
-    "payment_date",
-]
+# Small delay between funds to reduce unnecessary pressure
+# on the Prudential website.
+DELAY_BETWEEN_FUNDS_SECONDS = 1.0
 
 
 # ============================================================
-# NEW:
-# TEXT INDICATORS THAT SUGGEST DISTRIBUTION FUND
+# HELPERS
 # ============================================================
 
-DISTRIBUTION_TEXT_PATTERNS = [
-    r"\bdistribution\s+class\b",
-    r"\bdistribution\s+fund\b",
-    r"\bdividend\b",
-    r"\bdividends\b",
-    r"\bdistribution\b",
-    r"\bdistributions\b",
-]
+def safe_filename(value: str, max_length: int = 150) -> str:
+    """
+    Convert arbitrary text into a filesystem-safe filename.
+    """
+    value = str(value or "").strip()
+
+    if not value:
+        value = "unknown"
+
+    value = re.sub(r'[<>:"/\\|?*]', "_", value)
+    value = re.sub(r"\s+", " ", value)
+    value = value.strip(" .")
+
+    if not value:
+        value = "unknown"
+
+    return value[:max_length]
+
+
+def normalize_url(url: str) -> str:
+    """
+    Normalize an Excel URL into a clean string.
+    """
+    if url is None:
+        return ""
+
+    url = str(url).strip()
+
+    if not url:
+        return ""
+
+    return url
+
+
+def load_funds_from_excel():
+    """
+    Read every populated URL from Column A and the corresponding
+    PruAccess fund name from Column B.
+
+    Column A controls the universe.
+    """
+
+    if not EXCEL_FILE.exists():
+        raise FileNotFoundError(
+            f"Excel file not found: {EXCEL_FILE.resolve()}"
+        )
+
+    workbook = load_workbook(
+        filename=EXCEL_FILE,
+        read_only=True,
+        data_only=True,
+    )
+
+    try:
+        worksheet = workbook.active
+
+        funds = []
+
+        for row_number in range(2, worksheet.max_row + 1):
+
+            url_value = worksheet.cell(
+                row=row_number,
+                column=1,
+            ).value
+
+            name_value = worksheet.cell(
+                row=row_number,
+                column=2,
+            ).value
+
+            url = normalize_url(url_value)
+
+            # Column A controls the universe.
+            if not url:
+                continue
+
+            fund_name = (
+                str(name_value).strip()
+                if name_value is not None
+                else ""
+            )
+
+            funds.append(
+                {
+                    "excelRow": row_number,
+                    "prudentialUrl": url,
+                    "excelPruAccessName": fund_name,
+                }
+            )
+
+        return funds
+
+    finally:
+        workbook.close()
+
+
+def save_json(path: Path, data):
+    """
+    Save JSON using UTF-8 and readable formatting.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    with path.open(
+        "w",
+        encoding="utf-8",
+    ) as file:
+        json.dump(
+            data,
+            file,
+            indent=2,
+            ensure_ascii=False,
+        )
+
+
+def parse_dividend_rate_string(dividend_rate):
+    """
+    Parse Prudential dividendRate.
+
+    Example:
+
+        20260814=0.51&20260715=0.51&20260615=0.51
+
+    Returns a list of:
+
+        {
+            "date": "2026-08-14",
+            "rawDate": "20260814",
+            "rate": "0.51"
+        }
+
+    Only valid YYYYMMDD=value entries are accepted.
+
+    No calculations or conversions are performed.
+    """
+
+    if dividend_rate is None:
+        return []
+
+    if not isinstance(dividend_rate, str):
+        return []
+
+    dividend_rate = dividend_rate.strip()
+
+    if not dividend_rate:
+        return []
+
+    records = []
+
+    for item in dividend_rate.split("&"):
+
+        item = item.strip()
+
+        if not item:
+            continue
+
+        if "=" not in item:
+            continue
+
+        raw_date, rate = item.split("=", 1)
+
+        raw_date = raw_date.strip()
+        rate = rate.strip()
+
+        if not re.fullmatch(r"\d{8}", raw_date):
+            continue
+
+        if not rate:
+            continue
+
+        try:
+            parsed_date = datetime.strptime(
+                raw_date,
+                "%Y%m%d",
+            )
+        except ValueError:
+            continue
+
+        records.append(
+            {
+                "date": parsed_date.strftime("%Y-%m-%d"),
+                "rawDate": raw_date,
+                "rate": rate,
+            }
+        )
+
+    return records
+
+
+def find_dividend_information(data):
+    """
+    Recursively search the captured Prudential JSON for
+    dividendRate.
+
+    The official structure observed is:
+
+        $[0].dividendRate
+        $[0].dividendUnit
+        $[0].hasDividend
+        $[0].payoutFrequency
+
+    We search recursively rather than hardcoding the entire
+    JSON path so the extractor remains tolerant of wrapper
+    structures.
+
+    Returns the best usable dividend information or None.
+    """
+
+    candidates = []
+
+    def walk(value, path="$"):
+
+        if isinstance(value, dict):
+
+            for key, child in value.items():
+
+                child_path = f"{path}.{key}"
+
+                if key == "dividendRate":
+
+                    parsed = parse_dividend_rate_string(child)
+
+                    if parsed:
+                        candidates.append(
+                            {
+                                "path": child_path,
+                                "dividendRate": child,
+                                "records": parsed,
+                                "parent": value,
+                            }
+                        )
+
+                walk(child, child_path)
+
+        elif isinstance(value, list):
+
+            for index, child in enumerate(value):
+
+                child_path = f"{path}[{index}]"
+
+                walk(child, child_path)
+
+    walk(data)
+
+    if not candidates:
+        return None
+
+    # Prefer the candidate containing the greatest number of
+    # valid published dividend observations.
+    candidates.sort(
+        key=lambda item: len(item["records"]),
+        reverse=True,
+    )
+
+    candidate = candidates[0]
+
+    records = candidate["records"]
+
+    # Determine latest date by actual date.
+    latest = max(
+        records,
+        key=lambda item: item["rawDate"],
+    )
+
+    parent = candidate["parent"]
+
+    dividend_unit = parent.get("dividendUnit")
+
+    if dividend_unit is not None:
+        dividend_unit = str(dividend_unit).strip()
+
+    if not dividend_unit:
+        dividend_unit = None
+
+    has_dividend = parent.get("hasDividend")
+
+    payout_frequency = parent.get("payoutFrequency")
+
+    if payout_frequency is not None:
+        payout_frequency = str(payout_frequency).strip()
+
+    return {
+        "latestDividendDate": latest["date"],
+        "latestDividendRate": latest["rate"],
+        "dividendUnit": dividend_unit,
+        "dividendRatePath": candidate["path"],
+        "publishedDividendCount": len(records),
+        "hasDividend": has_dividend,
+        "payoutFrequency": payout_frequency,
+    }
+
+
+def extract_dividend_from_responses(response_data):
+    """
+    Inspect captured JSON responses and return the first usable
+    official dividend record.
+
+    Only ilpfunds.json responses are passed into this function.
+    """
+
+    for item in response_data:
+
+        data = item.get("data")
+
+        if data is None:
+            continue
+
+        result = find_dividend_information(data)
+
+        if result:
+            return result
+
+    return None
 
 
 # ============================================================
-# NEW:
-# RATE FIELD KEYWORDS
-#
-# These are intentionally broad because we do not yet know
-# Prudential's exact API field naming.
+# FUND TEST
 # ============================================================
 
-RATE_KEYWORDS = [
-    "rate",
-    "amount",
-    "percentage",
-    "percent",
-    "payout",
-    "distribution",
-    "dividend",
-]
-
-
-# ============================================================
-# RECURSIVE JSON SEARCH
-# ============================================================
-
-def find_dividend_fields(
-    value,
-    path="$",
-    matches=None
+async def process_fund(
+    browser,
+    fund,
+    fund_index,
+    total_funds,
 ):
+    """
+    Process one fund.
 
-    if matches is None:
-        matches = []
+    Returns:
 
-    # --------------------------------------------------------
-    # Dictionary
-    # --------------------------------------------------------
+        {
+            "status": "dividend_found"
+            ...
+        }
 
-    if isinstance(value, dict):
+    OR:
 
-        for key, child in value.items():
+        {
+            "status": "no_dividend"
+            ...
+        }
 
-            key_text = str(key).lower()
+    OR:
 
-            matched_keywords = [
-                keyword
-                for keyword in DIVIDEND_KEYWORDS
-                if keyword in key_text
-            ]
+        {
+            "status": "failed"
+            ...
+        }
+    """
 
-            if matched_keywords:
+    excel_row = fund["excelRow"]
+    prudential_url = fund["prudentialUrl"]
+    excel_pruaccess_name = fund["excelPruAccessName"]
 
-                matches.append({
-                    "path": f"{path}.{key}",
-                    "key": key,
-                    "matchedKeywords": matched_keywords,
-                    "value": child
-                })
+    fund_dir_name = (
+        f"{fund_index:03d}_row_{excel_row}_"
+        f"{safe_filename(excel_pruaccess_name or 'unnamed')}"
+    )
 
-            find_dividend_fields(
-                child,
-                f"{path}.{key}",
-                matches
+    fund_raw_dir = RAW_DIR / fund_dir_name
+    fund_raw_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    print()
+    print("=" * 80)
+    print(
+        f"[{fund_index}/{total_funds}] "
+        f"Excel row {excel_row}"
+    )
+    print(
+        f"Fund: {excel_pruaccess_name or '(Column B blank)'}"
+    )
+    print(f"URL:  {prudential_url}")
+    print("=" * 80)
+
+    captured_json = []
+    captured_requests = []
+
+    async def handle_response(response):
+
+        url = response.url
+
+        if not any(
+            part in url
+            for part in IMPORTANT_PARTS
+        ):
+            return
+
+        print(
+            f"  [JSON] {response.status} {url}"
+        )
+
+        request_record = {
+            "url": url,
+            "status": response.status,
+            "method": response.request.method,
+        }
+
+        captured_requests.append(request_record)
+
+        try:
+            text = await response.text()
+
+            response_number = len(captured_json) + 1
+
+            response_filename = (
+                f"response_{response_number}.json"
             )
 
-    # --------------------------------------------------------
-    # List
-    # --------------------------------------------------------
-
-    elif isinstance(value, list):
-
-        for index, child in enumerate(value):
-
-            find_dividend_fields(
-                child,
-                f"{path}[{index}]",
-                matches
+            response_path = (
+                fund_raw_dir / response_filename
             )
 
-    return matches
+            response_path.write_text(
+                text,
+                encoding="utf-8",
+            )
 
+            try:
+                parsed_json = json.loads(text)
 
-# ============================================================
-# LOAD JSON
-# ============================================================
+            except json.JSONDecodeError:
+                print(
+                    "  [WARN] Response was not valid JSON"
+                )
 
-def load_json_file(path):
+                return
+
+            captured_json.append(
+                {
+                    "url": url,
+                    "status": response.status,
+                    "data": parsed_json,
+                    "file": response_filename,
+                }
+            )
+
+        except Exception as exc:
+            print(
+                f"  [WARN] Could not capture response: {exc}"
+            )
+
+    context = await browser.new_context()
+
+    context.on(
+        "response",
+        lambda response: asyncio.create_task(
+            handle_response(response)
+        ),
+    )
+
+    page = await context.new_page()
 
     try:
 
-        text = path.read_text(
-            encoding="utf-8"
+        try:
+            await page.goto(
+                prudential_url,
+                wait_until="domcontentloaded",
+                timeout=PAGE_TIMEOUT_MS,
+            )
+
+        except PlaywrightTimeoutError:
+            print(
+                "  [WARN] Page navigation timed out; "
+                "continuing with captured responses."
+            )
+
+        except Exception as exc:
+            print(
+                f"  [ERROR] Navigation failed: {exc}"
+            )
+
+            return {
+                "status": "failed",
+                "excelRow": excel_row,
+                "prudentialUrl": prudential_url,
+                "excelPruAccessName": excel_pruaccess_name,
+                "error": f"Navigation failed: {exc}",
+            }
+
+        # Give the page time to make its API requests.
+        await page.wait_for_timeout(
+            NETWORK_WAIT_MS
         )
 
-        return json.loads(text)
+        # Allow outstanding response handlers to finish.
+        await page.wait_for_timeout(1000)
 
-    except Exception as e:
+        # ----------------------------------------------------
+        # Save rendered page
+        # ----------------------------------------------------
 
+        try:
+            html = await page.content()
+
+            (
+                fund_raw_dir / "rendered.html"
+            ).write_text(
+                html,
+                encoding="utf-8",
+            )
+
+        except Exception as exc:
+            print(
+                f"  [WARN] Could not save rendered HTML: {exc}"
+            )
+
+        # ----------------------------------------------------
+        # Save visible text
+        # ----------------------------------------------------
+
+        try:
+            visible_text = await page.locator(
+                "body"
+            ).inner_text()
+
+            (
+                fund_raw_dir / "visible_text.txt"
+            ).write_text(
+                visible_text,
+                encoding="utf-8",
+            )
+
+        except Exception as exc:
+            print(
+                f"  [WARN] Could not save visible text: {exc}"
+            )
+
+        # ----------------------------------------------------
+        # Save requests
+        # ----------------------------------------------------
+
+        save_json(
+            fund_raw_dir / "requests.json",
+            captured_requests,
+        )
+
+        # ----------------------------------------------------
+        # Wait for any final response tasks
+        # ----------------------------------------------------
+
+        await page.wait_for_timeout(1000)
+
+        # ----------------------------------------------------
+        # Extract dividend
+        # ----------------------------------------------------
+
+        dividend = extract_dividend_from_responses(
+            captured_json
+        )
+
+        # ----------------------------------------------------
+        # Save per-fund summary
+        # ----------------------------------------------------
+
+        summary = {
+            "excelRow": excel_row,
+            "prudentialUrl": prudential_url,
+            "excelPruAccessName": excel_pruaccess_name,
+            "capturedJsonResponses": len(captured_json),
+            "capturedImportantRequests": len(
+                captured_requests
+            ),
+            "dividend": dividend,
+        }
+
+        save_json(
+            fund_raw_dir / "summary.json",
+            summary,
+        )
+
+        # ----------------------------------------------------
+        # Dividend found
+        # ----------------------------------------------------
+
+        if dividend:
+
+            print()
+            print("  >>> DIVIDEND FOUND")
+            print(
+                f"      Date: {dividend['latestDividendDate']}"
+            )
+            print(
+                f"      Rate: {dividend['latestDividendRate']}"
+            )
+            print(
+                f"      Unit: {dividend.get('dividendUnit')}"
+            )
+            print(
+                f"      Published records: "
+                f"{dividend['publishedDividendCount']}"
+            )
+
+            return {
+                "status": "dividend_found",
+                "excelRow": excel_row,
+                "prudentialUrl": prudential_url,
+                "excelPruAccessName": excel_pruaccess_name,
+                "latestDividendDate": dividend[
+                    "latestDividendDate"
+                ],
+                "latestDividendRate": dividend[
+                    "latestDividendRate"
+                ],
+                "dividendUnit": dividend.get(
+                    "dividendUnit"
+                ),
+                "publishedDividendCount": dividend[
+                    "publishedDividendCount"
+                ],
+                "dividendRatePath": dividend[
+                    "dividendRatePath"
+                ],
+                "hasDividend": dividend.get(
+                    "hasDividend"
+                ),
+                "payoutFrequency": dividend.get(
+                    "payoutFrequency"
+                ),
+            }
+
+        # ----------------------------------------------------
+        # No dividend
+        # ----------------------------------------------------
+
+        print()
+        print("  >>> NO DIVIDEND RECORD")
+
+        return {
+            "status": "no_dividend",
+            "excelRow": excel_row,
+            "prudentialUrl": prudential_url,
+            "excelPruAccessName": excel_pruaccess_name,
+        }
+
+    except Exception as exc:
+
+        print()
         print(
-            "Could not parse JSON:",
-            path,
-            repr(e)
+            f"  [ERROR] Fund processing failed: {exc}"
         )
 
-        return None
+        return {
+            "status": "failed",
+            "excelRow": excel_row,
+            "prudentialUrl": prudential_url,
+            "excelPruAccessName": excel_pruaccess_name,
+            "error": str(exc),
+        }
 
+    finally:
 
-# ============================================================
-# NORMALIZE TEXT
-# ============================================================
-
-def normalize_text(value):
-
-    if value is None:
-        return ""
-
-    return re.sub(
-        r"\s+",
-        " ",
-        str(value)
-    ).strip()
-
-
-# ============================================================
-# DETECT DISTRIBUTION FUND FROM TEXT
-# ============================================================
-
-def detect_distribution_from_text(text):
-
-    normalized = normalize_text(
-        text
-    )
-
-    matches = []
-
-    for pattern in DISTRIBUTION_TEXT_PATTERNS:
-
-        found = re.search(
-            pattern,
-            normalized,
-            flags=re.IGNORECASE
-        )
-
-        if found:
-
-            matches.append({
-                "pattern": pattern,
-                "matchedText": found.group(0)
-            })
-
-    return matches
-
-
-# ============================================================
-# SEARCH TEXT FOR POSSIBLE DIVIDEND RATE
-#
-# IMPORTANT:
-# This does NOT calculate anything.
-#
-# It only captures a number when the page explicitly places
-# a percentage/rate/amount close to dividend/distribution text.
-# ============================================================
-
-def find_dividend_rates_in_text(text):
-
-    normalized = normalize_text(
-        text
-    )
-
-    results = []
-
-    # --------------------------------------------------------
-    # Examples:
-    #
-    # Dividend rate: 1.25%
-    # Distribution rate 2.50%
-    # Dividend: 0.0125
-    # Distribution amount: 0.50
-    # --------------------------------------------------------
-
-    patterns = [
-
-        (
-            "percentage_rate",
-            r"(?i)"
-            r"(?:dividend|distribution|payout)"
-            r"(?:\s+\w+){0,4}"
-            r"\s*(?:rate|percentage|percent)"
-            r"\s*[:\-]?\s*"
-            r"([0-9]+(?:\.[0-9]+)?)\s*%"
-        ),
-
-        (
-            "rate_before_label",
-            r"(?i)"
-            r"([0-9]+(?:\.[0-9]+)?)\s*%"
-            r"\s*"
-            r"(?:dividend|distribution|payout)"
-            r"(?:\s+\w+){0,4}"
-            r"\s*(?:rate|percentage|percent)"
-        ),
-
-        (
-            "amount",
-            r"(?i)"
-            r"(?:dividend|distribution|payout)"
-            r"(?:\s+\w+){0,4}"
-            r"\s*(?:amount|rate)"
-            r"\s*[:\-]?\s*"
-            r"([0-9]+(?:\.[0-9]+)?)"
-        ),
-
-    ]
-
-    for name, pattern in patterns:
-
-        for match in re.finditer(
-            pattern,
-            normalized
-        ):
-
-            results.append({
-                "type": name,
-                "matchedText": match.group(0),
-                "value": match.group(1)
-            })
-
-    return results
-
-
-# ============================================================
-# DETECT DISTRIBUTION FROM URL
-# ============================================================
-
-def detect_distribution_from_url(url):
-
-    lower_url = url.lower()
-
-    indicators = []
-
-    if "distribution" in lower_url:
-
-        indicators.append(
-            "URL contains 'distribution'"
-        )
-
-    if "dividend" in lower_url:
-
-        indicators.append(
-            "URL contains 'dividend'"
-        )
-
-    return indicators
+        await page.close()
+        await context.close()
 
 
 # ============================================================
@@ -347,611 +822,268 @@ def detect_distribution_from_url(url):
 
 async def main():
 
-    captured_json = []
-    captured_requests = []
+    print("=" * 80)
+    print("VGrat FMS - PRUDENTIAL DIVIDEND ALL-FUND TEST")
+    print("=" * 80)
 
-    async with async_playwright() as p:
+    # --------------------------------------------------------
+    # Prepare output
+    # --------------------------------------------------------
 
-        browser = await p.chromium.launch(
+    OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    RAW_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    # --------------------------------------------------------
+    # Load Excel
+    # --------------------------------------------------------
+
+    try:
+        funds = load_funds_from_excel()
+
+    except Exception as exc:
+
+        print(
+            f"[FATAL] Could not load Excel: {exc}"
+        )
+
+        sys.exit(1)
+
+    total_funds = len(funds)
+
+    print()
+    print(
+        f"Funds found in Column A: {total_funds}"
+    )
+
+    if total_funds == 0:
+
+        print(
+            "[FATAL] No populated fund URLs found "
+            "in Excel Column A."
+        )
+
+        sys.exit(1)
+
+    # --------------------------------------------------------
+    # Results
+    # --------------------------------------------------------
+
+    dividend_records = []
+    no_dividend_records = []
+    failed_records = []
+
+    started_at = datetime.now().isoformat()
+
+    # --------------------------------------------------------
+    # Browser
+    # --------------------------------------------------------
+
+    async with async_playwright() as playwright:
+
+        browser = await playwright.chromium.launch(
             headless=True
         )
 
-        page = await browser.new_page(
-            viewport={
-                "width": 1440,
-                "height": 1000
-            }
-        )
+        try:
 
-        # ====================================================
-        # EXISTING RESPONSE HANDLER
-        #
-        # THIS IS KEPT FUNCTIONALLY THE SAME.
-        # ====================================================
-
-        async def handle_response(response):
-
-            url = response.url
-
-            if not any(
-                part in url
-                for part in IMPORTANT_PARTS
-            ):
-                return
-
-            print()
-            print(
-                "FOUND PRUDENTIAL JSON:"
-            )
-            print(url)
-            print(
-                "STATUS:",
-                response.status
-            )
-
-            try:
-
-                body = await response.text()
-
-                filename = (
-                    f"response_"
-                    f"{len(captured_json) + 1}"
-                    f".json"
-                )
-
-                output_file = (
-                    OUTPUT_DIR /
-                    filename
-                )
-
-                output_file.write_text(
-                    body,
-                    encoding="utf-8"
-                )
-
-                captured_json.append({
-                    "filename":
-                        filename,
-
-                    "url":
-                        url,
-
-                    "status":
-                        response.status,
-
-                    "contentType":
-                        response.headers.get(
-                            "content-type",
-                            ""
-                        )
-                })
-
-            except Exception as e:
-
-                print(
-                    "Could not read response:",
-                    repr(e)
-                )
-
-        # ====================================================
-        # EXISTING REQUEST HANDLER
-        #
-        # ALSO KEPT.
-        # ====================================================
-
-        async def handle_request(request):
-
-            url = request.url
-
-            if any(
-                part in url
-                for part in IMPORTANT_PARTS
+            for index, fund in enumerate(
+                funds,
+                start=1,
             ):
 
-                captured_requests.append({
-                    "method":
-                        request.method,
-
-                    "url":
-                        request.url,
-
-                    "postData":
-                        request.post_data
-                })
-
-        page.on(
-            "response",
-            handle_response
-        )
-
-        page.on(
-            "request",
-            handle_request
-        )
-
-        # ====================================================
-        # OPEN PAGE
-        # ====================================================
-
-        print(
-            "Opening Prudential page..."
-        )
-
-        print(
-            TEST_URL
-        )
-
-        await page.goto(
-            TEST_URL,
-            wait_until="domcontentloaded",
-            timeout=120000
-        )
-
-        # ====================================================
-        # WAIT FOR JAVASCRIPT
-        # ====================================================
-
-        print(
-            "Waiting for Prudential JavaScript..."
-        )
-
-        await page.wait_for_timeout(
-            15000
-        )
-
-        # ====================================================
-        # SCROLL
-        # ====================================================
-
-        await page.evaluate(
-            """
-            window.scrollTo(
-                0,
-                document.body.scrollHeight
-            );
-            """
-        )
-
-        await page.wait_for_timeout(
-            5000
-        )
-
-        # ====================================================
-        # SAVE RENDERED HTML
-        # ====================================================
-
-        html = await page.content()
-
-        (
-            OUTPUT_DIR /
-            "rendered.html"
-        ).write_text(
-            html,
-            encoding="utf-8"
-        )
-
-        # ====================================================
-        # SAVE VISIBLE TEXT
-        # ====================================================
-
-        visible_text = await page.locator(
-            "body"
-        ).inner_text()
-
-        (
-            OUTPUT_DIR /
-            "visible_text.txt"
-        ).write_text(
-            visible_text,
-            encoding="utf-8"
-        )
-
-        # ====================================================
-        # SAVE REQUEST LIST
-        # ====================================================
-
-        (
-            OUTPUT_DIR /
-            "requests.json"
-        ).write_text(
-            json.dumps(
-                captured_requests,
-                indent=2,
-                ensure_ascii=False
-            ),
-            encoding="utf-8"
-        )
-
-        # ====================================================
-        # EXISTING SUMMARY
-        # ====================================================
-
-        summary = {
-            "testUrl":
-                TEST_URL,
-
-            "jsonResponsesCaptured":
-                len(captured_json),
-
-            "responses":
-                captured_json
-        }
-
-        (
-            OUTPUT_DIR /
-            "summary.json"
-        ).write_text(
-            json.dumps(
-                summary,
-                indent=2,
-                ensure_ascii=False
-            ),
-            encoding="utf-8"
-        )
-
-        # ====================================================
-        # NEW DIVIDEND ANALYSIS
-        # ====================================================
-
-        print()
-        print(
-            "========================================"
-        )
-        print(
-            "DIVIDEND / DISTRIBUTION ANALYSIS"
-        )
-        print(
-            "========================================"
-        )
-
-        # ----------------------------------------------------
-        # URL detection
-        # ----------------------------------------------------
-
-        url_indicators = (
-            detect_distribution_from_url(
-                TEST_URL
-            )
-        )
-
-        # ----------------------------------------------------
-        # Visible page text detection
-        # ----------------------------------------------------
-
-        text_indicators = (
-            detect_distribution_from_text(
-                visible_text
-            )
-        )
-
-        # ----------------------------------------------------
-        # Search visible text for rates
-        # ----------------------------------------------------
-
-        visible_text_rates = (
-            find_dividend_rates_in_text(
-                visible_text
-            )
-        )
-
-        # ----------------------------------------------------
-        # Search captured JSON
-        # ----------------------------------------------------
-
-        json_analysis = []
-
-        all_json_dividend_matches = []
-
-        for item in captured_json:
-
-            json_file = (
-                OUTPUT_DIR /
-                item["filename"]
-            )
-
-            data = load_json_file(
-                json_file
-            )
-
-            if data is None:
-
-                continue
-
-            matches = find_dividend_fields(
-                data
-            )
-
-            json_analysis.append({
-
-                "filename":
-                    item["filename"],
-
-                "url":
-                    item["url"],
-
-                "matches":
-                    matches
-
-            })
-
-            all_json_dividend_matches.extend(
-                matches
-            )
-
-        # ====================================================
-        # DETERMINE WHETHER THIS APPEARS TO BE A
-        # DISTRIBUTION / DIVIDEND FUND
-        # ====================================================
-
-        is_distribution_fund = (
-            len(url_indicators) > 0
-            or len(text_indicators) > 0
-            or len(all_json_dividend_matches) > 0
-        )
-
-        # ====================================================
-        # FIND POSSIBLE OFFICIAL RATE
-        # ====================================================
-
-        possible_rates = []
-
-        # From visible page
-
-        for item in visible_text_rates:
-
-            possible_rates.append({
-
-                "source":
-                    "visible_page_text",
-
-                **item
-
-            })
-
-        # From JSON
-
-        for item in all_json_dividend_matches:
-
-            key_lower = str(
-                item["key"]
-            ).lower()
-
-            # Only treat it as a possible rate if
-            # the field itself looks rate/amount related.
-
-            if any(
-                keyword in key_lower
-                for keyword in RATE_KEYWORDS
-            ):
-
-                value = item["value"]
-
-                # Do not automatically label arbitrary
-                # dividend-related objects as rates.
-
-                if isinstance(
-                    value,
-                    (
-                        str,
-                        int,
-                        float
+                result = await process_fund(
+                    browser=browser,
+                    fund=fund,
+                    fund_index=index,
+                    total_funds=total_funds,
+                )
+
+                status = result.get("status")
+
+                if status == "dividend_found":
+
+                    dividend_records.append(
+                        result
                     )
+
+                elif status == "no_dividend":
+
+                    no_dividend_records.append(
+                        result
+                    )
+
+                else:
+
+                    failed_records.append(
+                        result
+                    )
+
+                # ------------------------------------------------
+                # Save incrementally after every fund.
+                #
+                # This prevents losing all progress if the workflow
+                # is interrupted part-way through the run.
+                # ------------------------------------------------
+
+                save_json(
+                    DIVIDEND_RECORDS_FILE,
+                    dividend_records,
+                )
+
+                save_json(
+                    NO_DIVIDEND_FILE,
+                    no_dividend_records,
+                )
+
+                save_json(
+                    FAILED_FUNDS_FILE,
+                    failed_records,
+                )
+
+                current_summary = {
+                    "status": "running",
+                    "startedAt": started_at,
+                    "updatedAt": datetime.now().isoformat(),
+                    "excelFile": str(EXCEL_FILE),
+                    "totalFunds": total_funds,
+                    "processedFunds": (
+                        len(dividend_records)
+                        + len(no_dividend_records)
+                        + len(failed_records)
+                    ),
+                    "dividendFunds": len(
+                        dividend_records
+                    ),
+                    "noDividendFunds": len(
+                        no_dividend_records
+                    ),
+                    "failedFunds": len(
+                        failed_records
+                    ),
+                }
+
+                save_json(
+                    RUN_SUMMARY_FILE,
+                    current_summary,
+                )
+
+                if (
+                    index < total_funds
+                    and DELAY_BETWEEN_FUNDS_SECONDS > 0
                 ):
-
-                    possible_rates.append({
-
-                        "source":
-                            "prudential_json",
-
-                        "path":
-                            item["path"],
-
-                        "key":
-                            item["key"],
-
-                        "value":
-                            value
-
-                    })
-
-        # ====================================================
-        # REMOVE DUPLICATES
-        # ====================================================
-
-        unique_rates = []
-
-        seen_rates = set()
-
-        for item in possible_rates:
-
-            fingerprint = json.dumps(
-                item,
-                sort_keys=True,
-                ensure_ascii=False
-            )
-
-            if fingerprint in seen_rates:
-
-                continue
-
-            seen_rates.add(
-                fingerprint
-            )
-
-            unique_rates.append(
-                item
-            )
-
-        # ====================================================
-        # FINAL DIVIDEND RESULT
-        # ====================================================
-
-        dividend_analysis = {
-
-            "testUrl":
-                TEST_URL,
-
-            "isDistributionOrDividendFund":
-                is_distribution_fund,
-
-            "detection": {
-
-                "urlIndicators":
-                    url_indicators,
-
-                "visiblePageIndicators":
-                    text_indicators,
-
-                "jsonDividendFieldCount":
-                    len(
-                        all_json_dividend_matches
+                    await asyncio.sleep(
+                        DELAY_BETWEEN_FUNDS_SECONDS
                     )
 
-            },
+        finally:
 
-            "possibleOfficialRates":
-                unique_rates,
+            await browser.close()
 
-            "jsonDividendFields":
-                json_analysis,
+    # --------------------------------------------------------
+    # Final summary
+    # --------------------------------------------------------
 
-            "rules": {
+    completed_at = datetime.now().isoformat()
 
-                "rateCalculated":
-                    False,
-
-                "rateInferred":
-                    False,
-
-                "rateEstimated":
-                    False,
-
-                "rateSynthetic":
-                    False
-
-            }
-
-        }
-
-        (
-            OUTPUT_DIR /
-            "dividend_analysis.json"
-        ).write_text(
-            json.dumps(
-                dividend_analysis,
-                indent=2,
-                ensure_ascii=False
+    final_summary = {
+        "status": (
+            "completed"
+            if not failed_records
+            else "completed_with_failures"
+        ),
+        "startedAt": started_at,
+        "completedAt": completed_at,
+        "excelFile": str(EXCEL_FILE),
+        "totalFunds": total_funds,
+        "processedFunds": (
+            len(dividend_records)
+            + len(no_dividend_records)
+            + len(failed_records)
+        ),
+        "dividendFunds": len(
+            dividend_records
+        ),
+        "noDividendFunds": len(
+            no_dividend_records
+        ),
+        "failedFunds": len(
+            failed_records
+        ),
+        "outputs": {
+            "dividendRecords": str(
+                DIVIDEND_RECORDS_FILE
             ),
-            encoding="utf-8"
-        )
+            "noDividend": str(
+                NO_DIVIDEND_FILE
+            ),
+            "failedFunds": str(
+                FAILED_FUNDS_FILE
+            ),
+            "runSummary": str(
+                RUN_SUMMARY_FILE
+            ),
+            "rawDirectory": str(
+                RAW_DIR
+            ),
+        },
+    }
 
-        # ====================================================
-        # PRINT DIVIDEND RESULTS
-        # ====================================================
+    save_json(
+        RUN_SUMMARY_FILE,
+        final_summary,
+    )
 
-        print()
-        print(
-            "Distribution / Dividend fund:",
-            is_distribution_fund
-        )
+    # --------------------------------------------------------
+    # Console summary
+    # --------------------------------------------------------
 
-        print(
-            "URL indicators:",
-            len(url_indicators)
-        )
+    print()
+    print("=" * 80)
+    print("RUN COMPLETE")
+    print("=" * 80)
 
-        print(
-            "Visible page indicators:",
-            len(text_indicators)
-        )
+    print(
+        f"Total funds:       {total_funds}"
+    )
 
-        print(
-            "JSON dividend fields:",
-            len(all_json_dividend_matches)
-        )
+    print(
+        f"Dividend found:    {len(dividend_records)}"
+    )
 
-        print(
-            "Possible official rates:",
-            len(unique_rates)
-        )
+    print(
+        f"No dividend:       {len(no_dividend_records)}"
+    )
 
-        # ----------------------------------------------------
-        # Print detected rates
-        # ----------------------------------------------------
+    print(
+        f"Failed:             {len(failed_records)}"
+    )
 
-        if unique_rates:
+    print()
+    print(
+        f"Dividend records:  {DIVIDEND_RECORDS_FILE}"
+    )
 
-            print()
-            print(
-                "POSSIBLE OFFICIAL DIVIDEND "
-                "OR DISTRIBUTION VALUES:"
-            )
+    print(
+        f"No dividend:       {NO_DIVIDEND_FILE}"
+    )
 
-            for item in unique_rates:
+    print(
+        f"Failed funds:      {FAILED_FUNDS_FILE}"
+    )
 
-                print(
-                    json.dumps(
-                        item,
-                        ensure_ascii=False
-                    )
-                )
+    print(
+        f"Run summary:       {RUN_SUMMARY_FILE}"
+    )
 
-        else:
-
-            print()
-            print(
-                "No explicit dividend/distribution "
-                "rate was found."
-            )
-
-            print(
-                "No rate has been calculated or inferred."
-            )
-
-        # ====================================================
-        # FINAL EXISTING OUTPUT
-        # ====================================================
-
-        print()
-        print(
-            "========================================"
-        )
-        print(
-            "PRUDENTIAL JSON CAPTURE COMPLETE"
-        )
-        print(
-            "========================================"
-        )
-
-        print(
-            "JSON responses:",
-            len(captured_json)
-        )
-
-        for item in captured_json:
-
-            print(
-                item["filename"],
-                "->",
-                item["url"]
-            )
-
-        print()
-        print(
-            "Files saved to output/"
-        )
-
-        print(
-            "New dividend analysis:"
-        )
-
-        print(
-            "output/dividend_analysis.json"
-        )
-
-        await browser.close()
+    print("=" * 80)
 
 
 if __name__ == "__main__":
-
     asyncio.run(main())
