@@ -28,14 +28,14 @@ jobs:
         run: |
           playwright install --with-deps chromium
 
-      - name: Run Prudential test
+      - name: Run Prudential all-fund JSON capture
         run: |
-          python scripts/test_prudential_fund.py
+          python -u scripts/test_prudential_json_all_funds.py
 
-      - name: Upload diagnostic results
+      - name: Upload Prudential JSON results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: prudential-test-results
-          path: output/
-          if-no-files-found: warn
+          name: prudential-json-output
+          path: output_prudential_json/
+          if-no-files-found: error
