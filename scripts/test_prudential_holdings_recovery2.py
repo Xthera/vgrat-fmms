@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 """
-VGrat FMS - Prudential Top Holdings RECOVERY 2 EXTRACTOR
+VGrat FMS - Prudential Top Holdings RECOVERY 2
+ADAPTIVE / FORENSIC EXTRACTOR
 
 RECOVERY SOURCE
 ===============
@@ -29,13 +30,53 @@ The Excel workbook remains authoritative for:
     Column B = PruAccess fund name
 
 
+PURPOSE
+=======
+
+This version is deliberately diagnostic-first.
+
+The previous Recovery 2 implementation stopped whenever it could not find
+a literal "Top 10 Holdings" heading. That assumption is not reliable for
+all Prudential factsheet PDF layouts.
+
+This version therefore:
+
+1. Loads ONLY Recovery 1 failed funds.
+2. Downloads the official Prudential factsheet.
+3. Saves the complete PDF and extracted text.
+4. Extracts page-by-page text.
+5. Extracts positioned PDF text with coordinates.
+6. Searches the entire PDF for holdings-related terminology.
+7. Searches the entire PDF for ranked candidates 1-10.
+8. Searches the entire PDF for published percentages.
+9. Searches for conventional holdings sections if present.
+10. Builds multiple candidate regions without requiring a heading.
+11. Attempts strict text reconstruction.
+12. Attempts strict spatial reconstruction.
+13. Never invents a holding or percentage.
+14. Never pairs arbitrary names and percentages merely because they are
+    geographically close.
+15. Performs exact re-download verification for any accepted result.
+16. Saves forensic diagnostics for every unresolved fund.
+
+IMPORTANT
+=========
+
+This script is NOT permitted to conclude that a fund has no holdings merely
+because a literal "Top 10 Holdings" heading cannot be found.
+
+"NO_EXPLICIT_SECTION" means only that the conventional heading was not found.
+
+Official PDF evidence is retained for the next extraction stage.
+
+
 HARD RULES
 ==========
 
 - Recovery 1 failed funds control Recovery 2 universe.
 - No baseline fallback.
 - Excel Column A controls the master fund URL.
-- No hardcoded fund count.
+- No hardcoded master fund count.
 - Only official Prudential Singapore pages.
 - Only official Prudential Singapore factsheets.
 - No third-party holdings sources.
@@ -49,16 +90,14 @@ HARD RULES
 - Duplicate holding percentages are allowed.
 - Multiline holding names are supported.
 - Hyphenated PDF line wraps are reconstructed.
-- Fixed-income lines may contain coupon/rate percentages.
-- Fallback uses the LAST percentage on a logical line.
-- Primary parser rejects ambiguous multiple-percentage lines.
-- Spatial PDF recovery is permitted.
-- No fuzzy holding matching.
+- Fixed-income coupon/rate percentages must not be treated as portfolio
+  weights unless the PDF's table structure explicitly identifies the
+  percentage as the holding weight.
 - No arbitrary coordinate proximity pairing.
+- No fuzzy holding matching.
 - No synthetic values.
 - No estimated values.
 - No interpolated values.
-- Final verification downloads the official PDF again.
 - Final verification requires exact rank/name/weight signature equality.
 - Recovery 2 writes only to:
       output_holdings_recovery_2/
@@ -126,6 +165,70 @@ PRUDENTIAL_HOSTS = {
     "www.prudential.com.sg",
 }
 
+HOLDINGS_KEYWORDS = (
+    "holding",
+    "holdings",
+    "investment",
+    "investments",
+    "portfolio",
+    "security",
+    "securities",
+    "issuer",
+    "issuers",
+    "equity",
+    "bond",
+    "bonds",
+    "stock",
+    "stocks",
+    "top 10",
+    "top ten",
+)
+
+SECTION_HEADINGS = (
+    re.compile(
+        r"^top\s+(?:10|ten)\s+holdings\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"^top\s+holdings\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"^top\s+(?:10|ten)\s+investments\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"^largest\s+holdings\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"^portfolio\s+holdings\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"^major\s+holdings\b",
+        re.IGNORECASE,
+    ),
+)
+
+PERCENTAGE_RE = re.compile(
+    r"(?<![\d.])"
+    r"(\d+(?:\.\d+)?)"
+    r"\s*%"
+)
+
+LEADING_RANK_RE = re.compile(
+    r"^\s*(\d{1,2})[.)]?\s+(.*)$"
+)
+
+RANK_ONLY_RE = re.compile(
+    r"^\s*(\d{1,2})[.)]?\s*$"
+)
+
+DATE_RE = re.compile(
+    r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b"
+)
+
 
 # =============================================================================
 # GENERIC HELPERS
@@ -159,6 +262,7 @@ def normalize_text(value) -> str:
         .replace("\u201d", '"')
         .replace("\u2013", "-")
         .replace("\u2014", "-")
+        .replace("\u00a0", " ")
     )
 
     return re.sub(
@@ -168,7 +272,11 @@ def normalize_text(value) -> str:
     ).strip()
 
 
-def save_json(path: Path, value) -> None:
+def save_json(
+    path: Path,
+    value,
+) -> None:
+
     path.parent.mkdir(
         parents=True,
         exist_ok=True,
@@ -184,7 +292,10 @@ def save_json(path: Path, value) -> None:
     )
 
 
-def safe_filename(value: str) -> str:
+def safe_filename(
+    value: str,
+) -> str:
+
     text = clean_text(value)
 
     text = re.sub(
@@ -208,8 +319,12 @@ def safe_filename(value: str) -> str:
     return text.strip("._")
 
 
-def is_prudential_url(url: str) -> bool:
+def is_prudential_url(
+    url: str,
+) -> bool:
+
     try:
+
         parsed = urlparse(url)
 
         return (
@@ -220,18 +335,24 @@ def is_prudential_url(url: str) -> bool:
         )
 
     except Exception:
+
         return False
 
 
-def ensure_prudential_url(url: str) -> str:
+def ensure_prudential_url(
+    url: str,
+) -> str:
+
     value = clean_text(url)
 
     if not value:
+
         raise RuntimeError(
             "Prudential URL is empty."
         )
 
     if not is_prudential_url(value):
+
         raise RuntimeError(
             "URL is not an official Prudential Singapore URL: "
             f"{value}"
@@ -240,34 +361,19 @@ def ensure_prudential_url(url: str) -> str:
     return value
 
 
-class HoldingsParseFailure(RuntimeError):
+class HoldingsParseFailure(
+    RuntimeError
+):
     pass
 
 
 # =============================================================================
-# RECOVERY 1 FAILURE EXTRACTION
+# RECOVERY 1 FAILURE LOADING
 # =============================================================================
 
-def _normalize_failed_fund_entries(candidate) -> list[dict]:
-    """
-    Normalize possible Recovery 1 failure structures.
-
-    Accepted forms include:
-
-        [
-            {"excelRow": 17, ...}
-        ]
-
-    or:
-
-        {
-            "17": {
-                ...
-            }
-        }
-
-    The function does not access baseline data.
-    """
+def _normalize_failed_fund_entries(
+    candidate,
+) -> list[dict]:
 
     if isinstance(candidate, list):
 
@@ -295,9 +401,11 @@ def _normalize_failed_fund_entries(candidate) -> list[dict]:
                         if row_key in entry:
 
                             try:
+
                                 entry["excelRow"] = int(
                                     entry[row_key]
                                 )
+
                             except Exception:
                                 pass
 
@@ -306,7 +414,9 @@ def _normalize_failed_fund_entries(candidate) -> list[dict]:
                 if "excelRow" not in entry:
 
                     try:
+
                         entry["excelRow"] = int(key)
+
                     except Exception:
                         pass
 
@@ -319,20 +429,27 @@ def _normalize_failed_fund_entries(candidate) -> list[dict]:
                 }
 
                 try:
+
                     entry["excelRow"] = int(key)
+
                 except Exception:
                     pass
 
                 entries.append(entry)
 
     else:
+
         return []
 
     normalized = []
 
     for entry in entries:
 
-        if not isinstance(entry, dict):
+        if not isinstance(
+            entry,
+            dict,
+        ):
+
             continue
 
         item = dict(entry)
@@ -351,8 +468,13 @@ def _normalize_failed_fund_entries(candidate) -> list[dict]:
                 continue
 
             try:
-                row = int(item[key])
+
+                row = int(
+                    item[key]
+                )
+
             except Exception:
+
                 row = None
 
             if row is not None:
@@ -362,6 +484,7 @@ def _normalize_failed_fund_entries(candidate) -> list[dict]:
             continue
 
         item["excelRow"] = row
+
         normalized.append(item)
 
     normalized.sort(
@@ -372,24 +495,11 @@ def _normalize_failed_fund_entries(candidate) -> list[dict]:
 
 
 def load_recovery_1_failure_files() -> list[dict]:
-    """
-    Reconstruct Recovery 1 failures from Recovery 1's own output.
 
-    ONLY:
-
-        output_holdings_recovery/funds/*_failed/failure.json
-
-    NEVER:
-
-        output_holdings/
-    """
-
-    if not RECOVERY_FUNDS_OUTPUT_DIR.parent.exists():
-        return []
-
-    recovery1_funds_dir = Path(
-        "output_holdings_recovery"
-    ) / "funds"
+    recovery1_funds_dir = (
+        Path("output_holdings_recovery")
+        / "funds"
+    )
 
     if not recovery1_funds_dir.exists():
         return []
@@ -420,15 +530,22 @@ def load_recovery_1_failure_files() -> list[dict]:
                 f"{failure_file}"
             ) from error
 
-        if not isinstance(payload, dict):
+        if not isinstance(
+            payload,
+            dict,
+        ):
+
             continue
 
         if normalize_text(
             payload.get("status")
         ) != "failed":
+
             continue
 
-        excel_row = payload.get("excelRow")
+        excel_row = payload.get(
+            "excelRow"
+        )
 
         if excel_row is None:
 
@@ -438,17 +555,25 @@ def load_recovery_1_failure_files() -> list[dict]:
             )
 
             if match:
-                excel_row = int(match.group(1))
+                excel_row = int(
+                    match.group(1)
+                )
 
         if excel_row is None:
+
             raise RuntimeError(
                 "Recovery 1 failure file has no identifiable "
                 f"Excel row: {failure_file}"
             )
 
         try:
-            excel_row = int(excel_row)
+
+            excel_row = int(
+                excel_row
+            )
+
         except Exception as error:
+
             raise RuntimeError(
                 "Invalid Excel row in Recovery 1 failure file: "
                 f"{failure_file}"
@@ -458,9 +583,13 @@ def load_recovery_1_failure_files() -> list[dict]:
 
         item["excelRow"] = excel_row
 
-        item["_reconstructedFromRecovery1Output"] = True
+        item[
+            "_reconstructedFromRecovery1Output"
+        ] = True
 
-        item["_recovery1FailureFile"] = str(
+        item[
+            "_recovery1FailureFile"
+        ] = str(
             failure_file
         )
 
@@ -474,17 +603,6 @@ def load_recovery_1_failure_files() -> list[dict]:
 
 
 def load_recovery_1_run_summary() -> dict:
-    """
-    Load Recovery 1 state.
-
-    Preferred order:
-
-    1. failedFundsDetail
-    2. alternative failure fields in Recovery 1 summary
-    3. Recovery 1's own *_failed/failure.json files
-
-    NEVER uses baseline output.
-    """
 
     if not RECOVERY_1_RUN_SUMMARY_FILE.exists():
 
@@ -508,18 +626,21 @@ def load_recovery_1_run_summary() -> dict:
             f"{RECOVERY_1_RUN_SUMMARY_FILE}"
         ) from error
 
-    if not isinstance(payload, dict):
+    if not isinstance(
+        payload,
+        dict,
+    ):
 
         raise RuntimeError(
             "Recovery 1 run summary is not a JSON object."
         )
 
-    # -------------------------------------------------------------------------
-    # 1. Preferred field
-    # -------------------------------------------------------------------------
-
-    normalized_failed = _normalize_failed_fund_entries(
-        payload.get("failedFundsDetail")
+    normalized_failed = (
+        _normalize_failed_fund_entries(
+            payload.get(
+                "failedFundsDetail"
+            )
+        )
     )
 
     source = ""
@@ -530,10 +651,6 @@ def load_recovery_1_run_summary() -> dict:
             "recovery1_run_summary:"
             "failedFundsDetail"
         )
-
-    # -------------------------------------------------------------------------
-    # 2. Alternative fields
-    # -------------------------------------------------------------------------
 
     if not normalized_failed:
 
@@ -549,7 +666,9 @@ def load_recovery_1_run_summary() -> dict:
 
         for key in alternative_keys:
 
-            candidate = payload.get(key)
+            candidate = payload.get(
+                key
+            )
 
             candidate_entries = (
                 _normalize_failed_fund_entries(
@@ -570,10 +689,6 @@ def load_recovery_1_run_summary() -> dict:
 
                 break
 
-    # -------------------------------------------------------------------------
-    # 3. Recovery 1 own failure files
-    # -------------------------------------------------------------------------
-
     if not normalized_failed:
 
         reconstructed = (
@@ -582,7 +697,9 @@ def load_recovery_1_run_summary() -> dict:
 
         if reconstructed:
 
-            normalized_failed = reconstructed
+            normalized_failed = (
+                reconstructed
+            )
 
             source = (
                 "recovery1_output_failure_files"
@@ -617,27 +734,29 @@ def load_recovery_1_run_summary() -> dict:
             "Recovery 2 will NOT fall back to the baseline."
         )
 
-    # -------------------------------------------------------------------------
-    # Validate rows
-    # -------------------------------------------------------------------------
-
     cleaned = []
 
     seen = set()
 
     for item in normalized_failed:
 
-        row = item.get("excelRow")
+        row = item.get(
+            "excelRow"
+        )
 
         try:
+
             row = int(row)
+
         except Exception as error:
+
             raise RuntimeError(
                 "Recovery 1 failure entry has invalid excelRow: "
                 f"{item.get('excelRow')}"
             ) from error
 
         if row in seen:
+
             raise RuntimeError(
                 "Duplicate Recovery 1 failed Excel row: "
                 f"{row}"
@@ -646,6 +765,7 @@ def load_recovery_1_run_summary() -> dict:
         seen.add(row)
 
         entry = dict(item)
+
         entry["excelRow"] = row
 
         cleaned.append(entry)
@@ -654,15 +774,19 @@ def load_recovery_1_run_summary() -> dict:
         key=lambda item: item["excelRow"]
     )
 
-    payload["failedFundsDetail"] = cleaned
+    payload[
+        "failedFundsDetail"
+    ] = cleaned
 
-    payload["_recovery2FailureSource"] = source
+    payload[
+        "_recovery2FailureSource"
+    ] = source
 
     return payload
 
 
 # =============================================================================
-# EXCEL MASTER UNIVERSE
+# EXCEL
 # =============================================================================
 
 def read_excel_funds() -> dict[int, dict]:
@@ -728,10 +852,6 @@ def read_excel_funds() -> dict[int, dict]:
     return funds
 
 
-# =============================================================================
-# BUILD RECOVERY 2 UNIVERSE
-# =============================================================================
-
 def build_recovery_universe(
     recovery_1: dict,
     excel_funds: dict[int, dict],
@@ -750,22 +870,27 @@ def build_recovery_universe(
             "Recovery 1 failedFundsDetail is invalid."
         )
 
-    recovery_universe = []
+    universe = []
 
     seen_rows = set()
 
     for failure in failed_entries:
 
-        if not isinstance(failure, dict):
+        if not isinstance(
+            failure,
+            dict,
+        ):
 
             raise RuntimeError(
                 "Recovery 1 failure entry is not an object."
             )
 
         try:
+
             excel_row = int(
                 failure["excelRow"]
             )
+
         except Exception as error:
 
             raise RuntimeError(
@@ -780,7 +905,9 @@ def build_recovery_universe(
                 f"{excel_row}"
             )
 
-        seen_rows.add(excel_row)
+        seen_rows.add(
+            excel_row
+        )
 
         if excel_row not in excel_funds:
 
@@ -789,23 +916,35 @@ def build_recovery_universe(
                 "does not exist in Excel."
             )
 
-        excel_fund = excel_funds[excel_row]
+        excel_fund = excel_funds[
+            excel_row
+        ]
 
         excel_url = clean_text(
-            excel_fund.get("prudentialUrl")
+            excel_fund.get(
+                "prudentialUrl"
+            )
         )
 
         excel_name = clean_text(
-            excel_fund.get("pruAccessName")
+            excel_fund.get(
+                "pruAccessName"
+            )
         )
 
         failure_url = clean_text(
-            failure.get("prudentialUrl")
+            failure.get(
+                "prudentialUrl"
+            )
         )
 
         failure_name = clean_text(
-            failure.get("excelPruAccessName")
-            or failure.get("pruAccessName")
+            failure.get(
+                "excelPruAccessName"
+            )
+            or failure.get(
+                "pruAccessName"
+            )
         )
 
         if (
@@ -829,7 +968,7 @@ def build_recovery_universe(
                 f"Excel for row {excel_row}."
             )
 
-        recovery_universe.append(
+        universe.append(
             {
                 "excelRow": excel_row,
                 "prudentialUrl": excel_url,
@@ -838,7 +977,7 @@ def build_recovery_universe(
             }
         )
 
-    return recovery_universe
+    return universe
 
 
 # =============================================================================
@@ -864,7 +1003,9 @@ def find_factsheet_url(
         POST_PAGE_WAIT_MS
     )
 
-    links = page.locator("a")
+    links = page.locator(
+        "a"
+    )
 
     candidates = []
 
@@ -872,12 +1013,16 @@ def find_factsheet_url(
         links.count()
     ):
 
-        anchor = links.nth(index)
+        anchor = links.nth(
+            index
+        )
 
         try:
 
             href = clean_text(
-                anchor.get_attribute("href")
+                anchor.get_attribute(
+                    "href"
+                )
             )
 
             text = clean_text(
@@ -901,6 +1046,7 @@ def find_factsheet_url(
         if not is_prudential_url(
             absolute
         ):
+
             continue
 
         combined = normalize_text(
@@ -922,6 +1068,7 @@ def find_factsheet_url(
             score += 10
 
         if score > 0:
+
             candidates.append(
                 (
                     score,
@@ -969,7 +1116,9 @@ def download_factsheet(
 
     body = response.body()
 
-    if not body.startswith(b"%PDF"):
+    if not body.startswith(
+        b"%PDF"
+    ):
 
         raise RuntimeError(
             "Official factsheet response is not a PDF."
@@ -979,12 +1128,12 @@ def download_factsheet(
 
 
 # =============================================================================
-# PDF TEXT
+# PDF EXTRACTION
 # =============================================================================
 
-def extract_pdf_text(
+def read_pdf_pages(
     factsheet_bytes: bytes,
-) -> tuple[str, int]:
+) -> list[dict]:
 
     reader = PdfReader(
         BytesIO(factsheet_bytes)
@@ -992,341 +1141,500 @@ def extract_pdf_text(
 
     pages = []
 
-    for pdf_page in reader.pages:
+    for page_number, pdf_page in enumerate(
+        reader.pages,
+        start=1,
+    ):
 
         try:
+
             text = pdf_page.extract_text() or ""
+
         except Exception:
+
             text = ""
 
-        pages.append(text)
+        pages.append(
+            {
+                "page": page_number,
+                "text": text,
+                "lines": [
+                    clean_text(line)
+                    for line in text.splitlines()
+                    if clean_text(line)
+                ],
+            }
+        )
+
+    return pages
+
+
+def extract_pdf_text(
+    factsheet_bytes: bytes,
+) -> tuple[str, int, list[dict]]:
+
+    pages = read_pdf_pages(
+        factsheet_bytes
+    )
+
+    full_text = "\n".join(
+        page["text"]
+        for page in pages
+    )
 
     return (
-        "\n".join(pages),
-        len(reader.pages),
+        full_text,
+        len(pages),
+        pages,
     )
 
 
-def pdf_lines(text: str) -> list[str]:
+# =============================================================================
+# POSITIONED PDF EXTRACTION
+# =============================================================================
 
-    if not text:
+def positioned_pdf_words(
+    factsheet_bytes: bytes,
+) -> list[dict]:
+
+    reader = PdfReader(
+        BytesIO(factsheet_bytes)
+    )
+
+    positioned = []
+
+    for page_number, pdf_page in enumerate(
+        reader.pages,
+        start=1,
+    ):
+
+        words = []
+
+        try:
+
+            def visitor_text(
+                text,
+                cm,
+                tm,
+                font_dict,
+                font_size,
+            ):
+
+                if not text:
+                    return
+
+                raw_value = str(
+                    text
+                )
+
+                value = clean_text(
+                    raw_value
+                )
+
+                if not value:
+                    return
+
+                try:
+
+                    x = float(
+                        tm[4]
+                    )
+
+                    y = float(
+                        tm[5]
+                    )
+
+                except Exception:
+
+                    return
+
+                try:
+
+                    size = float(
+                        font_size or 0
+                    )
+
+                except Exception:
+
+                    size = 0.0
+
+                words.append(
+                    {
+                        "page": page_number,
+                        "text": value,
+                        "rawText": raw_value,
+                        "x": x,
+                        "y": y,
+                        "fontSize": size,
+                    }
+                )
+
+            pdf_page.extract_text(
+                visitor_text=visitor_text
+            )
+
+        except Exception:
+
+            words = []
+
+        positioned.extend(
+            words
+        )
+
+    return positioned
+
+
+def group_positioned_rows(
+    positioned: list[dict],
+    y_tolerance: float = 3.0,
+) -> list[dict]:
+
+    by_page = {}
+
+    for item in positioned:
+
+        by_page.setdefault(
+            int(item["page"]),
+            [],
+        ).append(item)
+
+    output = []
+
+    for page_number in sorted(
+        by_page
+    ):
+
+        items = sorted(
+            by_page[page_number],
+            key=lambda item: (
+                -float(item.get("y", 0)),
+                float(item.get("x", 0)),
+            ),
+        )
+
+        rows = []
+
+        for item in items:
+
+            y = float(
+                item.get(
+                    "y",
+                    0,
+                )
+            )
+
+            selected = None
+
+            for row in rows:
+
+                if abs(
+                    row["y"] - y
+                ) <= y_tolerance:
+
+                    selected = row
+                    break
+
+            if selected is None:
+
+                selected = {
+                    "page": page_number,
+                    "y": y,
+                    "items": [],
+                }
+
+                rows.append(
+                    selected
+                )
+
+            selected["items"].append(
+                item
+            )
+
+        for row in rows:
+
+            row["items"].sort(
+                key=lambda item: float(
+                    item.get(
+                        "x",
+                        0,
+                    )
+                )
+            )
+
+            row["text"] = clean_text(
+                " ".join(
+                    item.get(
+                        "text",
+                        "",
+                    )
+                    for item in row["items"]
+                )
+            )
+
+        rows.sort(
+            key=lambda row: -row["y"]
+        )
+
+        output.extend(
+            rows
+        )
+
+    return output
+
+
+# =============================================================================
+# DIAGNOSTIC SEARCH
+# =============================================================================
+
+def find_heading_candidates(
+    pages: list[dict],
+) -> list[dict]:
+
+    matches = []
+
+    for page in pages:
+
+        page_number = page[
+            "page"
+        ]
+
+        for line_index, line in enumerate(
+            page["lines"]
+        ):
+
+            normalized = normalize_text(
+                line
+            )
+
+            for pattern in SECTION_HEADINGS:
+
+                if pattern.search(
+                    normalized
+                ):
+
+                    matches.append(
+                        {
+                            "page": page_number,
+                            "lineIndex": line_index,
+                            "text": line,
+                            "normalized": normalized,
+                            "type": "section_heading",
+                        }
+                    )
+
+                    break
+
+    return matches
+
+
+def find_keyword_candidates(
+    pages: list[dict],
+) -> list[dict]:
+
+    matches = []
+
+    for page in pages:
+
+        page_number = page[
+            "page"
+        ]
+
+        for line_index, line in enumerate(
+            page["lines"]
+        ):
+
+            normalized = normalize_text(
+                line
+            )
+
+            found = [
+                keyword
+                for keyword in HOLDINGS_KEYWORDS
+                if keyword in normalized
+            ]
+
+            if found:
+
+                matches.append(
+                    {
+                        "page": page_number,
+                        "lineIndex": line_index,
+                        "text": line,
+                        "keywords": found,
+                    }
+                )
+
+    return matches
+
+
+def find_percentage_candidates(
+    pages: list[dict],
+) -> list[dict]:
+
+    matches = []
+
+    for page in pages:
+
+        page_number = page[
+            "page"
+        ]
+
+        for line_index, line in enumerate(
+            page["lines"]
+        ):
+
+            percentages = []
+
+            for match in percentage_matches(
+                line
+            ):
+
+                try:
+
+                    value = float(
+                        match.group(1)
+                    )
+
+                except Exception:
+
+                    continue
+
+                percentages.append(
+                    {
+                        "value": value,
+                        "text": match.group(0),
+                        "start": match.start(),
+                        "end": match.end(),
+                    }
+                )
+
+            if percentages:
+
+                matches.append(
+                    {
+                        "page": page_number,
+                        "lineIndex": line_index,
+                        "text": line,
+                        "percentages": percentages,
+                    }
+                )
+
+    return matches
+
+
+def find_rank_candidates(
+    pages: list[dict],
+) -> list[dict]:
+
+    matches = []
+
+    for page in pages:
+
+        page_number = page[
+            "page"
+        ]
+
+        lines = page[
+            "lines"
+        ]
+
+        for line_index, line in enumerate(
+            lines
+        ):
+
+            match = LEADING_RANK_RE.match(
+                line
+            )
+
+            if match:
+
+                rank = int(
+                    match.group(1)
+                )
+
+                if 1 <= rank <= 10:
+
+                    matches.append(
+                        {
+                            "page": page_number,
+                            "lineIndex": line_index,
+                            "rank": rank,
+                            "text": line,
+                            "remainder": clean_text(
+                                match.group(2)
+                            ),
+                            "hasPercentage": bool(
+                                percentage_matches(
+                                    line
+                                )
+                            ),
+                        }
+                    )
+
+                continue
+
+            rank_only = RANK_ONLY_RE.match(
+                line
+            )
+
+            if rank_only:
+
+                rank = int(
+                    rank_only.group(1)
+                )
+
+                if 1 <= rank <= 10:
+
+                    matches.append(
+                        {
+                            "page": page_number,
+                            "lineIndex": line_index,
+                            "rank": rank,
+                            "text": line,
+                            "remainder": "",
+                            "hasPercentage": False,
+                        }
+                    )
+
+    return matches
+
+
+def surrounding_lines(
+    pages: list[dict],
+    page_number: int,
+    line_index: int,
+    radius: int = 4,
+) -> list[str]:
+
+    page = next(
+        (
+            item
+            for item in pages
+            if item["page"] == page_number
+        ),
+        None,
+    )
+
+    if page is None:
         return []
 
-    return [
-        clean_text(line)
-        for line in text.splitlines()
+    start = max(
+        0,
+        line_index - radius,
+    )
+
+    end = min(
+        len(page["lines"]),
+        line_index + radius + 1,
+    )
+
+    return page["lines"][
+        start:end
     ]
 
 
 # =============================================================================
-# FACTSHEET METADATA
-# =============================================================================
-
-def extract_data_as_at(text: str) -> str:
-
-    for pattern in (
-        r"data\s+as\s+at\s*[:\-]?\s*([^\n]+)",
-        r"as\s+at\s*[:\-]?\s*([^\n]+)",
-    ):
-
-        match = re.search(
-            pattern,
-            text,
-            flags=re.IGNORECASE,
-        )
-
-        if match:
-            return clean_text(
-                match.group(1)
-            )
-
-    return ""
-
-
-def extract_document_date(text: str) -> str:
-
-    for pattern in (
-        r"document\s+date\s*[:\-]?\s*([^\n]+)",
-        r"dated\s*[:\-]?\s*([^\n]+)",
-    ):
-
-        match = re.search(
-            pattern,
-            text,
-            flags=re.IGNORECASE,
-        )
-
-        if match:
-            return clean_text(
-                match.group(1)
-            )
-
-    return ""
-
-
-# =============================================================================
-# TOP HOLDINGS SECTION
-# =============================================================================
-
-def find_holdings_start(
-    lines: list[str],
-) -> int | None:
-
-    for index, line in enumerate(lines):
-
-        normalized = normalize_text(line)
-
-        if re.match(
-            r"^top\s+(?:10|ten)\s+holdings\b",
-            normalized,
-            flags=re.IGNORECASE,
-        ):
-
-            return index
-
-    return None
-
-
-def is_holdings_end(line: str) -> bool:
-
-    normalized = normalize_text(line)
-
-    if not normalized:
-        return False
-
-    markers = (
-        "source",
-        "inception date",
-        "important information",
-        "disclaimer",
-        "past performance",
-        "portfolio characteristics",
-        "asset allocation",
-        "page ",
-    )
-
-    return any(
-        normalized.startswith(marker)
-        for marker in markers
-    )
-
-
-def extract_holdings_section(
-    full_text: str,
-) -> tuple[str, str]:
-
-    lines = pdf_lines(full_text)
-
-    start = find_holdings_start(lines)
-
-    if start is None:
-        return "", "not_found"
-
-    section = []
-
-    for line in lines[start + 1:]:
-
-        if is_holdings_end(line):
-            break
-
-        section.append(line)
-
-    section_text = "\n".join(section).strip()
-
-    if not section_text:
-        return "", "published_empty"
-
-    return section_text, "published"
-
-
-# =============================================================================
-# HOLDING NAME CLEANING
-# =============================================================================
-
-def clean_holding_name(value: str) -> str:
-
-    name = clean_text(value)
-
-    name = re.sub(
-        r"^[•·▪■□*]+",
-        "",
-        name,
-    ).strip()
-
-    name = re.sub(
-        r"^\d{1,2}[.)]\s+",
-        "",
-        name,
-    )
-
-    name = name.replace("|", " ")
-
-    name = re.sub(
-        r"\bNone\b",
-        " ",
-        name,
-        flags=re.IGNORECASE,
-    )
-
-    name = clean_text(name).strip(" -|")
-
-    if normalize_text(name) in {
-        "",
-        "none",
-        "null",
-        "-",
-        "—",
-    }:
-        return ""
-
-    return name
-
-
-def clean_holding_fragment(value: str) -> str:
-
-    text = clean_text(value)
-
-    text = text.replace("|", " ")
-
-    text = re.sub(
-        r"\bNone\b",
-        " ",
-        text,
-        flags=re.IGNORECASE,
-    )
-
-    text = re.sub(
-        r"^[•·▪■□*]+",
-        "",
-        text,
-    )
-
-    return clean_text(text)
-
-
-def combine_holding_name_fragments(
-    fragments: list[str],
-) -> str:
-
-    cleaned = []
-
-    for fragment in fragments:
-
-        fragment = clean_holding_fragment(
-            fragment
-        )
-
-        if fragment:
-            cleaned.append(fragment)
-
-    return clean_holding_name(
-        " ".join(cleaned)
-    )
-
-
-# =============================================================================
-# PERCENTAGES
-# =============================================================================
-
-PERCENTAGE_RE = re.compile(
-    r"(?<![\d.])"
-    r"(\d+(?:\.\d+)?)"
-    r"\s*%"
-)
-
-
-def percentage_matches(line: str):
-    return list(
-        PERCENTAGE_RE.finditer(line)
-    )
-
-
-def find_last_percentage_in_line(line: str):
-
-    matches = percentage_matches(line)
-
-    if not matches:
-        return None
-
-    match = matches[-1]
-
-    return (
-        float(match.group(1)),
-        match.group(0),
-        match.start(),
-        match.end(),
-    )
-
-
-# =============================================================================
-# RANKS
-# =============================================================================
-
-def extract_leading_rank(line: str):
-
-    text = clean_text(line)
-
-    match = re.match(
-        r"^(\d{1,2})[.)]?\s+(.*)$",
-        text,
-    )
-
-    if match:
-
-        rank = int(match.group(1))
-
-        if 1 <= rank <= 99:
-
-            return (
-                rank,
-                clean_text(
-                    match.group(2)
-                ),
-            )
-
-    return None, text
-
-
-# =============================================================================
-# NOISE
-# =============================================================================
-
-def is_holding_header_or_noise(
-    line: str,
-) -> bool:
-
-    normalized = normalize_text(line)
-
-    if not normalized:
-        return True
-
-    if normalized in {
-        "top 10 holdings",
-        "top ten holdings",
-        "holding",
-        "holdings",
-        "weight",
-        "percentage",
-        "%",
-        "name",
-    }:
-        return True
-
-    if normalized.startswith(
-        "top 10 holdings"
-    ):
-        return True
-
-    if normalized.startswith(
-        "top ten holdings"
-    ):
-        return True
-
-    return False
-
-
-# =============================================================================
-# PDF LINE RECONSTRUCTION
+# TEXT LINE HELPERS
 # =============================================================================
 
 def merge_hyphenated_line_breaks(
@@ -1339,7 +1647,9 @@ def merge_hyphenated_line_breaks(
 
     while index < len(lines):
 
-        current = clean_text(lines[index])
+        current = clean_text(
+            lines[index]
+        )
 
         if (
             current
@@ -1364,30 +1674,337 @@ def merge_hyphenated_line_breaks(
                 index += 1
 
         if current:
-            merged.append(current)
+
+            merged.append(
+                current
+            )
 
         index += 1
 
     return merged
 
 
-def build_logical_holding_lines(
-    section_text: str,
-) -> list[str]:
+def clean_holding_name(
+    value: str,
+) -> str:
 
-    lines = pdf_lines(section_text)
+    name = clean_text(
+        value
+    )
 
-    lines = merge_hyphenated_line_breaks(lines)
+    name = re.sub(
+        r"^[•·▪■□*]+",
+        "",
+        name,
+    ).strip()
 
-    return [
+    name = re.sub(
+        r"^\d{1,2}[.)]\s+",
+        "",
+        name,
+    )
+
+    name = name.replace(
+        "|",
+        " ",
+    )
+
+    name = re.sub(
+        r"\bNone\b",
+        " ",
+        name,
+        flags=re.IGNORECASE,
+    )
+
+    name = clean_text(
+        name
+    ).strip(
+        " -|"
+    )
+
+    if normalize_text(
+        name
+    ) in {
+        "",
+        "none",
+        "null",
+        "-",
+        "—",
+    }:
+
+        return ""
+
+    return name
+
+
+def clean_holding_fragment(
+    value: str,
+) -> str:
+
+    text = clean_text(
+        value
+    )
+
+    text = text.replace(
+        "|",
+        " ",
+    )
+
+    text = re.sub(
+        r"\bNone\b",
+        " ",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    text = re.sub(
+        r"^[•·▪■□*]+",
+        "",
+        text,
+    )
+
+    return clean_text(
+        text
+    )
+
+
+def combine_holding_name_fragments(
+    fragments: list[str],
+) -> str:
+
+    cleaned = []
+
+    for fragment in fragments:
+
+        fragment = clean_holding_fragment(
+            fragment
+        )
+
+        if fragment:
+            cleaned.append(
+                fragment
+            )
+
+    return clean_holding_name(
+        " ".join(
+            cleaned
+        )
+    )
+
+
+def percentage_matches(
+    line: str,
+):
+
+    return list(
+        PERCENTAGE_RE.finditer(
+            line
+        )
+    )
+
+
+def find_last_percentage_in_line(
+    line: str,
+):
+
+    matches = percentage_matches(
         line
-        for line in lines
-        if clean_text(line)
-    ]
+    )
+
+    if not matches:
+        return None
+
+    match = matches[-1]
+
+    return (
+        float(
+            match.group(1)
+        ),
+        match.group(0),
+        match.start(),
+        match.end(),
+    )
+
+
+def extract_leading_rank(
+    line: str,
+):
+
+    text = clean_text(
+        line
+    )
+
+    match = LEADING_RANK_RE.match(
+        text
+    )
+
+    if match:
+
+        rank = int(
+            match.group(1)
+        )
+
+        if 1 <= rank <= 99:
+
+            return (
+                rank,
+                clean_text(
+                    match.group(2)
+                ),
+            )
+
+    return None, text
+
+
+def is_noise_line(
+    line: str,
+) -> bool:
+
+    normalized = normalize_text(
+        line
+    )
+
+    if not normalized:
+        return True
+
+    if normalized in {
+        "top 10 holdings",
+        "top ten holdings",
+        "top holdings",
+        "holding",
+        "holdings",
+        "weight",
+        "weights",
+        "percentage",
+        "%",
+        "name",
+        "names",
+        "security",
+        "securities",
+        "investment",
+        "investments",
+        "portfolio",
+    }:
+
+        return True
+
+    return False
 
 
 # =============================================================================
-# VALIDATION
+# HOLDINGS SECTION
+# =============================================================================
+
+def extract_explicit_holdings_section(
+    pages: list[dict],
+) -> tuple[str, str, dict | None]:
+
+    headings = find_heading_candidates(
+        pages
+    )
+
+    if not headings:
+
+        return (
+            "",
+            "not_found",
+            None,
+        )
+
+    heading = headings[0]
+
+    page_number = heading[
+        "page"
+    ]
+
+    page = next(
+        item
+        for item in pages
+        if item["page"] == page_number
+    )
+
+    start = heading[
+        "lineIndex"
+    ] + 1
+
+    collected = []
+
+    for line in page["lines"][start:]:
+
+        normalized = normalize_text(
+            line
+        )
+
+        if normalized.startswith(
+            "source"
+        ):
+
+            break
+
+        if normalized.startswith(
+            "inception date"
+        ):
+
+            break
+
+        if normalized.startswith(
+            "important information"
+        ):
+
+            break
+
+        if normalized.startswith(
+            "disclaimer"
+        ):
+
+            break
+
+        if normalized.startswith(
+            "past performance"
+        ):
+
+            break
+
+        if normalized.startswith(
+            "portfolio characteristics"
+        ):
+
+            break
+
+        if normalized.startswith(
+            "asset allocation"
+        ):
+
+            break
+
+        if not line:
+            continue
+
+        collected.append(
+            line
+        )
+
+    section = "\n".join(
+        collected
+    ).strip()
+
+    if not section:
+
+        return (
+            "",
+            "published_empty",
+            heading,
+        )
+
+    return (
+        section,
+        "published",
+        heading,
+    )
+
+
+# =============================================================================
+# STRICT HOLDINGS PARSER
 # =============================================================================
 
 def validate_holdings(
@@ -1406,17 +2023,19 @@ def validate_holdings(
             f"Parser produced more than {MAX_HOLDINGS} holdings."
         )
 
+    actual = [
+        item.get(
+            "rank"
+        )
+        for item in holdings
+    ]
+
     expected = list(
         range(
             1,
             len(holdings) + 1,
         )
     )
-
-    actual = [
-        item.get("rank")
-        for item in holdings
-    ]
 
     if actual != expected:
 
@@ -1428,7 +2047,9 @@ def validate_holdings(
     for holding in holdings:
 
         name = clean_holding_name(
-            holding.get("name")
+            holding.get(
+                "name"
+            )
         )
 
         if not name:
@@ -1461,22 +2082,16 @@ def validate_holdings(
     return holdings
 
 
-# =============================================================================
-# PRIMARY PARSER
-# =============================================================================
-
-def parse_holdings(
+def parse_holdings_primary(
     section_text: str,
 ) -> list[dict]:
 
-    if not clean_text(section_text):
-
-        raise HoldingsParseFailure(
-            "Top 10 holdings section is empty."
-        )
-
-    logical_lines = build_logical_holding_lines(
-        section_text
+    logical_lines = merge_hyphenated_line_breaks(
+        [
+            clean_text(line)
+            for line in section_text.splitlines()
+            if clean_text(line)
+        ]
     )
 
     holdings = []
@@ -1487,15 +2102,21 @@ def parse_holdings(
 
     for raw_line in logical_lines:
 
-        line = clean_text(raw_line)
+        line = clean_text(
+            raw_line
+        )
 
-        if not line:
+        if is_noise_line(
+            line
+        ):
+
             continue
 
-        if is_holding_header_or_noise(line):
-            continue
-
-        rank, remainder = extract_leading_rank(line)
+        rank, remainder = (
+            extract_leading_rank(
+                line
+            )
+        )
 
         if rank is not None:
 
@@ -1507,18 +2128,29 @@ def parse_holdings(
                 )
 
             pending_rank = rank
+
             line = remainder
 
-        matches = percentage_matches(line)
+        matches = percentage_matches(
+            line
+        )
 
         if not matches:
 
-            if pending_rank is not None or holdings:
+            if (
+                pending_rank is not None
+                or holdings
+            ):
 
-                fragment = clean_holding_fragment(line)
+                fragment = clean_holding_fragment(
+                    line
+                )
 
                 if fragment:
-                    pending_fragments.append(fragment)
+
+                    pending_fragments.append(
+                        fragment
+                    )
 
             continue
 
@@ -1531,16 +2163,23 @@ def parse_holdings(
 
         match = matches[0]
 
-        percentage = float(match.group(1))
+        percentage = float(
+            match.group(1)
+        )
 
         percentage_text = match.group(0)
 
         fragment = clean_holding_fragment(
-            line[:match.start()]
+            line[
+                :match.start()
+            ]
         )
 
         if fragment:
-            pending_fragments.append(fragment)
+
+            pending_fragments.append(
+                fragment
+            )
 
         name = combine_holding_name_fragments(
             pending_fragments
@@ -1566,6 +2205,7 @@ def parse_holdings(
         )
 
         pending_fragments = []
+
         pending_rank = None
 
     if pending_fragments:
@@ -1574,25 +2214,21 @@ def parse_holdings(
             "Trailing holding text has no published percentage."
         )
 
-    return validate_holdings(holdings)
+    return validate_holdings(
+        holdings
+    )
 
-
-# =============================================================================
-# FALLBACK PARSER
-# =============================================================================
 
 def parse_holdings_fallback(
     section_text: str,
 ) -> list[dict]:
 
-    if not clean_text(section_text):
-
-        raise HoldingsParseFailure(
-            "Top 10 holdings section is empty."
-        )
-
-    logical_lines = build_logical_holding_lines(
-        section_text
+    logical_lines = merge_hyphenated_line_breaks(
+        [
+            clean_text(line)
+            for line in section_text.splitlines()
+            if clean_text(line)
+        ]
     )
 
     holdings = []
@@ -1623,7 +2259,7 @@ def parse_holdings_fallback(
         if len(holdings) >= MAX_HOLDINGS:
 
             raise HoldingsParseFailure(
-                f"Fallback parser produced more than "
+                "Fallback parser produced more than "
                 f"{MAX_HOLDINGS} holdings."
             )
 
@@ -1641,19 +2277,26 @@ def parse_holdings_fallback(
         )
 
         pending_fragments = []
+
         pending_rank = None
 
     for raw_line in logical_lines:
 
-        line = clean_text(raw_line)
+        line = clean_text(
+            raw_line
+        )
 
-        if not line:
+        if is_noise_line(
+            line
+        ):
+
             continue
 
-        if is_holding_header_or_noise(line):
-            continue
-
-        rank, remainder = extract_leading_rank(line)
+        rank, remainder = (
+            extract_leading_rank(
+                line
+            )
+        )
 
         if rank is not None:
 
@@ -1666,18 +2309,26 @@ def parse_holdings_fallback(
                 )
 
             pending_rank = rank
+
             line = remainder
 
-        last_percentage = find_last_percentage_in_line(
-            line
+        last_percentage = (
+            find_last_percentage_in_line(
+                line
+            )
         )
 
         if last_percentage is None:
 
-            fragment = clean_holding_fragment(line)
+            fragment = clean_holding_fragment(
+                line
+            )
 
             if fragment:
-                pending_fragments.append(fragment)
+
+                pending_fragments.append(
+                    fragment
+                )
 
             continue
 
@@ -1686,11 +2337,16 @@ def parse_holdings_fallback(
         )
 
         fragment = clean_holding_fragment(
-            line[:start]
+            line[
+                :start
+            ]
         )
 
         if fragment:
-            pending_fragments.append(fragment)
+
+            pending_fragments.append(
+                fragment
+            )
 
         commit(
             percentage,
@@ -1704,366 +2360,814 @@ def parse_holdings_fallback(
             "without a published percentage."
         )
 
-    return validate_holdings(holdings)
-
-
-# =============================================================================
-# SIGNATURE
-# =============================================================================
-
-def holding_signature(
-    holdings: list[dict],
-) -> list[tuple]:
-
-    return [
-        (
-            item.get("rank"),
-            normalize_text(item.get("name")),
-            float(item.get("weightPercent")),
-        )
-        for item in holdings
-    ]
-
-
-# =============================================================================
-# SPATIAL PDF EXTRACTION
-# =============================================================================
-
-def positioned_pdf_lines(
-    factsheet_bytes: bytes,
-) -> list[dict]:
-
-    reader = PdfReader(
-        BytesIO(factsheet_bytes)
+    return validate_holdings(
+        holdings
     )
 
-    positioned = []
 
-    for page_number, pdf_page in enumerate(
-        reader.pages,
-        start=1,
-    ):
+# =============================================================================
+# ADAPTIVE CANDIDATE REGIONS
+# =============================================================================
 
-        words = []
-
-        try:
-
-            def visitor_text(
-                text,
-                cm,
-                tm,
-                font_dict,
-                font_size,
-            ):
-
-                if not text:
-                    return
-
-                value = clean_text(text)
-
-                if not value:
-                    return
-
-                try:
-
-                    x = float(tm[4])
-                    y = float(tm[5])
-
-                except Exception:
-                    return
-
-                words.append(
-                    {
-                        "page": page_number,
-                        "text": value,
-                        "x": x,
-                        "y": y,
-                        "fontSize": float(
-                            font_size or 0
-                        ),
-                    }
-                )
-
-            pdf_page.extract_text(
-                visitor_text=visitor_text
-            )
-
-        except Exception:
-
-            words = []
-
-        positioned.extend(words)
-
-    return positioned
-
-
-def find_spatial_heading(
-    positioned: list[dict],
-):
-
-    for item in positioned:
-
-        normalized = normalize_text(
-            item.get("text")
-        )
-
-        if re.match(
-            r"^top\s+(?:10|ten)\s+holdings\b",
-            normalized,
-            flags=re.IGNORECASE,
-        ):
-
-            return item
-
-    return None
-
-
-def build_spatial_candidates(
-    positioned: list[dict],
-    heading: dict,
+def build_text_candidate_regions(
+    pages: list[dict],
 ) -> list[dict]:
 
-    page = heading.get("page")
-    heading_y = heading.get("y")
+    """
+    Build candidate text regions without requiring a Top 10 Holdings heading.
 
-    if page is None:
-        return []
+    A candidate begins around a rank 1-10 or a holdings keyword and continues
+    through nearby lines until a strong document boundary is encountered.
 
-    page_items = [
-        item
-        for item in positioned
-        if item.get("page") == page
-    ]
+    This is candidate discovery only. Strict validation decides whether a
+    candidate is actually accepted.
+    """
 
-    if heading_y is not None:
+    regions = []
 
-        page_items = [
-            item
-            for item in page_items
-            if item.get("y", 0) < heading_y
+    for page in pages:
+
+        lines = page[
+            "lines"
         ]
 
-    rows = {}
+        page_number = page[
+            "page"
+        ]
 
-    for item in page_items:
+        rank_indices = []
 
-        y = round(
-            float(item.get("y", 0)),
-            1,
+        for index, line in enumerate(
+            lines
+        ):
+
+            match = LEADING_RANK_RE.match(
+                line
+            )
+
+            if match:
+
+                rank = int(
+                    match.group(1)
+                )
+
+                if 1 <= rank <= 10:
+
+                    rank_indices.append(
+                        index
+                    )
+
+        keyword_indices = []
+
+        for index, line in enumerate(
+            lines
+        ):
+
+            normalized = normalize_text(
+                line
+            )
+
+            if any(
+                keyword in normalized
+                for keyword in HOLDINGS_KEYWORDS
+            ):
+
+                keyword_indices.append(
+                    index
+                )
+
+        starts = sorted(
+            set(
+                rank_indices
+                + keyword_indices
+            )
         )
 
-        rows.setdefault(y, []).append(item)
+        for start in starts:
+
+            end = min(
+                len(lines),
+                start + 40,
+            )
+
+            region_lines = []
+
+            for index in range(
+                start,
+                end,
+            ):
+
+                line = lines[index]
+
+                normalized = normalize_text(
+                    line
+                )
+
+                if index > start:
+
+                    if (
+                        normalized.startswith(
+                            "important information"
+                        )
+                        or normalized.startswith(
+                            "disclaimer"
+                        )
+                        or normalized.startswith(
+                            "past performance"
+                        )
+                        or normalized.startswith(
+                            "source"
+                        )
+                    ):
+
+                        break
+
+                region_lines.append(
+                    line
+                )
+
+            if not region_lines:
+                continue
+
+            text = "\n".join(
+                region_lines
+            )
+
+            rank_count = len(
+                [
+                    line
+                    for line in region_lines
+                    if (
+                        LEADING_RANK_RE.match(
+                            line
+                        )
+                        and 1 <= int(
+                            LEADING_RANK_RE.match(
+                                line
+                            ).group(1)
+                        ) <= 10
+                    )
+                ]
+            )
+
+            percentage_count = sum(
+                len(
+                    percentage_matches(
+                        line
+                    )
+                )
+                for line in region_lines
+            )
+
+            if (
+                rank_count == 0
+                and percentage_count == 0
+            ):
+
+                continue
+
+            regions.append(
+                {
+                    "page": page_number,
+                    "startLineIndex": start,
+                    "endLineIndex": (
+                        start
+                        + len(region_lines)
+                        - 1
+                    ),
+                    "text": text,
+                    "rankCount": rank_count,
+                    "percentageCount": percentage_count,
+                }
+            )
+
+    # Deduplicate identical candidate text.
+    deduplicated = []
+
+    seen = set()
+
+    for region in regions:
+
+        key = (
+            region["page"],
+            region["startLineIndex"],
+            region["endLineIndex"],
+            region["text"],
+        )
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+
+        deduplicated.append(
+            region
+        )
+
+    # Highest evidence first.
+    deduplicated.sort(
+        key=lambda item: (
+            -item["rankCount"],
+            -item["percentageCount"],
+            item["page"],
+            item["startLineIndex"],
+        )
+    )
+
+    return deduplicated
+
+
+def extract_ranked_text_windows(
+    pages: list[dict],
+) -> list[dict]:
+
+    """
+    More conservative windows.
+
+    Each candidate starts at a detected rank and includes a bounded number
+    of subsequent lines. This is useful when PDF text extraction separates
+    the security name and percentage vertically.
+    """
 
     candidates = []
 
-    for y in sorted(
-        rows,
-        reverse=True,
-    ):
+    for page in pages:
 
-        row = sorted(
-            rows[y],
-            key=lambda item: item.get("x", 0),
-        )
+        lines = page[
+            "lines"
+        ]
 
-        text = clean_text(
-            " ".join(
-                item.get("text", "")
-                for item in row
+        page_number = page[
+            "page"
+        ]
+
+        for start, line in enumerate(
+            lines
+        ):
+
+            match = LEADING_RANK_RE.match(
+                line
             )
-        )
 
-        if not text:
-            continue
+            if not match:
+                continue
 
-        if is_holding_header_or_noise(text):
-            continue
-
-        if percentage_matches(text):
-
-            candidates.append(
-                {
-                    "page": page,
-                    "y": y,
-                    "text": text,
-                    "items": row,
-                }
+            rank = int(
+                match.group(1)
             )
+
+            if not 1 <= rank <= 10:
+                continue
+
+            for width in (
+                8,
+                12,
+                18,
+                25,
+            ):
+
+                end = min(
+                    len(lines),
+                    start + width,
+                )
+
+                region_lines = lines[
+                    start:end
+                ]
+
+                text = "\n".join(
+                    region_lines
+                )
+
+                ranks = []
+
+                for candidate_line in region_lines:
+
+                    candidate_match = (
+                        LEADING_RANK_RE.match(
+                            candidate_line
+                        )
+                    )
+
+                    if candidate_match:
+
+                        candidate_rank = int(
+                            candidate_match.group(
+                                1
+                            )
+                        )
+
+                        if 1 <= candidate_rank <= 10:
+
+                            ranks.append(
+                                candidate_rank
+                            )
+
+                percentages = sum(
+                    len(
+                        percentage_matches(
+                            candidate_line
+                        )
+                    )
+                    for candidate_line in region_lines
+                )
+
+                if percentages == 0:
+                    continue
+
+                candidates.append(
+                    {
+                        "page": page_number,
+                        "startLineIndex": start,
+                        "endLineIndex": end - 1,
+                        "text": text,
+                        "rankCount": len(ranks),
+                        "ranks": ranks,
+                        "percentageCount": percentages,
+                        "windowWidth": width,
+                    }
+                )
+
+    candidates.sort(
+        key=lambda item: (
+            -item["rankCount"],
+            -item["percentageCount"],
+            item["page"],
+            item["startLineIndex"],
+            item["windowWidth"],
+        )
+    )
 
     return candidates
 
 
-def choose_spatial_left_column(
-    candidates: list[dict],
+# =============================================================================
+# SPATIAL DIAGNOSTICS
+# =============================================================================
+
+def spatial_keyword_matches(
+    positioned_rows: list[dict],
 ) -> list[dict]:
 
-    if not candidates:
-        return []
+    matches = []
 
-    weight_items = []
+    for row in positioned_rows:
 
-    for candidate in candidates:
-
-        for item in candidate.get(
-            "items",
-            [],
-        ):
-
-            if percentage_matches(
-                item.get("text", "")
-            ):
-
-                weight_items.append(item)
-
-    if not weight_items:
-        return []
-
-    boundary = max(
-        item.get("x", 0)
-        for item in weight_items
-    )
-
-    selected = []
-
-    for candidate in candidates:
-
-        left_items = [
-            item
-            for item in candidate.get(
-                "items",
-                [],
-            )
-            if item.get("x", 0) < boundary
-        ]
-
-        if not left_items:
-            continue
-
-        name_text = clean_text(
-            " ".join(
-                item.get("text", "")
-                for item in left_items
+        normalized = normalize_text(
+            row.get(
+                "text",
+                ""
             )
         )
 
-        if not name_text:
-            continue
+        found = [
+            keyword
+            for keyword in HOLDINGS_KEYWORDS
+            if keyword in normalized
+        ]
 
-        selected.append(
+        if found:
+
+            matches.append(
+                {
+                    "page": row.get(
+                        "page"
+                    ),
+                    "y": row.get(
+                        "y"
+                    ),
+                    "text": row.get(
+                        "text"
+                    ),
+                    "keywords": found,
+                    "items": row.get(
+                        "items",
+                        [],
+                    ),
+                }
+            )
+
+    return matches
+
+
+def spatial_rank_matches(
+    positioned_rows: list[dict],
+) -> list[dict]:
+
+    matches = []
+
+    for row in positioned_rows:
+
+        text = clean_text(
+            row.get(
+                "text",
+                ""
+            )
+        )
+
+        match = LEADING_RANK_RE.match(
+            text
+        )
+
+        if match:
+
+            rank = int(
+                match.group(
+                    1
+                )
+            )
+
+            if 1 <= rank <= 10:
+
+                matches.append(
+                    {
+                        "page": row.get(
+                            "page"
+                        ),
+                        "y": row.get(
+                            "y"
+                        ),
+                        "rank": rank,
+                        "text": text,
+                        "items": row.get(
+                            "items",
+                            [],
+                        ),
+                    }
+                )
+
+        rank_only = RANK_ONLY_RE.match(
+            text
+        )
+
+        if rank_only:
+
+            rank = int(
+                rank_only.group(
+                    1
+                )
+            )
+
+            if 1 <= rank <= 10:
+
+                matches.append(
+                    {
+                        "page": row.get(
+                            "page"
+                        ),
+                        "y": row.get(
+                            "y"
+                        ),
+                        "rank": rank,
+                        "text": text,
+                        "items": row.get(
+                            "items",
+                            [],
+                        ),
+                    }
+                )
+
+    return matches
+
+
+def spatial_percentage_matches(
+    positioned_rows: list[dict],
+) -> list[dict]:
+
+    matches = []
+
+    for row in positioned_rows:
+
+        text = clean_text(
+            row.get(
+                "text",
+                ""
+            )
+        )
+
+        percentages = []
+
+        for match in percentage_matches(
+            text
+        ):
+
+            percentages.append(
+                {
+                    "value": float(
+                        match.group(1)
+                    ),
+                    "text": match.group(0),
+                    "start": match.start(),
+                    "end": match.end(),
+                }
+            )
+
+        if percentages:
+
+            matches.append(
+                {
+                    "page": row.get(
+                        "page"
+                    ),
+                    "y": row.get(
+                        "y"
+                    ),
+                    "text": text,
+                    "percentages": percentages,
+                    "items": row.get(
+                        "items",
+                        [],
+                    ),
+                }
+            )
+
+    return matches
+
+
+def build_spatial_candidate_windows(
+    positioned_rows: list[dict],
+) -> list[dict]:
+
+    """
+    Build spatial windows from actual PDF rows.
+
+    This does NOT pair names to percentages merely by distance.
+
+    Instead, each candidate window is retained as raw evidence. The strict
+    parser is allowed to accept it only when the resulting sequence itself
+    contains explicit rank/name/percentage evidence.
+    """
+
+    candidates = []
+
+    by_page = {}
+
+    for row in positioned_rows:
+
+        by_page.setdefault(
+            int(row["page"]),
+            [],
+        ).append(row)
+
+    for page_number in sorted(
+        by_page
+    ):
+
+        rows = by_page[
+            page_number
+        ]
+
+        rows.sort(
+            key=lambda row: -float(
+                row.get(
+                    "y",
+                    0,
+                )
+            )
+        )
+
+        for start_index, row in enumerate(
+            rows
+        ):
+
+            text = clean_text(
+                row.get(
+                    "text",
+                    ""
+                )
+            )
+
+            rank_match = LEADING_RANK_RE.match(
+                text
+            )
+
+            rank_only_match = RANK_ONLY_RE.match(
+                text
+            )
+
+            rank = None
+
+            if rank_match:
+
+                rank = int(
+                    rank_match.group(
+                        1
+                    )
+                )
+
+            elif rank_only_match:
+
+                rank = int(
+                    rank_only_match.group(
+                        1
+                    )
+                )
+
+            if rank is None or not 1 <= rank <= 10:
+                continue
+
+            for width in (
+                6,
+                10,
+                15,
+                20,
+            ):
+
+                end = min(
+                    len(rows),
+                    start_index + width,
+                )
+
+                window = rows[
+                    start_index:end
+                ]
+
+                percentage_rows = [
+                    candidate
+                    for candidate in window
+                    if percentage_matches(
+                        candidate.get(
+                            "text",
+                            ""
+                        )
+                    )
+                ]
+
+                if not percentage_rows:
+                    continue
+
+                candidate = {
+                    "page": page_number,
+                    "startRowIndex": start_index,
+                    "endRowIndex": end - 1,
+                    "rank": rank,
+                    "rowCount": len(window),
+                    "percentageRowCount": len(
+                        percentage_rows
+                    ),
+                    "rows": window,
+                }
+
+                candidates.append(
+                    candidate
+                )
+
+    candidates.sort(
+        key=lambda item: (
+            -item["percentageRowCount"],
+            item["page"],
+            item["startRowIndex"],
+            item["rowCount"],
+        )
+    )
+
+    return candidates
+
+
+# =============================================================================
+# SPATIAL TABLE RECONSTRUCTION
+# =============================================================================
+
+def spatial_window_to_lines(
+    candidate: dict,
+) -> list[str]:
+
+    lines = []
+
+    for row in candidate.get(
+        "rows",
+        [],
+    ):
+
+        text = clean_text(
+            row.get(
+                "text",
+                ""
+            )
+        )
+
+        if text:
+            lines.append(
+                text
+            )
+
+    return lines
+
+
+def spatial_candidate_to_json(
+    candidate: dict,
+) -> dict:
+
+    rows = []
+
+    for row in candidate.get(
+        "rows",
+        [],
+    ):
+
+        rows.append(
             {
-                "y": candidate.get("y"),
-                "name": name_text,
-                "fullText": candidate.get("text"),
+                "page": row.get(
+                    "page"
+                ),
+                "y": row.get(
+                    "y"
+                ),
+                "text": row.get(
+                    "text"
+                ),
+                "items": [
+                    {
+                        "text": item.get(
+                            "text"
+                        ),
+                        "x": item.get(
+                            "x"
+                        ),
+                        "y": item.get(
+                            "y"
+                        ),
+                        "fontSize": item.get(
+                            "fontSize"
+                        ),
+                    }
+                    for item in row.get(
+                        "items",
+                        [],
+                    )
+                ],
             }
         )
 
-    return selected
-
-
-def spatial_lines_to_section(
-    spatial_lines: list[dict],
-) -> str:
-
-    return "\n".join(
-        clean_text(
-            item.get(
-                "fullText",
-                "",
-            )
-        )
-        for item in spatial_lines
-        if clean_text(
-            item.get(
-                "fullText",
-                "",
-            )
-        )
-    )
-
-
-def extract_spatial_fallback(
-    factsheet_bytes: bytes,
-) -> tuple[str, list[dict]]:
-
-    positioned = positioned_pdf_lines(
-        factsheet_bytes
-    )
-
-    if not positioned:
-
-        raise HoldingsParseFailure(
-            "No positioned PDF text was available."
-        )
-
-    heading = find_spatial_heading(
-        positioned
-    )
-
-    if heading is None:
-
-        raise HoldingsParseFailure(
-            "Spatial PDF fallback could not locate "
-            "the Top 10 Holdings heading."
-        )
-
-    candidates = build_spatial_candidates(
-        positioned,
-        heading,
-    )
-
-    selected = choose_spatial_left_column(
-        candidates
-    )
-
-    if not selected:
-
-        raise HoldingsParseFailure(
-            "Spatial PDF fallback could not reconstruct "
-            "holding lines."
-        )
-
-    section_text = spatial_lines_to_section(
-        selected
-    )
-
-    if not section_text:
-
-        raise HoldingsParseFailure(
-            "Spatial PDF fallback produced an empty section."
-        )
-
-    holdings = parse_holdings_fallback(
-        section_text
-    )
-
-    return section_text, holdings
+    return {
+        "page": candidate.get(
+            "page"
+        ),
+        "startRowIndex": candidate.get(
+            "startRowIndex"
+        ),
+        "endRowIndex": candidate.get(
+            "endRowIndex"
+        ),
+        "rank": candidate.get(
+            "rank"
+        ),
+        "rowCount": candidate.get(
+            "rowCount"
+        ),
+        "percentageRowCount": candidate.get(
+            "percentageRowCount"
+        ),
+        "rows": rows,
+    }
 
 
 # =============================================================================
-# RECOVERY EXTRACTION ENGINE
+# ADAPTIVE EXTRACTION
 # =============================================================================
 
-def extract_with_recovery_engine(
-    factsheet_bytes: bytes,
-    full_text: str,
-    section_text: str,
-) -> tuple[list[dict], str, str, str]:
+def attempt_explicit_section(
+    pages: list[dict],
+) -> dict:
+
+    section_text, status, heading = (
+        extract_explicit_holdings_section(
+            pages
+        )
+    )
+
+    diagnostic = {
+        "status": status,
+        "heading": heading,
+    }
+
+    if status != "published":
+
+        return {
+            "success": False,
+            "method": "explicit_section",
+            "error": (
+                "No explicit published holdings section."
+            ),
+            "diagnostic": diagnostic,
+        }
 
     primary_error = ""
-    fallback_error = ""
 
     try:
 
-        holdings = parse_holdings(
+        holdings = parse_holdings_primary(
             section_text
         )
 
-        return (
-            holdings,
-            "primary",
-            primary_error,
-            fallback_error,
-        )
+        return {
+            "success": True,
+            "method": "explicit_section_primary",
+            "holdings": holdings,
+            "sectionText": section_text,
+            "error": "",
+            "diagnostic": diagnostic,
+        }
 
     except Exception as error:
 
@@ -2077,53 +3181,703 @@ def extract_with_recovery_engine(
             section_text
         )
 
-        return (
-            holdings,
-            "fallback",
-            primary_error,
-            fallback_error,
-        )
+        return {
+            "success": True,
+            "method": "explicit_section_fallback",
+            "holdings": holdings,
+            "sectionText": section_text,
+            "error": primary_error,
+            "diagnostic": diagnostic,
+        }
 
     except Exception as error:
 
-        fallback_error = clean_text(
-            str(error)
+        return {
+            "success": False,
+            "method": "explicit_section",
+            "error": (
+                "Primary: "
+                f"{primary_error}; "
+                "Fallback: "
+                f"{clean_text(str(error))}"
+            ),
+            "diagnostic": diagnostic,
+        }
+
+
+def attempt_text_candidates(
+    pages: list[dict],
+) -> list[dict]:
+
+    results = []
+
+    regions = build_text_candidate_regions(
+        pages
+    )
+
+    ranked_windows = (
+        extract_ranked_text_windows(
+            pages
+        )
+    )
+
+    candidates = (
+        regions
+        + ranked_windows
+    )
+
+    for index, candidate in enumerate(
+        candidates,
+        start=1,
+    ):
+
+        text = candidate.get(
+            "text",
+            ""
         )
 
-    try:
+        if not text:
+            continue
 
-        _spatial_section, holdings = (
-            extract_spatial_fallback(
-                factsheet_bytes
+        attempts = []
+
+        try:
+
+            holdings = parse_holdings_primary(
+                text
+            )
+
+            attempts.append(
+                {
+                    "success": True,
+                    "parser": "primary",
+                    "holdings": holdings,
+                }
+            )
+
+        except Exception as error:
+
+            attempts.append(
+                {
+                    "success": False,
+                    "parser": "primary",
+                    "error": clean_text(
+                        str(error)
+                    ),
+                }
+            )
+
+        try:
+
+            holdings = parse_holdings_fallback(
+                text
+            )
+
+            attempts.append(
+                {
+                    "success": True,
+                    "parser": "fallback",
+                    "holdings": holdings,
+                }
+            )
+
+        except Exception as error:
+
+            attempts.append(
+                {
+                    "success": False,
+                    "parser": "fallback",
+                    "error": clean_text(
+                        str(error)
+                    ),
+                }
+            )
+
+        for attempt in attempts:
+
+            if attempt.get(
+                "success"
+            ):
+
+                results.append(
+                    {
+                        "candidateIndex": index,
+                        "candidate": candidate,
+                        "parser": attempt[
+                            "parser"
+                        ],
+                        "holdings": attempt[
+                            "holdings"
+                        ],
+                    }
+                )
+
+    return results
+
+
+def attempt_spatial_candidates(
+    positioned_rows: list[dict],
+) -> list[dict]:
+
+    candidates = (
+        build_spatial_candidate_windows(
+            positioned_rows
+        )
+    )
+
+    results = []
+
+    for index, candidate in enumerate(
+        candidates,
+        start=1,
+    ):
+
+        lines = spatial_window_to_lines(
+            candidate
+        )
+
+        text = "\n".join(
+            lines
+        )
+
+        if not text:
+            continue
+
+        for parser_name, parser in (
+            (
+                "spatial_primary",
+                parse_holdings_primary,
+            ),
+            (
+                "spatial_fallback",
+                parse_holdings_fallback,
+            ),
+        ):
+
+            try:
+
+                holdings = parser(
+                    text
+                )
+
+            except Exception:
+
+                continue
+
+            results.append(
+                {
+                    "candidateIndex": index,
+                    "candidate": candidate,
+                    "parser": parser_name,
+                    "holdings": holdings,
+                    "sectionText": text,
+                }
+            )
+
+    return results
+
+
+# =============================================================================
+# RESULT CONSISTENCY
+# =============================================================================
+
+def holding_signature(
+    holdings: list[dict],
+) -> list[tuple]:
+
+    return [
+        (
+            int(
+                item.get(
+                    "rank"
+                )
+            ),
+            normalize_text(
+                item.get(
+                    "name"
+                )
+            ),
+            float(
+                item.get(
+                    "weightPercent"
+                )
+            ),
+        )
+        for item in holdings
+    ]
+
+
+def choose_adaptive_result(
+    explicit_result: dict,
+    text_results: list[dict],
+    spatial_results: list[dict],
+) -> dict | None:
+
+    """
+    Select only a result that passes strict structural validation.
+
+    Preference:
+
+    1. Explicit section
+    2. Text candidate
+    3. Spatial candidate
+
+    Multiple independently discovered candidates with different signatures
+    are NOT silently reconciled. That ambiguity is retained as diagnostics.
+    """
+
+    if explicit_result.get(
+        "success"
+    ):
+
+        return {
+            "source": "explicit",
+            "method": explicit_result.get(
+                "method"
+            ),
+            "holdings": explicit_result.get(
+                "holdings"
+            ),
+            "sectionText": explicit_result.get(
+                "sectionText"
+            ),
+            "candidate": explicit_result.get(
+                "diagnostic"
+            ),
+        }
+
+    successful = (
+        text_results
+        + spatial_results
+    )
+
+    if not successful:
+        return None
+
+    signatures = {}
+
+    for item in successful:
+
+        signature = tuple(
+            holding_signature(
+                item["holdings"]
             )
         )
 
-        return (
-            holdings,
-            "spatial_fallback",
-            primary_error,
-            fallback_error,
+        signatures.setdefault(
+            signature,
+            [],
+        ).append(
+            item
         )
 
-    except Exception as error:
+    # If only one distinct signature was discovered, it is structurally
+    # consistent. If multiple signatures exist, do not guess.
+    if len(signatures) != 1:
 
-        spatial_error = clean_text(
-            str(error)
-        )
+        return None
 
-        raise HoldingsParseFailure(
-            "All Recovery 2 extraction strategies failed. "
-            f"Primary: {primary_error}; "
-            f"Fallback: {fallback_error}; "
-            f"Spatial: {spatial_error}"
+    signature = next(
+        iter(signatures)
+    )
+
+    matching = signatures[
+        signature
+    ]
+
+    first = matching[0]
+
+    return {
+        "source": (
+            "text_candidate"
+            if first.get(
+                "parser",
+                ""
+            ).startswith(
+                "primary"
+            )
+            or first.get(
+                "parser",
+                ""
+            ).startswith(
+                "fallback"
+            )
+            else "spatial_candidate"
+        ),
+        "method": first.get(
+            "parser"
+        ),
+        "holdings": first.get(
+            "holdings"
+        ),
+        "sectionText": first.get(
+            "sectionText"
         )
+        or first.get(
+            "candidate",
+            {},
+        ).get(
+            "text",
+            ""
+        ),
+        "candidate": first.get(
+            "candidate"
+        ),
+        "candidateCountWithSameSignature": len(
+            matching
+        ),
+    }
 
 
 # =============================================================================
-# FUND PAGE NAME
+# FORENSIC DIAGNOSTICS
 # =============================================================================
 
-def extract_fund_page_name(page) -> str:
+def build_page_diagnostics(
+    pages: list[dict],
+) -> list[dict]:
+
+    output = []
+
+    for page in pages:
+
+        page_number = page[
+            "page"
+        ]
+
+        lines = page[
+            "lines"
+        ]
+
+        rank_hits = []
+
+        percentage_hits = []
+
+        keyword_hits = []
+
+        for line_index, line in enumerate(
+            lines
+        ):
+
+            rank_match = LEADING_RANK_RE.match(
+                line
+            )
+
+            if rank_match:
+
+                rank = int(
+                    rank_match.group(
+                        1
+                    )
+                )
+
+                if 1 <= rank <= 10:
+
+                    rank_hits.append(
+                        {
+                            "lineIndex": line_index,
+                            "rank": rank,
+                            "text": line,
+                            "hasPercentage": bool(
+                                percentage_matches(
+                                    line
+                                )
+                            ),
+                        }
+                    )
+
+            percentages = percentage_matches(
+                line
+            )
+
+            if percentages:
+
+                percentage_hits.append(
+                    {
+                        "lineIndex": line_index,
+                        "text": line,
+                        "percentages": [
+                            {
+                                "value": float(
+                                    match.group(
+                                        1
+                                    )
+                                ),
+                                "text": match.group(
+                                    0
+                                ),
+                            }
+                            for match in percentages
+                        ],
+                    }
+                )
+
+            normalized = normalize_text(
+                line
+            )
+
+            found_keywords = [
+                keyword
+                for keyword in HOLDINGS_KEYWORDS
+                if keyword in normalized
+            ]
+
+            if found_keywords:
+
+                keyword_hits.append(
+                    {
+                        "lineIndex": line_index,
+                        "text": line,
+                        "keywords": found_keywords,
+                    }
+                )
+
+        output.append(
+            {
+                "page": page_number,
+                "lineCount": len(
+                    lines
+                ),
+                "rankCandidates": rank_hits,
+                "percentageCandidates": percentage_hits,
+                "keywordCandidates": keyword_hits,
+            }
+        )
+
+    return output
+
+
+def build_context_diagnostics(
+    pages: list[dict],
+    rank_candidates: list[dict],
+    percentage_candidates: list[dict],
+    keyword_candidates: list[dict],
+) -> dict:
+
+    rank_context = []
+
+    for item in rank_candidates:
+
+        rank_context.append(
+            {
+                "page": item[
+                    "page"
+                ],
+                "lineIndex": item[
+                    "lineIndex"
+                ],
+                "rank": item[
+                    "rank"
+                ],
+                "text": item[
+                    "text"
+                ],
+                "surroundingLines": surrounding_lines(
+                    pages,
+                    item[
+                        "page"
+                    ],
+                    item[
+                        "lineIndex"
+                    ],
+                    radius=5,
+                ),
+            }
+        )
+
+    percentage_context = []
+
+    for item in percentage_candidates:
+
+        percentage_context.append(
+            {
+                "page": item[
+                    "page"
+                ],
+                "lineIndex": item[
+                    "lineIndex"
+                ],
+                "text": item[
+                    "text"
+                ],
+                "percentages": item[
+                    "percentages"
+                ],
+                "surroundingLines": surrounding_lines(
+                    pages,
+                    item[
+                        "page"
+                    ],
+                    item[
+                        "lineIndex"
+                    ],
+                    radius=3,
+                ),
+            }
+        )
+
+    keyword_context = []
+
+    for item in keyword_candidates:
+
+        keyword_context.append(
+            {
+                "page": item[
+                    "page"
+                ],
+                "lineIndex": item[
+                    "lineIndex"
+                ],
+                "text": item[
+                    "text"
+                ],
+                "keywords": item[
+                    "keywords"
+                ],
+                "surroundingLines": surrounding_lines(
+                    pages,
+                    item[
+                        "page"
+                    ],
+                    item[
+                        "lineIndex"
+                    ],
+                    radius=3,
+                ),
+            }
+        )
+
+    return {
+        "rankContexts": rank_context,
+        "percentageContexts": percentage_context,
+        "keywordContexts": keyword_context,
+    }
+
+
+def save_forensic_diagnostics(
+    directory: Path,
+    factsheet_bytes: bytes,
+    full_text: str,
+    pages: list[dict],
+    positioned: list[dict],
+    diagnostic: dict,
+) -> None:
+
+    directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    (
+        directory / "factsheet.pdf"
+    ).write_bytes(
+        factsheet_bytes
+    )
+
+    (
+        directory / "factsheet_text.txt"
+    ).write_text(
+        full_text,
+        encoding="utf-8",
+    )
+
+    pages_dir = (
+        directory / "pages"
+    )
+
+    pages_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    for page in pages:
+
+        page_path = (
+            pages_dir
+            / (
+                f"page_"
+                f"{int(page['page']):03d}.txt"
+            )
+        )
+
+        page_path.write_text(
+            page.get(
+                "text",
+                ""
+            ),
+            encoding="utf-8",
+        )
+
+    save_json(
+        directory / "positioned_text.json",
+        positioned,
+    )
+
+    save_json(
+        directory / "diagnostic.json",
+        diagnostic,
+    )
+
+
+# =============================================================================
+# METADATA
+# =============================================================================
+
+def extract_data_as_at(
+    text: str,
+) -> str:
+
+    for pattern in (
+        r"data\s+as\s+at\s*[:\-]?\s*([^\n]+)",
+        r"as\s+at\s*[:\-]?\s*([^\n]+)",
+    ):
+
+        match = re.search(
+            pattern,
+            text,
+            flags=re.IGNORECASE,
+        )
+
+        if match:
+
+            return clean_text(
+                match.group(
+                    1
+                )
+            )
+
+    return ""
+
+
+def extract_document_date(
+    text: str,
+) -> str:
+
+    for pattern in (
+        r"document\s+date\s*[:\-]?\s*([^\n]+)",
+        r"dated\s*[:\-]?\s*([^\n]+)",
+    ):
+
+        match = re.search(
+            pattern,
+            text,
+            flags=re.IGNORECASE,
+        )
+
+        if match:
+
+            return clean_text(
+                match.group(
+                    1
+                )
+            )
+
+    return ""
+
+
+def extract_fund_page_name(
+    page,
+) -> str:
 
     try:
 
@@ -2141,8 +3895,38 @@ def extract_fund_page_name(page) -> str:
 
 
 # =============================================================================
-# RECOVER SINGLE FUND
+# FUND PROCESSING
 # =============================================================================
+
+def fund_output_directory(
+    excel_fund: dict,
+    page_title: str = "",
+) -> Path:
+
+    row = int(
+        excel_fund[
+            "excelRow"
+        ]
+    )
+
+    identifier = (
+        safe_filename(
+            page_title
+        )
+        or safe_filename(
+            excel_fund.get(
+                "pruAccessName",
+                ""
+            )
+        )
+        or f"fund_{row}"
+    )
+
+    return (
+        RECOVERY_FUNDS_OUTPUT_DIR
+        / f"{row}_{identifier}"
+    )
+
 
 def recover_single_fund(
     page,
@@ -2150,11 +3934,15 @@ def recover_single_fund(
 ) -> dict:
 
     excel_row = int(
-        excel_fund["excelRow"]
+        excel_fund[
+            "excelRow"
+        ]
     )
 
     prudential_url = ensure_prudential_url(
-        excel_fund["prudentialUrl"]
+        excel_fund[
+            "prudentialUrl"
+        ]
     )
 
     page.goto(
@@ -2194,45 +3982,299 @@ def recover_single_fund(
         factsheet_url,
     )
 
-    full_text, pdf_page_count = (
+    full_text, pdf_page_count, pages = (
         extract_pdf_text(
             factsheet_bytes
         )
     )
 
-    section_text, section_status = (
-        extract_holdings_section(
-            full_text
+    positioned = positioned_pdf_words(
+        factsheet_bytes
+    )
+
+    positioned_rows = group_positioned_rows(
+        positioned
+    )
+
+    headings = find_heading_candidates(
+        pages
+    )
+
+    keywords = find_keyword_candidates(
+        pages
+    )
+
+    percentages = find_percentage_candidates(
+        pages
+    )
+
+    ranks = find_rank_candidates(
+        pages
+    )
+
+    page_diagnostics = (
+        build_page_diagnostics(
+            pages
         )
     )
 
-    if section_status != "published":
+    contexts = build_context_diagnostics(
+        pages,
+        ranks,
+        percentages,
+        keywords,
+    )
 
-        if section_status == "not_found":
-
-            raise HoldingsParseFailure(
-                "Official factsheet has no confirmed "
-                "Top 10 Holdings section."
-            )
-
-        raise HoldingsParseFailure(
-            "Official factsheet Top 10 Holdings section "
-            "was empty."
+    spatial_keywords = (
+        spatial_keyword_matches(
+            positioned_rows
         )
+    )
 
-    (
-        holdings,
-        parser_used,
-        primary_error,
-        fallback_error,
-    ) = extract_with_recovery_engine(
+    spatial_ranks = (
+        spatial_rank_matches(
+            positioned_rows
+        )
+    )
+
+    spatial_percentages = (
+        spatial_percentage_matches(
+            positioned_rows
+        )
+    )
+
+    spatial_candidates = (
+        build_spatial_candidate_windows(
+            positioned_rows
+        )
+    )
+
+    explicit_result = (
+        attempt_explicit_section(
+            pages
+        )
+    )
+
+    text_results = (
+        attempt_text_candidates(
+            pages
+        )
+    )
+
+    spatial_results = (
+        attempt_spatial_candidates(
+            positioned_rows
+        )
+    )
+
+    adaptive_result = (
+        choose_adaptive_result(
+            explicit_result,
+            text_results,
+            spatial_results,
+        )
+    )
+
+    output_directory = fund_output_directory(
+        excel_fund,
+        page_title,
+    )
+
+    diagnostic = {
+        "status": (
+            "success"
+            if adaptive_result
+            else "diagnostic_no_confirmed_result"
+        ),
+        "excelRow": excel_row,
+        "prudentialUrl": prudential_url,
+        "finalUrl": final_url,
+        "pageTitle": page_title,
+        "excelPruAccessName": excel_fund.get(
+            "pruAccessName"
+        ),
+        "factsheetUrl": factsheet_url,
+        "factsheetPageCount": pdf_page_count,
+        "factsheetDocumentDate": extract_document_date(
+            full_text
+        ),
+        "factsheetDataAsAt": extract_data_as_at(
+            full_text
+        ),
+        "explicitSectionHeadings": headings,
+        "keywordCandidateCount": len(
+            keywords
+        ),
+        "percentageCandidateCount": len(
+            percentages
+        ),
+        "rankCandidateCount": len(
+            ranks
+        ),
+        "keywordCandidates": keywords,
+        "percentageCandidates": percentages,
+        "rankCandidates": ranks,
+        "context": contexts,
+        "pageDiagnostics": page_diagnostics,
+        "spatialKeywordCandidateCount": len(
+            spatial_keywords
+        ),
+        "spatialRankCandidateCount": len(
+            spatial_ranks
+        ),
+        "spatialPercentageCandidateCount": len(
+            spatial_percentages
+        ),
+        "spatialKeywordCandidates": spatial_keywords,
+        "spatialRankCandidates": spatial_ranks,
+        "spatialPercentageCandidates": spatial_percentages,
+        "spatialCandidateCount": len(
+            spatial_candidates
+        ),
+        "spatialCandidatePreviews": [
+            spatial_candidate_to_json(
+                candidate
+            )
+            for candidate in spatial_candidates[
+                :50
+            ]
+        ],
+        "explicitExtraction": {
+            "success": explicit_result.get(
+                "success"
+            ),
+            "method": explicit_result.get(
+                "method"
+            ),
+            "error": explicit_result.get(
+                "error"
+            ),
+            "diagnostic": explicit_result.get(
+                "diagnostic"
+            ),
+        },
+        "textCandidateResultCount": len(
+            text_results
+        ),
+        "textCandidateResults": [
+            {
+                "candidateIndex": item.get(
+                    "candidateIndex"
+                ),
+                "parser": item.get(
+                    "parser"
+                ),
+                "candidate": item.get(
+                    "candidate"
+                ),
+                "holdings": item.get(
+                    "holdings"
+                ),
+            }
+            for item in text_results[
+                :50
+            ]
+        ],
+        "spatialExtractionResultCount": len(
+            spatial_results
+        ),
+        "spatialExtractionResults": [
+            {
+                "candidateIndex": item.get(
+                    "candidateIndex"
+                ),
+                "parser": item.get(
+                    "parser"
+                ),
+                "candidate": spatial_candidate_to_json(
+                    item.get(
+                        "candidate",
+                        {}
+                    )
+                ),
+                "holdings": item.get(
+                    "holdings"
+                ),
+            }
+            for item in spatial_results[
+                :50
+            ]
+        ],
+        "adaptiveResult": (
+            {
+                "source": adaptive_result.get(
+                    "source"
+                ),
+                "method": adaptive_result.get(
+                    "method"
+                ),
+                "holdings": adaptive_result.get(
+                    "holdings"
+                ),
+                "candidateCountWithSameSignature":
+                    adaptive_result.get(
+                        "candidateCountWithSameSignature"
+                    ),
+            }
+            if adaptive_result
+            else None
+        ),
+        "rules": {
+            "recovery1FailedFundsOnly": True,
+            "noBaselineFallback": True,
+            "officialPrudentialSingaporeOnly": True,
+            "officialFactsheetOnly": True,
+            "thirdPartyHoldings": False,
+            "noInferredHoldings": True,
+            "noFabricatedHoldings": True,
+            "noFabricatedPercentages": True,
+            "noSyntheticValues": True,
+            "noEstimatedValues": True,
+            "noInterpolatedValues": True,
+            "maximumHoldings": MAX_HOLDINGS,
+            "publishedCountUsedExactly": True,
+            "fewerThanTenHoldingsAllowed": True,
+            "noForcedTenEntries": True,
+            "duplicateHoldingNamesAllowed": True,
+            "duplicateHoldingPercentagesAllowed": True,
+            "multilineHoldingNamesSupported": True,
+            "hyphenatedLineWrapReconstruction": True,
+            "fallbackUsesLastPercentageOnLogicalLine": True,
+            "noFuzzyHoldingMatching": True,
+            "noArbitraryCoordinateProximityPairing": True,
+            "exactFinalPdfVerification": True,
+            "exactRankNameWeightSignatureRequired": True,
+        },
+        "generatedAtUtc": utc_now_iso(),
+    }
+
+    save_forensic_diagnostics(
+        output_directory,
         factsheet_bytes,
         full_text,
-        section_text,
+        pages,
+        positioned,
+        diagnostic,
     )
 
+    if not adaptive_result:
+
+        return {
+            "success": False,
+            "status": (
+                "DIAGNOSTIC_NO_CONFIRMED_RESULT"
+            ),
+            "diagnostic": diagnostic,
+            "factsheetBytes": factsheet_bytes,
+            "fullText": full_text,
+            "factsheetUrl": factsheet_url,
+            "outputDirectory": output_directory,
+        }
+
     holdings = validate_holdings(
-        holdings
+        adaptive_result[
+            "holdings"
+        ]
     )
 
     result = {
@@ -2253,46 +4295,43 @@ def recover_single_fund(
             full_text
         ),
         "factsheetPageCount": pdf_page_count,
-        "holdingsSectionStatus": "published",
-        "topHoldingsCount": len(holdings),
-        "topHoldings": holdings,
-        "holdingsParser": parser_used,
-        "primaryParserError": primary_error,
-        "fallbackParserError": fallback_error,
-        "holdingsSectionExtraction": (
-            "pdf_coordinates"
-            if parser_used == "spatial_fallback"
-            else "pdf_text"
+        "topHoldingsCount": len(
+            holdings
         ),
-        "rules": {
-            "recovery1FailedFundsOnly": True,
-            "officialPrudentialSourceOnly": True,
-            "officialFactsheetOnly": True,
-            "maximumHoldings": MAX_HOLDINGS,
-            "publishedCountUsedExactly": True,
-            "fewerThanTenAllowed": True,
-            "noForcedTenEntries": True,
-            "noInferredHoldings": True,
-            "noFabricatedPercentages": True,
-            "duplicateHoldingNamesAllowed": True,
-            "duplicateHoldingPercentagesAllowed": True,
-            "multilineHoldingNamesSupported": True,
-            "wrappedPdfLinesJoined": True,
-            "fallbackUsesLastPercentageOnLogicalLine": True,
-            "spatialFallbackEnabled": True,
-            "noFuzzyHoldingMatching": True,
-            "noCoordinateProximityPairing": True,
-            "noSyntheticValues": True,
-            "exactFinalPdfVerification": True,
-            "exactRankNameWeightSignatureRequired": True,
-        },
+        "topHoldings": holdings,
+        "holdingsParser": adaptive_result.get(
+            "method"
+        ),
+        "holdingsExtractionSource": adaptive_result.get(
+            "source"
+        ),
+        "candidateEvidenceCount": adaptive_result.get(
+            "candidateCountWithSameSignature"
+        ),
+        "recovery1Failure": excel_fund.get(
+            "recovery1Failure"
+        ),
+        "rules": diagnostic[
+            "rules"
+        ],
     }
 
+    section_text = clean_text(
+        adaptive_result.get(
+            "sectionText",
+            ""
+        )
+    )
+
     return {
+        "success": True,
+        "status": "success",
         "result": result,
         "factsheetBytes": factsheet_bytes,
         "fullText": full_text,
         "sectionText": section_text,
+        "diagnostic": diagnostic,
+        "outputDirectory": output_directory,
     }
 
 
@@ -2303,10 +4342,17 @@ def recover_single_fund(
 def verify_exact_against_official_pdf(
     page,
     result: dict,
-) -> tuple[bytes, str, str, list[dict]]:
+) -> tuple[
+    bytes,
+    str,
+    str,
+    list[dict],
+]:
 
     factsheet_url = ensure_prudential_url(
-        result["factsheetUrl"]
+        result[
+            "factsheetUrl"
+        ]
     )
 
     response = page.request.get(
@@ -2331,61 +4377,69 @@ def verify_exact_against_official_pdf(
             "Factsheet re-download did not return a valid PDF."
         )
 
-    full_text, _page_count = extract_pdf_text(
+    full_text, page_count, pages = (
+        extract_pdf_text(
+            factsheet_bytes
+        )
+    )
+
+    positioned = positioned_pdf_words(
         factsheet_bytes
     )
 
-    section_text, section_status = (
-        extract_holdings_section(
-            full_text
+    positioned_rows = group_positioned_rows(
+        positioned
+    )
+
+    explicit_result = (
+        attempt_explicit_section(
+            pages
         )
     )
 
-    if section_status != "published":
+    text_results = (
+        attempt_text_candidates(
+            pages
+        )
+    )
+
+    spatial_results = (
+        attempt_spatial_candidates(
+            positioned_rows
+        )
+    )
+
+    adaptive_result = (
+        choose_adaptive_result(
+            explicit_result,
+            text_results,
+            spatial_results,
+        )
+    )
+
+    if not adaptive_result:
 
         raise RuntimeError(
-            "Factsheet holdings section disappeared "
-            "during final verification."
+            "No structurally confirmed holding result "
+            "was found during final verification."
         )
 
-    parser_used = result.get(
-        "holdingsParser"
-    ) or "primary"
-
-    if parser_used == "primary":
-
-        verified_holdings = parse_holdings(
-            section_text
-        )
-
-    elif parser_used == "fallback":
-
-        verified_holdings = parse_holdings_fallback(
-            section_text
-        )
-
-    elif parser_used == "spatial_fallback":
-
-        spatial_section, verified_holdings = (
-            extract_spatial_fallback(
-                factsheet_bytes
-            )
-        )
-
-        section_text = spatial_section
-
-    else:
-
-        raise RuntimeError(
-            "Unknown parser used during extraction: "
-            f"{parser_used}"
-        )
+    verified_holdings = validate_holdings(
+        adaptive_result[
+            "holdings"
+        ]
+    )
 
     original_holdings = (
-        result.get("topHoldings") or []
+        result.get(
+            "topHoldings"
+        )
+        or []
     )
 
-    if len(verified_holdings) != len(
+    if len(
+        verified_holdings
+    ) != len(
         original_holdings
     ):
 
@@ -2406,66 +4460,73 @@ def verify_exact_against_official_pdf(
             "No Recovery 2 result was accepted."
         )
 
-    result["topHoldings"] = verified_holdings
+    result[
+        "topHoldings"
+    ] = verified_holdings
 
-    result["topHoldingsCount"] = len(
+    result[
+        "topHoldingsCount"
+    ] = len(
         verified_holdings
     )
 
-    result["finalVerification"] = {
+    result[
+        "finalVerification"
+    ] = {
         "status": "verified",
         "verifiedAtUtc": utc_now_iso(),
         "exactSignatureMatch": True,
         "verifiedHoldingCount": len(
             verified_holdings
         ),
+        "verificationPageCount": page_count,
+        "verificationExtractionMethod":
+            adaptive_result.get(
+                "method"
+            ),
+        "verificationExtractionSource":
+            adaptive_result.get(
+                "source"
+            ),
     }
 
     return (
         factsheet_bytes,
         full_text,
-        section_text,
+        clean_text(
+            adaptive_result.get(
+                "sectionText",
+                ""
+            )
+        ),
         verified_holdings,
     )
 
 
 # =============================================================================
-# OUTPUT HELPERS
+# OUTPUT
 # =============================================================================
-
-def recovery_directory(
-    result: dict,
-) -> Path:
-
-    excel_row = int(
-        result["excelRow"]
-    )
-
-    identifier = safe_filename(
-        result.get("fundName")
-        or result.get("pageTitle")
-        or urlparse(
-            result.get("finalUrl")
-            or result.get("prudentialUrl")
-        ).path.rstrip("/").split("/")[-1]
-        or f"fund_{excel_row}"
-    )
-
-    return (
-        RECOVERY_FUNDS_OUTPUT_DIR
-        / f"{excel_row}_{identifier}"
-    )
-
 
 def save_success(
     result: dict,
     factsheet_bytes: bytes,
     full_text: str,
     section_text: str,
+    diagnostic: dict,
 ) -> Path:
 
-    directory = recovery_directory(
-        result
+    directory = fund_output_directory(
+        {
+            "excelRow": result[
+                "excelRow"
+            ],
+            "pruAccessName": result.get(
+                "excelPruAccessName"
+            ),
+        },
+        result.get(
+            "fundName"
+        ),
     )
 
     directory.mkdir(
@@ -2500,72 +4561,41 @@ def save_success(
 
     save_json(
         directory / "recovery_diagnostics.json",
-        {
-            "recoveryStage": "Recovery 2",
-            "recovery1Failure": result.get(
-                "recovery1Failure"
-            ),
-            "holdingsParser": result.get(
-                "holdingsParser"
-            ),
-            "primaryParserError": result.get(
-                "primaryParserError"
-            ),
-            "fallbackParserError": result.get(
-                "fallbackParserError"
-            ),
-            "finalVerification": result.get(
-                "finalVerification"
-            ),
-            "savedAtUtc": utc_now_iso(),
-        },
-    )
-
-    save_json(
-        directory / "metadata.json",
-        {
-            "excelRow": result.get(
-                "excelRow"
-            ),
-            "fundName": result.get(
-                "fundName"
-            ),
-            "factsheetUrl": result.get(
-                "factsheetUrl"
-            ),
-            "factsheetDocumentDate": result.get(
-                "factsheetDocumentDate"
-            ),
-            "factsheetDataAsAt": result.get(
-                "factsheetDataAsAt"
-            ),
-            "topHoldingsCount": result.get(
-                "topHoldingsCount"
-            ),
-            "status": result.get(
-                "status"
-            ),
-            "recoveryStage": "Recovery 2",
-            "savedAtUtc": utc_now_iso(),
-        },
+        diagnostic,
     )
 
     return directory
 
 
-def save_no_holdings_section(
+def save_unconfirmed_diagnostics(
     excel_fund: dict,
-    error_text: str,
+    diagnostic: dict,
 ) -> Path:
 
-    excel_row = int(
-        excel_fund["excelRow"]
+    row = int(
+        excel_fund[
+            "excelRow"
+        ]
     )
 
-    directory = (
-        RECOVERY_FUNDS_OUTPUT_DIR
-        / f"{excel_row}_no_holdings_section"
+    existing_directory = (
+        diagnostic.get(
+            "_outputDirectory"
+        )
     )
+
+    if existing_directory:
+
+        directory = Path(
+            existing_directory
+        )
+
+    else:
+
+        directory = fund_output_directory(
+            excel_fund,
+            "",
+        )
 
     directory.mkdir(
         parents=True,
@@ -2573,19 +4603,29 @@ def save_no_holdings_section(
     )
 
     save_json(
-        directory / "failure.json",
+        directory / "diagnostic_status.json",
         {
-            "status": "NO_HOLDINGS_SECTION",
-            "excelRow": excel_row,
+            "status": (
+                "DIAGNOSTIC_NO_CONFIRMED_RESULT"
+            ),
+            "excelRow": row,
             "prudentialUrl": excel_fund[
                 "prudentialUrl"
             ],
             "excelPruAccessName": excel_fund.get(
                 "pruAccessName"
             ),
-            "error": clean_text(error_text),
-            "recoveryStage": "Recovery 2",
-            "failedAtUtc": utc_now_iso(),
+            "recovery1Failure": excel_fund.get(
+                "recovery1Failure"
+            ),
+            "message": (
+                "The official factsheet was downloaded and "
+                "forensically inspected, but no single "
+                "structurally consistent holdings signature "
+                "was confirmed. No holding data was fabricated "
+                "or accepted."
+            ),
+            "generatedAtUtc": utc_now_iso(),
         },
     )
 
@@ -2595,16 +4635,17 @@ def save_no_holdings_section(
 def save_failure(
     excel_fund: dict,
     error_text: str,
-    recovery1_failure=None,
 ) -> Path:
 
-    excel_row = int(
-        excel_fund["excelRow"]
+    row = int(
+        excel_fund[
+            "excelRow"
+        ]
     )
 
     directory = (
         RECOVERY_FUNDS_OUTPUT_DIR
-        / f"{excel_row}_failed"
+        / f"{row}_failed"
     )
 
     directory.mkdir(
@@ -2616,16 +4657,20 @@ def save_failure(
         directory / "failure.json",
         {
             "status": "failed",
-            "excelRow": excel_row,
+            "excelRow": row,
             "prudentialUrl": excel_fund[
                 "prudentialUrl"
             ],
             "excelPruAccessName": excel_fund.get(
                 "pruAccessName"
             ),
-            "error": clean_text(error_text),
+            "error": clean_text(
+                error_text
+            ),
             "recoveryStage": "Recovery 2",
-            "recovery1Failure": recovery1_failure,
+            "recovery1Failure": excel_fund.get(
+                "recovery1Failure"
+            ),
             "failedAtUtc": utc_now_iso(),
         },
     )
@@ -2657,6 +4702,9 @@ def main() -> int:
     )
     print(
         "VGRAT FMS - PRUDENTIAL TOP HOLDINGS RECOVERY 2"
+    )
+    print(
+        "ADAPTIVE / FORENSIC EXTRACTOR"
     )
     print(
         "################################################################"
@@ -2714,30 +4762,26 @@ def main() -> int:
         f"{recovery1_failed_count}"
     )
 
-    if recovery_universe:
+    print(
+        "Recovery 1 failed rows:"
+    )
 
-        print(
-            "Recovery 1 failed rows:"
-        )
-
-        print(
-            "  "
-            + ", ".join(
-                str(
-                    item["excelRow"]
-                )
-                for item in recovery_universe
+    print(
+        "  "
+        + ", ".join(
+            str(
+                item[
+                    "excelRow"
+                ]
             )
+            for item in recovery_universe
         )
+    )
 
     print(
         f"Recovery 2 universe: "
         f"{len(recovery_universe)}"
     )
-
-    # -------------------------------------------------------------------------
-    # NOTHING TO RECOVER
-    # -------------------------------------------------------------------------
 
     if not recovery_universe:
 
@@ -2754,55 +4798,39 @@ def main() -> int:
                 "status": "nothing_to_recover",
                 "startedAtUtc": started_at,
                 "completedAtUtc": completed_at,
-                "excelFile": str(EXCEL_FILE),
+                "excelFile": str(
+                    EXCEL_FILE
+                ),
                 "recovery1RunSummary": str(
                     RECOVERY_1_RUN_SUMMARY_FILE
                 ),
                 "recovery1FailureSource": recovery_1.get(
                     "_recovery2FailureSource"
                 ),
-                "recovery1ExcelFundUniverse": recovery_1.get(
-                    "excelFundUniverse"
-                ),
-                "recovery1FailedFunds": recovery1_failed_count,
+                "recovery1FailedFunds":
+                    recovery1_failed_count,
                 "recovery2Universe": 0,
                 "successfulFunds": 0,
+                "diagnosticFunds": 0,
                 "failedFunds": 0,
+                "totalPublishedTopHoldings": 0,
                 "successfulFundsDetail": [],
+                "diagnosticFundsDetail": [],
                 "failedFundsDetail": [],
-                "rules": {
-                    "recovery1FailedFundsOnly": True,
-                    "noBaselineFallback": True,
-                    "officialPrudentialSingaporeOnly": True,
-                    "officialFactsheetOnly": True,
-                    "noThirdPartyHoldings": True,
-                    "noInferredHoldings": True,
-                    "noFabricatedHoldings": True,
-                    "noSyntheticValues": True,
-                    "exactFinalPdfVerification": True,
-                },
             },
-        )
-
-        print()
-        print(
-            "Recovery 1 has no failed funds."
-        )
-        print(
-            "Recovery 2 has nothing to recover."
         )
 
         return 0
 
     # -------------------------------------------------------------------------
-    # PROCESS FUNDS
+    # PROCESS
     # -------------------------------------------------------------------------
 
     successful = []
 
-    failed = []
+    diagnostic_funds = []
 
-    no_holdings_section = []
+    failed = []
 
     all_holdings = []
 
@@ -2840,12 +4868,14 @@ def main() -> int:
             ):
 
                 excel_row = int(
-                    excel_fund["excelRow"]
+                    excel_fund[
+                        "excelRow"
+                    ]
                 )
 
                 print()
                 print(
-                    "=" * 72
+                    "=" * 78
                 )
                 print(
                     f"RECOVERY 2 FUND "
@@ -2859,10 +4889,9 @@ def main() -> int:
                     f"{excel_fund['prudentialUrl']}"
                 )
                 print(
-                    "=" * 72
+                    "=" * 78
                 )
 
-                result_payload = None
                 last_error = None
 
                 for attempt in range(
@@ -2877,18 +4906,123 @@ def main() -> int:
                             f"{attempt}/{RETRY_COUNT}"
                         )
 
-                        result_payload = (
-                            recover_single_fund(
-                                page,
-                                excel_fund,
-                            )
+                        payload = recover_single_fund(
+                            page,
+                            excel_fund,
                         )
 
-                        result = (
-                            result_payload[
-                                "result"
+                        # -----------------------------------------------------
+                        # Diagnostic-only outcome
+                        # -----------------------------------------------------
+
+                        if not payload[
+                            "success"
+                        ]:
+
+                            diagnostic = payload[
+                                "diagnostic"
                             ]
-                        )
+
+                            diagnostic[
+                                "_outputDirectory"
+                            ] = str(
+                                payload[
+                                    "outputDirectory"
+                                ]
+                            )
+
+                            diagnostic_funds.append(
+                                {
+                                    "status":
+                                        "DIAGNOSTIC_NO_CONFIRMED_RESULT",
+                                    "excelRow":
+                                        excel_row,
+                                    "prudentialUrl":
+                                        excel_fund[
+                                            "prudentialUrl"
+                                        ],
+                                    "excelPruAccessName":
+                                        excel_fund.get(
+                                            "pruAccessName"
+                                        ),
+                                    "factsheetUrl":
+                                        payload.get(
+                                            "factsheetUrl"
+                                        ),
+                                    "factsheetPageCount":
+                                        diagnostic.get(
+                                            "factsheetPageCount"
+                                        ),
+                                    "explicitSectionHeadings":
+                                        len(
+                                            diagnostic.get(
+                                                "explicitSectionHeadings",
+                                                [],
+                                            )
+                                        ),
+                                    "rankCandidateCount":
+                                        diagnostic.get(
+                                            "rankCandidateCount",
+                                            0,
+                                        ),
+                                    "percentageCandidateCount":
+                                        diagnostic.get(
+                                            "percentageCandidateCount",
+                                            0,
+                                        ),
+                                    "keywordCandidateCount":
+                                        diagnostic.get(
+                                            "keywordCandidateCount",
+                                            0,
+                                        ),
+                                    "spatialRankCandidateCount":
+                                        diagnostic.get(
+                                            "spatialRankCandidateCount",
+                                            0,
+                                        ),
+                                    "spatialPercentageCandidateCount":
+                                        diagnostic.get(
+                                            "spatialPercentageCandidateCount",
+                                            0,
+                                        ),
+                                    "recovery1Failure":
+                                        excel_fund.get(
+                                            "recovery1Failure"
+                                        ),
+                                    "diagnosticDirectory":
+                                        str(
+                                            payload[
+                                                "outputDirectory"
+                                            ]
+                                        ),
+                                    "generatedAtUtc":
+                                        utc_now_iso(),
+                                }
+                            )
+
+                            print(
+                                "DIAGNOSTIC COMPLETE"
+                            )
+
+                            print(
+                                "No single "
+                                "structurally confirmed "
+                                "holdings signature."
+                            )
+
+                            print(
+                                "PDF forensic evidence saved to:"
+                            )
+
+                            print(
+                                f"  {payload['outputDirectory']}"
+                            )
+
+                            break
+
+                        result = payload[
+                            "result"
+                        ]
 
                         result[
                             "recovery1Failure"
@@ -2896,14 +5030,20 @@ def main() -> int:
                             "recovery1Failure"
                         )
 
+                        # -----------------------------------------------------
+                        # EXACT OFFICIAL PDF VERIFICATION
+                        # -----------------------------------------------------
+
                         (
                             verified_pdf,
                             verified_text,
                             verified_section,
                             verified_holdings,
-                        ) = verify_exact_against_official_pdf(
-                            page,
-                            result,
+                        ) = (
+                            verify_exact_against_official_pdf(
+                                page,
+                                result,
+                            )
                         )
 
                         result[
@@ -2921,10 +5061,18 @@ def main() -> int:
                             verified_pdf,
                             verified_text,
                             verified_section,
+                            payload[
+                                "diagnostic"
+                            ],
                         )
 
-                        successful.append(result)
-                        all_holdings.append(result)
+                        successful.append(
+                            result
+                        )
+
+                        all_holdings.append(
+                            result
+                        )
 
                         print(
                             "RECOVERY 2 SUCCESS"
@@ -2936,7 +5084,7 @@ def main() -> int:
                         )
 
                         print(
-                            f"Parser: "
+                            f"Method: "
                             f"{result.get('holdingsParser')}"
                         )
 
@@ -2967,71 +5115,32 @@ def main() -> int:
                         "Unknown Recovery 2 failure."
                     )
 
-                    if (
-                        "no confirmed Top 10 Holdings section"
-                        in error_text
-                    ):
+                    save_failure(
+                        excel_fund,
+                        error_text,
+                    )
 
-                        save_no_holdings_section(
-                            excel_fund,
-                            error_text,
-                        )
-
-                        no_holdings_section.append(
-                            {
-                                "excelRow": excel_row,
-                                "prudentialUrl": (
-                                    excel_fund[
-                                        "prudentialUrl"
-                                    ]
+                    failed.append(
+                        {
+                            "status": "failed",
+                            "excelRow": excel_row,
+                            "prudentialUrl":
+                                excel_fund[
+                                    "prudentialUrl"
+                                ],
+                            "excelPruAccessName":
+                                excel_fund.get(
+                                    "pruAccessName"
                                 ),
-                                "excelPruAccessName": (
-                                    excel_fund.get(
-                                        "pruAccessName"
-                                    )
+                            "error": error_text,
+                            "recovery1Failure":
+                                excel_fund.get(
+                                    "recovery1Failure"
                                 ),
-                                "error": error_text,
-                                "recovery1Failure": (
-                                    excel_fund.get(
-                                        "recovery1Failure"
-                                    )
-                                ),
-                            }
-                        )
-
-                    else:
-
-                        save_failure(
-                            excel_fund,
-                            error_text,
-                            excel_fund.get(
-                                "recovery1Failure"
-                            ),
-                        )
-
-                        failed.append(
-                            {
-                                "status": "failed",
-                                "excelRow": excel_row,
-                                "prudentialUrl": (
-                                    excel_fund[
-                                        "prudentialUrl"
-                                    ]
-                                ),
-                                "excelPruAccessName": (
-                                    excel_fund.get(
-                                        "pruAccessName"
-                                    )
-                                ),
-                                "error": error_text,
-                                "recovery1Failure": (
-                                    excel_fund.get(
-                                        "recovery1Failure"
-                                    )
-                                ),
-                                "failedAtUtc": utc_now_iso(),
-                            }
-                        )
+                            "failedAtUtc":
+                                utc_now_iso(),
+                        }
+                    )
 
                     print(
                         "RECOVERY 2 FAILED"
@@ -3059,72 +5168,69 @@ def main() -> int:
         for item in successful
     )
 
+    if failed:
+
+        status = "partial"
+
+    elif diagnostic_funds:
+
+        status = "diagnostic_complete"
+
+    else:
+
+        status = "success"
+
     run_summary = {
-        "status": (
-            "success"
-            if not failed
-            else "partial"
+        "status": status,
+        "startedAtUtc": started_at,
+        "completedAtUtc": completed_at,
+        "excelFile": str(
+            EXCEL_FILE
         ),
-
-        "startedAtUtc":
-            started_at,
-
-        "completedAtUtc":
-            completed_at,
-
-        "excelFile":
-            str(EXCEL_FILE),
-
-        "recovery1RunSummary":
-            str(
-                RECOVERY_1_RUN_SUMMARY_FILE
-            ),
-
+        "recovery1RunSummary": str(
+            RECOVERY_1_RUN_SUMMARY_FILE
+        ),
         "recovery1FailureSource":
             recovery_1.get(
                 "_recovery2FailureSource"
             ),
-
-        "recovery1ExcelFundUniverse":
-            recovery_1.get(
-                "excelFundUniverse"
-            ),
-
         "recovery1FailedFunds":
             recovery1_failed_count,
-
         "recovery1FailedRows":
             [
-                item.get("excelRow")
+                item.get(
+                    "excelRow"
+                )
                 for item in recovery_1.get(
                     "failedFundsDetail",
                     [],
                 )
             ],
-
         "recovery2Universe":
             len(
                 recovery_universe
             ),
-
         "recovery2UniverseRows":
             [
-                item.get("excelRow")
+                item.get(
+                    "excelRow"
+                )
                 for item in recovery_universe
             ],
-
         "successfulFunds":
-            len(successful),
-
-        "noHoldingsSectionFunds":
-            len(no_holdings_section),
-
+            len(
+                successful
+            ),
+        "diagnosticFunds":
+            len(
+                diagnostic_funds
+            ),
         "failedFunds":
-            len(failed),
-
+            len(
+                failed
+            ),
         "totalPublishedTopHoldings":
             total_holdings,
-
         "successfulFundsDetail":
             [
                 {
@@ -3132,46 +5238,45 @@ def main() -> int:
                         item.get(
                             "excelRow"
                         ),
-
                     "fundName":
                         item.get(
                             "fundName"
                         ),
-
                     "factsheetUrl":
                         item.get(
                             "factsheetUrl"
                         ),
-
                     "factsheetDocumentDate":
                         item.get(
                             "factsheetDocumentDate"
                         ),
-
                     "factsheetDataAsAt":
                         item.get(
                             "factsheetDataAsAt"
                         ),
-
                     "topHoldingsCount":
                         item.get(
                             "topHoldingsCount"
                         ),
-
                     "holdingsParser":
                         item.get(
                             "holdingsParser"
                         ),
+                    "holdingsExtractionSource":
+                        item.get(
+                            "holdingsExtractionSource"
+                        ),
+                    "finalVerification":
+                        item.get(
+                            "finalVerification"
+                        ),
                 }
                 for item in successful
             ],
-
-        "noHoldingsSectionDetail":
-            no_holdings_section,
-
+        "diagnosticFundsDetail":
+            diagnostic_funds,
         "failedFundsDetail":
             failed,
-
         "rules": {
             "recovery1FailedFundsOnly": True,
             "noBaselineFallback": True,
@@ -3183,6 +5288,8 @@ def main() -> int:
             "noFabricatedHoldings": True,
             "noFabricatedPercentages": True,
             "noSyntheticValues": True,
+            "noEstimatedValues": True,
+            "noInterpolatedValues": True,
             "maximumHoldings": MAX_HOLDINGS,
             "publishedCountUsedExactly": True,
             "fewerThanTenHoldingsAllowed": True,
@@ -3192,9 +5299,10 @@ def main() -> int:
             "multilineHoldingNamesSupported": True,
             "hyphenatedLineWrapReconstruction": True,
             "fallbackUsesLastPercentageOnLogicalLine": True,
-            "spatialFallbackEnabled": True,
             "noFuzzyHoldingMatching": True,
-            "noCoordinateProximityPairing": True,
+            "noArbitraryCoordinateProximityPairing": True,
+            "spatialDiagnosticsEnabled": True,
+            "adaptiveSectionDiscoveryEnabled": True,
             "exactFinalPdfVerification": True,
             "exactRankNameWeightSignatureRequired": True,
         },
@@ -3211,7 +5319,7 @@ def main() -> int:
     )
 
     # -------------------------------------------------------------------------
-    # FINAL CONSOLE
+    # CONSOLE
     # -------------------------------------------------------------------------
 
     print()
@@ -3247,12 +5355,12 @@ def main() -> int:
     )
 
     print(
-        f"No Top Holdings section: "
-        f"{len(no_holdings_section)}"
+        f"Diagnostic / unresolved: "
+        f"{len(diagnostic_funds)}"
     )
 
     print(
-        f"Failed: "
+        f"Failed technically: "
         f"{len(failed)}"
     )
 
@@ -3270,28 +5378,51 @@ def main() -> int:
         "  "
         + ", ".join(
             str(
-                item["excelRow"]
+                item[
+                    "excelRow"
+                ]
             )
             for item in recovery_universe
         )
     )
 
-    print()
-    print(
-        "Recovery source:"
-    )
+    if diagnostic_funds:
 
-    print(
-        f" - {RECOVERY_1_RUN_SUMMARY_FILE}"
-    )
-
-    if recovery_1.get(
-        "_recovery2FailureSource"
-    ) == "recovery1_output_failure_files":
-
+        print()
         print(
-            " - Recovery 1 *_failed/failure.json files"
+            "DIAGNOSTIC FUNDS:"
         )
+
+        for item in diagnostic_funds:
+
+            print(
+                f" - Row {item['excelRow']}: "
+                f"ranks={item.get('rankCandidateCount', 0)}, "
+                f"percentages={item.get('percentageCandidateCount', 0)}, "
+                f"keywords={item.get('keywordCandidateCount', 0)}, "
+                f"spatialRanks={item.get('spatialRankCandidateCount', 0)}, "
+                f"spatialPercentages={item.get('spatialPercentageCandidateCount', 0)}"
+            )
+
+            print(
+                f"   Diagnostics: "
+                f"{item.get('diagnosticDirectory')}"
+            )
+
+    if failed:
+
+        print()
+        print(
+            "RECOVERY 2 FAILED FUNDS:"
+        )
+
+        for failure in failed:
+
+            print(
+                f" - Row "
+                f"{failure['excelRow']}: "
+                f"{failure['error']}"
+            )
 
     print()
     print(
@@ -3309,21 +5440,6 @@ def main() -> int:
     print(
         f" - {RECOVERY_FUNDS_OUTPUT_DIR}"
     )
-
-    if failed:
-
-        print()
-        print(
-            "RECOVERY 2 FAILED FUNDS:"
-        )
-
-        for failure in failed:
-
-            print(
-                f" - Row "
-                f"{failure['excelRow']}: "
-                f"{failure['error']}"
-            )
 
     print()
     print(
@@ -3352,4 +5468,6 @@ if __name__ == "__main__":
             file=sys.stderr,
         )
 
-        raise SystemExit(130)
+        raise SystemExit(
+            130
+        )
