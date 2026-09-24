@@ -1,4 +1,4 @@
-name: Test Prudential Fund
+name: Prudential All Funds Basic Info
 
 on:
   workflow_dispatch:
