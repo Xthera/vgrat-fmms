@@ -1,118 +1,88 @@
 #!/usr/bin/env python3
 
 """
-VGrat FMS - Prudential Top Holdings FAILED-FUND RECOVERY 2
-
-PURPOSE
-=======
-
-Recover ONLY funds that failed during the frozen all-fund baseline:
-
-    scripts/test_prudential_holdings.py
-
-The baseline remains untouched.
+VGrat FMS - Prudential Top Holdings RECOVERY 2 EXTRACTOR
 
 RECOVERY SOURCE
 ===============
 
-1. output_holdings/run_summary.json
-       |
-       v
-   failedFundsDetail
-       |
-       v
-2. Funds Links.xlsm
-       |
-       v
-   authoritative Excel URL + PruAccess name
-       |
-       v
-3. Official Prudential Singapore fund page
-       |
-       v
-4. Official Prudential factsheet PDF
-       |
-       v
-5. Normal PDF extraction
-       |
-       v
-6. Primary holdings parser
-       |
-       v
-7. Fallback holdings parser
-       |
-       v
-8. Spatial PDF recovery
-       |
-       v
-9. Exact official-PDF re-download
-       |
-       v
-10. Exact extraction/signature verification
+Recovery 1 summary:
+
+    output_holdings_recovery/run_summary.json
+
+Recovery 1:
+    failedFundsDetail
+          |
+          v
+    Funds Links.xlsm
+          |
+          v
+    Official Prudential fund page
+          |
+          v
+    Official Prudential factsheet PDF
+          |
+          v
+    Top 10 Holdings extraction
+          |
+          v
+    Recovery 2 verification
 
 
 IMPORTANT
 =========
 
-This script is a SEPARATE recovery script.
+Recovery 2 ONLY processes funds that remain failed in Recovery 1.
 
-It does NOT modify:
+Recovery 2 does NOT read:
+    output_holdings/run_summary.json
 
-    scripts/test_prudential_holdings.py
+Recovery 2 does NOT use the original baseline failedFundsDetail directly.
 
-It does NOT expand the universe.
+The Recovery 1 failedFundsDetail list controls the Recovery 2 universe.
 
-It does NOT use PruAccess to discover holdings.
-
-It does NOT use third-party holdings sources.
-
-It does NOT fabricate holdings.
-
-It does NOT estimate percentages.
-
-It does NOT use fuzzy matching.
-
-It does NOT use proximity matching between arbitrary names and
-percentages.
-
-It does NOT silently accept a different result during final verification.
+The Excel workbook remains authoritative for the actual Prudential URL and
+PruAccess fund name after the failed Excel row has been identified.
 
 
 HARD RULES
 ==========
 
-- Baseline failedFundsDetail controls the recovery universe.
-- Funds Links.xlsm controls the authoritative URL and Excel row.
-- Only official Prudential Singapore URLs are accepted.
+- Recovery 1 failedFundsDetail controls the Recovery 2 universe.
+- No fallback to baseline run_summary.json.
+- Excel Column A controls the master fund URL.
+- No hardcoded 67-fund limit.
+- Only official Prudential Singapore pages are accepted.
 - Only official Prudential Singapore factsheets are accepted.
-- No third-party holdings sources.
+- No third-party holdings source.
 - No inferred holdings.
 - No fabricated holdings.
 - No fabricated percentages.
-- No forced ten holdings.
-- Fewer than ten published holdings is valid.
+- No forced 10 holdings.
+- If Prudential publishes fewer than 10 holdings, store exactly that count.
+- Holdings remain in Prudential's published order.
 - Duplicate holding names are allowed.
 - Duplicate holding percentages are allowed.
-- Published order must be preserved.
-- Fixed-income coupon percentages may occur inside holding names.
-- The last percentage on a logical fixed-income line is the portfolio
-  weight when fallback parsing is required.
-- A hyphenated PDF line break is rejoined before percentage parsing.
-- Spatial recovery MUST still pass the reconstructed section through
-  the fallback parser.
-- Spatial recovery does NOT independently pair names and percentages
-  using coordinate proximity.
-- Final verification downloads the official PDF again.
-- Final verification runs the extraction engine again.
-- Final verification requires the exact same:
-      rank
-      holding name
-      weight
-  signature.
-- If exact verification fails, the fund remains FAILED.
-- A recovery result never overwrites the baseline result.
+- Multiline holding names are supported.
+- Hyphenated PDF line wraps are reconstructed.
+- Fixed-income lines may contain coupon/rate percentages before the portfolio
+  weight.
+- For fallback parsing, the LAST percentage on the logical line is used as
+  the portfolio weight.
+- Primary parsing must not accept ambiguous multiple-percentage lines.
+- Fallback parsing handles those lines.
+- Spatial PDF recovery may be used when ordinary PDF text extraction fails.
+- Spatial recovery does not use fuzzy holding matching.
+- Spatial recovery does not use arbitrary proximity pairing.
+- No synthetic values.
+- No estimated values.
+- No interpolated values.
+- Final verification re-downloads the same official Prudential PDF.
+- Final verification requires an exact rank/name/weight signature match.
+- Successful Recovery 2 results are written only to:
+      output_holdings_recovery_2/
+- Recovery 1 and baseline outputs are never overwritten.
 """
-
 
 from __future__ import annotations
 
@@ -141,8 +111,8 @@ EXCEL_FILE = Path(
     "Funds Links.xlsm"
 )
 
-BASELINE_RUN_SUMMARY_FILE = Path(
-    "output_holdings/run_summary.json"
+RECOVERY_1_RUN_SUMMARY_FILE = Path(
+    "output_holdings_recovery/run_summary.json"
 )
 
 RECOVERY_OUTPUT_DIR = Path(
@@ -157,10 +127,14 @@ RECOVERY_RUN_SUMMARY_FILE = (
     RECOVERY_OUTPUT_DIR / "run_summary.json"
 )
 
+RECOVERY_ALL_HOLDINGS_FILE = (
+    RECOVERY_OUTPUT_DIR / "all_holdings.json"
+)
 
-# =============================================================================
-# BROWSER
-# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Browser
+# -----------------------------------------------------------------------------
 
 BROWSER_HEADLESS = True
 
@@ -174,17 +148,8 @@ RETRY_COUNT = 3
 
 RETRY_DELAY_SECONDS = 3.0
 
-
-# =============================================================================
-# HOLDINGS
-# =============================================================================
-
 MAX_HOLDINGS = 10
 
-
-# =============================================================================
-# OFFICIAL PRUDENTIAL HOSTS
-# =============================================================================
 
 PRUDENTIAL_HOSTS = {
     "prudential.com.sg",
@@ -193,17 +158,18 @@ PRUDENTIAL_HOSTS = {
 
 
 # =============================================================================
-# SPATIAL RECOVERY
+# GENERIC HELPERS
 # =============================================================================
 
-SPATIAL_MIN_NAME_LENGTH = 3
+def utc_now_iso() -> str:
 
-SPATIAL_MAX_LINES_AFTER_HEADING = 80
+    return (
+        datetime.now(
+            timezone.utc
+        )
+        .isoformat()
+    )
 
-
-# =============================================================================
-# GENERAL HELPERS
-# =============================================================================
 
 def clean_text(
     value,
@@ -212,11 +178,47 @@ def clean_text(
     if value is None:
         return ""
 
-    text = str(value)
-
-    text = text.replace(
-        "\xa0",
+    return re.sub(
+        r"\s+",
         " ",
+        str(value),
+    ).strip()
+
+
+def normalize_text(
+    value,
+) -> str:
+
+    text = clean_text(
+        value
+    ).lower()
+
+    text = (
+        text
+        .replace(
+            "\u2018",
+            "'",
+        )
+        .replace(
+            "\u2019",
+            "'",
+        )
+        .replace(
+            "\u201c",
+            '"',
+        )
+        .replace(
+            "\u201d",
+            '"',
+        )
+        .replace(
+            "\u2013",
+            "-",
+        )
+        .replace(
+            "\u2014",
+            "-",
+        )
     )
 
     text = re.sub(
@@ -228,49 +230,9 @@ def clean_text(
     return text.strip()
 
 
-def normalize_text(
-    value,
-) -> str:
-
-    text = clean_text(
-        value
-    )
-
-    text = text.casefold()
-
-    text = text.replace(
-        "–",
-        "-",
-    )
-
-    text = text.replace(
-        "—",
-        "-",
-    )
-
-    return re.sub(
-        r"\s+",
-        " ",
-        text,
-    ).strip()
-
-
-def utc_now_iso() -> str:
-
-    return (
-        datetime.now(
-            timezone.utc
-        )
-        .replace(
-            microsecond=0
-        )
-        .isoformat()
-    )
-
-
 def save_json(
     path: Path,
-    data,
+    value,
 ) -> None:
 
     path.parent.mkdir(
@@ -280,7 +242,7 @@ def save_json(
 
     path.write_text(
         json.dumps(
-            data,
+            value,
             indent=2,
             ensure_ascii=False,
         ),
@@ -289,7 +251,7 @@ def save_json(
 
 
 def safe_filename(
-    value,
+    value: str,
 ) -> str:
 
     text = clean_text(
@@ -297,19 +259,26 @@ def safe_filename(
     )
 
     text = re.sub(
-        r"[^A-Za-z0-9._-]+",
+        r"[<>:\"/\\|?*\x00-\x1f]",
         "_",
         text,
     )
 
-    text = text.strip(
-        "._"
+    text = re.sub(
+        r"\s+",
+        "_",
+        text,
     )
 
-    if not text:
-        text = "fund"
+    text = re.sub(
+        r"_+",
+        "_",
+        text,
+    )
 
-    return text[:120]
+    return text.strip(
+        "._"
+    )
 
 
 def is_prudential_url(
@@ -322,18 +291,17 @@ def is_prudential_url(
             url
         )
 
-        hostname = (
-            parsed.hostname
-            or ""
-        ).lower()
-
         return (
-            parsed.scheme.lower()
+            parsed.scheme
             in {
                 "http",
                 "https",
             }
-            and hostname
+            and
+            (
+                parsed.hostname
+                or ""
+            ).lower()
             in PRUDENTIAL_HOSTS
         )
 
@@ -346,81 +314,72 @@ def ensure_prudential_url(
     url: str,
 ) -> str:
 
-    url = clean_text(
+    value = clean_text(
         url
     )
 
-    if not url:
+    if not value:
 
         raise RuntimeError(
-            "URL is empty."
+            "Prudential URL is empty."
         )
 
     if not is_prudential_url(
-        url
+        value
     ):
 
         raise RuntimeError(
-            "Non-Prudential URL rejected: "
-            f"{url}"
+            "URL is not an official Prudential "
+            f"Singapore URL: {value}"
         )
 
-    return url
+    return value
 
 
-class HoldingsParseFailure(RuntimeError):
-
-    def __init__(
-        self,
-        message: str,
-        section_text: str = "",
-        full_text: str = "",
-        diagnostics: dict | None = None,
-    ) -> None:
-
-        super().__init__(
-            message
-        )
-
-        self.section_text = section_text
-
-        self.full_text = full_text
-
-        self.diagnostics = (
-            diagnostics
-            or {}
-        )
+class HoldingsParseFailure(
+    RuntimeError
+):
+    pass
 
 
 # =============================================================================
-# BASELINE
+# RECOVERY 1 RUN SUMMARY
 # =============================================================================
 
-def load_baseline_run_summary() -> dict:
+def load_recovery_1_run_summary() -> dict:
 
-    if not BASELINE_RUN_SUMMARY_FILE.exists():
+    if not RECOVERY_1_RUN_SUMMARY_FILE.exists():
 
         raise FileNotFoundError(
-            "Frozen baseline run summary not found: "
-            f"{BASELINE_RUN_SUMMARY_FILE}"
+            "Recovery 1 run summary not found: "
+            f"{RECOVERY_1_RUN_SUMMARY_FILE}"
         )
 
-    data = json.loads(
-        BASELINE_RUN_SUMMARY_FILE.read_text(
-            encoding="utf-8"
+    try:
+
+        payload = json.loads(
+            RECOVERY_1_RUN_SUMMARY_FILE.read_text(
+                encoding="utf-8"
+            )
         )
-    )
+
+    except Exception as error:
+
+        raise RuntimeError(
+            "Could not read Recovery 1 run summary: "
+            f"{RECOVERY_1_RUN_SUMMARY_FILE}"
+        ) from error
 
     if not isinstance(
-        data,
+        payload,
         dict,
     ):
 
         raise RuntimeError(
-            "Baseline run summary is not a JSON object."
+            "Recovery 1 run summary is not a JSON object."
         )
 
-    failed = data.get(
+    failed = payload.get(
         "failedFundsDetail"
     )
 
@@ -430,11 +389,11 @@ def load_baseline_run_summary() -> dict:
     ):
 
         raise RuntimeError(
-            "Baseline run summary does not contain "
+            "Recovery 1 run summary does not contain "
             "a valid failedFundsDetail list."
         )
 
-    return data
+    return payload
 
 
 # =============================================================================
@@ -467,33 +426,31 @@ def read_excel_funds() -> dict[int, dict]:
             worksheet.max_row + 1,
         ):
 
-            column_a = worksheet.cell(
-                row=row_number,
-                column=1,
-            ).value
-
-            column_b = worksheet.cell(
-                row=row_number,
-                column=2,
-            ).value
-
-            prudential_url = clean_text(
-                column_a
+            url = clean_text(
+                worksheet.cell(
+                    row=row_number,
+                    column=1,
+                ).value
             )
 
             pruaccess_name = clean_text(
-                column_b
+                worksheet.cell(
+                    row=row_number,
+                    column=2,
+                ).value
             )
 
-            if not prudential_url:
+            if not url:
                 continue
 
-            funds[row_number] = {
+            funds[
+                row_number
+            ] = {
                 "excelRow":
                     row_number,
 
                 "prudentialUrl":
-                    prudential_url,
+                    url,
 
                 "pruAccessName":
                     pruaccess_name,
@@ -506,19 +463,23 @@ def read_excel_funds() -> dict[int, dict]:
     if not funds:
 
         raise RuntimeError(
-            "No populated Prudential URLs were found "
+            "No populated Prudential URLs found "
             "in Excel Column A."
         )
 
     return funds
 
 
+# =============================================================================
+# BUILD RECOVERY 2 UNIVERSE
+# =============================================================================
+
 def build_recovery_universe(
-    baseline: dict,
+    recovery_1: dict,
     excel_funds: dict[int, dict],
 ) -> list[dict]:
 
-    failed_entries = baseline.get(
+    failed_entries = recovery_1.get(
         "failedFundsDetail"
     )
 
@@ -528,10 +489,10 @@ def build_recovery_universe(
     ):
 
         raise RuntimeError(
-            "Baseline failedFundsDetail is invalid."
+            "Recovery 1 failedFundsDetail is invalid."
         )
 
-    recovery = []
+    recovery_universe = []
 
     seen_rows = set()
 
@@ -543,13 +504,14 @@ def build_recovery_universe(
         ):
 
             raise RuntimeError(
-                "A failedFundsDetail entry is not an object."
+                "A Recovery 1 failedFundsDetail entry "
+                "is not an object."
             )
 
         if "excelRow" not in failure:
 
             raise RuntimeError(
-                "A baseline failure entry has no excelRow."
+                "A Recovery 1 failure entry has no excelRow."
             )
 
         try:
@@ -563,14 +525,15 @@ def build_recovery_universe(
         except Exception as error:
 
             raise RuntimeError(
-                "Baseline failure contains an invalid excelRow: "
-                f"{failure.get('excelRow')}"
+                "Recovery 1 failure contains invalid "
+                f"excelRow: {failure.get('excelRow')}"
             ) from error
 
         if excel_row in seen_rows:
 
             raise RuntimeError(
-                f"Duplicate failed excelRow in baseline: {excel_row}"
+                "Duplicate Recovery 1 failed excelRow: "
+                f"{excel_row}"
             )
 
         seen_rows.add(
@@ -580,7 +543,7 @@ def build_recovery_universe(
         if excel_row not in excel_funds:
 
             raise RuntimeError(
-                "Baseline failed row "
+                "Recovery 1 failed row "
                 f"{excel_row} does not exist in Excel."
             )
 
@@ -588,26 +551,10 @@ def build_recovery_universe(
             excel_row
         ]
 
-        baseline_url = clean_text(
-            failure.get(
-                "prudentialUrl"
-            )
-        )
-
-        baseline_name = clean_text(
-            failure.get(
-                "pruAccessName"
-            )
-            or
-            failure.get(
-                "excelPruAccessName"
-            )
-        )
-
         excel_url = clean_text(
-            excel_fund[
+            excel_fund.get(
                 "prudentialUrl"
-            ]
+            )
         )
 
         excel_name = clean_text(
@@ -616,35 +563,47 @@ def build_recovery_universe(
             )
         )
 
+        failure_url = clean_text(
+            failure.get(
+                "prudentialUrl"
+            )
+        )
+
+        failure_name = clean_text(
+            failure.get(
+                "excelPruAccessName"
+            )
+            or
+            failure.get(
+                "pruAccessName"
+            )
+        )
+
         if (
-            baseline_url
+            failure_url
             and
-            baseline_url
-            !=
-            excel_url
+            failure_url != excel_url
         ):
 
             raise RuntimeError(
-                "Baseline URL does not match Excel for "
-                f"row {excel_row}."
+                "Recovery 1 URL does not match Excel "
+                f"for row {excel_row}."
             )
 
         if (
-            baseline_name
+            failure_name
             and
             excel_name
             and
-            baseline_name
-            !=
-            excel_name
+            failure_name != excel_name
         ):
 
             raise RuntimeError(
-                "Baseline PruAccess name does not match Excel for "
-                f"row {excel_row}."
+                "Recovery 1 PruAccess name does not "
+                f"match Excel for row {excel_row}."
             )
 
-        recovery.append(
+        recovery_universe.append(
             {
                 "excelRow":
                     excel_row,
@@ -655,35 +614,50 @@ def build_recovery_universe(
                 "pruAccessName":
                     excel_name,
 
-                "baselineFailure":
+                "recovery1Failure":
                     failure,
             }
         )
 
-    return recovery
+    return recovery_universe
 
 
 # =============================================================================
-# FACTSHEET DISCOVERY
+# PRUDENTIAL PAGE / FACTSHEET DISCOVERY
 # =============================================================================
 
 def find_factsheet_url(
     page,
+    prudential_url: str,
 ) -> str:
 
-    anchors = page.locator(
+    ensure_prudential_url(
+        prudential_url
+    )
+
+    page.goto(
+        prudential_url,
+        wait_until="domcontentloaded",
+        timeout=PAGE_TIMEOUT_MS,
+    )
+
+    page.wait_for_timeout(
+        POST_PAGE_WAIT_MS
+    )
+
+    links = page.locator(
         "a"
     )
 
-    count = anchors.count()
-
     candidates = []
+
+    count = links.count()
 
     for index in range(
         count
     ):
 
-        anchor = anchors.nth(
+        anchor = links.nth(
             index
         )
 
@@ -695,87 +669,75 @@ def find_factsheet_url(
                 )
             )
 
-            if not href:
-                continue
-
-            absolute_url = urljoin(
-                page.url,
-                href,
-            )
-
-            if not is_prudential_url(
-                absolute_url
-            ):
-                continue
-
-            anchor_text = clean_text(
-                anchor.inner_text()
+            text = clean_text(
+                anchor.inner_text(
+                    timeout=3000
+                )
             )
 
         except Exception:
 
             continue
 
-        href_lower = (
-            absolute_url.lower()
+        if not href:
+
+            continue
+
+        absolute = urljoin(
+            page.url,
+            href,
         )
 
-        text_lower = (
-            anchor_text.lower()
+        if not is_prudential_url(
+            absolute
+        ):
+
+            continue
+
+        combined = normalize_text(
+            f"{text} {absolute}"
         )
 
         score = 0
 
-        if "fund factsheet" in text_lower:
-            score += 200
-
-        elif "factsheet" in text_lower:
-            score += 150
-
-        if "factsheet" in href_lower:
+        if "factsheet" in combined:
             score += 100
 
-        if href_lower.endswith(
-            ".pdf"
-        ):
+        if "fund factsheet" in combined:
             score += 50
 
-        if score > 0:
+        if ".pdf" in combined:
+            score += 50
 
-            candidates.append(
-                {
-                    "score":
-                        score,
+        if "fund" in combined:
+            score += 10
 
-                    "url":
-                        absolute_url,
+        if score <= 0:
+            continue
 
-                    "text":
-                        anchor_text,
-                }
+        candidates.append(
+            (
+                score,
+                absolute,
             )
+        )
 
     if not candidates:
 
         raise RuntimeError(
-            "Could not find an official Prudential factsheet link."
+            "Could not locate an official Prudential "
+            "factsheet link on the fund page."
         )
 
     candidates.sort(
         key=lambda item: (
-            -item["score"],
-            item["url"],
+            -item[0],
+            item[1],
         )
     )
 
-    return ensure_prudential_url(
-        candidates[0]["url"]
-    )
+    return candidates[0][1]
 
-
-# =============================================================================
-# PDF DOWNLOAD
-# =============================================================================
 
 def download_factsheet(
     page,
@@ -794,31 +756,18 @@ def download_factsheet(
     if response.status != 200:
 
         raise RuntimeError(
-            "Factsheet HTTP status was "
-            f"{response.status}."
+            "Factsheet download returned "
+            f"HTTP {response.status}."
         )
 
     body = response.body()
-
-    if not body:
-
-        raise RuntimeError(
-            "Factsheet response contained zero bytes."
-        )
 
     if not body.startswith(
         b"%PDF"
     ):
 
-        content_type = clean_text(
-            response.headers.get(
-                "content-type"
-            )
-        )
-
         raise RuntimeError(
-            "Factsheet response was not a PDF. "
-            f"Content-Type={content_type}"
+            "Official factsheet response is not a PDF."
         )
 
     return body
@@ -829,119 +778,77 @@ def download_factsheet(
 # =============================================================================
 
 def extract_pdf_text(
-    pdf_bytes: bytes,
+    factsheet_bytes: bytes,
 ) -> tuple[str, int]:
 
     reader = PdfReader(
         BytesIO(
-            pdf_bytes
+            factsheet_bytes
         )
     )
-
-    page_count = len(
-        reader.pages
-    )
-
-    if page_count == 0:
-
-        raise RuntimeError(
-            "Factsheet PDF has zero pages."
-        )
 
     pages = []
 
-    for page_number, pdf_page in enumerate(
-        reader.pages,
-        start=1,
-    ):
+    for page in reader.pages:
 
         try:
 
-            text = (
-                pdf_page.extract_text()
-                or ""
-            )
+            text = page.extract_text() or ""
 
-        except Exception as error:
+        except Exception:
 
-            raise RuntimeError(
-                "Failed to extract PDF text from page "
-                f"{page_number}: {error}"
-            ) from error
+            text = ""
 
         pages.append(
             text
         )
 
-    full_text = "\n".join(
-        pages
-    )
-
-    if not clean_text(
-        full_text
-    ):
-
-        raise RuntimeError(
-            "Factsheet PDF contains no extractable text."
-        )
-
     return (
-        full_text,
-        page_count,
+        "\n".join(
+            pages
+        ),
+        len(
+            reader.pages
+        ),
     )
 
-
-# =============================================================================
-# PDF LINES
-# =============================================================================
 
 def pdf_lines(
     text: str,
 ) -> list[str]:
 
-    result = []
+    if not text:
 
-    for raw_line in text.splitlines():
+        return []
 
-        line = clean_text(
-            raw_line
+    return [
+        clean_text(
+            line
         )
-
-        if line:
-            result.append(
-                line
-            )
-
-    return result
+        for line
+        in text.splitlines()
+    ]
 
 
 # =============================================================================
-# FACTSHEET DATES
+# FACTSHEET METADATA
 # =============================================================================
 
 def extract_data_as_at(
     text: str,
-) -> str | None:
+) -> str:
 
     patterns = [
-
-        re.compile(
-            r"\bdata\s+as\s+at\s*"
-            r"([0-9]{1,2}\s+[A-Za-z]{3,9}\s+[0-9]{4})\b",
-            re.IGNORECASE,
-        ),
-
-        re.compile(
-            r"\ball\s+data\s+as\s+at\s*"
-            r"([0-9]{1,2}\s+[A-Za-z]{3,9}\s+[0-9]{4})\b",
-            re.IGNORECASE,
-        ),
+        r"data\s+as\s+at\s*[:\-]?\s*([^\n]+)",
+        r"as\s+at\s*[:\-]?\s*([^\n]+)",
     ]
 
     for pattern in patterns:
 
-        match = pattern.search(
-            text
+        match = re.search(
+            pattern,
+            text,
+            flags=re.IGNORECASE,
         )
 
         if match:
@@ -950,40 +857,37 @@ def extract_data_as_at(
                 match.group(1)
             )
 
-    return None
+    return ""
 
 
 def extract_document_date(
     text: str,
-) -> str | None:
+) -> str:
 
-    pattern = re.compile(
-        r"\b("
-        r"January|February|March|April|May|June|July|"
-        r"August|September|October|November|December"
-        r")\s+([0-9]{4})\b",
-        re.IGNORECASE,
-    )
+    patterns = [
+        r"document\s+date\s*[:\-]?\s*([^\n]+)",
+        r"dated\s*[:\-]?\s*([^\n]+)",
+    ]
 
-    for line in pdf_lines(
-        text
-    )[:50]:
+    for pattern in patterns:
 
-        match = pattern.search(
-            line
+        match = re.search(
+            pattern,
+            text,
+            flags=re.IGNORECASE,
         )
 
         if match:
 
             return clean_text(
-                match.group(0)
+                match.group(1)
             )
 
-    return None
+    return ""
 
 
 # =============================================================================
-# HOLDINGS SECTION
+# TOP HOLDINGS SECTION
 # =============================================================================
 
 def find_holdings_start(
@@ -998,12 +902,10 @@ def find_holdings_start(
             line
         )
 
-        if (
-            "top 10 holdings"
-            in normalized
-            or
-            "top ten holdings"
-            in normalized
+        if re.match(
+            r"^top\s+(?:10|ten)\s+holdings\b",
+            normalized,
+            flags=re.IGNORECASE,
         ):
 
             return index
@@ -1019,54 +921,38 @@ def is_holdings_end(
         line
     )
 
-    if normalized in {
+    if not normalized:
+
+        return False
+
+    end_markers = [
         "source",
-        "source:",
         "inception date",
         "important information",
-        "important information:",
         "disclaimer",
         "past performance",
         "portfolio characteristics",
         "asset allocation",
-    }:
+        "page ",
+    ]
 
-        return True
+    for marker in end_markers:
 
-    if normalized.startswith(
-        "source:"
-    ):
+        if normalized.startswith(
+            marker
+        ):
 
-        return True
-
-    if normalized.startswith(
-        "inception date:"
-    ):
-
-        return True
-
-    if normalized.startswith(
-        "important information"
-    ):
-
-        return True
-
-    if re.fullmatch(
-        r"page\s+\d+(\s+of\s+\d+)?",
-        normalized,
-    ):
-
-        return True
+            return True
 
     return False
 
 
 def extract_holdings_section(
-    text: str,
+    full_text: str,
 ) -> tuple[str, str]:
 
     lines = pdf_lines(
-        text
+        full_text
     )
 
     start = find_holdings_start(
@@ -1077,7 +963,7 @@ def extract_holdings_section(
 
         return (
             "",
-            "not_published",
+            "not_found",
         )
 
     section = []
@@ -1096,16 +982,25 @@ def extract_holdings_section(
             line
         )
 
+    section_text = "\n".join(
+        section
+    ).strip()
+
+    if not section_text:
+
+        return (
+            "",
+            "published_empty",
+        )
+
     return (
-        "\n".join(
-            section
-        ),
+        section_text,
         "published",
     )
 
 
 # =============================================================================
-# NAME CLEANING
+# HOLDING NAME CLEANING
 # =============================================================================
 
 def clean_holding_name(
@@ -1116,14 +1011,11 @@ def clean_holding_name(
         value
     )
 
-    if not name:
-        return ""
-
     name = re.sub(
         r"^[•·▪■□*]+",
         "",
         name,
-    )
+    ).strip()
 
     name = re.sub(
         r"^\d{1,2}[.)]\s+",
@@ -1145,9 +1037,7 @@ def clean_holding_name(
 
     name = clean_text(
         name
-    )
-
-    name = name.strip(
+    ).strip(
         " -|"
     )
 
@@ -1170,33 +1060,30 @@ def clean_holding_fragment(
     value: str,
 ) -> str:
 
-    fragment = clean_text(
+    text = clean_text(
         value
     )
 
-    if not fragment:
-        return ""
-
-    fragment = fragment.replace(
+    text = text.replace(
         "|",
         " ",
     )
 
-    fragment = re.sub(
+    text = re.sub(
         r"\bNone\b",
         " ",
-        fragment,
+        text,
         flags=re.IGNORECASE,
     )
 
-    fragment = re.sub(
+    text = re.sub(
         r"^[•·▪■□*]+",
         "",
-        fragment,
+        text,
     )
 
     return clean_text(
-        fragment
+        text
     )
 
 
@@ -1212,81 +1099,62 @@ def combine_holding_name_fragments(
             fragment
         )
 
-        if not fragment:
-            continue
+        if fragment:
 
-        if re.fullmatch(
-            r"\d{1,2}",
-            fragment,
-        ):
-
-            continue
-
-        cleaned.append(
-            fragment
-        )
-
-    if not cleaned:
-        return ""
-
-    combined = " ".join(
-        cleaned
-    )
-
-    combined = re.sub(
-        r"\s+",
-        " ",
-        combined,
-    ).strip()
+            cleaned.append(
+                fragment
+            )
 
     return clean_holding_name(
-        combined
+        " ".join(
+            cleaned
+        )
     )
 
 
 # =============================================================================
-# PERCENTAGES
+# PERCENTAGE HELPERS
 # =============================================================================
+
+PERCENTAGE_RE = re.compile(
+    r"(?<![\d.])"
+    r"(\d+(?:\.\d+)?)"
+    r"\s*%"
+)
+
 
 def percentage_matches(
     line: str,
-) -> list[re.Match]:
+):
 
     return list(
-        re.finditer(
-            r"(?<![\d.])"
-            r"([0-9]+(?:\.[0-9]+)?)"
-            r"\s*%",
-            line,
+        PERCENTAGE_RE.finditer(
+            line
         )
     )
 
 
 def find_percentage_in_line(
     line: str,
-) -> tuple[float, str, int, int] | None:
+):
 
     matches = percentage_matches(
         line
     )
 
-    if not matches:
+    if len(
+        matches
+    ) != 1:
+
         return None
 
     match = matches[0]
 
-    value = float(
-        match.group(1)
-    )
-
-    if not 0 <= value <= 100:
-        return None
-
     return (
-        value,
-        clean_text(
-            match.group(0)
+        float(
+            match.group(1)
         ),
+        match.group(0),
         match.start(),
         match.end(),
     )
@@ -1294,74 +1162,42 @@ def find_percentage_in_line(
 
 def find_last_percentage_in_line(
     line: str,
-) -> tuple[float, str, int, int] | None:
+):
 
     matches = percentage_matches(
         line
     )
 
     if not matches:
+
         return None
 
     match = matches[-1]
 
-    value = float(
-        match.group(1)
-    )
-
-    if not 0 <= value <= 100:
-        return None
-
     return (
-        value,
-        clean_text(
-            match.group(0)
+        float(
+            match.group(1)
         ),
+        match.group(0),
         match.start(),
         match.end(),
     )
 
 
 # =============================================================================
-# RANKS
+# RANK HELPERS
 # =============================================================================
 
 def extract_leading_rank(
     line: str,
-) -> tuple[int | None, str]:
+):
 
     text = clean_text(
         line
     )
 
-    if not text:
-        return (
-            None,
-            "",
-        )
-
     match = re.match(
-        r"^\s*(\d{1,2})[.)\-:]\s*(.*)$",
-        text,
-    )
-
-    if match:
-
-        rank = int(
-            match.group(1)
-        )
-
-        if 1 <= rank <= 99:
-
-            return (
-                rank,
-                clean_text(
-                    match.group(2)
-                ),
-            )
-
-    match = re.match(
-        r"^\s*(\d{1,2})\s+(.+)$",
+        r"^(\d{1,2})[.)]?\s+(.*)$",
         text,
     )
 
@@ -1399,19 +1235,18 @@ def is_holding_header_or_noise(
     )
 
     if not normalized:
+
         return True
 
     if normalized in {
+        "top 10 holdings",
+        "top ten holdings",
         "holding",
         "holdings",
-        "name",
-        "names",
         "weight",
-        "weights",
-        "allocation",
-        "allocations",
+        "percentage",
         "%",
-        "portfolio holdings",
+        "name",
     }:
 
         return True
@@ -1432,7 +1267,7 @@ def is_holding_header_or_noise(
 
 
 # =============================================================================
-# HYPHENATED LINE RECONSTRUCTION
+# PDF HYPHENATED LINE WRAPS
 # =============================================================================
 
 def merge_hyphenated_line_breaks(
@@ -1443,57 +1278,66 @@ def merge_hyphenated_line_breaks(
 
     index = 0
 
-    while index < len(lines):
+    while index < len(
+        lines
+    ):
 
         current = clean_text(
             lines[index]
         )
 
-        while (
-            current.endswith("-")
-            and
-            index + 1 < len(lines)
+        if (
+            current
+            and current.endswith("-")
+            and index + 1 < len(lines)
         ):
 
-            index += 1
-
             next_line = clean_text(
-                lines[index]
+                lines[index + 1]
             )
 
-            current = (
-                current
-                +
+            if (
                 next_line
-            )
+                and not next_line.startswith(
+                    "%"
+                )
+            ):
 
-        merged.append(
-            current
-        )
+                current = (
+                    current[:-1]
+                    + next_line
+                )
+
+                index += 1
+
+        if current:
+
+            merged.append(
+                current
+            )
 
         index += 1
 
     return merged
 
 
-# =============================================================================
-# LOGICAL LINES
-# =============================================================================
-
 def build_logical_holding_lines(
     section_text: str,
 ) -> list[str]:
 
-    raw_lines = pdf_lines(
+    lines = pdf_lines(
         section_text
     )
 
-    if not raw_lines:
-        return []
-
-    return merge_hyphenated_line_breaks(
-        raw_lines
+    lines = merge_hyphenated_line_breaks(
+        lines
     )
+
+    return [
+        line
+        for line in lines
+        if clean_text(line)
+    ]
 
 
 # =============================================================================
@@ -1502,41 +1346,45 @@ def build_logical_holding_lines(
 
 def validate_holdings(
     holdings: list[dict],
-    parser_name: str,
 ) -> list[dict]:
 
     if not holdings:
 
-        raise RuntimeError(
-            f"{parser_name} parser produced no holdings."
+        raise HoldingsParseFailure(
+            "No holding/percentage pairs were extracted."
         )
 
-    if len(holdings) > MAX_HOLDINGS:
+    if len(
+        holdings
+    ) > MAX_HOLDINGS:
 
-        raise RuntimeError(
-            f"{parser_name} parser produced more than "
+        raise HoldingsParseFailure(
+            "Parser produced more than "
             f"{MAX_HOLDINGS} holdings."
         )
 
-    expected = list(
+    expected_ranks = list(
         range(
             1,
-            len(holdings) + 1,
+            len(
+                holdings
+            ) + 1,
         )
     )
 
-    ranks = [
-        item[
+    actual_ranks = [
+        item.get(
             "rank"
-        ]
+        )
         for item in holdings
     ]
 
-    if ranks != expected:
+    if actual_ranks != expected_ranks:
 
-        raise RuntimeError(
-            f"{parser_name} parser ranks invalid. "
-            f"Parsed={ranks}; Expected={expected}"
+        raise HoldingsParseFailure(
+            "Holding ranks are not sequential. "
+            f"Parsed={actual_ranks}; "
+            f"Expected={expected_ranks}"
         )
 
     for holding in holdings:
@@ -1549,8 +1397,8 @@ def validate_holdings(
 
         if not name:
 
-            raise RuntimeError(
-                f"{parser_name} parser produced an empty holding name."
+            raise HoldingsParseFailure(
+                "Holding name is empty."
             )
 
         weight = holding.get(
@@ -1562,14 +1410,17 @@ def validate_holdings(
             (int, float),
         ):
 
-            raise RuntimeError(
-                f"{parser_name} parser produced an invalid weight."
+            raise HoldingsParseFailure(
+                "Holding weight is invalid."
             )
 
-        if not 0 <= weight <= 100:
+        if (
+            weight < 0
+            or weight > 100
+        ):
 
-            raise RuntimeError(
-                f"{parser_name} parser produced weight outside 0-100."
+            raise HoldingsParseFailure(
+                "Holding weight is outside 0-100%."
             )
 
         holding[
@@ -1580,22 +1431,24 @@ def validate_holdings(
 
 
 # =============================================================================
-# PRIMARY PARSER
+# PRIMARY HOLDINGS PARSER
 # =============================================================================
 
 def parse_holdings(
     section_text: str,
 ) -> list[dict]:
 
-    lines = build_logical_holding_lines(
+    if not clean_text(
+        section_text
+    ):
+
+        raise HoldingsParseFailure(
+            "Top 10 holdings section is empty."
+        )
+
+    logical_lines = build_logical_holding_lines(
         section_text
     )
-
-    if not lines:
-
-        raise RuntimeError(
-            "Holdings section is empty."
-        )
 
     holdings = []
 
@@ -1603,13 +1456,14 @@ def parse_holdings(
 
     pending_rank = None
 
-    for raw_line in lines:
+    for raw_line in logical_lines:
 
         line = clean_text(
             raw_line
         )
 
         if not line:
+
             continue
 
         if is_holding_header_or_noise(
@@ -1618,138 +1472,146 @@ def parse_holdings(
 
             continue
 
-        detected_rank, remainder = (
-            extract_leading_rank(
-                line
-            )
+        rank, remainder = extract_leading_rank(
+            line
         )
 
-        if detected_rank is not None:
+        if rank is not None:
 
             if pending_fragments:
 
-                raise RuntimeError(
-                    "Primary parser encountered a new rank "
-                    "before the previous holding received a weight."
+                raise HoldingsParseFailure(
+                    "New holding rank appeared before "
+                    "the previous holding received "
+                    "a percentage."
                 )
 
-            pending_rank = detected_rank
+            pending_rank = rank
 
             line = remainder
-
-            if not line:
-                continue
 
         matches = percentage_matches(
             line
         )
 
-        if len(matches) > 1:
+        if not matches:
 
-            raise RuntimeError(
-                "Primary parser found multiple percentages on "
-                "one logical line."
-            )
+            if pending_rank is not None or holdings:
 
-        percentage_info = (
-            find_percentage_in_line(
-                line
-            )
-        )
-
-        if percentage_info:
-
-            (
-                weight,
-                weight_text,
-                start,
-                _end,
-            ) = percentage_info
-
-            fragment = clean_text(
-                line[:start]
-            )
-
-            if fragment:
-                pending_fragments.append(
-                    fragment
+                fragment = clean_holding_fragment(
+                    line
                 )
 
-            name = combine_holding_name_fragments(
-                pending_fragments
-            )
+                if fragment:
 
-            if not name:
-
-                raise RuntimeError(
-                    "Primary parser found a percentage "
-                    "without a holding name."
-                )
-
-            rank = (
-                pending_rank
-                if pending_rank is not None
-                else len(holdings) + 1
-            )
-
-            holdings.append(
-                {
-                    "rank":
-                        rank,
-
-                    "name":
-                        name,
-
-                    "weightPercent":
-                        weight,
-
-                    "weightText":
-                        weight_text,
-                }
-            )
-
-            pending_fragments = []
-
-            pending_rank = None
-
-            if len(holdings) >= MAX_HOLDINGS:
-
-                break
+                    pending_fragments.append(
+                        fragment
+                    )
 
             continue
 
+        if len(
+            matches
+        ) != 1:
+
+            raise HoldingsParseFailure(
+                "Primary parser encountered multiple "
+                "percentages on one logical line."
+            )
+
+        match = matches[0]
+
+        percentage = float(
+            match.group(1)
+        )
+
+        percentage_text = match.group(0)
+
         fragment = clean_holding_fragment(
-            line
+            line[
+                :match.start()
+            ]
         )
 
         if fragment:
+
             pending_fragments.append(
                 fragment
             )
 
+        name = combine_holding_name_fragments(
+            pending_fragments
+        )
+
+        if not name:
+
+            raise HoldingsParseFailure(
+                "Published percentage has no holding name."
+            )
+
+        if len(
+            holdings
+        ) >= MAX_HOLDINGS:
+
+            raise HoldingsParseFailure(
+                "Parser produced more than "
+                f"{MAX_HOLDINGS} holdings."
+            )
+
+        holdings.append(
+            {
+                "rank":
+                    (
+                        pending_rank
+                        if pending_rank is not None
+                        else len(holdings) + 1
+                    ),
+
+                "name":
+                    name,
+
+                "weightPercent":
+                    percentage,
+
+                "weightText":
+                    percentage_text,
+            }
+        )
+
+        pending_fragments = []
+
+        pending_rank = None
+
+    if pending_fragments:
+
+        raise HoldingsParseFailure(
+            "Trailing holding text has no published percentage."
+        )
+
     return validate_holdings(
-        holdings,
-        "Primary",
+        holdings
     )
 
 
 # =============================================================================
-# FALLBACK PARSER
+# FALLBACK HOLDINGS PARSER
 # =============================================================================
 
 def parse_holdings_fallback(
     section_text: str,
 ) -> list[dict]:
 
-    lines = build_logical_holding_lines(
+    if not clean_text(
+        section_text
+    ):
+
+        raise HoldingsParseFailure(
+            "Top 10 holdings section is empty."
+        )
+
+    logical_lines = build_logical_holding_lines(
         section_text
     )
-
-    if not lines:
-
-        raise RuntimeError(
-            "Fallback parser received an empty section."
-        )
 
     holdings = []
 
@@ -1757,13 +1619,66 @@ def parse_holdings_fallback(
 
     pending_rank = None
 
-    for raw_line in lines:
+    def commit(
+        percentage,
+        percentage_text,
+    ):
+
+        nonlocal pending_fragments
+        nonlocal pending_rank
+
+        name = combine_holding_name_fragments(
+            pending_fragments
+        )
+
+        if not name:
+
+            raise HoldingsParseFailure(
+                "Fallback parser found a published "
+                "percentage but no holding name."
+            )
+
+        if len(
+            holdings
+        ) >= MAX_HOLDINGS:
+
+            raise HoldingsParseFailure(
+                "Fallback parser produced more than "
+                f"{MAX_HOLDINGS} holdings."
+            )
+
+        holdings.append(
+            {
+                "rank":
+                    (
+                        pending_rank
+                        if pending_rank is not None
+                        else len(holdings) + 1
+                    ),
+
+                "name":
+                    name,
+
+                "weightPercent":
+                    percentage,
+
+                "weightText":
+                    percentage_text,
+            }
+        )
+
+        pending_fragments = []
+
+        pending_rank = None
+
+    for raw_line in logical_lines:
 
         line = clean_text(
             raw_line
         )
 
         if not line:
+
             continue
 
         if is_holding_header_or_noise(
@@ -1772,97 +1687,50 @@ def parse_holdings_fallback(
 
             continue
 
-        detected_rank, remainder = (
-            extract_leading_rank(
-                line
-            )
+        rank, remainder = extract_leading_rank(
+            line
         )
 
-        if detected_rank is not None:
+        if rank is not None:
 
             if pending_fragments:
 
-                raise RuntimeError(
-                    "Fallback parser encountered a new rank "
-                    "before the previous holding received a weight."
+                raise HoldingsParseFailure(
+                    "Fallback parser encountered a new "
+                    "rank before the previous holding "
+                    "received a published percentage."
                 )
 
-            pending_rank = detected_rank
+            pending_rank = rank
 
             line = remainder
 
-            if not line:
-                continue
-
-        percentage_info = (
-            find_last_percentage_in_line(
-                line
-            )
+        last_percentage = find_last_percentage_in_line(
+            line
         )
 
-        if percentage_info:
+        if last_percentage is None:
 
-            (
-                weight,
-                weight_text,
-                start,
-                _end,
-            ) = percentage_info
-
-            fragment = clean_text(
-                line[:start]
+            fragment = clean_holding_fragment(
+                line
             )
 
             if fragment:
+
                 pending_fragments.append(
                     fragment
                 )
 
-            name = combine_holding_name_fragments(
-                pending_fragments
-            )
-
-            if not name:
-
-                raise RuntimeError(
-                    "Fallback parser found a percentage "
-                    "without a holding name."
-                )
-
-            rank = (
-                pending_rank
-                if pending_rank is not None
-                else len(holdings) + 1
-            )
-
-            holdings.append(
-                {
-                    "rank":
-                        rank,
-
-                    "name":
-                        name,
-
-                    "weightPercent":
-                        weight,
-
-                    "weightText":
-                        weight_text,
-                }
-            )
-
-            pending_fragments = []
-
-            pending_rank = None
-
-            if len(holdings) >= MAX_HOLDINGS:
-
-                break
-
             continue
 
+        percentage, percentage_text, start, end = (
+            last_percentage
+        )
+
         fragment = clean_holding_fragment(
-            line
+            line[
+                :start
+            ]
         )
 
         if fragment:
@@ -1871,9 +1739,20 @@ def parse_holdings_fallback(
                 fragment
             )
 
+        commit(
+            percentage,
+            percentage_text,
+        )
+
+    if pending_fragments:
+
+        raise HoldingsParseFailure(
+            "Fallback parser found trailing holding text "
+            "without a published percentage."
+        )
+
     return validate_holdings(
-        holdings,
-        "Fallback",
+        holdings
     )
 
 
@@ -1891,22 +1770,20 @@ def holding_signature(
 
         signature.append(
             (
-                int(
-                    holding[
-                        "rank"
-                    ]
+                holding.get(
+                    "rank"
                 ),
 
                 normalize_text(
-                    holding[
+                    holding.get(
                         "name"
-                    ]
+                    )
                 ),
 
                 float(
-                    holding[
+                    holding.get(
                         "weightPercent"
-                    ]
+                    )
                 ),
             )
         )
@@ -1915,78 +1792,83 @@ def holding_signature(
 
 
 # =============================================================================
-# SPATIAL PDF EXTRACTION
+# SPATIAL PDF RECOVERY
 # =============================================================================
 
 def positioned_pdf_lines(
-    pdf_bytes: bytes,
+    factsheet_bytes: bytes,
 ) -> list[dict]:
 
     reader = PdfReader(
         BytesIO(
-            pdf_bytes
+            factsheet_bytes
         )
     )
 
-    all_lines = []
+    positioned = []
 
     for page_number, page in enumerate(
         reader.pages,
         start=1,
     ):
 
-        fragments = []
-
-        def visitor_text(
-            text,
-            cm,
-            tm,
-            font_dict,
-            font_size,
-        ):
-
-            value = clean_text(
-                text
-            )
-
-            if not value:
-                return
-
-            try:
-
-                x = float(
-                    tm[4]
-                )
-
-                y = float(
-                    tm[5]
-                )
-
-            except Exception:
-
-                return
-
-            fragments.append(
-                {
-                    "text":
-                        value,
-
-                    "x":
-                        x,
-
-                    "y":
-                        y,
-
-                    "fontSize":
-                        float(
-                            font_size
-                            or
-                            0
-                        ),
-                }
-            )
+        words = []
 
         try:
+
+            def visitor_text(
+                text,
+                cm,
+                tm,
+                font_dict,
+                font_size,
+            ):
+
+                if not text:
+                    return
+
+                value = clean_text(
+                    text
+                )
+
+                if not value:
+                    return
+
+                try:
+
+                    x = float(
+                        tm[4]
+                    )
+
+                    y = float(
+                        tm[5]
+                    )
+
+                except Exception:
+
+                    return
+
+                words.append(
+                    {
+                        "page":
+                            page_number,
+
+                        "text":
+                            value,
+
+                        "x":
+                            x,
+
+                        "y":
+                            y,
+
+                        "fontSize":
+                            float(
+                                font_size
+                                or 0
+                            ),
+                    }
+                )
 
             page.extract_text(
                 visitor_text=visitor_text
@@ -1994,505 +1876,381 @@ def positioned_pdf_lines(
 
         except Exception:
 
-            continue
+            words = []
 
-        fragments.sort(
-            key=lambda item: (
-                -item["y"],
-                item["x"],
-            )
+        positioned.extend(
+            words
         )
 
-        page_lines = []
-
-        tolerance = 3.0
-
-        for fragment in fragments:
-
-            if not page_lines:
-
-                page_lines.append(
-                    {
-                        "page":
-                            page_number,
-
-                        "y":
-                            fragment[
-                                "y"
-                            ],
-
-                        "fragments":
-                            [
-                                fragment
-                            ],
-                    }
-                )
-
-                continue
-
-            current = page_lines[
-                -1
-            ]
-
-            if abs(
-                current["y"]
-                -
-                fragment["y"]
-            ) <= tolerance:
-
-                current[
-                    "fragments"
-                ].append(
-                    fragment
-                )
-
-            else:
-
-                page_lines.append(
-                    {
-                        "page":
-                            page_number,
-
-                        "y":
-                            fragment[
-                                "y"
-                            ],
-
-                        "fragments":
-                            [
-                                fragment
-                            ],
-                    }
-                )
-
-        for line in page_lines:
-
-            fragments_sorted = sorted(
-                line[
-                    "fragments"
-                ],
-                key=lambda item: item[
-                    "x"
-                ],
-            )
-
-            text = clean_text(
-                " ".join(
-                    item[
-                        "text"
-                    ]
-                    for item
-                    in fragments_sorted
-                )
-            )
-
-            if not text:
-                continue
-
-            all_lines.append(
-                {
-                    "page":
-                        line[
-                            "page"
-                        ],
-
-                    "y":
-                        line[
-                            "y"
-                        ],
-
-                    "xMin":
-                        min(
-                            item[
-                                "x"
-                            ]
-                            for item
-                            in fragments_sorted
-                        ),
-
-                    "xMax":
-                        max(
-                            item[
-                                "x"
-                            ]
-                            for item
-                            in fragments_sorted
-                        ),
-
-                    "text":
-                        text,
-                }
-            )
-
-    return all_lines
+    return positioned
 
 
 def find_spatial_heading(
-    lines: list[dict],
-) -> int | None:
+    positioned: list[dict],
+):
 
-    for index, line in enumerate(
-        lines
-    ):
+    for item in positioned:
 
         normalized = normalize_text(
-            line[
+            item.get(
                 "text"
-            ]
+            )
         )
 
-        if (
-            "top 10 holdings"
-            in normalized
-            or
-            "top ten holdings"
-            in normalized
+        if re.match(
+            r"^top\s+(?:10|ten)\s+holdings\b",
+            normalized,
+            flags=re.IGNORECASE,
         ):
 
-            return index
+            return item
 
     return None
 
 
 def spatial_line_has_weight(
-    line: dict,
+    item: dict,
 ) -> bool:
 
     return bool(
         percentage_matches(
-            line[
-                "text"
-            ]
+            clean_text(
+                item.get(
+                    "text"
+                )
+            )
         )
     )
 
 
 def build_spatial_candidates(
-    lines: list[dict],
-    heading_index: int,
+    positioned: list[dict],
+    heading: dict,
 ) -> list[dict]:
 
-    heading = lines[
-        heading_index
-    ]
-
-    heading_page = heading[
+    page = heading.get(
         "page"
+    )
+
+    heading_y = heading.get(
+        "y"
+    )
+
+    if page is None:
+
+        return []
+
+    page_items = [
+        item
+        for item in positioned
+        if item.get(
+            "page"
+        ) == page
     ]
 
-    heading_y = heading[
-        "y"
-    ]
+    if heading_y is not None:
+
+        page_items = [
+            item
+            for item in page_items
+            if (
+                item.get(
+                    "y",
+                    0
+                )
+                <= heading_y + 2
+                or
+                item.get(
+                    "y",
+                    0
+                )
+                < heading_y
+            )
+        ]
+
+    rows = {}
+
+    for item in page_items:
+
+        y = round(
+            float(
+                item.get(
+                    "y",
+                    0
+                )
+            ),
+            1,
+        )
+
+        rows.setdefault(
+            y,
+            []
+        ).append(
+            item
+        )
 
     candidates = []
 
-    for index in range(
-        heading_index + 1,
-        min(
-            len(lines),
-            heading_index
-            +
-            SPATIAL_MAX_LINES_AFTER_HEADING
-            +
-            1,
-        ),
+    for y in sorted(
+        rows,
+        reverse=True,
     ):
 
-        line = lines[
-            index
-        ]
-
-        if line[
-            "page"
-        ] != heading_page:
-
-            break
+        row = sorted(
+            rows[y],
+            key=lambda item: item.get(
+                "x",
+                0
+            ),
+        )
 
         text = clean_text(
-            line[
-                "text"
-            ]
+            " ".join(
+                item.get(
+                    "text",
+                    ""
+                )
+                for item in row
+            )
         )
 
         if not text:
+
             continue
 
-        if is_holdings_end(
+        if is_holding_header_or_noise(
             text
         ):
 
-            break
-
-        if normalize_text(
-            text
-        ) in {
-            "name",
-            "holding",
-            "holdings",
-            "weight",
-            "weights",
-            "allocation",
-        }:
-
             continue
 
-        candidates.append(
-            line
-        )
+        if percentage_matches(
+            text
+        ):
+
+            candidates.append(
+                {
+                    "page":
+                        page,
+
+                    "y":
+                        y,
+
+                    "text":
+                        text,
+
+                    "items":
+                        row,
+                }
+            )
 
     return candidates
 
 
 def choose_spatial_left_column(
-    lines: list[dict],
+    candidates: list[dict],
 ) -> list[dict]:
 
-    if not lines:
+    if not candidates:
+
         return []
 
-    weight_lines = [
-        line
-        for line in lines
-        if spatial_line_has_weight(
-            line
+    weight_items = []
+
+    for candidate in candidates:
+
+        for item in candidate.get(
+            "items",
+            [],
+        ):
+
+            if percentage_matches(
+                item.get(
+                    "text",
+                    ""
+                )
+            ):
+
+                weight_items.append(
+                    item
+                )
+
+    if not weight_items:
+
+        return []
+
+    boundary = max(
+        item.get(
+            "x",
+            0
         )
-    ]
-
-    if not weight_lines:
-        return []
-
-    rightmost_weight_x = max(
-        line[
-            "xMax"
-        ]
-        for line
-        in weight_lines
+        for item in weight_items
     )
-
-    # The holdings name column normally occupies the area left of the
-    # portfolio-weight column. We do not pair coordinates here.
-    # We only reconstruct the textual left-side section.
-    boundary = rightmost_weight_x
 
     selected = []
 
-    for line in lines:
+    for candidate in candidates:
 
-        text = line[
-            "text"
+        left_items = [
+            item
+            for item in candidate.get(
+                "items",
+                []
+            )
+            if item.get(
+                "x",
+                0
+            ) < boundary
         ]
 
-        if not text:
+        if not left_items:
+
             continue
 
-        if line[
-            "xMin"
-        ] < boundary:
-
-            selected.append(
-                line
+        name_text = clean_text(
+            " ".join(
+                item.get(
+                    "text",
+                    ""
+                )
+                for item in left_items
             )
+        )
+
+        if not name_text:
+
+            continue
+
+        selected.append(
+            {
+                "y":
+                    candidate.get(
+                        "y"
+                    ),
+
+                "name":
+                    name_text,
+
+                "fullText":
+                    candidate.get(
+                        "text"
+                    ),
+            }
+        )
 
     return selected
 
 
 def spatial_lines_to_section(
-    lines: list[dict],
+    spatial_lines: list[dict],
 ) -> str:
 
-    if not lines:
-        return ""
+    if not spatial_lines:
 
-    # Preserve PDF reading order.
-    lines = sorted(
-        lines,
-        key=lambda item: (
-            item[
-                "page"
-            ],
-            -item[
-                "y"
-            ],
-            item[
-                "xMin"
-            ],
-        )
-    )
+        return ""
 
     return "\n".join(
         clean_text(
-            line[
-                "text"
-            ]
+            item.get(
+                "fullText"
+                or "name",
+                ""
+            )
         )
-        for line
-        in lines
+        for item in spatial_lines
         if clean_text(
-            line[
-                "text"
-            ]
+            item.get(
+                "fullText"
+                or "name",
+                ""
+            )
         )
     )
 
 
 def extract_spatial_fallback(
-    pdf_bytes: bytes,
-) -> tuple[
-    list[dict],
-    str,
-    dict,
-]:
+    factsheet_bytes: bytes,
+) -> tuple[str, list[dict]]:
 
-    lines = positioned_pdf_lines(
-        pdf_bytes
+    positioned = positioned_pdf_lines(
+        factsheet_bytes
     )
 
-    diagnostics = {
-        "positionedLineCount":
-            len(lines),
+    if not positioned:
 
-        "headingFound":
-            False,
-
-        "candidateLineCount":
-            0,
-
-        "selectedLineCount":
-            0,
-
-        "parser":
-            "fallback",
-    }
-
-    heading_index = find_spatial_heading(
-        lines
-    )
-
-    if heading_index is None:
-
-        raise RuntimeError(
-            "Spatial recovery could not locate "
-            "Top 10 holdings heading."
+        raise HoldingsParseFailure(
+            "No positioned PDF text was available."
         )
 
-    diagnostics[
-        "headingFound"
-    ] = True
-
-    candidate_lines = (
-        build_spatial_candidates(
-            lines,
-            heading_index,
-        )
+    heading = find_spatial_heading(
+        positioned
     )
 
-    diagnostics[
-        "candidateLineCount"
-    ] = len(
-        candidate_lines
-    )
+    if heading is None:
 
-    selected_lines = (
-        choose_spatial_left_column(
-            candidate_lines
-        )
-    )
-
-    diagnostics[
-        "selectedLineCount"
-    ] = len(
-        selected_lines
-    )
-
-    section = spatial_lines_to_section(
-        selected_lines
-    )
-
-    if not section:
-
-        raise RuntimeError(
-            "Spatial recovery reconstructed an empty "
-            "Top 10 holdings section."
+        raise HoldingsParseFailure(
+            "Spatial PDF fallback could not locate "
+            "the Top 10 Holdings heading."
         )
 
-    # IMPORTANT:
-    #
-    # Spatial recovery is only allowed to reconstruct the section.
-    # It MUST then use the normal fallback parser.
+    candidates = build_spatial_candidates(
+        positioned,
+        heading,
+    )
+
+    selected = choose_spatial_left_column(
+        candidates
+    )
+
+    if not selected:
+
+        raise HoldingsParseFailure(
+            "Spatial PDF fallback could not reconstruct "
+            "holding lines."
+        )
+
+    section_text = spatial_lines_to_section(
+        selected
+    )
+
+    if not section_text:
+
+        raise HoldingsParseFailure(
+            "Spatial PDF fallback produced an empty section."
+        )
+
     holdings = parse_holdings_fallback(
-        section
-    )
-
-    diagnostics[
-        "parsedHoldingCount"
-    ] = len(
-        holdings
+        section_text
     )
 
     return (
+        section_text,
         holdings,
-        section,
-        diagnostics,
     )
 
 
 # =============================================================================
-# EXTRACTION ENGINE
+# RECOVERY EXTRACTION ENGINE
 # =============================================================================
 
 def extract_with_recovery_engine(
-    pdf_bytes: bytes,
-) -> dict:
+    factsheet_bytes: bytes,
+    full_text: str,
+    section_text: str,
+) -> tuple[
+    list[dict],
+    str,
+    str,
+    str,
+]:
 
-    (
-        full_text,
-        page_count,
-    ) = extract_pdf_text(
-        pdf_bytes
-    )
+    primary_error = ""
 
-    (
-        section_text,
-        section_status,
-    ) = extract_holdings_section(
-        full_text
-    )
+    fallback_error = ""
 
-    if section_status == "not_published":
-
-        return {
-            "status":
-                "no_holdings_section",
-
-            "holdings":
-                [],
-
-            "parser":
-                None,
-
-            "primaryParserError":
-                None,
-
-            "fallbackParserError":
-                None,
-
-            "spatialRecoveryError":
-                None,
-
-            "fullText":
-                full_text,
-
-            "sectionText":
-                "",
-
-            "pageCount":
-                page_count,
-
-            "spatialDiagnostics":
-                None,
-        }
-
-    primary_error = None
+    # -------------------------------------------------------------------------
+    # Primary parser
+    # -------------------------------------------------------------------------
 
     try:
 
@@ -2500,37 +2258,12 @@ def extract_with_recovery_engine(
             section_text
         )
 
-        return {
-            "status":
-                "success",
-
-            "holdings":
-                holdings,
-
-            "parser":
-                "primary",
-
-            "primaryParserError":
-                None,
-
-            "fallbackParserError":
-                None,
-
-            "spatialRecoveryError":
-                None,
-
-            "fullText":
-                full_text,
-
-            "sectionText":
-                section_text,
-
-            "pageCount":
-                page_count,
-
-            "spatialDiagnostics":
-                None,
-        }
+        return (
+            holdings,
+            "primary",
+            primary_error,
+            fallback_error,
+        )
 
     except Exception as error:
 
@@ -2538,7 +2271,9 @@ def extract_with_recovery_engine(
             str(error)
         )
 
-    fallback_error = None
+    # -------------------------------------------------------------------------
+    # Text fallback parser
+    # -------------------------------------------------------------------------
 
     try:
 
@@ -2546,37 +2281,12 @@ def extract_with_recovery_engine(
             section_text
         )
 
-        return {
-            "status":
-                "success",
-
-            "holdings":
-                holdings,
-
-            "parser":
-                "fallback",
-
-            "primaryParserError":
-                primary_error,
-
-            "fallbackParserError":
-                None,
-
-            "spatialRecoveryError":
-                None,
-
-            "fullText":
-                full_text,
-
-            "sectionText":
-                section_text,
-
-            "pageCount":
-                page_count,
-
-            "spatialDiagnostics":
-                None,
-        }
+        return (
+            holdings,
+            "fallback",
+            primary_error,
+            fallback_error,
+        )
 
     except Exception as error:
 
@@ -2584,49 +2294,24 @@ def extract_with_recovery_engine(
             str(error)
         )
 
-    spatial_error = None
+    # -------------------------------------------------------------------------
+    # Spatial fallback
+    # -------------------------------------------------------------------------
 
     try:
 
-        (
-            spatial_holdings,
-            spatial_section,
-            spatial_diagnostics,
-        ) = extract_spatial_fallback(
-            pdf_bytes
+        spatial_section, holdings = (
+            extract_spatial_fallback(
+                factsheet_bytes
+            )
         )
 
-        return {
-            "status":
-                "success",
-
-            "holdings":
-                spatial_holdings,
-
-            "parser":
-                "spatial_fallback",
-
-            "primaryParserError":
-                primary_error,
-
-            "fallbackParserError":
-                fallback_error,
-
-            "spatialRecoveryError":
-                None,
-
-            "fullText":
-                full_text,
-
-            "sectionText":
-                spatial_section,
-
-            "pageCount":
-                page_count,
-
-            "spatialDiagnostics":
-                spatial_diagnostics,
-        }
+        return (
+            holdings,
+            "spatial_fallback",
+            primary_error,
+            fallback_error,
+        )
 
     except Exception as error:
 
@@ -2634,28 +2319,16 @@ def extract_with_recovery_engine(
             str(error)
         )
 
-    raise HoldingsParseFailure(
-        "All recovery extraction engines failed. "
-        f"Primary={primary_error}; "
-        f"Fallback={fallback_error}; "
-        f"Spatial={spatial_error}",
-        section_text=section_text,
-        full_text=full_text,
-        diagnostics={
-            "primaryParserError":
-                primary_error,
-
-            "fallbackParserError":
-                fallback_error,
-
-            "spatialRecoveryError":
-                spatial_error,
-        },
-    )
+        raise HoldingsParseFailure(
+            "All Recovery 2 extraction strategies failed. "
+            f"Primary: {primary_error}; "
+            f"Fallback: {fallback_error}; "
+            f"Spatial: {spatial_error}"
+        )
 
 
 # =============================================================================
-# FUND PAGE
+# FUND PAGE NAME
 # =============================================================================
 
 def extract_fund_page_name(
@@ -2664,42 +2337,13 @@ def extract_fund_page_name(
 
     try:
 
-        h1 = page.locator(
-            "h1"
-        ).first
-
-        if h1.count():
-
-            name = clean_text(
-                h1.inner_text()
-            )
-
-            if name:
-                return name
-
-    except Exception:
-
-        pass
-
-    try:
-
-        body = clean_text(
-            page.locator(
-                "body"
-            ).inner_text()
+        title = clean_text(
+            page.title()
         )
 
-        match = re.search(
-            r"\bPRU(?:Link|Prime)\s+[^\n]+",
-            body,
-            re.IGNORECASE,
-        )
+        if title:
 
-        if match:
-
-            return clean_text(
-                match.group(0)
-            )
+            return title
 
     except Exception:
 
@@ -2709,7 +2353,7 @@ def extract_fund_page_name(
 
 
 # =============================================================================
-# SINGLE FUND RECOVERY
+# RECOVER SINGLE FUND
 # =============================================================================
 
 def recover_single_fund(
@@ -2729,39 +2373,11 @@ def recover_single_fund(
         ]
     )
 
-    print(
-        "\n"
-        + "=" * 72
-    )
-
-    print(
-        f"RECOVERY 2 - FUND ROW {excel_row}"
-    )
-
-    print(
-        "=" * 72
-    )
-
-    print(
-        f"URL: {prudential_url}"
-    )
-
     page.goto(
         prudential_url,
         wait_until="domcontentloaded",
         timeout=PAGE_TIMEOUT_MS,
     )
-
-    try:
-
-        page.wait_for_load_state(
-            "networkidle",
-            timeout=25000,
-        )
-
-    except PlaywrightTimeoutError:
-
-        pass
 
     page.wait_for_timeout(
         POST_PAGE_WAIT_MS
@@ -2776,28 +2392,17 @@ def recover_single_fund(
     ):
 
         raise RuntimeError(
-            "Fund page redirected outside Prudential Singapore: "
-            f"{final_url}"
+            "Prudential page redirected to a non-Prudential "
+            f"host: {final_url}"
         )
 
-    page_title = clean_text(
-        page.title()
-    )
-
-    fund_name = extract_fund_page_name(
+    page_title = extract_fund_page_name(
         page
     )
 
     factsheet_url = find_factsheet_url(
-        page
-    )
-
-    print(
-        f"Fund: {fund_name or '-'}"
-    )
-
-    print(
-        f"Factsheet: {factsheet_url}"
+        page,
+        final_url,
     )
 
     factsheet_bytes = download_factsheet(
@@ -2805,87 +2410,41 @@ def recover_single_fund(
         factsheet_url,
     )
 
-    engine = extract_with_recovery_engine(
+    full_text, pdf_page_count = extract_pdf_text(
         factsheet_bytes
     )
 
-    if engine[
-        "status"
-    ] == "no_holdings_section":
+    section_text, section_status = (
+        extract_holdings_section(
+            full_text
+        )
+    )
 
-        return {
-            "status":
-                "no_holdings_section",
+    if section_status != "published":
 
-            "excelRow":
-                excel_row,
+        if section_status == "not_found":
 
-            "prudentialUrl":
-                prudential_url,
+            raise HoldingsParseFailure(
+                "Official factsheet has no confirmed "
+                "Top 10 Holdings section."
+            )
 
-            "finalUrl":
-                final_url,
+        raise HoldingsParseFailure(
+            "Official factsheet Top 10 Holdings section "
+            "was empty."
+        )
 
-            "pageTitle":
-                page_title,
+    holdings, parser_used, primary_error, fallback_error = (
+        extract_with_recovery_engine(
+            factsheet_bytes,
+            full_text,
+            section_text,
+        )
+    )
 
-            "fundName":
-                fund_name,
-
-            "excelPruAccessName":
-                excel_fund.get(
-                    "pruAccessName"
-                ),
-
-            "factsheetUrl":
-                factsheet_url,
-
-            "factsheetPageCount":
-                engine[
-                    "pageCount"
-                ],
-
-            "factsheetDocumentDate":
-                extract_document_date(
-                    engine[
-                        "fullText"
-                    ]
-                ),
-
-            "factsheetDataAsAt":
-                extract_data_as_at(
-                    engine[
-                        "fullText"
-                    ]
-                ),
-
-            "topHoldingsCount":
-                0,
-
-            "topHoldings":
-                [],
-
-            "holdingsParser":
-                None,
-
-            "recoveryEngine":
-                "no_holdings_section",
-
-            "_factsheetBytes":
-                factsheet_bytes,
-
-            "_fullText":
-                engine[
-                    "fullText"
-                ],
-
-            "_sectionText":
-                "",
-        }
-
-    holdings = engine[
-        "holdings"
-    ]
+    holdings = validate_holdings(
+        holdings
+    )
 
     result = {
         "status":
@@ -2904,7 +2463,7 @@ def recover_single_fund(
             page_title,
 
         "fundName":
-            fund_name,
+            page_title,
 
         "excelPruAccessName":
             excel_fund.get(
@@ -2916,22 +2475,16 @@ def recover_single_fund(
 
         "factsheetDocumentDate":
             extract_document_date(
-                engine[
-                    "fullText"
-                ]
+                full_text
             ),
 
         "factsheetDataAsAt":
             extract_data_as_at(
-                engine[
-                    "fullText"
-                ]
+                full_text
             ),
 
         "factsheetPageCount":
-            engine[
-                "pageCount"
-            ],
+            pdf_page_count,
 
         "holdingsSectionStatus":
             "published",
@@ -2945,45 +2498,95 @@ def recover_single_fund(
             holdings,
 
         "holdingsParser":
-            engine[
-                "parser"
-            ],
+            parser_used,
 
         "primaryParserError":
-            engine[
-                "primaryParserError"
-            ],
+            primary_error,
 
         "fallbackParserError":
-            engine[
-                "fallbackParserError"
-            ],
+            fallback_error,
 
-        "spatialRecoveryError":
-            engine[
-                "spatialRecoveryError"
-            ],
+        "holdingsSectionExtraction":
+            (
+                "pdf_coordinates"
+                if parser_used
+                == "spatial_fallback"
+                else "pdf_text"
+            ),
 
-        "spatialDiagnostics":
-            engine[
-                "spatialDiagnostics"
-            ],
+        "rules": {
+            "recovery1FailedFundsOnly":
+                True,
 
-        "_factsheetBytes":
-            factsheet_bytes,
+            "officialPrudentialSourceOnly":
+                True,
 
-        "_fullText":
-            engine[
-                "fullText"
-            ],
+            "officialFactsheetOnly":
+                True,
 
-        "_sectionText":
-            engine[
-                "sectionText"
-            ],
+            "maximumHoldings":
+                MAX_HOLDINGS,
+
+            "publishedCountUsedExactly":
+                True,
+
+            "fewerThanTenAllowed":
+                True,
+
+            "noForcedTenEntries":
+                True,
+
+            "noInferredHoldings":
+                True,
+
+            "noFabricatedPercentages":
+                True,
+
+            "duplicateHoldingNamesAllowed":
+                True,
+
+            "duplicateHoldingPercentagesAllowed":
+                True,
+
+            "multilineHoldingNamesSupported":
+                True,
+
+            "wrappedPdfLinesJoined":
+                True,
+
+            "fallbackUsesLastPercentageOnLogicalLine":
+                True,
+
+            "spatialFallbackEnabled":
+                True,
+
+            "noFuzzyHoldingMatching":
+                True,
+
+            "noSyntheticValues":
+                True,
+
+            "exactFinalPdfVerification":
+                True,
+
+            "exactRankNameWeightSignatureRequired":
+                True,
+        },
     }
 
-    return result
+    return {
+        "result":
+            result,
+
+        "factsheetBytes":
+            factsheet_bytes,
+
+        "fullText":
+            full_text,
+
+        "sectionText":
+            section_text,
+    }
 
 
 # =============================================================================
@@ -2993,11 +2596,12 @@ def recover_single_fund(
 def verify_exact_against_official_pdf(
     page,
     result: dict,
-) -> dict:
-
-    print(
-        "FINAL VERIFICATION: downloading official PDF again..."
-    )
+) -> tuple[
+    bytes,
+    str,
+    str,
+    list[dict],
+]:
 
     factsheet_url = ensure_prudential_url(
         result[
@@ -3013,135 +2617,145 @@ def verify_exact_against_official_pdf(
     if response.status != 200:
 
         raise RuntimeError(
-            "Final verification factsheet download returned "
+            "Factsheet re-download returned "
             f"HTTP {response.status}."
         )
 
-    verification_bytes = response.body()
+    factsheet_bytes = response.body()
 
-    if not verification_bytes.startswith(
+    if not factsheet_bytes.startswith(
         b"%PDF"
     ):
 
         raise RuntimeError(
-            "Final verification response was not a PDF."
+            "Factsheet re-download did not return a valid PDF."
         )
 
-    verification_engine = (
-        extract_with_recovery_engine(
-            verification_bytes
+    full_text, _page_count = extract_pdf_text(
+        factsheet_bytes
+    )
+
+    section_text, section_status = (
+        extract_holdings_section(
+            full_text
         )
     )
 
-    if verification_engine[
-        "status"
-    ] != "success":
+    if section_status != "published":
 
         raise RuntimeError(
-            "Final verification could not extract published holdings."
+            "Factsheet holdings section disappeared "
+            "during final verification."
         )
 
-    original_holdings = result[
+    parser_used = result.get(
+        "holdingsParser"
+    ) or "primary"
+
+    if parser_used == "primary":
+
+        try:
+
+            verified_holdings = parse_holdings(
+                section_text
+            )
+
+        except Exception as error:
+
+            raise RuntimeError(
+                "Final verification could not reproduce "
+                "the primary parser result: "
+                f"{error}"
+            ) from error
+
+    elif parser_used == "fallback":
+
+        verified_holdings = parse_holdings_fallback(
+            section_text
+        )
+
+    elif parser_used == "spatial_fallback":
+
+        spatial_section, verified_holdings = (
+            extract_spatial_fallback(
+                factsheet_bytes
+            )
+        )
+
+        section_text = spatial_section
+
+    else:
+
+        raise RuntimeError(
+            "Unknown parser used during extraction: "
+            f"{parser_used}"
+        )
+
+    original_holdings = result.get(
         "topHoldings"
-    ]
+    ) or []
 
-    verified_holdings = (
-        verification_engine[
-            "holdings"
-        ]
-    )
-
-    original_signature = holding_signature(
+    if len(
+        verified_holdings
+    ) != len(
         original_holdings
-    )
+    ):
 
-    verified_signature = holding_signature(
+        raise RuntimeError(
+            "Holding count changed during final verification: "
+            f"initial={len(original_holdings)}, "
+            f"verified={len(verified_holdings)}."
+        )
+
+    if (
+        holding_signature(
+            verified_holdings
+        )
+        !=
+        holding_signature(
+            original_holdings
+        )
+    ):
+
+        raise RuntimeError(
+            "Holding signature changed during final verification. "
+            "No Recovery 2 result was accepted."
+        )
+
+    result[
+        "topHoldings"
+    ] = verified_holdings
+
+    result[
+        "topHoldingsCount"
+    ] = len(
         verified_holdings
     )
 
-    if (
-        original_signature
-        !=
-        verified_signature
-    ):
+    result[
+        "finalVerification"
+    ] = {
+        "status":
+            "verified",
 
-        diagnostics = {
-            "originalSignature":
-                original_signature,
+        "verifiedAtUtc":
+            utc_now_iso(),
 
-            "verifiedSignature":
-                verified_signature,
-
-            "originalHoldings":
-                original_holdings,
-
-            "verifiedHoldings":
-                verified_holdings,
-
-            "verificationParser":
-                verification_engine[
-                    "parser"
-                ],
-
-            "verificationPrimaryParserError":
-                verification_engine[
-                    "primaryParserError"
-                ],
-
-            "verificationFallbackParserError":
-                verification_engine[
-                    "fallbackParserError"
-                ],
-
-            "verificationSpatialDiagnostics":
-                verification_engine[
-                    "spatialDiagnostics"
-                ],
-        }
-
-        raise HoldingsParseFailure(
-            "EXACT VERIFICATION FAILED: the re-downloaded "
-            "official Prudential PDF produced a different "
-            "rank/name/weight signature.",
-            section_text=verification_engine[
-                "sectionText"
-            ],
-            full_text=verification_engine[
-                "fullText"
-            ],
-            diagnostics=diagnostics,
-        )
-
-    return {
-        "verified":
+        "exactSignatureMatch":
             True,
-
-        "verifiedParser":
-            verification_engine[
-                "parser"
-            ],
 
         "verifiedHoldingCount":
             len(
                 verified_holdings
             ),
-
-        "verifiedSignature":
-            verified_signature,
-
-        "verificationFactsheetBytes":
-            verification_bytes,
-
-        "verificationFullText":
-            verification_engine[
-                "fullText"
-            ],
-
-        "verificationSectionText":
-            verification_engine[
-                "sectionText"
-            ],
     }
+
+    return (
+        factsheet_bytes,
+        full_text,
+        section_text,
+        verified_holdings,
+    )
 
 
 # =============================================================================
@@ -3161,6 +2775,10 @@ def recovery_directory(
     identifier = safe_filename(
         result.get(
             "fundName"
+        )
+        or
+        result.get(
+            "pageTitle"
         )
         or
         urlparse(
@@ -3189,7 +2807,9 @@ def recovery_directory(
 
 def save_success(
     result: dict,
-    verification: dict,
+    factsheet_bytes: bytes,
+    full_text: str,
+    section_text: str,
 ) -> Path:
 
     directory = recovery_directory(
@@ -3201,96 +2821,45 @@ def save_success(
         exist_ok=True,
     )
 
-    verification_bytes = (
-        verification[
-            "verificationFactsheetBytes"
-        ]
-    )
-
-    verification_full_text = (
-        verification[
-            "verificationFullText"
-        ]
-    )
-
-    verification_section = (
-        verification[
-            "verificationSectionText"
-        ]
-    )
-
     (
         directory
-        /
-        "factsheet.pdf"
+        / "factsheet.pdf"
     ).write_bytes(
-        verification_bytes
+        factsheet_bytes
     )
 
     (
         directory
-        /
-        "factsheet_text.txt"
+        / "factsheet_text.txt"
     ).write_text(
-        verification_full_text,
+        full_text,
         encoding="utf-8",
     )
 
     (
         directory
-        /
-        "top_holdings_section.txt"
+        / "top_holdings_section.txt"
     ).write_text(
-        verification_section,
+        section_text,
         encoding="utf-8",
     )
 
-    clean_result = {
-        key:
-            value
-        for key, value
-        in result.items()
-        if not key.startswith("_")
-    }
-
-    clean_result[
-        "verification"
-    ] = {
-        "verified":
-            True,
-
-        "verifiedParser":
-            verification[
-                "verifiedParser"
-            ],
-
-        "verifiedHoldingCount":
-            verification[
-                "verifiedHoldingCount"
-            ],
-
-        "exactSignatureMatch":
-            True,
-
-        "verifiedAtUtc":
-            utc_now_iso(),
-    }
-
     save_json(
         directory
-        /
-        "top_holdings.json",
-        clean_result,
+        / "top_holdings.json",
+        result,
     )
 
     save_json(
         directory
-        /
-        "recovery_diagnostics.json",
+        / "recovery_diagnostics.json",
         {
-            "recoveryEngine":
+            "recoveryStage":
+                "Recovery 2",
+
+            "recovery1Failure":
                 result.get(
-                    "recoveryEngine"
+                    "recovery1Failure"
                 ),
 
             "holdingsParser":
@@ -3308,26 +2877,10 @@ def save_success(
                     "fallbackParserError"
                 ),
 
-            "spatialRecoveryError":
+            "finalVerification":
                 result.get(
-                    "spatialRecoveryError"
+                    "finalVerification"
                 ),
-
-            "spatialDiagnostics":
-                result.get(
-                    "spatialDiagnostics"
-                ),
-
-            "verification":
-                {
-                    "verifiedParser":
-                        verification[
-                            "verifiedParser"
-                        ],
-
-                    "exactSignatureMatch":
-                        True,
-                },
 
             "savedAtUtc":
                 utc_now_iso(),
@@ -3336,8 +2889,7 @@ def save_success(
 
     save_json(
         directory
-        /
-        "metadata.json",
+        / "metadata.json",
         {
             "excelRow":
                 result.get(
@@ -3369,18 +2921,13 @@ def save_success(
                     "topHoldingsCount"
                 ),
 
-            "holdingsParser":
+            "status":
                 result.get(
-                    "holdingsParser"
+                    "status"
                 ),
 
-            "verificationParser":
-                verification.get(
-                    "verifiedParser"
-                ),
-
-            "exactVerification":
-                True,
+            "recoveryStage":
+                "Recovery 2",
 
             "savedAtUtc":
                 utc_now_iso(),
@@ -3391,11 +2938,20 @@ def save_success(
 
 
 def save_no_holdings_section(
-    result: dict,
+    excel_fund: dict,
+    error_text: str,
 ) -> Path:
 
-    directory = recovery_directory(
-        result
+    excel_row = int(
+        excel_fund[
+            "excelRow"
+        ]
+    )
+
+    directory = (
+        RECOVERY_FUNDS_OUTPUT_DIR
+        /
+        f"{excel_row}_no_holdings_section"
     )
 
     directory.mkdir(
@@ -3403,62 +2959,35 @@ def save_no_holdings_section(
         exist_ok=True,
     )
 
-    clean_result = {
-        key:
-            value
-        for key, value
-        in result.items()
-        if not key.startswith("_")
-    }
-
-    clean_result[
-        "recoveryEngine"
-    ] = "no_holdings_section"
-
     save_json(
         directory
-        /
-        "top_holdings.json",
-        clean_result,
-    )
-
-    (
-        directory
-        /
-        "factsheet_text.txt"
-    ).write_text(
-        result.get(
-            "_fullText"
-        )
-        or
-        "",
-        encoding="utf-8",
-    )
-
-    save_json(
-        directory
-        /
-        "metadata.json",
+        / "failure.json",
         {
-            "excelRow":
-                result.get(
-                    "excelRow"
-                ),
-
-            "fundName":
-                result.get(
-                    "fundName"
-                ),
-
-            "factsheetUrl":
-                result.get(
-                    "factsheetUrl"
-                ),
-
             "status":
-                "no_holdings_section",
+                "NO_HOLDINGS_SECTION",
 
-            "savedAtUtc":
+            "excelRow":
+                excel_row,
+
+            "prudentialUrl":
+                excel_fund[
+                    "prudentialUrl"
+                ],
+
+            "excelPruAccessName":
+                excel_fund.get(
+                    "pruAccessName"
+                ),
+
+            "error":
+                clean_text(
+                    error_text
+                ),
+
+            "recoveryStage":
+                "Recovery 2",
+
+            "failedAtUtc":
                 utc_now_iso(),
         },
     )
@@ -3469,10 +2998,7 @@ def save_no_holdings_section(
 def save_failure(
     excel_fund: dict,
     error_text: str,
-    attempt_diagnostics: list[dict],
-    section_text: str | None = None,
-    full_text: str | None = None,
-    diagnostics: dict | None = None,
+    recovery1_failure=None,
 ) -> Path:
 
     excel_row = int(
@@ -3492,72 +3018,41 @@ def save_failure(
         exist_ok=True,
     )
 
-    failure = {
-        "status":
-            "failed",
-
-        "excelRow":
-            excel_row,
-
-        "prudentialUrl":
-            excel_fund[
-                "prudentialUrl"
-            ],
-
-        "excelPruAccessName":
-            excel_fund.get(
-                "pruAccessName"
-            ),
-
-        "error":
-            clean_text(
-                error_text
-            ),
-
-        "attempts":
-            attempt_diagnostics,
-
-        "failedAtUtc":
-            utc_now_iso(),
-    }
-
     save_json(
         directory
-        /
-        "failure.json",
-        failure,
+        / "failure.json",
+        {
+            "status":
+                "failed",
+
+            "excelRow":
+                excel_row,
+
+            "prudentialUrl":
+                excel_fund[
+                    "prudentialUrl"
+                ],
+
+            "excelPruAccessName":
+                excel_fund.get(
+                    "pruAccessName"
+                ),
+
+            "error":
+                clean_text(
+                    error_text
+                ),
+
+            "recoveryStage":
+                "Recovery 2",
+
+            "recovery1Failure":
+                recovery1_failure,
+
+            "failedAtUtc":
+                utc_now_iso(),
+        },
     )
-
-    if section_text:
-
-        (
-            directory
-            /
-            "top_holdings_section.txt"
-        ).write_text(
-            section_text,
-            encoding="utf-8",
-        )
-
-    if full_text:
-
-        (
-            directory
-            /
-            "factsheet_text.txt"
-        ).write_text(
-            full_text,
-            encoding="utf-8",
-        )
-
-    if diagnostics:
-
-        save_json(
-            directory
-            /
-            "recovery_diagnostics.json",
-            diagnostics,
-        )
 
     return directory
 
@@ -3582,7 +3077,7 @@ def main() -> int:
 
     print(
         "\n"
-        + "#" * 72
+        "################################################################"
     )
 
     print(
@@ -3590,554 +3085,442 @@ def main() -> int:
     )
 
     print(
-        "#" * 72
+        "################################################################"
     )
 
     print(
         f"Started UTC: {started_at}"
     )
 
-    # -------------------------------------------------------------------------
-    # Load frozen baseline
-    # -------------------------------------------------------------------------
-
-    baseline = load_baseline_run_summary()
-
     print(
-        "\nFROZEN BASELINE"
+        "Recovery 1 summary: "
+        f"{RECOVERY_1_RUN_SUMMARY_FILE}"
     )
 
     print(
-        f"Baseline status: "
-        f"{baseline.get('status')}"
+        "Recovery 2 output:  "
+        f"{RECOVERY_OUTPUT_DIR}"
     )
 
     print(
-        f"Baseline universe: "
-        f"{baseline.get('excelFundUniverse')}"
+        "\nRecovery source: Recovery 1 failedFundsDetail ONLY"
     )
 
-    print(
-        f"Baseline failed funds: "
-        f"{baseline.get('failedFunds')}"
+    recovery_1 = (
+        load_recovery_1_run_summary()
     )
-
-    # -------------------------------------------------------------------------
-    # Load Excel
-    # -------------------------------------------------------------------------
 
     excel_funds = read_excel_funds()
 
-    recovery_universe = build_recovery_universe(
-        baseline,
-        excel_funds,
+    recovery_universe = (
+        build_recovery_universe(
+            recovery_1,
+            excel_funds,
+        )
     )
 
     print(
-        f"\nRecovery universe: "
-        f"{len(recovery_universe)} failed fund(s)"
+        f"Recovery 1 universe: "
+        f"{recovery_1.get('excelFundUniverse')}"
+    )
+
+    print(
+        f"Recovery 1 failed funds: "
+        f"{recovery_1.get('failedFunds')}"
+    )
+
+    print(
+        f"Recovery 2 universe: "
+        f"{len(recovery_universe)}"
     )
 
     if not recovery_universe:
 
         completed_at = utc_now_iso()
 
-        summary = {
-            "status":
-                "nothing_to_recover",
-
-            "startedAtUtc":
-                started_at,
-
-            "completedAtUtc":
-                completed_at,
-
-            "baselineRunSummary":
-                str(
-                    BASELINE_RUN_SUMMARY_FILE
-                ),
-
-            "excelFile":
-                str(
-                    EXCEL_FILE
-                ),
-
-            "baselineFailedFunds":
-                int(
-                    baseline.get(
-                        "failedFunds",
-                        0,
-                    )
-                    or
-                    0
-                ),
-
-            "recoveryUniverse":
-                0,
-
-            "recoveredFunds":
-                0,
-
-            "noHoldingsSectionFunds":
-                0,
-
-            "failedFunds":
-                0,
-
-            "rules": {
-                "baselineFailedFundsOnly":
-                    True,
-
-                "officialPrudentialOnly":
-                    True,
-
-                "noThirdPartyHoldings":
-                    True,
-
-                "noInferredHoldings":
-                    True,
-
-                "noFabricatedPercentages":
-                    True,
-
-                "exactFinalVerification":
-                    True,
-            },
-        }
+        save_json(
+            RECOVERY_ALL_HOLDINGS_FILE,
+            [],
+        )
 
         save_json(
             RECOVERY_RUN_SUMMARY_FILE,
-            summary,
+            {
+                "status":
+                    "nothing_to_recover",
+
+                "startedAtUtc":
+                    started_at,
+
+                "completedAtUtc":
+                    completed_at,
+
+                "excelFile":
+                    str(
+                        EXCEL_FILE
+                    ),
+
+                "recovery1RunSummary":
+                    str(
+                        RECOVERY_1_RUN_SUMMARY_FILE
+                    ),
+
+                "recovery1ExcelFundUniverse":
+                    recovery_1.get(
+                        "excelFundUniverse"
+                    ),
+
+                "recovery1FailedFunds":
+                    recovery_1.get(
+                        "failedFunds"
+                    ),
+
+                "recovery2Universe":
+                    0,
+
+                "successfulFunds":
+                    0,
+
+                "failedFunds":
+                    0,
+
+                "successfulFundsDetail":
+                    [],
+
+                "failedFundsDetail":
+                    [],
+
+                "rules": {
+                    "recovery1FailedFundsOnly":
+                        True,
+
+                    "excelColumnAControlsMasterUniverse":
+                        True,
+
+                    "noBaselineFallback":
+                        True,
+
+                    "officialPrudentialSingaporeOnly":
+                        True,
+
+                    "officialFactsheetOnly":
+                        True,
+
+                    "noThirdPartyHoldings":
+                        True,
+
+                    "noInferredHoldings":
+                        True,
+
+                    "noFabricatedHoldings":
+                        True,
+
+                    "noSyntheticValues":
+                        True,
+
+                    "exactFinalPdfVerification":
+                        True,
+                },
+            },
         )
 
         print(
-            "\nNothing to recover."
+            "\nRecovery 1 has no failed funds."
+        )
+
+        print(
+            "Recovery 2 has nothing to recover."
         )
 
         return 0
 
-    # -------------------------------------------------------------------------
-    # Recovery state
-    # -------------------------------------------------------------------------
-
-    recovered = []
-
-    no_holdings_section = []
+    successful = []
 
     failed = []
 
-    fallback_recovered = []
+    no_holdings_section = []
 
-    spatial_recovered = []
+    all_holdings = []
 
-    for index, excel_fund in enumerate(
-        recovery_universe,
-        start=1,
-    ):
+    with sync_playwright() as playwright:
 
-        excel_row = int(
-            excel_fund[
-                "excelRow"
-            ]
+        browser = playwright.chromium.launch(
+            headless=BROWSER_HEADLESS
         )
 
-        print(
-            "\n"
-            + "=" * 78
+        context = browser.new_context(
+            viewport={
+                "width": 1440,
+                "height": 1000,
+            },
+
+            user_agent=(
+                "Mozilla/5.0 "
+                "(Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 "
+                "(KHTML, like Gecko) "
+                "Chrome/153.0.0.0 Safari/537.36"
+            ),
         )
 
-        print(
-            f"RECOVERY FUND {index}/{len(recovery_universe)}"
-        )
+        page = context.new_page()
 
-        print(
-            f"Excel row: {excel_row}"
-        )
+        try:
 
-        print(
-            "=" * 78
-        )
-
-        attempt_diagnostics = []
-
-        final_result = None
-
-        last_exception = None
-
-        for attempt in range(
-            1,
-            RETRY_COUNT + 1,
-        ):
-
-            print(
-                f"\nAttempt {attempt}/{RETRY_COUNT}"
+            total = len(
+                recovery_universe
             )
 
-            attempt_record = {
-                "attempt":
-                    attempt,
+            for index, excel_fund in enumerate(
+                recovery_universe,
+                start=1,
+            ):
 
-                "startedAtUtc":
-                    utc_now_iso(),
-            }
-
-            try:
-
-                with sync_playwright() as playwright:
-
-                    browser = playwright.chromium.launch(
-                        headless=BROWSER_HEADLESS
-                    )
-
-                    context = browser.new_context(
-                        viewport={
-                            "width": 1440,
-                            "height": 1000,
-                        },
-
-                        user_agent=(
-                            "Mozilla/5.0 "
-                            "(Windows NT 10.0; Win64; x64) "
-                            "AppleWebKit/537.36 "
-                            "(KHTML, like Gecko) "
-                            "Chrome/153.0.0.0 Safari/537.36"
-                        ),
-                    )
-
-                    page = context.new_page()
-
-                    try:
-
-                        result = recover_single_fund(
-                            page,
-                            excel_fund,
-                        )
-
-                        if (
-                            result[
-                                "status"
-                            ]
-                            ==
-                            "no_holdings_section"
-                        ):
-
-                            directory = (
-                                save_no_holdings_section(
-                                    result
-                                )
-                            )
-
-                            result[
-                                "outputDirectory"
-                            ] = str(
-                                directory
-                            )
-
-                            final_result = result
-
-                        else:
-
-                            # -------------------------------------------------
-                            # Exact final verification
-                            # -------------------------------------------------
-
-                            verification = (
-                                verify_exact_against_official_pdf(
-                                    page,
-                                    result,
-                                )
-                            )
-
-                            directory = save_success(
-                                result,
-                                verification,
-                            )
-
-                            result[
-                                "outputDirectory"
-                            ] = str(
-                                directory
-                            )
-
-                            result[
-                                "exactVerification"
-                            ] = True
-
-                            result[
-                                "verificationParser"
-                            ] = verification[
-                                "verifiedParser"
-                            ]
-
-                            final_result = result
-
-                    finally:
-
-                        context.close()
-
-                        browser.close()
-
-                attempt_record[
-                    "status"
-                ] = "success"
-
-                attempt_record[
-                    "completedAtUtc"
-                ] = utc_now_iso()
-
-                if final_result:
-
-                    attempt_record[
-                        "parser"
-                    ] = final_result.get(
-                        "holdingsParser"
-                    )
-
-                    attempt_record[
-                        "status"
-                    ] = final_result.get(
-                        "status"
-                    )
-
-                attempt_diagnostics.append(
-                    attempt_record
-                )
-
-                last_exception = None
-
-                break
-
-            except Exception as error:
-
-                last_exception = error
-
-                error_text = clean_text(
-                    str(error)
-                )
-
-                attempt_record[
-                    "status"
-                ] = "failed"
-
-                attempt_record[
-                    "error"
-                ] = error_text
-
-                attempt_record[
-                    "completedAtUtc"
-                ] = utc_now_iso()
-
-                if isinstance(
-                    error,
-                    HoldingsParseFailure,
-                ):
-
-                    attempt_record[
-                        "diagnostics"
-                    ] = error.diagnostics
-
-                attempt_diagnostics.append(
-                    attempt_record
+                excel_row = int(
+                    excel_fund[
+                        "excelRow"
+                    ]
                 )
 
                 print(
-                    f"Attempt failed: {error_text}"
+                    "\n"
+                    + "=" * 72
                 )
 
-                if attempt < RETRY_COUNT:
+                print(
+                    f"RECOVERY 2 FUND "
+                    f"{index}/{total}"
+                )
+
+                print(
+                    f"Excel row: {excel_row}"
+                )
+
+                print(
+                    f"URL: "
+                    f"{excel_fund['prudentialUrl']}"
+                )
+
+                print(
+                    "=" * 72
+                )
+
+                result_payload = None
+
+                last_error = None
+
+                for attempt in range(
+                    1,
+                    RETRY_COUNT + 1,
+                ):
+
+                    try:
+
+                        print(
+                            f"Attempt "
+                            f"{attempt}/{RETRY_COUNT}"
+                        )
+
+                        result_payload = (
+                            recover_single_fund(
+                                page,
+                                excel_fund,
+                            )
+                        )
+
+                        result = (
+                            result_payload[
+                                "result"
+                            ]
+                        )
+
+                        result[
+                            "recovery1Failure"
+                        ] = excel_fund.get(
+                            "recovery1Failure"
+                        )
+
+                        (
+                            verified_pdf,
+                            verified_text,
+                            verified_section,
+                            verified_holdings,
+                        ) = verify_exact_against_official_pdf(
+                            page,
+                            result,
+                        )
+
+                        result[
+                            "factsheetPageCount"
+                        ] = len(
+                            PdfReader(
+                                BytesIO(
+                                    verified_pdf
+                                )
+                            ).pages
+                        )
+
+                        save_success(
+                            result,
+                            verified_pdf,
+                            verified_text,
+                            verified_section,
+                        )
+
+                        successful.append(
+                            result
+                        )
+
+                        all_holdings.append(
+                            result
+                        )
+
+                        print(
+                            "RECOVERY 2 SUCCESS"
+                        )
+
+                        print(
+                            f"Holdings: "
+                            f"{len(verified_holdings)}"
+                        )
+
+                        print(
+                            f"Parser: "
+                            f"{result.get('holdingsParser')}"
+                        )
+
+                        break
+
+                    except Exception as error:
+
+                        last_error = clean_text(
+                            str(error)
+                        )
+
+                        print(
+                            "Recovery 2 attempt failed: "
+                            f"{last_error}"
+                        )
+
+                        if attempt < RETRY_COUNT:
+
+                            time.sleep(
+                                RETRY_DELAY_SECONDS
+                            )
+
+                else:
+
+                    error_text = (
+                        last_error
+                        or
+                        "Unknown Recovery 2 failure."
+                    )
+
+                    if (
+                        "no confirmed Top 10 Holdings section"
+                        in error_text
+                    ):
+
+                        save_no_holdings_section(
+                            excel_fund,
+                            error_text,
+                        )
+
+                        no_holdings_section.append(
+                            {
+                                "excelRow":
+                                    excel_row,
+
+                                "prudentialUrl":
+                                    excel_fund[
+                                        "prudentialUrl"
+                                    ],
+
+                                "excelPruAccessName":
+                                    excel_fund.get(
+                                        "pruAccessName"
+                                    ),
+
+                                "error":
+                                    error_text,
+
+                                "recovery1Failure":
+                                    excel_fund.get(
+                                        "recovery1Failure"
+                                    ),
+                            }
+                        )
+
+                    else:
+
+                        save_failure(
+                            excel_fund,
+                            error_text,
+                            excel_fund.get(
+                                "recovery1Failure"
+                            ),
+                        )
+
+                        failed.append(
+                            {
+                                "status":
+                                    "failed",
+
+                                "excelRow":
+                                    excel_row,
+
+                                "prudentialUrl":
+                                    excel_fund[
+                                        "prudentialUrl"
+                                    ],
+
+                                "excelPruAccessName":
+                                    excel_fund.get(
+                                        "pruAccessName"
+                                    ),
+
+                                "error":
+                                    error_text,
+
+                                "recovery1Failure":
+                                    excel_fund.get(
+                                        "recovery1Failure"
+                                    ),
+
+                                "failedAtUtc":
+                                    utc_now_iso(),
+                            }
+                        )
 
                     print(
-                        f"Retrying in "
-                        f"{RETRY_DELAY_SECONDS} seconds..."
+                        "RECOVERY 2 FAILED"
                     )
 
-                    time.sleep(
-                        RETRY_DELAY_SECONDS
-                    )
+        finally:
 
-        # ---------------------------------------------------------------------
-        # No successful recovery
-        # ---------------------------------------------------------------------
+            context.close()
 
-        if final_result is None:
-
-            section_text = getattr(
-                last_exception,
-                "section_text",
-                None,
-            )
-
-            full_text = getattr(
-                last_exception,
-                "full_text",
-                None,
-            )
-
-            diagnostics = getattr(
-                last_exception,
-                "diagnostics",
-                None,
-            )
-
-            directory = save_failure(
-                excel_fund,
-                clean_text(
-                    str(
-                        last_exception
-                    )
-                    if last_exception
-                    else
-                    "Unknown recovery failure."
-                ),
-                attempt_diagnostics,
-                section_text=section_text,
-                full_text=full_text,
-                diagnostics=diagnostics,
-            )
-
-            failed.append(
-                {
-                    "excelRow":
-                        excel_row,
-
-                    "prudentialUrl":
-                        excel_fund[
-                            "prudentialUrl"
-                        ],
-
-                    "pruAccessName":
-                        excel_fund.get(
-                            "pruAccessName"
-                        ),
-
-                    "error":
-                        clean_text(
-                            str(
-                                last_exception
-                            )
-                            if last_exception
-                            else
-                            "Unknown recovery failure."
-                        ),
-
-                    "outputDirectory":
-                        str(
-                            directory
-                        ),
-
-                    "attempts":
-                        attempt_diagnostics,
-                }
-            )
-
-            continue
-
-        # ---------------------------------------------------------------------
-        # No holdings section
-        # ---------------------------------------------------------------------
-
-        if (
-            final_result[
-                "status"
-            ]
-            ==
-            "no_holdings_section"
-        ):
-
-            no_holdings_section.append(
-                final_result
-            )
-
-            print(
-                "\nRECOVERY RESULT: "
-                "NO TOP HOLDINGS SECTION"
-            )
-
-            continue
-
-        # ---------------------------------------------------------------------
-        # Successful recovery
-        # ---------------------------------------------------------------------
-
-        recovered.append(
-            final_result
-        )
-
-        parser = final_result.get(
-            "holdingsParser"
-        )
-
-        if parser == "fallback":
-
-            fallback_recovered.append(
-                final_result
-            )
-
-        elif parser == "spatial_fallback":
-
-            spatial_recovered.append(
-                final_result
-            )
-
-        print(
-            "\nRECOVERY SUCCESS"
-        )
-
-        print(
-            f"Fund: "
-            f"{final_result.get('fundName') or '-'}"
-        )
-
-        print(
-            f"Parser: "
-            f"{parser or '-'}"
-        )
-
-        print(
-            f"Holdings: "
-            f"{final_result.get('topHoldingsCount')}"
-        )
-
-        print(
-            "Exact final verification: PASS"
-        )
-
-        for holding in final_result[
-            "topHoldings"
-        ]:
-
-            print(
-                f"  {holding['rank']}. "
-                f"{holding['name']} - "
-                f"{holding['weightText']}"
-            )
-
-    # =========================================================================
-    # CONSOLIDATED SUMMARY
-    # =========================================================================
+            browser.close()
 
     completed_at = utc_now_iso()
 
     total_holdings = sum(
         int(
-            result.get(
+            item.get(
                 "topHoldingsCount",
                 0,
             )
-            or
-            0
+            or 0
         )
-        for result
-        in recovered
+        for item in successful
     )
 
-    summary = {
+    run_summary = {
         "status":
             (
                 "success"
                 if not failed
-                else
-                "partial"
+                else "partial"
             ),
 
         "startedAtUtc":
@@ -4146,34 +3529,34 @@ def main() -> int:
         "completedAtUtc":
             completed_at,
 
-        "baselineRunSummary":
-            str(
-                BASELINE_RUN_SUMMARY_FILE
-            ),
-
         "excelFile":
             str(
                 EXCEL_FILE
             ),
 
-        "baselineExcelFundUniverse":
-            baseline.get(
+        "recovery1RunSummary":
+            str(
+                RECOVERY_1_RUN_SUMMARY_FILE
+            ),
+
+        "recovery1ExcelFundUniverse":
+            recovery_1.get(
                 "excelFundUniverse"
             ),
 
-        "baselineFailedFunds":
-            baseline.get(
+        "recovery1FailedFunds":
+            recovery_1.get(
                 "failedFunds"
             ),
 
-        "recoveryUniverse":
+        "recovery2Universe":
             len(
                 recovery_universe
             ),
 
-        "recoveredFunds":
+        "successfulFunds":
             len(
-                recovered
+                successful
             ),
 
         "noHoldingsSectionFunds":
@@ -4186,248 +3569,142 @@ def main() -> int:
                 failed
             ),
 
-        "fallbackRecoveredFunds":
-            len(
-                fallback_recovered
-            ),
-
-        "spatialRecoveredFunds":
-            len(
-                spatial_recovered
-            ),
-
-        "totalPublishedTopHoldingsRecovered":
+        "totalPublishedTopHoldings":
             total_holdings,
 
-        "recoveredFundsDetail":
+        "successfulFundsDetail":
             [
                 {
                     "excelRow":
-                        result.get(
+                        item.get(
                             "excelRow"
                         ),
 
                     "fundName":
-                        result.get(
+                        item.get(
                             "fundName"
                         ),
 
                     "factsheetUrl":
-                        result.get(
+                        item.get(
                             "factsheetUrl"
                         ),
 
                     "factsheetDocumentDate":
-                        result.get(
+                        item.get(
                             "factsheetDocumentDate"
                         ),
 
                     "factsheetDataAsAt":
-                        result.get(
+                        item.get(
                             "factsheetDataAsAt"
                         ),
 
                     "topHoldingsCount":
-                        result.get(
+                        item.get(
                             "topHoldingsCount"
                         ),
 
                     "holdingsParser":
-                        result.get(
+                        item.get(
                             "holdingsParser"
                         ),
-
-                    "exactVerification":
-                        result.get(
-                            "exactVerification"
-                        ),
-
-                    "verificationParser":
-                        result.get(
-                            "verificationParser"
-                        ),
-
-                    "outputDirectory":
-                        result.get(
-                            "outputDirectory"
-                        ),
                 }
 
-                for result
-                in recovered
-            ],
-
-        "fallbackRecoveredFundsDetail":
-            [
-                {
-                    "excelRow":
-                        result.get(
-                            "excelRow"
-                        ),
-
-                    "fundName":
-                        result.get(
-                            "fundName"
-                        ),
-
-                    "topHoldingsCount":
-                        result.get(
-                            "topHoldingsCount"
-                        ),
-
-                    "primaryParserError":
-                        result.get(
-                            "primaryParserError"
-                        ),
-                }
-
-                for result
-                in fallback_recovered
-            ],
-
-        "spatialRecoveredFundsDetail":
-            [
-                {
-                    "excelRow":
-                        result.get(
-                            "excelRow"
-                        ),
-
-                    "fundName":
-                        result.get(
-                            "fundName"
-                        ),
-
-                    "topHoldingsCount":
-                        result.get(
-                            "topHoldingsCount"
-                        ),
-
-                    "fallbackParserError":
-                        result.get(
-                            "fallbackParserError"
-                        ),
-
-                    "spatialDiagnostics":
-                        result.get(
-                            "spatialDiagnostics"
-                        ),
-                }
-
-                for result
-                in spatial_recovered
+                for item
+                in successful
             ],
 
         "noHoldingsSectionDetail":
-            [
-                {
-                    "excelRow":
-                        result.get(
-                            "excelRow"
-                        ),
-
-                    "fundName":
-                        result.get(
-                            "fundName"
-                        ),
-
-                    "factsheetUrl":
-                        result.get(
-                            "factsheetUrl"
-                        ),
-                }
-
-                for result
-                in no_holdings_section
-            ],
+            no_holdings_section,
 
         "failedFundsDetail":
             failed,
 
-        "rules":
-            {
-                "baselineFailedFundsOnly":
-                    True,
+        "rules": {
+            "recovery1FailedFundsOnly":
+                True,
 
-                "excelColumnAControlsMasterUniverse":
-                    True,
+            "noBaselineFallback":
+                True,
 
-                "officialPrudentialSingaporeOnly":
-                    True,
+            "excelColumnAControlsMasterUniverse":
+                True,
 
-                "officialFactsheetOnly":
-                    True,
+            "officialPrudentialSingaporeOnly":
+                True,
 
-                "thirdPartyHoldings":
-                    False,
+            "officialFactsheetOnly":
+                True,
 
-                "noInferredHoldings":
-                    True,
+            "thirdPartyHoldings":
+                False,
 
-                "noFabricatedHoldings":
-                    True,
+            "noInferredHoldings":
+                True,
 
-                "noFabricatedPercentages":
-                    True,
+            "noFabricatedHoldings":
+                True,
 
-                "noForcedTenEntries":
-                    True,
+            "noFabricatedPercentages":
+                True,
 
-                "fewerThanTenPublishedHoldingsAllowed":
-                    True,
+            "noSyntheticValues":
+                True,
 
-                "duplicateHoldingNamesAllowed":
-                    True,
+            "maximumHoldings":
+                MAX_HOLDINGS,
 
-                "duplicateHoldingPercentagesAllowed":
-                    True,
+            "publishedCountUsedExactly":
+                True,
 
-                "multilineHoldingNamesSupported":
-                    True,
+            "fewerThanTenHoldingsAllowed":
+                True,
 
-                "hyphenatedLineWrapReconstruction":
-                    True,
+            "noForcedTenEntries":
+                True,
 
-                "fixedIncomeCouponPercentagesSupported":
-                    True,
+            "duplicateHoldingNamesAllowed":
+                True,
 
-                "primaryParser":
-                    True,
+            "duplicateHoldingPercentagesAllowed":
+                True,
 
-                "fallbackParser":
-                    True,
+            "multilineHoldingNamesSupported":
+                True,
 
-                "spatialRecovery":
-                    True,
+            "hyphenatedLineWrapReconstruction":
+                True,
 
-                "spatialRecoveryUsesFallbackParser":
-                    True,
+            "fallbackUsesLastPercentageOnLogicalLine":
+                True,
 
-                "noCoordinateProximityPairing":
-                    True,
+            "spatialFallbackEnabled":
+                True,
 
-                "noFuzzyHoldingMatching":
-                    True,
+            "noFuzzyHoldingMatching":
+                True,
 
-                "noSyntheticValues":
-                    True,
+            "noCoordinateProximityPairing":
+                True,
 
-                "exactFinalPdfVerification":
-                    True,
+            "exactFinalPdfVerification":
+                True,
 
-                "exactRankNameWeightSignatureRequired":
-                    True,
-            },
+            "exactRankNameWeightSignatureRequired":
+                True,
+        },
     }
 
     save_json(
-        RECOVERY_RUN_SUMMARY_FILE,
-        summary,
+        RECOVERY_ALL_HOLDINGS_FILE,
+        all_holdings,
     )
 
-    # =========================================================================
-    # CONSOLE SUMMARY
-    # =========================================================================
+    save_json(
+        RECOVERY_RUN_SUMMARY_FILE,
+        run_summary,
+    )
 
     print(
         "\n\n"
@@ -4443,23 +3720,23 @@ def main() -> int:
     )
 
     print(
-        f"Baseline universe: "
-        f"{baseline.get('excelFundUniverse')}"
+        f"Recovery 1 universe: "
+        f"{recovery_1.get('excelFundUniverse')}"
     )
 
     print(
-        f"Baseline failed funds: "
-        f"{baseline.get('failedFunds')}"
+        f"Recovery 1 failed funds: "
+        f"{recovery_1.get('failedFunds')}"
     )
 
     print(
-        f"Recovery universe: "
+        f"Recovery 2 universe: "
         f"{len(recovery_universe)}"
     )
 
     print(
-        f"Recovered: "
-        f"{len(recovered)}"
+        f"Successful with holdings: "
+        f"{len(successful)}"
     )
 
     print(
@@ -4468,79 +3745,29 @@ def main() -> int:
     )
 
     print(
-        f"Still failed: "
+        f"Failed: "
         f"{len(failed)}"
     )
 
     print(
-        f"Recovered by fallback parser: "
-        f"{len(fallback_recovered)}"
-    )
-
-    print(
-        f"Recovered by spatial fallback: "
-        f"{len(spatial_recovered)}"
-    )
-
-    print(
-        f"Total published holdings recovered: "
+        f"Total published holdings extracted: "
         f"{total_holdings}"
     )
 
     print(
-        "\nRecovery order:"
+        "\nRecovery source:"
     )
 
     print(
-        "  1. Normal PDF extraction"
+        f" - {RECOVERY_1_RUN_SUMMARY_FILE}"
     )
 
     print(
-        "  2. Primary parser"
+        "\nRecovery 2 output:"
     )
 
     print(
-        "  3. Fallback parser"
-    )
-
-    print(
-        "  4. Spatial section reconstruction"
-    )
-
-    print(
-        "  5. Fallback parser on reconstructed section"
-    )
-
-    print(
-        "  6. Exact official PDF re-download"
-    )
-
-    print(
-        "  7. Exact rank/name/weight verification"
-    )
-
-    print(
-        "\nNo fuzzy matching."
-    )
-
-    print(
-        "No proximity name/weight pairing."
-    )
-
-    print(
-        "No fabricated holdings."
-    )
-
-    print(
-        "No fabricated percentages."
-    )
-
-    print(
-        "No third-party holdings."
-    )
-
-    print(
-        "\nOutput:"
+        f" - {RECOVERY_ALL_HOLDINGS_FILE}"
     )
 
     print(
@@ -4554,24 +3781,21 @@ def main() -> int:
     if failed:
 
         print(
-            "\nSTILL FAILED:"
+            "\nRECOVERY 2 FAILED FUNDS:"
         )
 
-        for item in failed:
+        for failure in failed:
 
             print(
                 f" - Row "
-                f"{item['excelRow']}: "
-                f"{item['error']}"
+                f"{failure['excelRow']}: "
+                f"{failure['error']}"
             )
 
     print(
         "\nDone."
     )
 
-    # Deliberately return zero even when some recovery funds remain failed.
-    # GitHub Actions should preserve and upload diagnostics instead of
-    # discarding the recovery artifacts because of a non-zero process exit.
     return 0
 
 
@@ -4596,20 +3820,4 @@ if __name__ == "__main__":
 
         raise SystemExit(
             130
-        )
-
-    except Exception as error:
-
-        print(
-            "\nFATAL RECOVERY ERROR:",
-            file=sys.stderr,
-        )
-
-        print(
-            str(error),
-            file=sys.stderr,
-        )
-
-        raise SystemExit(
-            1
         )
