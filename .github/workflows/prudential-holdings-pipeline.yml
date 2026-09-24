@@ -1,54 +1,232 @@
-      - name: "Verify pipeline files"
+name: Prudential Holdings Full Pipeline
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prudential-holdings-pipeline:
+    name: Baseline → Recovery 1 → Recovery 2
+    runs-on: ubuntu-latest
+
+    steps:
+      # ============================================================
+      # 1. CHECKOUT
+      # ============================================================
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ============================================================
+      # 2. SET UP PYTHON
+      # ============================================================
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # ============================================================
+      # 3. INSTALL PYTHON DEPENDENCIES
+      # ============================================================
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openpyxl pypdf playwright
+
+      # ============================================================
+      # 4. INSTALL PLAYWRIGHT CHROMIUM
+      # ============================================================
+      - name: Install Playwright Chromium
+        run: |
+          python -m playwright install --with-deps chromium
+
+      # ============================================================
+      # 5. VERIFY PIPELINE INPUTS
+      # ============================================================
+      - name: Verify pipeline files
+        run: |
+          echo "Checking required files..."
+
+          test -f "Funds Links.xlsm"
+          test -f "scripts/test_prudential_holdings.py"
+          test -f "scripts/recover_prudential_holdings.py"
+          test -f "scripts/recover_prudential_holdings_2.py"
+
+          echo ""
+          echo "Required files found:"
+          echo "  Funds Links.xlsm"
+          echo "  scripts/test_prudential_holdings.py"
+          echo "  scripts/recover_prudential_holdings.py"
+          echo "  scripts/recover_prudential_holdings_2.py"
+
+      # ============================================================
+      # 6. FROZEN BASELINE
+      #
+      # This is the first and authoritative extraction pass.
+      #
+      # DO NOT modify this script here.
+      # ============================================================
+      - name: "STEP 1 - Frozen Baseline"
         run: |
           echo "============================================================"
-          echo "VERIFYING PIPELINE FILES"
+          echo "STEP 1 - FROZEN BASELINE"
           echo "============================================================"
-
           echo ""
-          echo "Repository root:"
-          pwd
-
+          echo "Running:"
+          echo "  scripts/test_prudential_holdings.py"
           echo ""
-          echo "Top-level files:"
-          find . -maxdepth 2 -type f | sort
 
-          echo ""
-          echo "Checking Funds Links.xlsm..."
-          if [ -f "Funds Links.xlsm" ]; then
-            echo "OK: Funds Links.xlsm"
-          else
-            echo "MISSING: Funds Links.xlsm"
-          fi
-
-          echo ""
-          echo "Python scripts:"
-          find scripts -maxdepth 1 -type f -name "*.py" -print 2>/dev/null | sort || true
-
-          echo ""
-          echo "Checking frozen baseline..."
-          if [ -f "scripts/test_prudential_holdings.py" ]; then
-            echo "OK: scripts/test_prudential_holdings.py"
-          else
-            echo "MISSING: scripts/test_prudential_holdings.py"
-          fi
-
-          echo ""
-          echo "Checking Recovery 1..."
-          if [ -f "scripts/recover_prudential_holdings.py" ]; then
-            echo "OK: scripts/recover_prudential_holdings.py"
-          else
-            echo "MISSING: scripts/recover_prudential_holdings.py"
-          fi
-
-          echo ""
-          echo "Checking Recovery 2..."
-          if [ -f "scripts/recover_prudential_holdings_2.py" ]; then
-            echo "OK: scripts/recover_prudential_holdings_2.py"
-          else
-            echo "MISSING: scripts/recover_prudential_holdings_2.py"
-          fi
+          python -u scripts/test_prudential_holdings.py
 
           echo ""
           echo "============================================================"
-          echo "END FILE CHECK"
+          echo "STEP 1 COMPLETE"
           echo "============================================================"
+
+      # ============================================================
+      # 7. VERIFY BASELINE OUTPUT
+      #
+      # Recovery 1 must consume the baseline run summary.
+      # ============================================================
+      - name: "Verify Step 1 output"
+        run: |
+          echo "Checking baseline output..."
+
+          test -f "output_holdings/run_summary.json"
+
+          echo ""
+          echo "Baseline run summary found:"
+          echo "  output_holdings/run_summary.json"
+
+      # ============================================================
+      # 8. RECOVERY 1
+      #
+      # Recovery 1 runs only after the frozen baseline has completed.
+      #
+      # The frozen baseline is NOT rerun.
+      # ============================================================
+      - name: "STEP 2 - Recovery 1"
+        run: |
+          echo "============================================================"
+          echo "STEP 2 - RECOVERY 1"
+          echo "============================================================"
+          echo ""
+          echo "Running:"
+          echo "  scripts/recover_prudential_holdings.py"
+          echo ""
+
+          python -u scripts/recover_prudential_holdings.py
+
+          echo ""
+          echo "============================================================"
+          echo "STEP 2 COMPLETE"
+          echo "============================================================"
+
+      # ============================================================
+      # 9. VERIFY RECOVERY 1 OUTPUT
+      #
+      # Recovery 2 will consume the remaining failures from Recovery 1.
+      # ============================================================
+      - name: "Verify Step 2 output"
+        run: |
+          echo "Checking Recovery 1 output..."
+
+          test -f "output_holdings_recovery/run_summary.json"
+
+          echo ""
+          echo "Recovery 1 run summary found:"
+          echo "  output_holdings_recovery/run_summary.json"
+
+      # ============================================================
+      # 10. RECOVERY 2
+      #
+      # Recovery 2 is the final downstream recovery stage.
+      #
+      # IMPORTANT:
+      # The Recovery 2 script must read the remaining failed funds
+      # from Recovery 1 rather than the original baseline.
+      # ============================================================
+      - name: "STEP 3 - Recovery 2"
+        run: |
+          echo "============================================================"
+          echo "STEP 3 - RECOVERY 2"
+          echo "============================================================"
+          echo ""
+          echo "Running:"
+          echo "  scripts/recover_prudential_holdings_2.py"
+          echo ""
+
+          python -u scripts/recover_prudential_holdings_2.py
+
+          echo ""
+          echo "============================================================"
+          echo "STEP 3 COMPLETE"
+          echo "============================================================"
+
+      # ============================================================
+      # 11. VERIFY FINAL OUTPUT
+      # ============================================================
+      - name: "Verify final Recovery 2 output"
+        if: always()
+        run: |
+          echo "Checking final Recovery 2 output..."
+
+          if [ -f "output_holdings_recovery_2/run_summary.json" ]; then
+            echo ""
+            echo "Final Recovery 2 run summary found:"
+            echo "  output_holdings_recovery_2/run_summary.json"
+          else
+            echo ""
+            echo "WARNING: Recovery 2 run summary was not found."
+          fi
+
+      # ============================================================
+      # 12. SHOW PIPELINE SUMMARIES
+      # ============================================================
+      - name: "Display pipeline summaries"
+        if: always()
+        run: |
+          echo ""
+          echo "============================================================"
+          echo "PIPELINE SUMMARIES"
+          echo "============================================================"
+
+          echo ""
+          echo "----- BASELINE -----"
+          if [ -f "output_holdings/run_summary.json" ]; then
+            cat "output_holdings/run_summary.json"
+          else
+            echo "Baseline summary not found."
+          fi
+
+          echo ""
+          echo "----- RECOVERY 1 -----"
+          if [ -f "output_holdings_recovery/run_summary.json" ]; then
+            cat "output_holdings_recovery/run_summary.json"
+          else
+            echo "Recovery 1 summary not found."
+          fi
+
+          echo ""
+          echo "----- RECOVERY 2 -----"
+          if [ -f "output_holdings_recovery_2/run_summary.json" ]; then
+            cat "output_holdings_recovery_2/run_summary.json"
+          else
+            echo "Recovery 2 summary not found."
+          fi
+
+      # ============================================================
+      # 13. UPLOAD COMPLETE PIPELINE ARTIFACTS
+      # ============================================================
+      - name: "Upload complete pipeline results"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prudential-holdings-full-pipeline
+          path: |
+            output_holdings/
+            output_holdings_recovery/
+            output_holdings_recovery_2/
+          if-no-files-found: warn
+          retention-days: 30
