@@ -1,4 +1,4 @@
-name: Test Prudential Holdings Baseline + Recovery
+name: Top Holding - All Funds Recovery
 
 on:
   workflow_dispatch:
