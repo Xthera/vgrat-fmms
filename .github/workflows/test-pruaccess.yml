@@ -1,4 +1,4 @@
-name: Test PruAccess
+name: Funds Bid History
 
 on:
   workflow_dispatch:
