@@ -1,4 +1,4 @@
-name: Test Prudential Top Holdings - All Funds
+name: Top Holdings - All Funds
 
 on:
   workflow_dispatch:
