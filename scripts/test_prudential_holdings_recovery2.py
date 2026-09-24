@@ -1,94 +1,52 @@
 #!/usr/bin/env python3
-
 """
 VGrat FMS - Prudential Top Holdings RECOVERY 2
-================================================
+
+RECOVERY CHAIN
+==============
+1. test_prudential_holdings.py
+2. update_prudential_holdings.py
+3. THIS SCRIPT
 
 RECOVERY 2 SOURCE
------------------
-Recovery 1 failures ONLY:
-
+=================
+ONLY:
     output_holdings_recovery/run_summary.json
 
-If Recovery 1's run_summary.json does not expose failed-fund details,
-Recovery 2 reconstructs the failed list from:
+The Recovery 1 summary stores unresolved funds in:
+    stillFailedFundsDetail
 
-    output_holdings_recovery/funds/*_failed/failure.json
-
-IMPORTANT
----------
-This script NEVER falls back to the baseline:
-
+Recovery 2 therefore NEVER reads:
     output_holdings/run_summary.json
 
-MASTER UNIVERSE
----------------
-Funds Links.xlsm
+and NEVER rebuilds its universe from the baseline.
 
-Column A:
-    Official Prudential Singapore fund URL
+PURPOSE
+=======
+Recover only the funds still failed by Recovery 1.
 
-Column B:
-    Exact PruAccess fund name
-
-RECOVERY 2 PURPOSE
-------------------
-Recover only the funds which failed Recovery 1.
-
-The extractor is intentionally structural and conservative.
-
-It requires physical PDF evidence for:
-
-    rank column
-        +
-    security-name column
-        +
-    portfolio-weight column
-
-The three pieces must belong to the same table geometry.
-
-The script does NOT:
-
-    - infer ranks from row order
-    - invent missing ranks
-    - pair arbitrary nearby names and percentages
-    - use third-party holdings
-    - use calculated/synthetic weights
-    - treat fund charges as holdings
-    - treat performance figures as holdings
-    - treat benchmark figures as holdings
-    - treat coupon percentages as portfolio weights
-    - force ten holdings
-    - require ten holdings
-    - use fuzzy holding-name matching
-
-FIXED-INCOME HANDLING
----------------------
-For a genuine fixed-income table line such as:
-
-    SINGAPORE (REPUBLIC OF) 2.375% 1-JUL-2039 5.8%
-
-the security name is:
-
-    SINGAPORE (REPUBLIC OF) 2.375% 1-JUL-2039
-
-and the portfolio weight is:
-
-    5.8%
-
-The LAST percentage on the physical security row is used as the
-portfolio weight only when the row is structurally confirmed as part
-of a holdings table.
-
-The coupon percentage remains inside the security name.
+This script is intentionally conservative:
+- official Prudential Singapore sources only
+- no third-party holdings data
+- no inferred ranks
+- no inferred names
+- no name/weight proximity pairing
+- no synthetic weights
+- no forced ten holdings
+- fewer than ten published holdings is allowed
+- fixed-income coupon percentages are not portfolio weights
+- the LAST percentage on a confirmed fixed-income security row is the
+  portfolio weight
+- a result is successful only when the physical PDF geometry proves a
+  ranked holding table
+- final verification downloads the same official PDF again and requires an
+  exact rank/name/weight signature match
 
 OUTPUT
-------
+======
 output_holdings_recovery_2/
-
-    all_holdings.json
     run_summary.json
-
+    all_holdings.json
     funds/
         <row>_<identifier>/
             factsheet.pdf
@@ -99,244 +57,670 @@ output_holdings_recovery_2/
             candidate_holdings.json
             confirmation.json
             metadata.json
+            top_holdings.json
+            top_holdings_section.txt
+            recovery_result.json
 
-            SUCCESS:
-                top_holdings.json
-                top_holdings_section.txt
-                recovery_result.json
+        <row>_failed/
+            factsheet.pdf
+            factsheet_text.txt
+            spatial_rows.json
+            spatial_candidates.json
+            candidate_regions.json
+            candidate_holdings.json
+            diagnostic_failure.json
+            recovery_result.json
 
-            UNRESOLVED:
-                diagnostic_failure.json
-                recovery_result.json
-
-VERIFICATION
-------------
-A successful extraction is downloaded again from the same official
-Prudential page and extracted again.
-
-The exact signature must match:
-
-    rank
-    normalized name
-    float(weight)
-
-The second extraction must independently satisfy the same structural
-rules.
-
-PYTHON
-------
-Python 3.12 compatible.
+EXIT CODE
+=========
+Always 0 after the run so GitHub Actions preserves diagnostics/artifacts.
+A configuration/programming failure before fund processing returns 1.
 """
 
 from __future__ import annotations
 
 import io
 import json
-import math
-import os
 import re
-import statistics
 import sys
 import time
-
-from collections import Counter, defaultdict
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
-import openpyxl
+from openpyxl import load_workbook
 from pypdf import PdfReader
-
-try:
-    from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-except Exception:
-    sync_playwright = None
-    PlaywrightTimeoutError = Exception
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import sync_playwright
 
 
-# ============================================================================
+# =============================================================================
 # CONFIGURATION
-# ============================================================================
+# =============================================================================
 
 EXCEL_FILE = Path("Funds Links.xlsm")
 
-RECOVERY_1_RUN_SUMMARY_FILE = Path(
+RECOVERY_1_SUMMARY_FILE = Path(
     "output_holdings_recovery/run_summary.json"
 )
 
-RECOVERY_OUTPUT_DIR = Path(
-    "output_holdings_recovery_2"
-)
-
-RECOVERY_FUNDS_OUTPUT_DIR = (
-    RECOVERY_OUTPUT_DIR / "funds"
-)
-
-RECOVERY_RUN_SUMMARY_FILE = (
-    RECOVERY_OUTPUT_DIR / "run_summary.json"
-)
-
-RECOVERY_ALL_HOLDINGS_FILE = (
-    RECOVERY_OUTPUT_DIR / "all_holdings.json"
-)
-
-BROWSER_HEADLESS = True
-
-PAGE_TIMEOUT_MS = 120000
-FACTSHEET_DOWNLOAD_TIMEOUT_MS = 120000
-POST_PAGE_WAIT_MS = 1500
-
-RETRY_COUNT = 3
-RETRY_DELAY_SECONDS = 3.0
-
-MAX_HOLDINGS = 10
+OUTPUT_DIR = Path("output_holdings_recovery_2")
+FUNDS_OUTPUT_DIR = OUTPUT_DIR / "funds"
+ALL_HOLDINGS_FILE = OUTPUT_DIR / "all_holdings.json"
+RUN_SUMMARY_FILE = OUTPUT_DIR / "run_summary.json"
 
 PRUDENTIAL_HOSTS = {
     "prudential.com.sg",
     "www.prudential.com.sg",
 }
 
-# PDF geometry tolerances.
-Y_TOLERANCE = 3.5
-Y_TOLERANCE_WIDE = 6.0
+MAX_HOLDINGS = 10
 
-MIN_WORD_WIDTH = 0.5
+PAGE_TIMEOUT_MS = 120_000
+DOWNLOAD_TIMEOUT_MS = 120_000
+POST_PAGE_WAIT_MS = 1_500
 
-# Percentages.
+RETRY_COUNT = 3
+RETRY_DELAY_SECONDS = 3.0
+
+ROW_Y_TOLERANCE = 2.5
+MIN_TABLE_ROWS = 2
+MIN_NAME_LENGTH = 3
+
+# Percentages are normally near the right side of the holdings table.
+# These are deliberately broad; the actual column is learned from the PDF.
 PERCENTAGE_RE = re.compile(
     r"(?<![\d.])(\d+(?:\.\d+)?)\s*%"
 )
 
-# Explicit rank forms.
-RANK_PREFIX_RE = re.compile(
-    r"^\s*(\d{1,2})(?:[.)]\s*|\s+)"
-)
-
-RANK_ONLY_RE = re.compile(
+RANK_RE = re.compile(
     r"^\s*(\d{1,2})\s*$"
 )
 
-RANK_MARKED_RE = re.compile(
-    r"^\s*(\d{1,2})[.)]\s*$"
+RANK_PREFIX_RE = re.compile(
+    r"^\s*(\d{1,2})[.)]?\s+(.+?)\s*$"
 )
 
-# Date forms useful for fixed-income descriptors.
-DATE_RE = re.compile(
-    r"\b"
-    r"(?:"
-    r"\d{1,2}[-/]\d{1,2}[-/]\d{2,4}"
-    r"|"
-    r"\d{1,2}[-/]"
-    r"(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)"
-    r"[-/]\d{2,4}"
-    r"|"
-    r"(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)"
-    r"[-/]\d{1,2}[-/]\d{2,4}"
-    r")"
-    r"\b",
-    re.IGNORECASE,
-)
-
-YEAR_RE = re.compile(r"\b(?:19|20)\d{2}\b")
-
-# Strong semantic rejection patterns.
-# These are deliberately strong because false positives are more dangerous
-# than leaving a difficult fund unresolved.
-FORBIDDEN_NAME_PATTERNS = [
-    r"\bcharge\b",
-    r"\binitial investment charge\b",
-    r"\bsubscription method\b",
-    r"\blaunch date\b",
-    r"\bunderlying fund size\b",
-    r"\bfunds under management\b",
-    r"\bmanager of the fund\b",
-    r"\bperformance chart\b",
-    r"\bcalendar year performance\b",
-    r"\bprice indexed\b",
-    r"\bbenchmark\b",
-    r"\bdistribution class\b",
-    r"\bdistribution date\b",
-    r"\bperformance\b",
-    r"\bmorningstar\b",
-    r"\bsustainability rating\b",
-    r"\bfinancial year end\b",
-    r"\bimportant information\b",
-    r"\bpast performance\b",
-    r"\bsubscription\b",
-    r"\bmanagement fee\b",
-    r"\bexpense ratio\b",
-    r"\btotal expense\b",
-    r"\bportfolio characteristics\b",
-    r"\basset allocation\b",
-    r"\bsector allocation\b",
-    r"\bgeographical allocation\b",
-    r"\bprice indexed\b",
-    r"\bseries2\b",
-]
-
-FORBIDDEN_REGION_PATTERNS = [
-    r"\bperformance chart\b",
-    r"\bcalendar year performance\b",
-    r"\bprice indexed\b",
-    r"\bbenchmark\b",
-    r"\bmorningstar\b",
-    r"\bunderlying fund size\b",
-    r"\bfunds under management\b",
-    r"\binitial investment charge\b",
-    r"\bdistribution class\b",
-]
-
-# Generic table header vocabulary.
-RANK_HEADERS = {
-    "rank",
-    "no",
-    "no.",
-    "#",
-}
-
-NAME_HEADERS = {
-    "holding",
-    "holdings",
-    "security",
-    "securities",
-    "name",
-    "description",
-    "investment",
-}
-
-WEIGHT_HEADERS = {
-    "%",
-    "weight",
-    "weights",
-    "portfolio",
-    "portfolio weight",
-    "weight %",
-    "% of net assets",
-    "% net assets",
-}
-
-# Words which are frequently page furniture rather than holdings.
-PAGE_FURNITURE = {
-    "source",
-    "page",
-    "important information",
-    "disclaimer",
-    "past performance",
+# Text that is not a security name even if it contains a percentage/rank.
+NOISE_TERMS = (
+    "charge",
+    "initial investment charge",
+    "subscription method",
+    "launch date",
+    "performance chart",
+    "calendar year performance",
+    "benchmark",
+    "price indexed",
+    "distribution class",
+    "fund size",
+    "funds under management",
+    "manager of the fund",
+    "morningstar",
+    "financial year end",
     "performance",
     "asset allocation",
     "portfolio characteristics",
-}
+    "important information",
+    "disclaimer",
+    "past performance",
+    "source",
+    "data as at",
+    "inception date",
+    "risk classification",
+    "investment-linked",
+    "insurance products",
+    "cash, srs",
+    "cash srs",
+)
 
-# ============================================================================
-# DATA CLASSES
-# ============================================================================
+TABLE_HEADER_TERMS = (
+    "top 10 holdings",
+    "top ten holdings",
+    "holdings",
+    "name",
+    "weight",
+    "portfolio",
+    "security",
+    "investment",
+)
 
+DATE_RE = re.compile(
+    r"\b(?:\d{1,2}[-/]){2}\d{2,4}\b"
+    r"|\b\d{1,2}[-/][A-Za-z]{3,9}[-/]\d{2,4}\b"
+    r"|\b[A-Za-z]{3,9}\s+\d{1,2},\s+\d{4}\b"
+)
+
+# =============================================================================
+# HELPERS
+# =============================================================================
+
+def clean_text(value: Any) -> str:
+    if value is None:
+        return ""
+    text = str(value).replace("\xa0", " ")
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+
+def normalize_text(value: Any) -> str:
+    text = clean_text(value).casefold()
+    text = text.replace("–", "-").replace("—", "-")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def utc_now_iso() -> str:
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+    )
+
+
+def save_json(path: Path, payload: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+
+def safe_filename(value: Any) -> str:
+    text = clean_text(value)
+    text = re.sub(r"[^A-Za-z0-9._-]+", "_", text)
+    text = text.strip("._")
+    return (text or "fund")[:120]
+
+
+def is_prudential_url(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+        return (
+            parsed.scheme.lower() in {"http", "https"}
+            and (parsed.hostname or "").lower() in PRUDENTIAL_HOSTS
+        )
+    except Exception:
+        return False
+
+
+def ensure_prudential_url(url: str) -> str:
+    url = clean_text(url)
+    if not url:
+        raise RuntimeError("Prudential URL is empty.")
+    if not is_prudential_url(url):
+        raise RuntimeError(f"Non-Prudential URL rejected: {url}")
+    return url
+
+
+def normalize_name(value: str) -> str:
+    text = clean_text(value)
+    text = text.replace("|", " ")
+    text = re.sub(r"\bNone\b", " ", text, flags=re.I)
+    text = re.sub(r"\s+", " ", text).strip(" -|")
+    return text
+
+
+def signature(items: list[dict]) -> list[list[Any]]:
+    return [
+        [
+            int(item["rank"]),
+            normalize_text(item["name"]),
+            float(item["weightPercent"]),
+        ]
+        for item in items
+    ]
+
+
+def validate_holdings(holdings: list[dict]) -> None:
+    if not holdings:
+        raise RuntimeError("No holdings were extracted.")
+
+    if len(holdings) > MAX_HOLDINGS:
+        raise RuntimeError(
+            f"More than {MAX_HOLDINGS} holdings were extracted."
+        )
+
+    ranks = [int(item["rank"]) for item in holdings]
+    expected = list(range(1, len(holdings) + 1))
+
+    if ranks != expected:
+        raise RuntimeError(
+            "Confirmed holding ranks are not an explicit contiguous "
+            f"sequence: {ranks}"
+        )
+
+    for item in holdings:
+        name = normalize_name(item.get("name", ""))
+        weight = item.get("weightPercent")
+
+        if len(name) < MIN_NAME_LENGTH:
+            raise RuntimeError("Confirmed holding has no usable name.")
+
+        if weight is None:
+            raise RuntimeError("Confirmed holding has no published weight.")
+
+        weight = float(weight)
+        if not 0.0 <= weight <= 100.0:
+            raise RuntimeError(
+                f"Invalid published holding weight: {weight}"
+            )
+
+
+def is_noise(text: str) -> bool:
+    normalized = normalize_text(text)
+
+    if not normalized:
+        return True
+
+    if normalized in {
+        "charge",
+        "performance",
+        "benchmark",
+        "holdings",
+        "holding",
+        "weight",
+        "name",
+        "security",
+        "distribution class",
+    }:
+        return True
+
+    for term in NOISE_TERMS:
+        if term in normalized:
+            return True
+
+    return False
+
+
+def is_probable_security_name(text: str) -> bool:
+    text = normalize_name(text)
+
+    if len(text) < MIN_NAME_LENGTH:
+        return False
+
+    if is_noise(text):
+        return False
+
+    # A pure percentage/date/rank cannot be a security name.
+    if PERCENTAGE_RE.fullmatch(text):
+        return False
+
+    if RANK_RE.fullmatch(text):
+        return False
+
+    # Chart-axis fragments and years.
+    if re.fullmatch(r"[\d\s./%-]+", text):
+        return False
+
+    return True
+
+
+# =============================================================================
+# RECOVERY 1 LOADER
+# =============================================================================
+
+def load_recovery_1_failed_funds() -> tuple[dict, list[dict]]:
+    """
+    Recovery 1's actual schema is:
+
+        stillFailedFundsDetail
+
+    This is the EXCLUSIVE Recovery 2 universe.
+
+    No baseline summary is read.
+    """
+
+    if not RECOVERY_1_SUMMARY_FILE.exists():
+        raise RuntimeError(
+            "Recovery 1 run summary not found: "
+            f"{RECOVERY_1_SUMMARY_FILE}"
+        )
+
+    payload = json.loads(
+        RECOVERY_1_SUMMARY_FILE.read_text(encoding="utf-8")
+    )
+
+    if not isinstance(payload, dict):
+        raise RuntimeError("Recovery 1 run summary is not a JSON object.")
+
+    failed = payload.get("stillFailedFundsDetail")
+
+    if not isinstance(failed, list):
+        raise RuntimeError(
+            "Recovery 1 summary does not contain the required "
+            "'stillFailedFundsDetail' list."
+        )
+
+    normalized: list[dict] = []
+
+    for entry in failed:
+        if not isinstance(entry, dict):
+            continue
+
+        row = entry.get("excelRow")
+        url = entry.get("prudentialUrl")
+        pru_name = entry.get("pruAccessName")
+
+        if row is None:
+            raise RuntimeError(
+                "Recovery 1 failed-fund detail is missing excelRow."
+            )
+
+        if not url:
+            raise RuntimeError(
+                f"Recovery 1 row {row} is missing prudentialUrl."
+            )
+
+        normalized.append(
+            {
+                "excelRow": int(row),
+                "prudentialUrl": ensure_prudential_url(url),
+                "pruAccessName": clean_text(pru_name),
+                "recovery1Error": clean_text(entry.get("error")),
+                "recovery1OutputDirectory": clean_text(
+                    entry.get("outputDirectory")
+                ),
+                "baselineFailure": entry.get("baselineFailure"),
+            }
+        )
+
+    normalized.sort(key=lambda item: item["excelRow"])
+
+    # Explicitly prevent accidental duplication.
+    seen: set[int] = set()
+    for item in normalized:
+        row = item["excelRow"]
+        if row in seen:
+            raise RuntimeError(
+                f"Duplicate Recovery 1 failed row: {row}"
+            )
+        seen.add(row)
+
+    return payload, normalized
+
+
+# =============================================================================
+# EXCEL REFERENCE LOOKUP
+# =============================================================================
+
+def read_excel_reference_funds() -> dict[int, dict]:
+    """
+    Reads the master workbook only to obtain the exact Column A/B values
+    for the Recovery 1 rows.
+
+    It does NOT expand the Recovery 2 universe.
+    """
+
+    if not EXCEL_FILE.exists():
+        raise RuntimeError(f"Excel file not found: {EXCEL_FILE}")
+
+    workbook = load_workbook(
+        EXCEL_FILE,
+        read_only=True,
+        data_only=False,
+        keep_links=True,
+    )
+
+    try:
+        worksheet = workbook.active
+        rows: dict[int, dict] = {}
+
+        for row_number in range(2, worksheet.max_row + 1):
+            url_cell = worksheet.cell(row_number, 1)
+            name_cell = worksheet.cell(row_number, 2)
+
+            url = clean_text(url_cell.value)
+            name = clean_text(name_cell.value)
+
+            if url:
+                rows[row_number] = {
+                    "excelRow": row_number,
+                    "prudentialUrl": url,
+                    "pruAccessName": name,
+                }
+
+        return rows
+    finally:
+        workbook.close()
+
+
+def merge_recovery_and_excel(
+    recovery_funds: list[dict],
+    excel_rows: dict[int, dict],
+) -> list[dict]:
+    merged: list[dict] = []
+
+    for recovery in recovery_funds:
+        row = recovery["excelRow"]
+        excel = excel_rows.get(row)
+
+        if excel is None:
+            raise RuntimeError(
+                f"Recovery 1 failed row {row} is not present in "
+                "Funds Links.xlsm Column A."
+            )
+
+        # Recovery 1 URL remains authoritative for this recovery run.
+        # Excel is checked for consistency only.
+        excel_url = clean_text(excel["prudentialUrl"])
+        recovery_url = clean_text(recovery["prudentialUrl"])
+
+        if normalize_text(excel_url) != normalize_text(recovery_url):
+            raise RuntimeError(
+                f"Excel/Recovery 1 URL mismatch at row {row}."
+            )
+
+        merged.append(
+            {
+                **recovery,
+                "excelPruAccessName": clean_text(
+                    excel.get("pruAccessName")
+                ),
+            }
+        )
+
+    return merged
+
+
+# =============================================================================
+# PLAYWRIGHT / FACTSHEET DOWNLOAD
+# =============================================================================
+
+def find_factsheet_url(
+    page,
+    page_url: str,
+) -> str:
+    """
+    Locate an official Prudential PDF link from the fund page.
+
+    Preference:
+    - links containing factsheet/fund/facts
+    - direct PDF links
+    - Prudential-hosted document links only
+    """
+
+    links = page.locator("a").all()
+
+    candidates: list[tuple[int, str]] = []
+
+    for link in links:
+        try:
+            href = clean_text(link.get_attribute("href"))
+            text = clean_text(link.inner_text(timeout=2000))
+        except Exception:
+            continue
+
+        if not href:
+            continue
+
+        absolute = urljoin(page_url, href)
+
+        if not is_prudential_url(absolute):
+            continue
+
+        parsed = urlparse(absolute)
+        lower = parsed.path.casefold()
+
+        if ".pdf" not in lower:
+            continue
+
+        score = 0
+
+        combined = normalize_text(
+            f"{text} {absolute}"
+        )
+
+        if "factsheet" in combined:
+            score += 100
+
+        if "fund" in combined:
+            score += 20
+
+        if "facts" in combined:
+            score += 10
+
+        if "/media/ilp/" in lower:
+            score += 10
+
+        candidates.append((score, absolute))
+
+    if not candidates:
+        raise RuntimeError(
+            "No official Prudential PDF factsheet link found."
+        )
+
+    candidates.sort(
+        key=lambda item: (item[0], item[1]),
+        reverse=True,
+    )
+
+    return candidates[0][1]
+
+
+def download_factsheet(
+    browser,
+    prudential_url: str,
+) -> tuple[bytes, str, str]:
+    """
+    Returns:
+        factsheet bytes
+        resolved fund page URL
+        factsheet URL
+    """
+
+    context = browser.new_context(
+        accept_downloads=True
+    )
+
+    page = context.new_page()
+    page.set_default_timeout(PAGE_TIMEOUT_MS)
+
+    try:
+        page.goto(
+            prudential_url,
+            wait_until="domcontentloaded",
+            timeout=PAGE_TIMEOUT_MS,
+        )
+
+        page.wait_for_timeout(POST_PAGE_WAIT_MS)
+
+        final_url = page.url
+
+        if not is_prudential_url(final_url):
+            raise RuntimeError(
+                f"Resolved page left Prudential Singapore host: {final_url}"
+            )
+
+        factsheet_url = find_factsheet_url(
+            page,
+            final_url,
+        )
+
+        response = context.request.get(
+            factsheet_url,
+            timeout=DOWNLOAD_TIMEOUT_MS,
+        )
+
+        if not response.ok:
+            raise RuntimeError(
+                f"Factsheet HTTP request failed: "
+                f"{response.status} {factsheet_url}"
+            )
+
+        content_type = normalize_text(
+            response.headers.get("content-type", "")
+        )
+
+        data = response.body()
+
+        if not data.startswith(b"%PDF"):
+            # Some Prudential responses have a generic content type.
+            # The PDF magic header is the definitive check.
+            raise RuntimeError(
+                "Official factsheet response is not a PDF."
+            )
+
+        if "pdf" not in content_type and not factsheet_url.casefold().endswith(".pdf"):
+            raise RuntimeError(
+                "Official factsheet response did not identify itself as PDF."
+            )
+
+        return data, final_url, factsheet_url
+
+    finally:
+        context.close()
+
+
+def download_with_retries(
+    browser,
+    url: str,
+) -> tuple[bytes, str, str]:
+    last_error: Exception | None = None
+
+    for attempt in range(1, RETRY_COUNT + 1):
+        try:
+            return download_factsheet(browser, url)
+        except (
+            PlaywrightTimeoutError,
+            Exception,
+        ) as error:
+            last_error = error
+            if attempt < RETRY_COUNT:
+                time.sleep(RETRY_DELAY_SECONDS)
+
+    raise RuntimeError(
+        f"Factsheet download failed after {RETRY_COUNT} attempts: "
+        f"{clean_text(str(last_error))}"
+    )
+
+
+# =============================================================================
+# PDF TEXT
+# =============================================================================
+
+def extract_pdf_text(pdf_bytes: bytes) -> str:
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+
+    chunks: list[str] = []
+
+    for page in reader.pages:
+        try:
+            chunks.append(page.extract_text() or "")
+        except Exception as error:
+            chunks.append(
+                f"[PDF_TEXT_EXTRACTION_ERROR: {error}]"
+            )
+
+    return "\n".join(chunks)
+
+
+# =============================================================================
+# POSITIONED PDF MODEL
+# =============================================================================
 
 @dataclass
 class PDFWord:
-    page: int
     text: str
     x: float
     y: float
@@ -378,4093 +762,1698 @@ class PDFRow:
         ).strip()
 
 
-@dataclass
-class HoldingCandidate:
-    rank: int
-    name: str
-    weight: float
-    page: int
-    source_row_index: int
-    strategy: str
-    evidence: dict[str, Any]
+def build_positioned_rows(pdf_bytes: bytes) -> list[PDFRow]:
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+    rows: list[PDFRow] = []
 
+    for page_index, page in enumerate(reader.pages, start=1):
+        words: list[PDFWord] = []
 
-class HoldingsParseFailure(RuntimeError):
-    pass
+        def visitor(text, cm, tm, font_dict, font_size):
+            if not text or not text.strip():
+                return
 
-
-# ============================================================================
-# GENERAL HELPERS
-# ============================================================================
-
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def normalize_text(value: Any) -> str:
-    if value is None:
-        return ""
-
-    text = str(value)
-
-    text = (
-        text.replace("\u00a0", " ")
-        .replace("\u200b", "")
-        .replace("\u200c", "")
-        .replace("\u200d", "")
-        .replace("\ufeff", "")
-    )
-
-    text = re.sub(r"\s+", " ", text)
-
-    return text.strip()
-
-
-def normalize_name(value: str) -> str:
-    text = normalize_text(value).lower()
-
-    text = text.replace("–", "-")
-    text = text.replace("—", "-")
-
-    text = re.sub(r"\s+", " ", text)
-
-    return text.strip()
-
-
-def safe_filename(value: str, fallback: str = "fund") -> str:
-    value = normalize_text(value)
-
-    value = re.sub(
-        r'[<>:"/\\|?*\x00-\x1f]',
-        "_",
-        value,
-    )
-
-    value = value.strip(" ._")
-
-    if not value:
-        value = fallback
-
-    return value[:160]
-
-
-def json_dump(path: Path, payload: Any) -> None:
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    path.write_text(
-        json.dumps(
-            payload,
-            indent=2,
-            ensure_ascii=False,
-        ),
-        encoding="utf-8",
-    )
-
-
-def text_dump(path: Path, text: str) -> None:
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    path.write_text(
-        text,
-        encoding="utf-8",
-    )
-
-
-def mean(values: list[float]) -> float:
-    return (
-        statistics.mean(values)
-        if values
-        else 0.0
-    )
-
-
-def median(values: list[float]) -> float:
-    return (
-        statistics.median(values)
-        if values
-        else 0.0
-    )
-
-
-def population_std(values: list[float]) -> float:
-    if len(values) < 2:
-        return 0.0
-
-    return statistics.pstdev(values)
-
-
-def nearly_equal(a: float, b: float, tolerance: float = 1.0) -> bool:
-    return abs(a - b) <= tolerance
-
-
-def clamp_probability_score(value: float) -> float:
-    return max(
-        0.0,
-        min(
-            1.0,
-            value,
-        ),
-    )
-
-
-# ============================================================================
-# RECOVERY 1 FAILURE LOADING
-# ============================================================================
-
-
-def normalize_failure_entry(
-    entry: dict[str, Any],
-) -> dict[str, Any] | None:
-    if not isinstance(entry, dict):
-        return None
-
-    excel_row = entry.get("excelRow")
-
-    if excel_row is None:
-        excel_row = entry.get("row")
-
-    if excel_row is None:
-        excel_row = entry.get("rowNumber")
-
-    try:
-        excel_row = int(excel_row)
-    except Exception:
-        return None
-
-    result = dict(entry)
-
-    result["excelRow"] = excel_row
-
-    return result
-
-
-def extract_failure_list_from_summary(
-    payload: dict[str, Any],
-) -> list[dict[str, Any]]:
-    keys = [
-        "failedFundsDetail",
-        "failedFundsDetails",
-        "failedFunds",
-        "failedFundsList",
-        "failureDetails",
-        "failures",
-        "failed",
-        "failedFundDetails",
-    ]
-
-    for key in keys:
-        value = payload.get(key)
-
-        if not isinstance(value, list):
-            continue
-
-        normalized = []
-
-        for item in value:
-            normalized_item = normalize_failure_entry(item)
-
-            if normalized_item is not None:
-                normalized.append(normalized_item)
-
-        if normalized:
-            normalized.sort(
-                key=lambda item: int(item["excelRow"])
-            )
-
-            return normalized
-
-    return []
-
-
-def load_recovery_1_failure_details_from_output() -> list[dict[str, Any]]:
-    """
-    Reconstruct failed funds from Recovery 1 output.
-
-    This is intentionally restricted to:
-
-        output_holdings_recovery/funds/*_failed/failure.json
-    """
-
-    if not RECOVERY_FUNDS_OUTPUT_DIR.exists():
-        return []
-
-    recovered: list[dict[str, Any]] = []
-
-    failure_files = sorted(
-        RECOVERY_FUNDS_OUTPUT_DIR.glob(
-            "*_failed/failure.json"
-        ),
-        key=lambda path: path.parent.name,
-    )
-
-    for failure_file in failure_files:
-        try:
-            payload = json.loads(
-                failure_file.read_text(
-                    encoding="utf-8"
-                )
-            )
-        except Exception:
-            continue
-
-        if not isinstance(payload, dict):
-            continue
-
-        status = normalize_text(
-            payload.get("status")
-        ).lower()
-
-        if status != "failed":
-            continue
-
-        excel_row = payload.get("excelRow")
-
-        if excel_row is None:
-            match = re.match(
-                r"^(\d+)_failed$",
-                failure_file.parent.name,
-            )
-
-            if match:
-                excel_row = int(match.group(1))
-
-        try:
-            excel_row = int(excel_row)
-        except Exception:
-            continue
-
-        entry = dict(payload)
-
-        entry["excelRow"] = excel_row
-
-        entry["_reconstructedFromRecovery1Output"] = True
-        entry["_recovery1FailureFile"] = str(
-            failure_file
-        )
-
-        recovered.append(entry)
-
-    recovered.sort(
-        key=lambda item: int(item["excelRow"])
-    )
-
-    return recovered
-
-
-def load_recovery_1_run_summary() -> tuple[
-    dict[str, Any],
-    list[dict[str, Any]],
-    str,
-]:
-    if not RECOVERY_1_RUN_SUMMARY_FILE.exists():
-        raise RuntimeError(
-            "Recovery 1 run_summary.json was not found: "
-            f"{RECOVERY_1_RUN_SUMMARY_FILE}"
-        )
-
-    payload = json.loads(
-        RECOVERY_1_RUN_SUMMARY_FILE.read_text(
-            encoding="utf-8"
-        )
-    )
-
-    if not isinstance(payload, dict):
-        raise RuntimeError(
-            "Recovery 1 run_summary.json is not a JSON object."
-        )
-
-    failures = extract_failure_list_from_summary(
-        payload
-    )
-
-    source = "recovery1_run_summary"
-
-    if not failures:
-        failures = (
-            load_recovery_1_failure_details_from_output()
-        )
-
-        source = "recovery1_output_failure_files"
-
-    return (
-        payload,
-        failures,
-        source,
-    )
-
-
-# ============================================================================
-# EXCEL
-# ============================================================================
-
-
-def load_excel_universe() -> dict[int, dict[str, Any]]:
-    if not EXCEL_FILE.exists():
-        raise RuntimeError(
-            f"Excel file not found: {EXCEL_FILE}"
-        )
-
-    workbook = openpyxl.load_workbook(
-        EXCEL_FILE,
-        read_only=True,
-        data_only=True,
-        keep_links=True,
-    )
-
-    worksheet = workbook.active
-
-    result: dict[int, dict[str, Any]] = {}
-
-    for row_number in range(
-        2,
-        worksheet.max_row + 1,
-    ):
-        url_value = worksheet.cell(
-            row=row_number,
-            column=1,
-        ).value
-
-        name_value = worksheet.cell(
-            row=row_number,
-            column=2,
-        ).value
-
-        url = normalize_text(url_value)
-
-        if not url:
-            continue
-
-        result[row_number] = {
-            "excelRow": row_number,
-            "prudentialUrl": url,
-            "excelPruAccessName": normalize_text(
-                name_value
-            ),
-        }
-
-    workbook.close()
-
-    return result
-
-
-# ============================================================================
-# PRUDENTIAL URL VALIDATION
-# ============================================================================
-
-
-def is_official_prudential_url(url: str) -> bool:
-    try:
-        parsed = urlparse(url)
-
-        if parsed.scheme.lower() != "https":
-            return False
-
-        hostname = (
-            parsed.hostname or ""
-        ).lower()
-
-        return hostname in PRUDENTIAL_HOSTS
-
-    except Exception:
-        return False
-
-
-# ============================================================================
-# PLAYWRIGHT / FACTSHEET
-# ============================================================================
-
-
-def find_factsheet_url(
-    page,
-    source_url: str,
-) -> str:
-    if not is_official_prudential_url(
-        source_url
-    ):
-        raise RuntimeError(
-            "Source URL is not an official Prudential Singapore URL."
-        )
-
-    candidates: list[str] = []
-
-    try:
-        links = page.locator("a").all()
-
-        for link in links:
-            try:
-                href = link.get_attribute(
-                    "href"
-                )
-
-                text = normalize_text(
-                    link.inner_text()
-                )
-
-                if not href:
-                    continue
-
-                absolute = page.url
-
-                if href.startswith("/"):
-                    parsed = urlparse(
-                        absolute
-                    )
-
-                    href = (
-                        f"{parsed.scheme}://"
-                        f"{parsed.netloc}"
-                        f"{href}"
-                    )
-
-                elif href.startswith("#"):
-                    continue
-
-                elif not href.lower().startswith(
-                    ("http://", "https://")
-                ):
-                    continue
-
-                if not is_official_prudential_url(
-                    href
-                ):
-                    continue
-
-                lower_href = href.lower()
-                lower_text = text.lower()
-
-                if (
-                    ".pdf" in lower_href
-                    or "factsheet" in lower_href
-                    or "factsheet" in lower_text
-                    or "fund factsheet" in lower_text
-                ):
-                    candidates.append(href)
-
-            except Exception:
-                continue
-
-    except Exception:
-        pass
-
-    # Remove duplicates while preserving order.
-    seen = set()
-    unique = []
-
-    for item in candidates:
-        if item not in seen:
-            seen.add(item)
-            unique.append(item)
-
-    if not unique:
-        raise RuntimeError(
-            "No official Prudential factsheet PDF link was found."
-        )
-
-    # Prefer explicit factsheet URLs.
-    unique.sort(
-        key=lambda value: (
-            0 if "factsheet" in value.lower() else 1,
-            len(value),
-        )
-    )
-
-    return unique[0]
-
-
-def download_factsheet(
-    page,
-    source_url: str,
-) -> tuple[bytes, str]:
-    last_error: Exception | None = None
-
-    for attempt in range(
-        1,
-        RETRY_COUNT + 1,
-    ):
-        try:
-            page.goto(
-                source_url,
-                wait_until="domcontentloaded",
-                timeout=PAGE_TIMEOUT_MS,
-            )
-
-            page.wait_for_timeout(
-                POST_PAGE_WAIT_MS
-            )
-
-            factsheet_url = find_factsheet_url(
-                page,
-                source_url,
-            )
-
-            response = page.request.get(
-                factsheet_url,
-                timeout=FACTSHEET_DOWNLOAD_TIMEOUT_MS,
-            )
-
-            if not response.ok:
-                raise RuntimeError(
-                    "Factsheet HTTP status "
-                    f"{response.status}"
-                )
-
-            content_type = (
-                response.headers.get(
-                    "content-type",
-                    "",
-                )
-                .lower()
-            )
-
-            body = response.body()
-
-            if not body:
-                raise RuntimeError(
-                    "Factsheet response was empty."
-                )
-
-            if (
-                "pdf" not in content_type
-                and not body.startswith(
-                    b"%PDF"
-                )
-            ):
-                raise RuntimeError(
-                    "Factsheet response does not appear to be a PDF."
-                )
-
-            return (
-                body,
-                factsheet_url,
-            )
-
-        except Exception as exc:
-            last_error = exc
-
-            if attempt < RETRY_COUNT:
-                time.sleep(
-                    RETRY_DELAY_SECONDS
-                )
-
-    raise RuntimeError(
-        "Factsheet download failed: "
-        f"{last_error}"
-    )
-
-
-# ============================================================================
-# PDF TEXT EXTRACTION
-# ============================================================================
-
-
-def extract_pdf_text(
-    pdf_bytes: bytes,
-) -> str:
-    reader = PdfReader(
-        io.BytesIO(pdf_bytes)
-    )
-
-    pages: list[str] = []
-
-    for page_number, page in enumerate(
-        reader.pages,
-        start=1,
-    ):
-        try:
-            text = page.extract_text() or ""
-        except Exception:
-            text = ""
-
-        pages.append(
-            f"\n===== PAGE {page_number} =====\n"
-            f"{text}"
-        )
-
-    return "\n".join(pages)
-
-
-# ============================================================================
-# POSITIONED PDF EXTRACTION
-# ============================================================================
-
-
-def _visitor_text_factory(
-    output_words: list[PDFWord],
-    page_number: int,
-):
-    def visitor_text(
-        text,
-        cm,
-        tm,
-        font_dict,
-        font_size,
-    ):
-        if text is None:
-            return
-
-        text = str(text)
-
-        if not text.strip():
-            return
-
-        try:
+            # tm[4], tm[5] are text origin coordinates in PDF user space.
             x = float(tm[4])
             y = float(tm[5])
-        except Exception:
-            return
 
-        width = max(
-            MIN_WORD_WIDTH,
-            len(text) * max(
+            cleaned = clean_text(text)
+
+            if not cleaned:
+                return
+
+            # Approximate width. Exact glyph width is not required because
+            # x positions are used comparatively within one PDF.
+            width = max(
+                float(font_size) * 0.25 * len(cleaned),
                 1.0,
-                float(font_size or 8) * 0.45,
-            ),
-        )
-
-        height = max(
-            1.0,
-            float(font_size or 8),
-        )
-
-        # pypdf visitor_text sometimes provides chunks rather than words.
-        # Split whitespace while retaining approximate horizontal positions.
-        pieces = re.findall(
-            r"\S+",
-            text,
-        )
-
-        if not pieces:
-            return
-
-        cursor = x
-
-        for piece in pieces:
-            piece_width = max(
-                MIN_WORD_WIDTH,
-                len(piece)
-                * max(
-                    1.0,
-                    float(font_size or 8)
-                    * 0.45,
-                ),
             )
 
-            output_words.append(
+            words.append(
                 PDFWord(
-                    page=page_number,
-                    text=piece,
-                    x=cursor,
+                    text=cleaned,
+                    x=x,
                     y=y,
-                    width=piece_width,
-                    height=height,
+                    width=width,
+                    height=float(font_size),
                 )
             )
-
-            cursor += (
-                piece_width
-                + max(
-                    1.0,
-                    float(font_size or 8)
-                    * 0.25,
-                )
-            )
-
-    return visitor_text
-
-
-def extract_positioned_words(
-    pdf_bytes: bytes,
-) -> list[PDFWord]:
-    reader = PdfReader(
-        io.BytesIO(pdf_bytes)
-    )
-
-    words: list[PDFWord] = []
-
-    for page_number, page in enumerate(
-        reader.pages,
-        start=1,
-    ):
-        visitor = _visitor_text_factory(
-            words,
-            page_number,
-        )
 
         try:
             page.extract_text(
                 visitor_text=visitor
             )
-        except TypeError:
-            # Older pypdf compatibility.
-            try:
-                page.extract_text(
-                    visitor
-                )
-            except Exception:
-                continue
-
         except Exception:
             continue
 
-    return words
+        words.sort(key=lambda item: (-item.y, item.x))
 
+        page_rows: list[PDFRow] = []
 
-# ============================================================================
-# ROW GROUPING
-# ============================================================================
+        for word in words:
+            target = None
 
+            for row in page_rows:
+                if abs(row.y - word.y) <= ROW_Y_TOLERANCE:
+                    target = row
+                    break
 
-def group_words_into_rows(
-    words: list[PDFWord],
-    tolerance: float = Y_TOLERANCE,
-) -> list[PDFRow]:
-    rows_by_page: dict[int, list[PDFRow]] = defaultdict(list)
+            if target is None:
+                target = PDFRow(
+                    page=page_index,
+                    y=word.y,
+                    words=[],
+                )
+                page_rows.append(target)
 
-    for word in sorted(
-        words,
-        key=lambda item: (
-            item.page,
-            -item.y,
-            item.x,
-        ),
-    ):
-        page_rows = rows_by_page[
-            word.page
-        ]
-
-        matched: PDFRow | None = None
+            target.words.append(word)
 
         for row in page_rows:
-            if abs(row.y - word.y) <= tolerance:
-                matched = row
+            row.words.sort(key=lambda item: item.x)
+            rows.append(row)
+
+    return rows
+
+
+# =============================================================================
+# SPATIAL ROW TOKENIZATION
+# =============================================================================
+
+@dataclass
+class PercentageToken:
+    value: float
+    text: str
+    x: float
+    right: float
+
+
+@dataclass
+class RankToken:
+    rank: int
+    text: str
+    x: float
+    right: float
+
+
+def row_percentages(row: PDFRow) -> list[PercentageToken]:
+    tokens: list[PercentageToken] = []
+
+    for word in row.words:
+        matches = list(PERCENTAGE_RE.finditer(word.text))
+
+        for match in matches:
+            value = float(match.group(1))
+            tokens.append(
+                PercentageToken(
+                    value=value,
+                    text=match.group(0),
+                    x=word.x,
+                    right=word.right,
+                )
+            )
+
+    return tokens
+
+
+def row_rank_tokens(row: PDFRow) -> list[RankToken]:
+    tokens: list[RankToken] = []
+
+    for word in row.words:
+        text = clean_text(word.text)
+
+        match = RANK_RE.fullmatch(text)
+
+        if match:
+            rank = int(match.group(1))
+            if 1 <= rank <= 10:
+                tokens.append(
+                    RankToken(
+                        rank=rank,
+                        text=text,
+                        x=word.x,
+                        right=word.right,
+                    )
+                )
+            continue
+
+        match = RANK_PREFIX_RE.match(text)
+
+        if match:
+            rank = int(match.group(1))
+            if 1 <= rank <= 10:
+                tokens.append(
+                    RankToken(
+                        rank=rank,
+                        text=match.group(1),
+                        x=word.x,
+                        right=word.right,
+                    )
+                )
+
+    return tokens
+
+
+def words_between(
+    row: PDFRow,
+    left: float,
+    right: float,
+) -> str:
+    selected = [
+        word
+        for word in row.words
+        if word.x >= left and word.right <= right
+    ]
+
+    return normalize_name(
+        " ".join(
+            word.text
+            for word in sorted(
+                selected,
+                key=lambda item: item.x,
+            )
+        )
+    )
+
+
+# =============================================================================
+# TABLE GEOMETRY
+# =============================================================================
+
+def median(values: list[float]) -> float:
+    if not values:
+        return 0.0
+    values = sorted(values)
+    middle = len(values) // 2
+    if len(values) % 2:
+        return values[middle]
+    return (values[middle - 1] + values[middle]) / 2.0
+
+
+def cluster_values(
+    values: list[float],
+    tolerance: float,
+) -> list[list[float]]:
+    clusters: list[list[float]] = []
+
+    for value in sorted(values):
+        placed = False
+
+        for cluster in clusters:
+            if abs(value - median(cluster)) <= tolerance:
+                cluster.append(value)
+                placed = True
                 break
 
-        if matched is None:
-            matched = PDFRow(
-                page=word.page,
-                y=word.y,
-                words=[],
+        if not placed:
+            clusters.append([value])
+
+    return clusters
+
+
+def candidate_rank_columns(
+    rows: list[PDFRow],
+) -> list[dict]:
+    entries: list[tuple[float, int, int, str]] = []
+
+    for row_index, row in enumerate(rows):
+        for token in row_rank_tokens(row):
+            entries.append(
+                (
+                    token.x,
+                    token.rank,
+                    row_index,
+                    row.text,
+                )
             )
 
-            page_rows.append(
-                matched
-            )
+    clusters = cluster_values(
+        [item[0] for item in entries],
+        tolerance=10.0,
+    )
 
-        matched.words.append(
-            word
-        )
+    candidates: list[dict] = []
 
-    result: list[PDFRow] = []
+    for cluster in clusters:
+        center = median(cluster)
 
-    for page_number in sorted(
-        rows_by_page
-    ):
-        page_rows = rows_by_page[
-            page_number
+        cluster_entries = [
+            item
+            for item in entries
+            if abs(item[0] - center) <= 10.0
         ]
 
-        page_rows.sort(
-            key=lambda row: -row.y
+        ranks = [
+            item[1]
+            for item in cluster_entries
+        ]
+
+        distinct_rows = len(
+            {item[2] for item in cluster_entries}
         )
 
-        for row in page_rows:
-            row.words.sort(
-                key=lambda word: word.x
+        if distinct_rows < MIN_TABLE_ROWS:
+            continue
+
+        candidates.append(
+            {
+                "x": center,
+                "rowCount": distinct_rows,
+                "ranks": ranks,
+                "rankRows": cluster_entries,
+            }
+        )
+
+    candidates.sort(
+        key=lambda item: (
+            item["rowCount"],
+            len(set(item["ranks"])),
+        ),
+        reverse=True,
+    )
+
+    return candidates
+
+
+def candidate_weight_columns(
+    rows: list[PDFRow],
+) -> list[dict]:
+    entries: list[tuple[float, float, int, str]] = []
+
+    for row_index, row in enumerate(rows):
+        for token in row_percentages(row):
+            entries.append(
+                (
+                    token.x,
+                    token.value,
+                    row_index,
+                    row.text,
+                )
             )
 
-            if row.text:
-                result.append(row)
+    if not entries:
+        return []
 
-    return result
+    clusters = cluster_values(
+        [item[0] for item in entries],
+        tolerance=14.0,
+    )
+
+    candidates: list[dict] = []
+
+    for cluster in clusters:
+        center = median(cluster)
+
+        cluster_entries = [
+            item
+            for item in entries
+            if abs(item[0] - center) <= 14.0
+        ]
+
+        distinct_rows = len(
+            {item[2] for item in cluster_entries}
+        )
+
+        if distinct_rows < MIN_TABLE_ROWS:
+            continue
+
+        candidates.append(
+            {
+                "x": center,
+                "rowCount": distinct_rows,
+                "percentages": cluster_entries,
+            }
+        )
+
+    candidates.sort(
+        key=lambda item: item["rowCount"],
+        reverse=True,
+    )
+
+    return candidates
 
 
-# ============================================================================
-# PDF ROW SERIALIZATION
-# ============================================================================
-
-
-def serialize_pdf_rows(
+def section_heading_rows(
     rows: list[PDFRow],
-) -> list[dict[str, Any]]:
-    output = []
+) -> list[int]:
+    indexes: list[int] = []
 
     for index, row in enumerate(rows):
-        output.append(
+        normalized = normalize_text(row.text)
+
+        if (
+            "top 10 holdings" in normalized
+            or "top ten holdings" in normalized
+            or normalized == "holdings"
+        ):
+            indexes.append(index)
+
+    return indexes
+
+
+def nearby_table_region(
+    rows: list[PDFRow],
+    heading_index: int,
+) -> tuple[int, int]:
+    """
+    Start after the heading and stop before obvious later sections.
+
+    The region is intentionally page-local.
+    """
+
+    page = rows[heading_index].page
+    start = heading_index + 1
+    end = start
+
+    while end < len(rows):
+        row = rows[end]
+
+        if row.page != page:
+            break
+
+        normalized = normalize_text(row.text)
+
+        if end > start and any(
+            marker in normalized
+            for marker in (
+                "asset allocation",
+                "portfolio characteristics",
+                "performance chart",
+                "calendar year performance",
+                "important information",
+                "disclaimer",
+                "past performance",
+                "source:",
+            )
+        ):
+            break
+
+        end += 1
+
+    return start, end
+
+
+# =============================================================================
+# PHYSICAL HOLDING CANDIDATES
+# =============================================================================
+
+def build_candidate_from_rank_row(
+    rows: list[PDFRow],
+    row_index: int,
+    rank_x: float,
+    weight_x: float,
+) -> dict | None:
+    row = rows[row_index]
+
+    rank_tokens = [
+        token
+        for token in row_rank_tokens(row)
+        if abs(token.x - rank_x) <= 10.0
+    ]
+
+    if not rank_tokens:
+        return None
+
+    rank_token = rank_tokens[0]
+
+    # Weight must be physically in the learned weight column.
+    percentages = [
+        token
+        for token in row_percentages(row)
+        if abs(token.x - weight_x) <= 14.0
+    ]
+
+    if not percentages:
+        return None
+
+    # A genuine holding row normally has one portfolio-weight token in the
+    # weight column. If multiple tokens occupy the same column, reject rather
+    # than guessing.
+    distinct_values = {
+        round(token.value, 8)
+        for token in percentages
+    }
+
+    if len(distinct_values) != 1:
+        return None
+
+    weight = percentages[0]
+
+    # Name column is physically between rank and weight.
+    name_left = max(
+        rank_token.right + 1.0,
+        rank_x + 4.0,
+    )
+    name_right = weight.x - 1.0
+
+    if name_right <= name_left:
+        return None
+
+    name = words_between(
+        row,
+        name_left,
+        name_right,
+    )
+
+    # Some PDFs place the security name slightly outside the strict row
+    # bounds. If no name exists, caller may add continuation rows, but never
+    # invent a name from arbitrary nearby text.
+    if not name:
+        return {
+            "rank": rank_token.rank,
+            "weight": weight.value,
+            "name": "",
+            "page": row.page,
+            "source_row_index": row_index,
+            "rankX": rank_token.x,
+            "weightX": weight.x,
+            "raw_row": row.text,
+            "needsContinuation": True,
+        }
+
+    if not is_probable_security_name(name):
+        return None
+
+    return {
+        "rank": rank_token.rank,
+        "weight": weight.value,
+        "name": name,
+        "page": row.page,
+        "source_row_index": row_index,
+        "rankX": rank_token.x,
+        "weightX": weight.x,
+        "raw_row": row.text,
+        "needsContinuation": False,
+    }
+
+
+def add_continuation_rows(
+    rows: list[PDFRow],
+    candidate: dict,
+    weight_x: float,
+    rank_x: float,
+    region_end: int,
+) -> dict:
+    """
+    Add physical name continuation lines directly below a ranked row.
+
+    A continuation is accepted only while:
+    - same page
+    - before next explicit rank
+    - no percentage in the learned weight column
+    - text lies inside the name column
+    - text is not semantic noise
+    """
+
+    if not candidate.get("needsContinuation"):
+        return candidate
+
+    start = int(candidate["source_row_index"]) + 1
+    fragments: list[str] = []
+
+    for index in range(start, min(region_end, start + 6)):
+        row = rows[index]
+
+        if row.page != candidate["page"]:
+            break
+
+        next_rank = [
+            token
+            for token in row_rank_tokens(row)
+            if abs(token.x - rank_x) <= 10.0
+        ]
+
+        if next_rank:
+            break
+
+        weight_here = [
+            token
+            for token in row_percentages(row)
+            if abs(token.x - weight_x) <= 14.0
+        ]
+
+        if weight_here:
+            break
+
+        fragment = words_between(
+            row,
+            max(rank_x + 4.0, row.x_min),
+            weight_x - 1.0,
+        )
+
+        if not fragment:
+            continue
+
+        if is_noise(fragment):
+            break
+
+        fragments.append(fragment)
+
+    if fragments:
+        candidate["name"] = normalize_name(
+            " ".join(fragments)
+        )
+
+    candidate["needsContinuation"] = False
+
+    if not is_probable_security_name(candidate.get("name", "")):
+        return {}
+
+    return candidate
+
+
+def extract_table_candidate(
+    rows: list[PDFRow],
+    start: int,
+    end: int,
+    rank_column: dict,
+    weight_column: dict,
+) -> dict | None:
+    rank_x = float(rank_column["x"])
+    weight_x = float(weight_column["x"])
+
+    candidates: list[dict] = []
+
+    for index in range(start, end):
+        row = rows[index]
+
+        if row.page != rows[start].page:
+            break
+
+        candidate = build_candidate_from_rank_row(
+            rows,
+            index,
+            rank_x,
+            weight_x,
+        )
+
+        if candidate is None:
+            continue
+
+        candidate = add_continuation_rows(
+            rows,
+            candidate,
+            weight_x,
+            rank_x,
+            end,
+        )
+
+        if not candidate:
+            continue
+
+        if not candidate.get("name"):
+            continue
+
+        candidates.append(candidate)
+
+    if len(candidates) < MIN_TABLE_ROWS:
+        return None
+
+    # Explicit ranks must be present. No inferred rank.
+    ranks = [
+        int(item["rank"])
+        for item in candidates
+    ]
+
+    # Remove duplicate physical observations only when they are exactly the
+    # same row. We do not collapse distinct holdings with duplicate names.
+    unique: list[dict] = []
+    seen_rows: set[int] = set()
+
+    for item in candidates:
+        row_index = int(item["source_row_index"])
+        if row_index in seen_rows:
+            continue
+        seen_rows.add(row_index)
+        unique.append(item)
+
+    candidates = unique
+
+    # A valid published sequence must begin at 1 and be contiguous.
+    # We deliberately do not sort/relabel rows to manufacture ranks.
+    candidates.sort(
+        key=lambda item: int(item["source_row_index"])
+    )
+
+    ranks = [
+        int(item["rank"])
+        for item in candidates
+    ]
+
+    # Some PDF extraction layouts repeat a table. Find the longest contiguous
+    # explicit rank run starting at 1.
+    best: list[dict] = []
+
+    for offset, item in enumerate(candidates):
+        if int(item["rank"]) != 1:
+            continue
+
+        run = [item]
+        expected = 2
+
+        for following in candidates[offset + 1:]:
+            rank = int(following["rank"])
+
+            if rank == expected:
+                run.append(following)
+                expected += 1
+
+                if len(run) == MAX_HOLDINGS:
+                    break
+
+            elif rank == 1:
+                break
+
+            else:
+                # A genuine table cannot skip a published rank.
+                break
+
+        if len(run) > len(best):
+            best = run
+
+    if len(best) < MIN_TABLE_ROWS:
+        return None
+
+    # Validate exact explicit sequence.
+    holdings: list[dict] = []
+
+    for item in best:
+        holdings.append(
             {
-                "rowIndex": index,
+                "rank": int(item["rank"]),
+                "name": normalize_name(item["name"]),
+                "weightPercent": float(item["weight"]),
+                "weightText": f"{float(item['weight']):g}%",
+                "page": int(item["page"]),
+                "sourceRowIndex": int(item["source_row_index"]),
+                "extractionStrategy": "recovery2_spatial_table",
+                "evidence": {
+                    "rankX": float(item["rankX"]),
+                    "weightX": float(item["weightX"]),
+                    "rawRow": item["raw_row"],
+                },
+            }
+        )
+
+    try:
+        validate_holdings(holdings)
+    except Exception:
+        return None
+
+    return {
+        "holdings": holdings,
+        "rankX": rank_x,
+        "weightX": weight_x,
+        "start": start,
+        "end": end,
+        "page": rows[start].page,
+        "rowCount": len(holdings),
+    }
+
+
+# =============================================================================
+# TABLE SEARCH
+# =============================================================================
+
+def search_spatial_tables(
+    rows: list[PDFRow],
+) -> tuple[
+    list[dict],
+    list[dict],
+    list[dict],
+]:
+    """
+    Returns:
+        confirmed candidates
+        candidate regions
+        diagnostic spatial candidates
+
+    No candidate is accepted merely because a name is close to a percentage.
+    The rank, name and weight must belong to the same physical table geometry.
+    """
+
+    confirmed: list[dict] = []
+    regions: list[dict] = []
+    diagnostics: list[dict] = []
+
+    # Process one page at a time.
+    page_numbers = sorted(
+        {row.page for row in rows}
+    )
+
+    for page in page_numbers:
+        page_rows = [
+            row
+            for row in rows
+            if row.page == page
+        ]
+
+        if not page_rows:
+            continue
+
+        headings = [
+            index
+            for index, row in enumerate(page_rows)
+            if (
+                "top 10 holdings" in normalize_text(row.text)
+                or "top ten holdings" in normalize_text(row.text)
+                or normalize_text(row.text) == "holdings"
+            )
+        ]
+
+        # If heading extraction is poor, use any page containing repeated
+        # explicit rank/percentage geometry, but still require a real table.
+        if not headings:
+            headings = [-1]
+
+        for heading in headings:
+            if heading >= 0:
+                start = heading + 1
+            else:
+                start = 0
+
+            end = len(page_rows)
+
+            # Limit fallback pages to the first coherent table-like block.
+            if heading >= 0:
+                for index in range(start, len(page_rows)):
+                    normalized = normalize_text(page_rows[index].text)
+                    if any(
+                        marker in normalized
+                        for marker in (
+                            "asset allocation",
+                            "portfolio characteristics",
+                            "performance chart",
+                            "calendar year performance",
+                            "important information",
+                            "disclaimer",
+                        )
+                    ):
+                        end = index
+                        break
+
+            if end - start < MIN_TABLE_ROWS:
+                continue
+
+            region_rows = page_rows[start:end]
+
+            rank_columns = candidate_rank_columns(
+                region_rows
+            )
+
+            weight_columns = candidate_weight_columns(
+                region_rows
+            )
+
+            region_record = {
+                "page": page,
+                "headingIndex": heading,
+                "start": start,
+                "end": end,
+                "rankColumns": [
+                    {
+                        "x": c["x"],
+                        "rowCount": c["rowCount"],
+                        "ranks": c["ranks"],
+                    }
+                    for c in rank_columns[:20]
+                ],
+                "weightColumns": [
+                    {
+                        "x": c["x"],
+                        "rowCount": c["rowCount"],
+                    }
+                    for c in weight_columns[:20]
+                ],
+            }
+
+            regions.append(region_record)
+
+            for rank_column in rank_columns[:12]:
+                for weight_column in weight_columns[:20]:
+                    # Name column must exist physically between rank and weight.
+                    if weight_column["x"] <= rank_column["x"] + 10:
+                        continue
+
+                    candidate = extract_table_candidate(
+                        region_rows,
+                        0,
+                        len(region_rows),
+                        rank_column,
+                        weight_column,
+                    )
+
+                    if candidate is None:
+                        continue
+
+                    # Reject obvious non-holdings candidates.
+                    names = [
+                        normalize_text(item["name"])
+                        for item in candidate["holdings"]
+                    ]
+
+                    if any(
+                        is_noise(name)
+                        for name in names
+                    ):
+                        continue
+
+                    # Require multiple distinct explicit ranks.
+                    distinct_ranks = {
+                        int(item["rank"])
+                        for item in candidate["holdings"]
+                    }
+
+                    if len(distinct_ranks) < MIN_TABLE_ROWS:
+                        continue
+
+                    candidate["page"] = page
+                    candidate["rankColumnX"] = rank_column["x"]
+                    candidate["weightColumnX"] = weight_column["x"]
+
+                    confirmed.append(candidate)
+
+    # Diagnostic candidate dump is deliberately comprehensive enough to
+    # understand unresolved PDFs without treating diagnostics as results.
+    for region in regions:
+        diagnostics.append(
+            {
+                "page": region["page"],
+                "rankColumns": region["rankColumns"],
+                "weightColumns": region["weightColumns"],
+                "headingIndex": region["headingIndex"],
+            }
+        )
+
+    return confirmed, regions, diagnostics
+
+
+# =============================================================================
+# FIXED-INCOME SAFETY CHECK
+# =============================================================================
+
+def validate_fixed_income_names(
+    holdings: list[dict],
+) -> None:
+    """
+    A fixed-income holding may contain coupon and maturity information.
+
+    We do not remove those percentages from the security name if they are
+    physically part of the published security description.
+
+    This check only prevents a row whose extracted name is merely a maturity
+    date from being accepted.
+    """
+
+    for item in holdings:
+        name = normalize_name(item["name"])
+
+        if DATE_RE.fullmatch(name):
+            raise RuntimeError(
+                "Fixed-income candidate contains only a maturity/date "
+                "instead of the published security name."
+            )
+
+
+# =============================================================================
+# SECTION TEXT FOR AUDIT
+# =============================================================================
+
+def build_section_text(
+    holdings: list[dict],
+) -> str:
+    lines = []
+
+    for item in holdings:
+        lines.append(
+            f"{item['rank']} | "
+            f"{item['name']} | "
+            f"{item['weightText']}"
+        )
+
+    return "\n".join(lines)
+
+
+# =============================================================================
+# FUND PROCESSING
+# =============================================================================
+
+def fund_identifier(
+    row: int,
+    final_url: str,
+    fund_name: str,
+) -> str:
+    parsed = urlparse(final_url)
+    slug = (
+        parsed.path.rstrip("/").split("/")[-1]
+        or fund_name
+        or f"fund_{row}"
+    )
+    return safe_filename(slug)
+
+
+def create_result_base(
+    entry: dict,
+    final_url: str,
+    factsheet_url: str,
+    pdf_bytes: bytes,
+) -> dict:
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+
+    fund_name = clean_text(
+        entry.get("excelPruAccessName")
+        or entry.get("pruAccessName")
+    )
+
+    return {
+        "status": "success",
+        "excelRow": int(entry["excelRow"]),
+        "prudentialUrl": entry["prudentialUrl"],
+        "finalUrl": final_url,
+        "excelPruAccessName": fund_name,
+        "factsheetUrl": factsheet_url,
+        "factsheetPageCount": len(reader.pages),
+    }
+
+
+def save_success(
+    entry: dict,
+    result: dict,
+    pdf_bytes: bytes,
+    pdf_text: str,
+    regions: list[dict],
+    diagnostics: list[dict],
+    candidates: list[dict],
+    confirmation: dict,
+) -> Path:
+    identifier = fund_identifier(
+        result["excelRow"],
+        result["finalUrl"],
+        result.get("excelPruAccessName", ""),
+    )
+
+    directory = (
+        FUNDS_OUTPUT_DIR
+        / f"{result['excelRow']}_{identifier}"
+    )
+
+    directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    (directory / "factsheet.pdf").write_bytes(
+        pdf_bytes
+    )
+
+    (directory / "factsheet_text.txt").write_text(
+        pdf_text,
+        encoding="utf-8",
+    )
+
+    save_json(
+        directory / "spatial_rows.json",
+        [
+            {
                 "page": row.page,
                 "y": row.y,
                 "xMin": row.x_min,
                 "xMax": row.x_max,
                 "text": row.text,
                 "words": [
-                    {
-                        "text": word.text,
-                        "x": word.x,
-                        "y": word.y,
-                        "width": word.width,
-                        "height": word.height,
-                    }
+                    asdict(word)
                     for word in row.words
                 ],
             }
-        )
-
-    return output
-
-
-# ============================================================================
-# PERCENTAGE / RANK ANALYSIS
-# ============================================================================
-
-
-def percentage_tokens(
-    row: PDFRow,
-) -> list[dict[str, Any]]:
-    result = []
-
-    for word in row.words:
-        matches = list(
-            PERCENTAGE_RE.finditer(
-                word.text
-            )
-        )
-
-        for match in matches:
-            try:
-                value = float(
-                    match.group(1)
-                )
-            except Exception:
-                continue
-
-            if not (
-                0.0
-                <= value
-                <= 100.0
-            ):
-                continue
-
-            result.append(
-                {
-                    "value": value,
-                    "x": word.x,
-                    "right": word.right,
-                    "word": word.text,
-                }
-            )
-
-    return result
-
-
-def explicit_rank_tokens(
-    row: PDFRow,
-) -> list[dict[str, Any]]:
-    result = []
-
-    for word in row.words:
-        text = normalize_text(
-            word.text
-        )
-
-        match = RANK_ONLY_RE.match(
-            text
-        )
-
-        if match:
-            value = int(
-                match.group(1)
-            )
-
-            if 1 <= value <= 10:
-                result.append(
-                    {
-                        "rank": value,
-                        "x": word.x,
-                        "right": word.right,
-                        "word": text,
-                    }
-                )
-
-            continue
-
-        match = RANK_MARKED_RE.match(
-            text
-        )
-
-        if match:
-            value = int(
-                match.group(1)
-            )
-
-            if 1 <= value <= 10:
-                result.append(
-                    {
-                        "rank": value,
-                        "x": word.x,
-                        "right": word.right,
-                        "word": text,
-                    }
-                )
-
-    return result
-
-
-# ============================================================================
-# SEMANTIC FILTERING
-# ============================================================================
-
-
-def contains_forbidden_name_pattern(
-    name: str,
-) -> tuple[bool, str]:
-    normalized = normalize_name(
-        name
+            for row in build_positioned_rows(pdf_bytes)
+        ],
     )
 
-    for pattern in FORBIDDEN_NAME_PATTERNS:
-        if re.search(
-            pattern,
-            normalized,
-            flags=re.IGNORECASE,
-        ):
-            return (
-                True,
-                pattern,
-            )
-
-    return (
-        False,
-        "",
-    )
-
-
-def contains_forbidden_region_pattern(
-    text: str,
-) -> tuple[bool, str]:
-    normalized = normalize_name(
-        text
-    )
-
-    for pattern in FORBIDDEN_REGION_PATTERNS:
-        if re.search(
-            pattern,
-            normalized,
-            flags=re.IGNORECASE,
-        ):
-            return (
-                True,
-                pattern,
-            )
-
-    return (
-        False,
-        "",
-    )
-
-
-def is_probable_page_furniture(
-    text: str,
-) -> bool:
-    normalized = normalize_name(
-        text
-    )
-
-    if not normalized:
-        return True
-
-    if normalized in PAGE_FURNITURE:
-        return True
-
-    if normalized.startswith(
-        "page "
-    ):
-        return True
-
-    return False
-
-
-# ============================================================================
-# TABLE HEADER DETECTION
-# ============================================================================
-
-
-def header_kind(
-    text: str,
-) -> str | None:
-    normalized = normalize_name(
-        text
-    )
-
-    if normalized in {
-        normalize_name(value)
-        for value in RANK_HEADERS
-    }:
-        return "rank"
-
-    if normalized in {
-        normalize_name(value)
-        for value in NAME_HEADERS
-    }:
-        return "name"
-
-    if normalized in {
-        normalize_name(value)
-        for value in WEIGHT_HEADERS
-    }:
-        return "weight"
-
-    return None
-
-
-def detect_header_rows(
-    rows: list[PDFRow],
-) -> list[dict[str, Any]]:
-    headers = []
-
-    for index, row in enumerate(rows):
-        found = []
-
-        for word in row.words:
-            kind = header_kind(
-                word.text
-            )
-
-            if kind:
-                found.append(
-                    {
-                        "kind": kind,
-                        "x": word.x,
-                        "right": word.right,
-                        "text": word.text,
-                    }
-                )
-
-        kinds = {
-            item["kind"]
-            for item in found
-        }
-
-        if len(kinds) >= 2:
-            headers.append(
-                {
-                    "rowIndex": index,
-                    "page": row.page,
-                    "y": row.y,
-                    "text": row.text,
-                    "headers": found,
-                }
-            )
-
-    return headers
-
-
-# ============================================================================
-# COLUMN CLUSTERING
-# ============================================================================
-
-
-def cluster_x_positions(
-    positions: list[float],
-    tolerance: float = 10.0,
-) -> list[dict[str, Any]]:
-    if not positions:
-        return []
-
-    positions = sorted(
-        positions
-    )
-
-    clusters: list[list[float]] = []
-
-    for value in positions:
-        if not clusters:
-            clusters.append(
-                [value]
-            )
-            continue
-
-        current = clusters[-1]
-
-        if abs(
-            value - median(current)
-        ) <= tolerance:
-            current.append(value)
-        else:
-            clusters.append(
-                [value]
-            )
-
-    result = []
-
-    for cluster in clusters:
-        result.append(
-            {
-                "x": median(cluster),
-                "count": len(cluster),
-                "min": min(cluster),
-                "max": max(cluster),
-                "std": population_std(
-                    cluster
-                ),
-            }
-        )
-
-    result.sort(
-        key=lambda item: (
-            -item["count"],
-            item["x"],
-        )
-    )
-
-    return result
-
-
-def percentage_column_candidates(
-    rows: list[PDFRow],
-) -> list[dict[str, Any]]:
-    positions = []
-
-    occurrences = []
-
-    for row_index, row in enumerate(rows):
-        tokens = percentage_tokens(
-            row
-        )
-
-        for token in tokens:
-            positions.append(
-                token["x"]
-            )
-
-            occurrences.append(
-                {
-                    "rowIndex": row_index,
-                    **token,
-                }
-            )
-
-    clusters = cluster_x_positions(
-        positions,
-        tolerance=12.0,
-    )
-
-    output = []
-
-    for cluster in clusters:
-        matching = [
-            item
-            for item in occurrences
-            if abs(
-                item["x"]
-                - cluster["x"]
-            )
-            <= 12.0
-        ]
-
-        pages = sorted(
-            {
-                rows[item["rowIndex"]].page
-                for item in matching
-            }
-        )
-
-        output.append(
-            {
-                **cluster,
-                "rows": [
-                    item["rowIndex"]
-                    for item in matching
-                ],
-                "pages": pages,
-                "occurrences": matching,
-            }
-        )
-
-    return output
-
-
-def rank_column_candidates(
-    rows: list[PDFRow],
-) -> list[dict[str, Any]]:
-    positions = []
-
-    occurrences = []
-
-    for row_index, row in enumerate(rows):
-        tokens = explicit_rank_tokens(
-            row
-        )
-
-        for token in tokens:
-            positions.append(
-                token["x"]
-            )
-
-            occurrences.append(
-                {
-                    "rowIndex": row_index,
-                    **token,
-                }
-            )
-
-    clusters = cluster_x_positions(
-        positions,
-        tolerance=12.0,
-    )
-
-    output = []
-
-    for cluster in clusters:
-        matching = [
-            item
-            for item in occurrences
-            if abs(
-                item["x"]
-                - cluster["x"]
-            )
-            <= 12.0
-        ]
-
-        pages = sorted(
-            {
-                rows[item["rowIndex"]].page
-                for item in matching
-            }
-        )
-
-        output.append(
-            {
-                **cluster,
-                "rows": [
-                    item["rowIndex"]
-                    for item in matching
-                ],
-                "pages": pages,
-                "occurrences": matching,
-            }
-        )
-
-    return output
-
-
-# ============================================================================
-# TABLE REGION DISCOVERY
-# ============================================================================
-
-
-def rows_between(
-    rows: list[PDFRow],
-    start_index: int,
-    end_index: int,
-) -> list[tuple[int, PDFRow]]:
-    return [
-        (index, rows[index])
-        for index in range(
-            max(0, start_index),
-            min(
-                len(rows),
-                end_index + 1,
-            ),
-        )
-    ]
-
-
-def table_region_score(
-    rows: list[PDFRow],
-    start_index: int,
-    end_index: int,
-    rank_x: float,
-    weight_x: float,
-) -> dict[str, Any]:
-    if weight_x <= rank_x:
-        return {
-            "score": -999.0,
-            "valid": False,
-        }
-
-    selected = rows_between(
-        rows,
-        start_index,
-        end_index,
-    )
-
-    if len(selected) < 2:
-        return {
-            "score": -999.0,
-            "valid": False,
-        }
-
-    rank_rows = 0
-    weight_rows = 0
-    paired_rows = 0
-    semantic_rejections = 0
-
-    distances = []
-
-    for row_index, row in selected:
-        forbidden, _ = contains_forbidden_region_pattern(
-            row.text
-        )
-
-        if forbidden:
-            semantic_rejections += 1
-            continue
-
-        ranks = explicit_rank_tokens(
-            row
-        )
-
-        weights = percentage_tokens(
-            row
-        )
-
-        rank_here = [
-            item
-            for item in ranks
-            if (
-                rank_x - 8
-                <= item["x"]
-                <= rank_x + 18
-            )
-        ]
-
-        weight_here = [
-            item
-            for item in weights
-            if (
-                weight_x - 14
-                <= item["x"]
-                <= weight_x + 14
-            )
-        ]
-
-        if rank_here:
-            rank_rows += 1
-
-        if weight_here:
-            weight_rows += 1
-
-        if rank_here and weight_here:
-            paired_rows += 1
-
-            distances.append(
-                abs(
-                    rank_here[0]["x"]
-                    - weight_here[0]["x"]
-                )
-            )
-
-    if paired_rows == 0:
-        return {
-            "score": -999.0,
-            "valid": False,
-        }
-
-    # A genuine table needs repeated physical rank + weight pairing.
-    score = (
-        paired_rows * 8.0
-        + rank_rows * 2.0
-        + weight_rows * 2.0
-        - semantic_rejections * 5.0
-    )
-
-    return {
-        "score": score,
-        "valid": (
-            paired_rows >= 2
-            and rank_rows >= 2
-            and weight_rows >= 2
-        ),
-        "startIndex": start_index,
-        "endIndex": end_index,
-        "rankX": rank_x,
-        "weightX": weight_x,
-        "pairedRows": paired_rows,
-        "rankRows": rank_rows,
-        "weightRows": weight_rows,
-        "semanticRejections": semantic_rejections,
-        "rankWeightDistances": distances,
-    }
-
-
-def discover_candidate_regions(
-    rows: list[PDFRow],
-) -> list[dict[str, Any]]:
-    rank_columns = rank_column_candidates(
-        rows
-    )
-
-    weight_columns = percentage_column_candidates(
-        rows
-    )
-
-    regions = []
-
-    for rank_column in rank_columns:
-        if rank_column["count"] < 2:
-            continue
-
-        for weight_column in weight_columns:
-            if weight_column["count"] < 2:
-                continue
-
-            rank_x = float(
-                rank_column["x"]
-            )
-
-            weight_x = float(
-                weight_column["x"]
-            )
-
-            if weight_x <= rank_x:
-                continue
-
-            shared_pages = sorted(
-                set(
-                    rank_column["pages"]
-                ).intersection(
-                    weight_column["pages"]
-                )
-            )
-
-            if not shared_pages:
-                continue
-
-            relevant_indices = []
-
-            for page in shared_pages:
-                page_indices = [
-                    index
-                    for index, row in enumerate(
-                        rows
-                    )
-                    if row.page == page
-                ]
-
-                if not page_indices:
-                    continue
-
-                relevant_indices.extend(
-                    page_indices
-                )
-
-            if not relevant_indices:
-                continue
-
-            start = min(
-                relevant_indices
-            )
-
-            end = max(
-                relevant_indices
-            )
-
-            # Do not allow a huge page-wide pairing block.
-            if end - start > 80:
-                # Use local windows around rank/weight occurrences.
-                candidate_indices = sorted(
-                    set(
-                        rank_column["rows"]
-                    ).intersection(
-                        weight_column["rows"]
-                    )
-                )
-
-                if not candidate_indices:
-                    continue
-
-                start = max(
-                    0,
-                    min(candidate_indices)
-                    - 12,
-                )
-
-                end = min(
-                    len(rows) - 1,
-                    max(candidate_indices)
-                    + 12,
-                )
-
-            region = table_region_score(
-                rows,
-                start,
-                end,
-                rank_x,
-                weight_x,
-            )
-
-            if region.get(
-                "valid"
-            ):
-                regions.append(
-                    {
-                        **region,
-                        "rankColumn": rank_column,
-                        "weightColumn": weight_column,
-                    }
-                )
-
-    regions.sort(
-        key=lambda item: (
-            -item["score"],
-            item["startIndex"],
-        )
-    )
-
-    return regions
-
-
-# ============================================================================
-# TABLE ROW GEOMETRY
-# ============================================================================
-
-
-def words_in_x_range(
-    row: PDFRow,
-    x_min: float,
-    x_max: float,
-) -> list[PDFWord]:
-    return [
-        word
-        for word in row.words
-        if (
-            word.right >= x_min
-            and word.x <= x_max
-        )
-    ]
-
-
-def text_in_x_range(
-    row: PDFRow,
-    x_min: float,
-    x_max: float,
-) -> str:
-    words = words_in_x_range(
-        row,
-        x_min,
-        x_max,
-    )
-
-    return " ".join(
-        word.text
-        for word in sorted(
-            words,
-            key=lambda item: item.x,
-        )
-    ).strip()
-
-
-def rank_for_region(
-    row: PDFRow,
-    rank_x: float,
-) -> list[dict[str, Any]]:
-    result = []
-
-    for token in explicit_rank_tokens(
-        row
-    ):
-        if (
-            rank_x - 10
-            <= token["x"]
-            <= rank_x + 20
-        ):
-            result.append(
-                token
-            )
-
-    return result
-
-
-def weights_for_region(
-    row: PDFRow,
-    weight_x: float,
-) -> list[dict[str, Any]]:
-    result = []
-
-    for token in percentage_tokens(
-        row
-    ):
-        if (
-            weight_x - 16
-            <= token["x"]
-            <= weight_x + 16
-        ):
-            result.append(
-                token
-            )
-
-    return result
-
-
-# ============================================================================
-# NAME CLEANING
-# ============================================================================
-
-
-def remove_weight_percentages(
-    text: str,
-) -> str:
-    return normalize_text(
-        PERCENTAGE_RE.sub(
-            "",
-            text,
-        )
-    )
-
-
-def remove_rank_prefix(
-    text: str,
-) -> str:
-    text = normalize_text(
-        text
-    )
-
-    match = re.match(
-        r"^\s*\d{1,2}[.)]?\s+",
-        text,
-    )
-
-    if match:
-        return normalize_text(
-            text[match.end():]
-        )
-
-    return text
-
-
-def clean_holding_name(
-    text: str,
-) -> str:
-    text = normalize_text(
-        text
-    )
-
-    text = remove_rank_prefix(
-        text
-    )
-
-    text = remove_weight_percentages(
-        text
-    )
-
-    # Remove common PDF artifacts.
-    text = text.replace(
-        "†",
-        "",
-    )
-
-    text = text.replace(
-        "‡",
-        "",
-    )
-
-    text = re.sub(
-        r"\s+",
-        " ",
-        text,
-    )
-
-    return text.strip(
-        " -:;,."
-    )
-
-
-def is_valid_holding_name(
-    name: str,
-) -> tuple[bool, str]:
-    name = clean_holding_name(
-        name
-    )
-
-    if len(name) < 3:
-        return (
-            False,
-            "holding name too short",
-        )
-
-    forbidden, pattern = (
-        contains_forbidden_name_pattern(
-            name
-        )
-    )
-
-    if forbidden:
-        return (
-            False,
-            f"semantic rejection: {pattern}",
-        )
-
-    # A pure number/date is not a security name.
-    if re.fullmatch(
-        r"[\d\s./%-]+",
-        name,
-    ):
-        return (
-            False,
-            "name is numeric",
-        )
-
-    if DATE_RE.fullmatch(
-        name
-    ):
-        return (
-            False,
-            "name is only a date",
-        )
-
-    return (
-        True,
-        "",
-    )
-
-
-# ============================================================================
-# PHYSICAL TABLE NAME EXTRACTION
-# ============================================================================
-
-
-def name_interval_for_region(
-    rank_x: float,
-    weight_x: float,
-) -> tuple[float, float]:
-    # Leave a small gap around rank and percentage columns.
-    return (
-        rank_x + 20.0,
-        weight_x - 16.0,
-    )
-
-
-def extract_name_from_row(
-    row: PDFRow,
-    rank_x: float,
-    weight_x: float,
-) -> str:
-    name_min, name_max = (
-        name_interval_for_region(
-            rank_x,
-            weight_x,
-        )
-    )
-
-    words = words_in_x_range(
-        row,
-        name_min,
-        name_max,
-    )
-
-    if not words:
-        return ""
-
-    text = " ".join(
-        word.text
-        for word in sorted(
-            words,
-            key=lambda item: item.x,
-        )
-    )
-
-    return clean_holding_name(
-        text
-    )
-
-
-def row_has_valid_table_geometry(
-    row: PDFRow,
-    rank_x: float,
-    weight_x: float,
-) -> bool:
-    ranks = rank_for_region(
-        row,
-        rank_x,
-    )
-
-    weights = weights_for_region(
-        row,
-        weight_x,
-    )
-
-    if not ranks:
-        return False
-
-    if not weights:
-        return False
-
-    name = extract_name_from_row(
-        row,
-        rank_x,
-        weight_x,
-    )
-
-    valid, _ = is_valid_holding_name(
-        name
-    )
-
-    return valid
-
-
-# ============================================================================
-# FIXED-INCOME DETECTION
-# ============================================================================
-
-
-def looks_like_fixed_income_security(
-    name: str,
-) -> bool:
-    normalized = normalize_name(
-        name
-    )
-
-    coupon_count = len(
-        list(
-            PERCENTAGE_RE.finditer(
-                name
-            )
-        )
-    )
-
-    has_date = bool(
-        DATE_RE.search(
-            name
-        )
-    )
-
-    bond_terms = any(
-        term in normalized
-        for term in (
-            "government",
-            "republic of",
-            "holdings plc",
-            "bank",
-            "sa ",
-            "treasury",
-            "bond",
-            "notes",
-        )
-    )
-
-    return (
-        has_date
-        and (
-            coupon_count >= 1
-            or bond_terms
-        )
-    )
-
-
-def extract_security_name_preserving_coupon(
-    row: PDFRow,
-    rank_x: float,
-    weight_x: float,
-) -> str:
-    """
-    Fixed-income-aware name extraction.
-
-    The percentage in the weight column is excluded.
-    Any percentage physically inside the name interval remains.
-
-    This is what allows:
-
-        SINGAPORE (REPUBLIC OF) 2.375% 1-JUL-2039 5.8%
-
-    to become:
-
-        SINGAPORE (REPUBLIC OF) 2.375% 1-JUL-2039
-    """
-
-    name_min, name_max = (
-        name_interval_for_region(
-            rank_x,
-            weight_x,
-        )
-    )
-
-    words = words_in_x_range(
-        row,
-        name_min,
-        name_max,
-    )
-
-    if not words:
-        return ""
-
-    pieces = []
-
-    for word in sorted(
-        words,
-        key=lambda item: item.x,
-    ):
-        text = normalize_text(
-            word.text
-        )
-
-        if not text:
-            continue
-
-        # A percentage word inside the name interval is retained.
-        pieces.append(
-            text
-        )
-
-    return clean_holding_name(
-        " ".join(pieces)
-    )
-
-
-# ============================================================================
-# TABLE BLOCK RECONSTRUCTION
-# ============================================================================
-
-
-def reconstruct_table_block(
-    rows: list[PDFRow],
-    region: dict[str, Any],
-) -> tuple[
-    list[HoldingCandidate],
-    dict[str, Any],
-]:
-    rank_x = float(
-        region["rankX"]
-    )
-
-    weight_x = float(
-        region["weightX"]
-    )
-
-    start_index = int(
-        region["startIndex"]
-    )
-
-    end_index = int(
-        region["endIndex"]
-    )
-
-    candidates: list[HoldingCandidate] = []
-
-    row_diagnostics = []
-
-    current: dict[str, Any] | None = None
-
-    for source_row_index in range(
-        start_index,
-        end_index + 1,
-    ):
-        row = rows[
-            source_row_index
-        ]
-
-        ranks = rank_for_region(
-            row,
-            rank_x,
-        )
-
-        weights = weights_for_region(
-            row,
-            weight_x,
-        )
-
-        forbidden, forbidden_pattern = (
-            contains_forbidden_region_pattern(
-                row.text
-            )
-        )
-
-        if forbidden:
-            row_diagnostics.append(
-                {
-                    "sourceRowIndex": source_row_index,
-                    "page": row.page,
-                    "text": row.text,
-                    "action": "reject_semantic_region",
-                    "pattern": forbidden_pattern,
-                }
-            )
-
-            # Do not carry semantic metadata into a holding.
-            continue
-
-        # ------------------------------------------------------------
-        # Explicit rank + weight on same physical row.
-        # ------------------------------------------------------------
-        if ranks and weights:
-            rank = ranks[0]["rank"]
-
-            # Multiple percentage values are allowed only when
-            # the final percentage is physically in the weight column.
-            selected_weight = weights[-1]
-
-            name = (
-                extract_security_name_preserving_coupon(
-                    row,
-                    rank_x,
-                    weight_x,
-                )
-            )
-
-            valid_name, reason = (
-                is_valid_holding_name(
-                    name
-                )
-            )
-
-            if not valid_name:
-                row_diagnostics.append(
-                    {
-                        "sourceRowIndex": source_row_index,
-                        "page": row.page,
-                        "text": row.text,
-                        "action": "reject_name",
-                        "reason": reason,
-                        "rank": rank,
-                        "weight": selected_weight["value"],
-                    }
-                )
-
-                current = None
-
-                continue
-
-            # Never accept ranks outside 1..10.
-            if not (
-                1 <= rank <= MAX_HOLDINGS
-            ):
-                current = None
-                continue
-
-            candidate = HoldingCandidate(
-                rank=rank,
-                name=name,
-                weight=float(
-                    selected_weight["value"]
-                ),
-                page=row.page,
-                source_row_index=source_row_index,
-                strategy="spatial_table",
-                evidence={
-                    "rankX": rank_x,
-                    "weightX": weight_x,
-                    "rankToken": ranks[0],
-                    "weightToken": selected_weight,
-                    "allPercentages": [
-                        item["value"]
-                        for item in percentage_tokens(
-                            row
-                        )
-                    ],
-                    "rowText": row.text,
-                    "geometry": {
-                        "rankColumnStable": True,
-                        "weightColumnStable": True,
-                        "samePhysicalRow": True,
-                        "nameBetweenColumns": True,
-                    },
-                },
-            )
-
-            candidates.append(
-                candidate
-            )
-
-            current = {
-                "candidateIndex": len(
-                    candidates
-                ) - 1,
-                "rank": rank,
-                "name": name,
-                "weight": float(
-                    selected_weight["value"]
-                ),
-                "page": row.page,
-                "sourceRowIndex": source_row_index,
-            }
-
-            row_diagnostics.append(
-                {
-                    "sourceRowIndex": source_row_index,
-                    "page": row.page,
-                    "text": row.text,
-                    "action": "new_holding",
-                    "rank": rank,
-                    "weight": selected_weight["value"],
-                    "name": name,
-                }
-            )
-
-            continue
-
-        # ------------------------------------------------------------
-        # Continuation row.
-        #
-        # There must already be a confirmed current holding.
-        # The continuation must contain text physically inside the
-        # same name column.
-        #
-        # A continuation is never allowed to introduce a percentage.
-        # ------------------------------------------------------------
-        if current:
-            continuation_name = extract_name_from_row(
-                row,
-                rank_x,
-                weight_x,
-            )
-
-            row_percentages = percentage_tokens(
-                row
-            )
-
-            if continuation_name:
-                forbidden_name, forbidden_pattern = (
-                    contains_forbidden_name_pattern(
-                        continuation_name
-                    )
-                )
-
-                if (
-                    not forbidden_name
-                    and not row_percentages
-                ):
-                    combined_name = clean_holding_name(
-                        current["name"]
-                        + " "
-                        + continuation_name
-                    )
-
-                    valid_name, _ = (
-                        is_valid_holding_name(
-                            combined_name
-                        )
-                    )
-
-                    if valid_name:
-                        candidate_index = current[
-                            "candidateIndex"
-                        ]
-
-                        candidates[
-                            candidate_index
-                        ].name = combined_name
-
-                        candidates[
-                            candidate_index
-                        ].evidence[
-                            "multilineContinuationRows"
-                        ] = (
-                            candidates[
-                                candidate_index
-                            ].evidence.get(
-                                "multilineContinuationRows",
-                                [],
-                            )
-                            + [
-                                {
-                                    "sourceRowIndex": source_row_index,
-                                    "page": row.page,
-                                    "text": row.text,
-                                }
-                            ]
-                        )
-
-                        current["name"] = (
-                            combined_name
-                        )
-
-                        row_diagnostics.append(
-                            {
-                                "sourceRowIndex": source_row_index,
-                                "page": row.page,
-                                "text": row.text,
-                                "action": "append_name_continuation",
-                                "name": continuation_name,
-                            }
-                        )
-
-                        continue
-
-        # Anything else cannot be used.
-        row_diagnostics.append(
-            {
-                "sourceRowIndex": source_row_index,
-                "page": row.page,
-                "text": row.text,
-                "action": "ignored",
-            }
-        )
-
-    return (
-        candidates,
-        {
-            "region": region,
-            "rows": row_diagnostics,
-        },
-    )
-
-
-# ============================================================================
-# CANDIDATE SEQUENCE VALIDATION
-# ============================================================================
-
-
-def normalize_candidate_list(
-    candidates: list[HoldingCandidate],
-) -> list[HoldingCandidate]:
-    # Preserve physical order, but do not infer ranks.
-    candidates = sorted(
-        candidates,
-        key=lambda item: (
-            item.page,
-            item.source_row_index,
-        ),
-    )
-
-    # Remove exact duplicate physical candidates only.
-    # Duplicate security names/weights are valid; duplicates generated
-    # from the same source row are not separate holdings.
-    seen_physical = set()
-    result = []
-
-    for candidate in candidates:
-        key = (
-            candidate.page,
-            candidate.source_row_index,
-            candidate.rank,
-            normalize_name(
-                candidate.name
-            ),
-            float(
-                candidate.weight
-            ),
-        )
-
-        if key in seen_physical:
-            continue
-
-        seen_physical.add(key)
-        result.append(
-            candidate
-        )
-
-    return result
-
-
-def validate_rank_sequence(
-    candidates: list[HoldingCandidate],
-) -> tuple[
-    bool,
-    str,
-]:
-    if not candidates:
-        return (
-            False,
-            "no candidates",
-        )
-
-    if len(candidates) > MAX_HOLDINGS:
-        return (
-            False,
-            "more than ten holdings detected",
-        )
-
-    ranks = [
-        item.rank
-        for item in candidates
-    ]
-
-    if any(
-        rank < 1
-        or rank > MAX_HOLDINGS
-        for rank in ranks
-    ):
-        return (
-            False,
-            "rank outside 1..10",
-        )
-
-    # Ranks must be explicit and contiguous.
-    expected = list(
-        range(
-            1,
-            len(ranks) + 1,
-        )
-    )
-
-    if ranks != expected:
-        return (
-            False,
-            "explicit published ranks are not contiguous from 1",
-        )
-
-    return (
-        True,
-        "",
-    )
-
-
-def validate_candidate_semantics(
-    candidates: list[HoldingCandidate],
-) -> tuple[
-    bool,
-    str,
-]:
-    for candidate in candidates:
-        valid, reason = (
-            is_valid_holding_name(
-                candidate.name
-            )
-        )
-
-        if not valid:
-            return (
-                False,
-                reason,
-            )
-
-        if not (
-            0.0
-            <= candidate.weight
-            <= 100.0
-        ):
-            return (
-                False,
-                "weight outside 0..100",
-            )
-
-    return (
-        True,
-        "",
-    )
-
-
-def validate_table_structure(
-    candidates: list[HoldingCandidate],
-    region: dict[str, Any],
-) -> tuple[
-    bool,
-    str,
-]:
-    if len(candidates) < 2:
-        return (
-            False,
-            "fewer than two physically confirmed ranked holdings",
-        )
-
-    if region["pairedRows"] < 2:
-        return (
-            False,
-            "insufficient same-row rank/weight evidence",
-        )
-
-    # Every accepted candidate must explicitly have all three pieces.
-    for candidate in candidates:
-        geometry = candidate.evidence.get(
-            "geometry",
-            {},
-        )
-
-        if not geometry.get(
-            "samePhysicalRow"
-        ):
-            return (
-                False,
-                "rank/name/weight not proven on same physical row",
-            )
-
-        if not geometry.get(
-            "nameBetweenColumns"
-        ):
-            return (
-                False,
-                "name column not proven between rank and weight",
-            )
-
-    return (
-        True,
-        "",
-    )
-
-
-def consolidate_candidates(
-    candidates: list[HoldingCandidate],
-) -> list[HoldingCandidate]:
-    """
-    Keep the first structurally confirmed occurrence for each explicit rank.
-
-    If the same rank occurs with a conflicting security, the sequence is
-    invalidated elsewhere rather than guessed here.
-    """
-
-    by_rank: dict[int, list[HoldingCandidate]] = defaultdict(
-        list
-    )
-
-    for candidate in candidates:
-        by_rank[
-            candidate.rank
-        ].append(candidate)
-
-    result = []
-
-    for rank in sorted(
-        by_rank
-    ):
-        values = by_rank[
-            rank
-        ]
-
-        if len(values) == 1:
-            result.append(
-                values[0]
-            )
-            continue
-
-        signatures = {
-            (
-                normalize_name(
-                    item.name
-                ),
-                float(
-                    item.weight
-                ),
-            )
-            for item in values
-        }
-
-        if len(signatures) == 1:
-            result.append(
-                values[0]
-            )
-            continue
-
-        # Conflicting explicit rank evidence must not be guessed.
-        raise HoldingsParseFailure(
-            "Conflicting explicit holdings share rank "
-            f"{rank}."
-        )
-
-    return result
-
-
-# ============================================================================
-# TABLE SELECTION
-# ============================================================================
-
-
-def extract_candidates_from_regions(
-    rows: list[PDFRow],
-    regions: list[dict[str, Any]],
-) -> tuple[
-    list[HoldingCandidate],
-    dict[str, Any],
-]:
-    diagnostics = {
-        "regionsAttempted": [],
-        "acceptedRegion": None,
-        "rejectedRegions": [],
-    }
-
-    valid_sequences: list[
-        tuple[
-            list[HoldingCandidate],
-            dict[str, Any],
-        ]
-    ] = []
-
-    for region_index, region in enumerate(
-        regions
-    ):
-        candidates, reconstruction = (
-            reconstruct_table_block(
-                rows,
-                region,
-            )
-        )
-
-        candidates = normalize_candidate_list(
-            candidates
-        )
-
-        region_record = {
-            "regionIndex": region_index,
-            "region": region,
-            "candidateCount": len(
-                candidates
-            ),
-            "candidates": [
-                asdict(item)
-                for item in candidates
-            ],
-            "reconstruction": reconstruction,
-        }
-
-        diagnostics[
-            "regionsAttempted"
-        ].append(
-            region_record
-        )
-
-        if not candidates:
-            diagnostics[
-                "rejectedRegions"
-            ].append(
-                {
-                    "regionIndex": region_index,
-                    "reason": "no candidates",
-                }
-            )
-            continue
-
-        try:
-            candidates = consolidate_candidates(
-                candidates
-            )
-        except HoldingsParseFailure as exc:
-            diagnostics[
-                "rejectedRegions"
-            ].append(
-                {
-                    "regionIndex": region_index,
-                    "reason": str(exc),
-                }
-            )
-            continue
-
-        ok, reason = validate_rank_sequence(
-            candidates
-        )
-
-        if not ok:
-            diagnostics[
-                "rejectedRegions"
-            ].append(
-                {
-                    "regionIndex": region_index,
-                    "reason": reason,
-                }
-            )
-            continue
-
-        ok, reason = validate_candidate_semantics(
-            candidates
-        )
-
-        if not ok:
-            diagnostics[
-                "rejectedRegions"
-            ].append(
-                {
-                    "regionIndex": region_index,
-                    "reason": reason,
-                }
-            )
-            continue
-
-        ok, reason = validate_table_structure(
-            candidates,
-            region,
-        )
-
-        if not ok:
-            diagnostics[
-                "rejectedRegions"
-            ].append(
-                {
-                    "regionIndex": region_index,
-                    "reason": reason,
-                }
-            )
-            continue
-
-        valid_sequences.append(
-            (
-                candidates,
-                region,
-            )
-        )
-
-    if not valid_sequences:
-        return (
-            [],
-            diagnostics,
-        )
-
-    # If multiple regions independently produce different complete
-    # sequences, do not guess between them.
-    signatures = []
-
-    for candidates, region in valid_sequences:
-        signature = [
-            (
-                item.rank,
-                normalize_name(
-                    item.name
-                ),
-                float(
-                    item.weight
-                ),
-            )
-            for item in candidates
-        ]
-
-        signatures.append(
-            signature
-        )
-
-    unique_signatures = []
-
-    for signature in signatures:
-        if signature not in unique_signatures:
-            unique_signatures.append(
-                signature
-            )
-
-    if len(unique_signatures) != 1:
-        raise HoldingsParseFailure(
-            "Multiple structurally valid table regions produced "
-            "different holding signatures."
-        )
-
-    # Select the region with the strongest geometry score.
-    valid_sequences.sort(
-        key=lambda pair: (
-            -float(
-                pair[1]["score"]
-            ),
-            -len(
-                pair[0]
-            ),
-        )
-    )
-
-    candidates, region = (
-        valid_sequences[0]
-    )
-
-    diagnostics[
-        "acceptedRegion"
-    ] = region
-
-    return (
-        candidates,
+    save_json(
+        directory / "spatial_candidates.json",
         diagnostics,
     )
 
+    save_json(
+        directory / "candidate_regions.json",
+        regions,
+    )
 
-# ============================================================================
-# TOP-HOLDINGS SECTION TEXT
-# ============================================================================
+    save_json(
+        directory / "candidate_holdings.json",
+        candidates,
+    )
+
+    save_json(
+        directory / "confirmation.json",
+        confirmation,
+    )
+
+    metadata = {
+        "excelRow": result["excelRow"],
+        "prudentialUrl": result["prudentialUrl"],
+        "finalUrl": result["finalUrl"],
+        "factsheetUrl": result["factsheetUrl"],
+        "recoverySource": str(RECOVERY_1_SUMMARY_FILE),
+        "recoverySourceField": "stillFailedFundsDetail",
+        "officialPrudentialOnly": True,
+        "noProximityNameWeightMatching": True,
+        "noInferredRanks": True,
+        "noInferredNames": True,
+        "maximumHoldings": MAX_HOLDINGS,
+    }
+
+    save_json(
+        directory / "metadata.json",
+        metadata,
+    )
+
+    (directory / "top_holdings_section.txt").write_text(
+        build_section_text(result["topHoldings"]),
+        encoding="utf-8",
+    )
+
+    save_json(
+        directory / "top_holdings.json",
+        result,
+    )
+
+    recovery_result = {
+        "status": "success",
+        "excelRow": result["excelRow"],
+        "holdingsCount": result["topHoldingsCount"],
+        "topHoldings": result["topHoldings"],
+        "verification": result["finalVerification"],
+    }
+
+    save_json(
+        directory / "recovery_result.json",
+        recovery_result,
+    )
+
+    return directory
 
 
-def build_top_holdings_section_text(
+def save_failure(
+    entry: dict,
+    pdf_bytes: bytes | None,
+    pdf_text: str,
     rows: list[PDFRow],
-    candidates: list[HoldingCandidate],
-) -> str:
-    if not candidates:
-        return ""
-
-    min_index = min(
-        item.source_row_index
-        for item in candidates
+    regions: list[dict],
+    diagnostics: list[dict],
+    candidates: list[dict],
+    error: str,
+) -> Path:
+    directory = (
+        FUNDS_OUTPUT_DIR
+        / f"{entry['excelRow']}_failed"
     )
 
-    max_index = max(
-        item.source_row_index
-        for item in candidates
+    directory.mkdir(
+        parents=True,
+        exist_ok=True,
     )
 
-    selected = rows[
-        max(
-            0,
-            min_index - 3,
-        ):
-        min(
-            len(rows),
-            max_index + 4,
-        )
-    ]
-
-    lines = []
-
-    for row in selected:
-        lines.append(
-            row.text
+    if pdf_bytes:
+        (directory / "factsheet.pdf").write_bytes(
+            pdf_bytes
         )
 
-    return "\n".join(
-        lines
+    (directory / "factsheet_text.txt").write_text(
+        pdf_text,
+        encoding="utf-8",
     )
 
-
-# ============================================================================
-# CONFIRMATION
-# ============================================================================
-
-
-def holding_signature(
-    candidates: list[HoldingCandidate],
-) -> list[list[Any]]:
-    return [
+    save_json(
+        directory / "spatial_rows.json",
         [
-            int(item.rank),
-            normalize_name(
-                item.name
-            ),
-            float(
-                item.weight
-            ),
-        ]
-        for item in candidates
-    ]
-
-
-def confirm_extraction(
-    candidates: list[HoldingCandidate],
-    diagnostics: dict[str, Any],
-) -> dict[str, Any]:
-    if not candidates:
-        return {
-            "confirmed": False,
-            "reason": "no confirmed candidates",
-        }
-
-    signature = holding_signature(
-        candidates
+            {
+                "page": row.page,
+                "y": row.y,
+                "xMin": row.x_min,
+                "xMax": row.x_max,
+                "text": row.text,
+                "words": [
+                    asdict(word)
+                    for word in row.words
+                ],
+            }
+            for row in rows
+        ],
     )
 
-    return {
-        "confirmed": True,
-        "confirmationMode": (
-            "strict_spatial_table_complete_sequence"
-        ),
-        "strategy": "spatial_table",
-        "holdingsCount": len(
-            candidates
-        ),
-        "signature": signature,
-        "tableRegion": diagnostics.get(
-            "acceptedRegion"
-        ),
-        "rulesSatisfied": {
-            "explicitRanks": True,
-            "explicitWeights": True,
-            "samePhysicalRows": True,
-            "stableRankColumn": True,
-            "stableWeightColumn": True,
-            "nameBetweenColumns": True,
-            "semanticValidation": True,
-            "contiguousPublishedRanks": True,
-            "noRankInference": True,
-            "noArbitraryPairing": True,
-            "noSyntheticValues": True,
+    save_json(
+        directory / "spatial_candidates.json",
+        diagnostics,
+    )
+
+    save_json(
+        directory / "candidate_regions.json",
+        regions,
+    )
+
+    save_json(
+        directory / "candidate_holdings.json",
+        candidates,
+    )
+
+    diagnostic = {
+        "status": "DIAGNOSTIC_NO_CONFIRMED_RESULT",
+        "excelRow": entry["excelRow"],
+        "prudentialUrl": entry["prudentialUrl"],
+        "pruAccessName": entry.get("pruAccessName"),
+        "error": error,
+        "recovery1Error": entry.get("recovery1Error"),
+        "rules": {
+            "officialPrudentialOnly": True,
+            "noProximityNameWeightMatching": True,
+            "noInferredRanks": True,
+            "noInferredNames": True,
+            "noSyntheticWeights": True,
             "fewerThanTenAllowed": True,
         },
     }
 
+    save_json(
+        directory / "diagnostic_failure.json",
+        diagnostic,
+    )
 
-# ============================================================================
-# FORENSIC EXTRACTION ENGINE
-# ============================================================================
+    save_json(
+        directory / "recovery_result.json",
+        diagnostic,
+    )
+
+    return directory
 
 
-def extract_forensic_holdings(
+def extract_once(
     pdf_bytes: bytes,
-) -> dict[str, Any]:
-    full_text = extract_pdf_text(
-        pdf_bytes
-    )
+) -> tuple[list[dict], dict, list[dict], list[dict], list[dict]]:
+    rows = build_positioned_rows(pdf_bytes)
 
-    words = extract_positioned_words(
-        pdf_bytes
-    )
-
-    rows = group_words_into_rows(
-        words,
-        tolerance=Y_TOLERANCE,
-    )
-
-    headers = detect_header_rows(
+    confirmed, regions, diagnostics = search_spatial_tables(
         rows
     )
 
-    rank_columns = rank_column_candidates(
-        rows
-    )
+    # Preserve all structural candidates for diagnostics.
+    candidate_payload = confirmed
 
-    weight_columns = percentage_column_candidates(
-        rows
-    )
-
-    regions = discover_candidate_regions(
-        rows
-    )
-
-    candidates, diagnostics = (
-        extract_candidates_from_regions(
-            rows,
-            regions,
+    if not confirmed:
+        raise RuntimeError(
+            "No confirmed ranked holdings table was found "
+            "using official PDF coordinates."
         )
+
+    # Never choose by arbitrary proximity. A candidate must have the largest
+    # explicit contiguous rank sequence. If two candidates have the same
+    # sequence length but different signatures, reject as ambiguous.
+    max_count = max(
+        len(item["holdings"])
+        for item in confirmed
     )
 
-    candidates_payload = [
-        asdict(item)
-        for item in candidates
+    best = [
+        item
+        for item in confirmed
+        if len(item["holdings"]) == max_count
     ]
 
-    confirmation = confirm_extraction(
-        candidates,
-        diagnostics,
-    )
-
-    return {
-        "fullText": full_text,
-        "words": words,
-        "rows": rows,
-        "headers": headers,
-        "rankColumns": rank_columns,
-        "weightColumns": weight_columns,
-        "regions": regions,
-        "candidates": candidates,
-        "candidatesPayload": candidates_payload,
-        "diagnostics": diagnostics,
-        "confirmation": confirmation,
+    unique_signatures = {
+        json.dumps(
+            signature(item["holdings"]),
+            ensure_ascii=False,
+        )
+        for item in best
     }
 
-
-# ============================================================================
-# FORENSIC OUTPUT
-# ============================================================================
-
-
-def save_diagnostics(
-    fund_dir: Path,
-    extraction: dict[str, Any],
-) -> None:
-    rows = extraction["rows"]
-
-    text_dump(
-        fund_dir / "factsheet_text.txt",
-        extraction["fullText"],
-    )
-
-    json_dump(
-        fund_dir / "spatial_rows.json",
-        {
-            "rowCount": len(rows),
-            "rows": serialize_pdf_rows(
-                rows
-            ),
-        },
-    )
-
-    json_dump(
-        fund_dir / "spatial_candidates.json",
-        {
-            "rankColumns": extraction[
-                "rankColumns"
-            ],
-            "weightColumns": extraction[
-                "weightColumns"
-            ],
-            "headers": extraction[
-                "headers"
-            ],
-        },
-    )
-
-    json_dump(
-        fund_dir / "candidate_regions.json",
-        {
-            "regions": extraction[
-                "regions"
-            ],
-            "diagnostics": extraction[
-                "diagnostics"
-            ],
-        },
-    )
-
-    json_dump(
-        fund_dir / "candidate_holdings.json",
-        {
-            "candidates": extraction[
-                "candidatesPayload"
-            ],
-        },
-    )
-
-    json_dump(
-        fund_dir / "confirmation.json",
-        extraction[
-            "confirmation"
-        ],
-    )
-
-
-# ============================================================================
-# METADATA
-# ============================================================================
-
-
-def save_metadata(
-    fund_dir: Path,
-    excel_fund: dict[str, Any],
-    factsheet_url: str,
-) -> None:
-    json_dump(
-        fund_dir / "metadata.json",
-        {
-            "excelRow": excel_fund[
-                "excelRow"
-            ],
-            "prudentialUrl": excel_fund[
-                "prudentialUrl"
-            ],
-            "excelPruAccessName": excel_fund[
-                "excelPruAccessName"
-            ],
-            "factsheetUrl": factsheet_url,
-            "officialPrudentialOnly": True,
-            "generatedAtUtc": utc_now(),
-        },
-    )
-
-
-# ============================================================================
-# EXACT FINAL VERIFICATION
-# ============================================================================
-
-
-def verify_exactly(
-    page,
-    source_url: str,
-    expected_signature: list[list[Any]],
-) -> dict[str, Any]:
-    second_pdf, second_factsheet_url = (
-        download_factsheet(
-            page,
-            source_url,
+    if len(unique_signatures) != 1:
+        raise RuntimeError(
+            "Multiple equally strong spatial holdings candidates have "
+            "different exact signatures; extraction is ambiguous."
         )
-    )
 
-    second_extraction = (
-        extract_forensic_holdings(
-            second_pdf
-        )
-    )
+    selected = best[0]
 
-    second_candidates = (
-        second_extraction[
-            "candidates"
-        ]
-    )
+    holdings = selected["holdings"]
 
-    second_confirmation = (
-        second_extraction[
-            "confirmation"
-        ]
-    )
+    validate_holdings(holdings)
+    validate_fixed_income_names(holdings)
 
-    if not second_confirmation.get(
-        "confirmed"
-    ):
-        return {
-            "verified": False,
-            "reason": (
-                "fresh PDF extraction did not independently confirm "
-                "a structural holdings table"
-            ),
-            "factsheetUrl": second_factsheet_url,
-        }
-
-    actual_signature = holding_signature(
-        second_candidates
-    )
-
-    verified = (
-        actual_signature
-        == expected_signature
-    )
-
-    return {
-        "verified": verified,
-        "factsheetUrl": second_factsheet_url,
-        "expectedSignature": expected_signature,
-        "actualSignature": actual_signature,
-        "confirmation": second_confirmation,
+    confirmation = {
+        "confirmed": True,
+        "confirmationMode": "strict_spatial_rank_name_weight_table",
+        "strategy": "recovery2_spatial_table",
+        "page": selected["page"],
+        "rankColumnX": selected["rankColumnX"],
+        "weightColumnX": selected["weightColumnX"],
+        "holdingsCount": len(holdings),
+        "signature": signature(holdings),
     }
-
-
-# ============================================================================
-# FUND OUTPUT
-# ============================================================================
-
-
-def fund_output_directory(
-    excel_row: int,
-    fund_name: str,
-) -> Path:
-    identifier = safe_filename(
-        fund_name,
-        fallback="fund",
-    )
 
     return (
-        RECOVERY_FUNDS_OUTPUT_DIR
-        / f"{excel_row}_{identifier}"
+        holdings,
+        confirmation,
+        regions,
+        diagnostics,
+        candidate_payload,
     )
 
 
-def write_success_outputs(
-    fund_dir: Path,
-    candidates: list[HoldingCandidate],
-    section_text: str,
-    verification: dict[str, Any],
-) -> None:
-    top_holdings = [
-        {
-            "rank": int(item.rank),
-            "name": item.name,
-            "weight": float(item.weight),
-            "page": int(item.page),
-            "sourceRowIndex": int(
-                item.source_row_index
-            ),
-            "extractionStrategy": item.strategy,
-            "evidence": item.evidence,
-        }
-        for item in candidates
-    ]
+# =============================================================================
+# FINAL VERIFICATION
+# =============================================================================
 
-    json_dump(
-        fund_dir / "top_holdings.json",
-        {
-            "holdings": top_holdings,
-            "count": len(
-                top_holdings
-            ),
-            "signature": holding_signature(
-                candidates
-            ),
-        },
+def verify_exact_signature(
+    browser,
+    entry: dict,
+    expected: list[dict],
+) -> dict:
+    """
+    Fresh official PDF download and a fresh extraction.
+
+    Exact rank/name/weight signature must match.
+    """
+
+    fresh_pdf, fresh_final_url, fresh_factsheet_url = (
+        download_with_retries(
+            browser,
+            entry["prudentialUrl"],
+        )
     )
 
-    text_dump(
-        fund_dir / "top_holdings_section.txt",
-        section_text,
+    fresh_holdings, confirmation, _, _, _ = extract_once(
+        fresh_pdf
     )
 
-    json_dump(
-        fund_dir / "recovery_result.json",
-        {
-            "status": "success",
-            "holdingsCount": len(
-                candidates
-            ),
-            "holdings": top_holdings,
-            "signature": holding_signature(
-                candidates
-            ),
-            "verification": verification,
-            "completedAtUtc": utc_now(),
-        },
-    )
-
-
-def write_failure_outputs(
-    fund_dir: Path,
-    excel_fund: dict[str, Any],
-    reason: str,
-    extraction: dict[str, Any] | None = None,
-) -> None:
-    payload = {
-        "status": "failed",
-        "excelRow": excel_fund[
-            "excelRow"
-        ],
-        "prudentialUrl": excel_fund[
-            "prudentialUrl"
-        ],
-        "excelPruAccessName": excel_fund[
-            "excelPruAccessName"
-        ],
-        "error": reason,
-        "completedAtUtc": utc_now(),
-    }
-
-    if extraction is not None:
-        payload[
-            "diagnosticSummary"
-        ] = {
-            "candidateCount": len(
-                extraction.get(
-                    "candidates",
-                    [],
-                )
-            ),
-            "regionCount": len(
-                extraction.get(
-                    "regions",
-                    [],
-                )
-            ),
-            "acceptedRegion": extraction.get(
-                "diagnostics",
-                {},
-            ).get(
-                "acceptedRegion"
-            ),
-            "confirmation": extraction.get(
-                "confirmation"
-            ),
-        }
-
-    json_dump(
-        fund_dir / "diagnostic_failure.json",
-        payload,
-    )
-
-    json_dump(
-        fund_dir / "recovery_result.json",
-        payload,
-    )
-
-
-# ============================================================================
-# SINGLE FUND
-# ============================================================================
-
-
-def recover_single_fund(
-    page,
-    excel_fund: dict[str, Any],
-) -> dict[str, Any]:
-    excel_row = int(
-        excel_fund[
-            "excelRow"
-        ]
-    )
-
-    fund_name = (
-        excel_fund[
-            "excelPruAccessName"
-        ]
-        or f"Fund Row {excel_row}"
-    )
-
-    fund_dir = fund_output_directory(
-        excel_row,
-        fund_name,
-    )
-
-    fund_dir.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    source_url = excel_fund[
-        "prudentialUrl"
-    ]
-
-    if not is_official_prudential_url(
-        source_url
-    ):
-        reason = (
-            "Source URL is not an official Prudential Singapore URL."
+    if signature(fresh_holdings) != signature(expected):
+        raise RuntimeError(
+            "Final verification failed: fresh official PDF extraction "
+            "produced a different rank/name/weight signature."
         )
 
-        write_failure_outputs(
-            fund_dir,
-            excel_fund,
-            reason,
-        )
-
-        return {
-            "status": "failed",
-            "excelRow": excel_row,
-            "error": reason,
-        }
-
-    try:
-        pdf_bytes, factsheet_url = (
-            download_factsheet(
-                page,
-                source_url,
-            )
-        )
-
-        (fund_dir / "factsheet.pdf").write_bytes(
-            pdf_bytes
-        )
-
-        save_metadata(
-            fund_dir,
-            excel_fund,
-            factsheet_url,
-        )
-
-        extraction = extract_forensic_holdings(
-            pdf_bytes
-        )
-
-        save_diagnostics(
-            fund_dir,
-            extraction,
-        )
-
-        candidates = extraction[
-            "candidates"
-        ]
-
-        confirmation = extraction[
-            "confirmation"
-        ]
-
-        if not confirmation.get(
-            "confirmed"
-        ):
-            reason = (
-                "No structurally confirmed holdings table was found."
-            )
-
-            write_failure_outputs(
-                fund_dir,
-                excel_fund,
-                reason,
-                extraction,
-            )
-
-            return {
-                "status": "DIAGNOSTIC_NO_CONFIRMED_RESULT",
-                "excelRow": excel_row,
-                "error": reason,
-            }
-
-        # Explicit final structural checks.
-        ok, reason = validate_rank_sequence(
-            candidates
-        )
-
-        if not ok:
-            write_failure_outputs(
-                fund_dir,
-                excel_fund,
-                f"Rank sequence validation failed: {reason}",
-                extraction,
-            )
-
-            return {
-                "status": "DIAGNOSTIC_NO_CONFIRMED_RESULT",
-                "excelRow": excel_row,
-                "error": reason,
-            }
-
-        ok, reason = validate_candidate_semantics(
-            candidates
-        )
-
-        if not ok:
-            write_failure_outputs(
-                fund_dir,
-                excel_fund,
-                f"Semantic validation failed: {reason}",
-                extraction,
-            )
-
-            return {
-                "status": "DIAGNOSTIC_NO_CONFIRMED_RESULT",
-                "excelRow": excel_row,
-                "error": reason,
-            }
-
-        expected_signature = holding_signature(
-            candidates
-        )
-
-        # Fresh PDF verification.
-        verification = verify_exactly(
-            page,
-            source_url,
-            expected_signature,
-        )
-
-        if not verification.get(
-            "verified"
-        ):
-            reason = (
-                "Exact fresh-PDF verification failed."
-            )
-
-            json_dump(
-                fund_dir / "confirmation.json",
-                {
-                    **confirmation,
-                    "verified": False,
-                    "verification": verification,
-                },
-            )
-
-            write_failure_outputs(
-                fund_dir,
-                excel_fund,
-                reason,
-                extraction,
-            )
-
-            return {
-                "status": "DIAGNOSTIC_NO_CONFIRMED_RESULT",
-                "excelRow": excel_row,
-                "error": reason,
-                "verification": verification,
-            }
-
-        section_text = (
-            build_top_holdings_section_text(
-                extraction["rows"],
-                candidates,
-            )
-        )
-
-        write_success_outputs(
-            fund_dir,
-            candidates,
-            section_text,
-            verification,
-        )
-
-        return {
-            "status": "success",
-            "excelRow": excel_row,
-            "holdingsCount": len(
-                candidates
-            ),
-            "holdings": [
-                {
-                    "rank": int(item.rank),
-                    "name": item.name,
-                    "weight": float(
-                        item.weight
-                    ),
-                    "page": int(item.page),
-                    "extractionStrategy": item.strategy,
-                }
-                for item in candidates
-            ],
-            "signature": expected_signature,
-            "extractionConfirmation": confirmation,
-            "verification": verification,
-        }
-
-    except HoldingsParseFailure as exc:
-        reason = str(exc)
-
-        write_failure_outputs(
-            fund_dir,
-            excel_fund,
-            reason,
-        )
-
-        return {
-            "status": "DIAGNOSTIC_NO_CONFIRMED_RESULT",
-            "excelRow": excel_row,
-            "error": reason,
-        }
-
-    except Exception as exc:
-        reason = (
-            f"{type(exc).__name__}: {exc}"
-        )
-
-        write_failure_outputs(
-            fund_dir,
-            excel_fund,
-            reason,
-        )
-
-        return {
-            "status": "failed",
-            "excelRow": excel_row,
-            "error": reason,
-        }
-
-
-# ============================================================================
-# RULES
-# ============================================================================
-
-
-def build_rules() -> dict[str, Any]:
     return {
-        "recovery1FailedFundsOnly": True,
-        "noBaselineFallback": True,
-        "excelColumnAControlsMasterUniverse": True,
-        "officialPrudentialSingaporeOnly": True,
-        "officialFactsheetOnly": True,
-        "thirdPartyHoldings": False,
-        "noInferredHoldings": True,
-        "noFabricatedHoldings": True,
-        "noFabricatedPercentages": True,
-        "noSyntheticValues": True,
-        "noEstimatedValues": True,
-        "noInterpolatedValues": True,
-        "maximumHoldings": 10,
-        "publishedCountUsedExactly": True,
-        "fewerThanTenHoldingsAllowed": True,
-        "noForcedTenEntries": True,
-        "duplicateHoldingNamesAllowed": True,
-        "duplicateHoldingPercentagesAllowed": True,
-        "multilineHoldingNamesSupported": True,
-        "hyphenatedLineWrapReconstruction": True,
-        "fixedIncomeCouponPreserved": True,
-        "fixedIncomeUsesLastPhysicalPercentageAsWeight": True,
-        "noFuzzyHoldingMatching": True,
-        "noArbitraryCoordinateProximityPairing": True,
-        "explicitTop10HeadingNotRequired": True,
-        "adaptiveTableReconstruction": True,
-        "samePdfRowStructureRequired": True,
-        "explicitRankColumnRequired": True,
-        "explicitWeightColumnRequired": True,
-        "nameColumnRequired": True,
-        "semanticFalsePositiveRejection": True,
-        "noRankInference": True,
-        "contiguousPublishedRanksRequired": True,
-        "crossStrategyExactSignatureConfirmation": True,
-        "singleStrategyCompleteSequenceAllowed": True,
-        "exactFinalPdfVerification": True,
-        "exactRankNameWeightSignatureRequired": True,
-        "forensicDiagnosticsSaved": True,
+        "verified": True,
+        "verificationMethod": "fresh_same_official_pdf_extraction_engine",
+        "nameWeightProximityMatching": False,
+        "freshFinalUrl": fresh_final_url,
+        "freshFactsheetUrl": fresh_factsheet_url,
+        "signature": signature(fresh_holdings),
+        "confirmation": confirmation,
+        "verifiedAtUtc": utc_now_iso(),
     }
 
 
-# ============================================================================
+# =============================================================================
 # MAIN
-# ============================================================================
-
+# =============================================================================
 
 def main() -> int:
-    started_at = utc_now()
+    started_at = utc_now_iso()
 
-    print()
-    print("=" * 72)
-    print("VGrat FMS - Prudential Top Holdings RECOVERY 2")
-    print("=" * 72)
-    print()
-    print(
-        "Recovery 1 summary:",
-        RECOVERY_1_RUN_SUMMARY_FILE,
+    OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
     )
-    print(
-        "Recovery 2 output: ",
-        RECOVERY_OUTPUT_DIR,
-    )
-    print(
-        "Recovery source: Recovery 1 failed-fund details ONLY"
-    )
-    print()
-
-    RECOVERY_OUTPUT_DIR.mkdir(
+    FUNDS_OUTPUT_DIR.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    RECOVERY_FUNDS_OUTPUT_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
+    recovery_1_summary, recovery_funds = (
+        load_recovery_1_failed_funds()
     )
 
-    # ------------------------------------------------------------------
-    # Load Recovery 1 failures.
-    # ------------------------------------------------------------------
+    excel_rows = read_excel_reference_funds()
+
+    universe = merge_recovery_and_excel(
+        recovery_funds,
+        excel_rows,
+    )
+
+    print()
+    print("============================================================")
+    print("VGrat FMS - PRUDENTIAL TOP HOLDINGS RECOVERY 2")
+    print("============================================================")
+    print(f"Recovery 1 summary: {RECOVERY_1_SUMMARY_FILE}")
+    print("Recovery 1 failure field: stillFailedFundsDetail")
+    print(f"Recovery 2 universe: {len(universe)}")
+    print(
+        "Recovery 2 rows: "
+        + ", ".join(
+            str(item["excelRow"])
+            for item in universe
+        )
+    )
+    print("============================================================")
+    print()
+
+    successful: list[dict] = []
+    failed: list[dict] = []
+
+    all_holdings: list[dict] = []
 
     try:
-        (
-            recovery_1_summary,
-            recovery_1_failures,
-            failure_source,
-        ) = load_recovery_1_run_summary()
-
-    except Exception as exc:
-        error_payload = {
-            "status": "failed",
-            "startedAtUtc": started_at,
-            "completedAtUtc": utc_now(),
-            "error": str(exc),
-            "rules": build_rules(),
-        }
-
-        json_dump(
-            RECOVERY_RUN_SUMMARY_FILE,
-            error_payload,
-        )
-
-        json_dump(
-            RECOVERY_ALL_HOLDINGS_FILE,
-            [],
-        )
-
-        print(
-            f"ERROR: {exc}"
-        )
-
-        # Preserve artifacts in GitHub Actions.
-        return 0
-
-    print(
-        "Recovery 1 failure source:",
-        failure_source,
-    )
-
-    print(
-        "Recovery 1 failed funds:",
-        len(
-            recovery_1_failures
-        ),
-    )
-
-    failed_rows = sorted(
-        {
-            int(item["excelRow"])
-            for item in recovery_1_failures
-        }
-    )
-
-    print(
-        "Recovery 1 failed rows:",
-        failed_rows,
-    )
-
-    # ------------------------------------------------------------------
-    # Load Excel universe.
-    # ------------------------------------------------------------------
-
-    try:
-        excel_universe = load_excel_universe()
-
-    except Exception as exc:
-        error_payload = {
-            "status": "failed",
-            "startedAtUtc": started_at,
-            "completedAtUtc": utc_now(),
-            "excelFile": str(
-                EXCEL_FILE
-            ),
-            "recovery1RunSummary": str(
-                RECOVERY_1_RUN_SUMMARY_FILE
-            ),
-            "error": str(exc),
-            "rules": build_rules(),
-        }
-
-        json_dump(
-            RECOVERY_RUN_SUMMARY_FILE,
-            error_payload,
-        )
-
-        json_dump(
-            RECOVERY_ALL_HOLDINGS_FILE,
-            [],
-        )
-
-        print(
-            f"ERROR: {exc}"
-        )
-
-        return 0
-
-    # ------------------------------------------------------------------
-    # Recovery 2 universe = Recovery 1 failed rows intersected with
-    # Excel rows.
-    #
-    # We NEVER construct the universe from baseline output.
-    # ------------------------------------------------------------------
-
-    recovery_universe = []
-
-    missing_excel_rows = []
-
-    for failure in recovery_1_failures:
-        excel_row = int(
-            failure["excelRow"]
-        )
-
-        fund = excel_universe.get(
-            excel_row
-        )
-
-        if fund is None:
-            missing_excel_rows.append(
-                excel_row
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(
+                headless=True
             )
-            continue
 
-        recovery_universe.append(
-            fund
-        )
+            try:
+                for position, entry in enumerate(
+                    universe,
+                    start=1,
+                ):
+                    row = entry["excelRow"]
 
-    recovery_universe.sort(
-        key=lambda item: int(
-            item["excelRow"]
-        )
-    )
+                    print(
+                        f"[{position}/{len(universe)}] "
+                        f"Excel row {row}: "
+                        f"{entry.get('pruAccessName') or '-'}"
+                    )
 
-    print(
-        "Recovery 2 universe:",
-        len(
-            recovery_universe
-        ),
-    )
+                    pdf_bytes: bytes | None = None
+                    pdf_text = ""
+                    rows: list[PDFRow] = []
+                    regions: list[dict] = []
+                    diagnostics: list[dict] = []
+                    candidate_payload: list[dict] = []
 
-    print(
-        "Recovery 2 universe rows:",
-        [
-            int(
-                item["excelRow"]
-            )
-            for item in recovery_universe
-        ],
-    )
+                    try:
+                        pdf_bytes, final_url, factsheet_url = (
+                            download_with_retries(
+                                browser,
+                                entry["prudentialUrl"],
+                            )
+                        )
 
-    if missing_excel_rows:
-        print(
-            "WARNING: Recovery 1 failed rows missing from Excel:",
-            missing_excel_rows,
-        )
+                        pdf_text = extract_pdf_text(
+                            pdf_bytes
+                        )
 
-    # ------------------------------------------------------------------
-    # No failures = nothing to recover.
-    # ------------------------------------------------------------------
+                        (
+                            holdings,
+                            confirmation,
+                            regions,
+                            diagnostics,
+                            candidate_payload,
+                        ) = extract_once(
+                            pdf_bytes
+                        )
 
-    if not recovery_universe:
+                        # Fresh download verification.
+                        verification = verify_exact_signature(
+                            browser,
+                            entry,
+                            holdings,
+                        )
+
+                        result = create_result_base(
+                            entry,
+                            final_url,
+                            factsheet_url,
+                            pdf_bytes,
+                        )
+
+                        result.update(
+                            {
+                                "holdingsSectionStatus": "published",
+                                "topHoldingsCount": len(holdings),
+                                "topHoldings": holdings,
+                                "holdingsParser": "recovery2_spatial_table",
+                                "holdingsSectionExtraction": "pdf_coordinates",
+                                "extractionConfirmation": confirmation,
+                                "finalVerification": verification,
+                                "recovery1Error": entry.get(
+                                    "recovery1Error"
+                                ),
+                                "recovery1OutputDirectory": entry.get(
+                                    "recovery1OutputDirectory"
+                                ),
+                                "recovery2CompletedAtUtc": utc_now_iso(),
+                            }
+                        )
+
+                        directory = save_success(
+                            entry,
+                            result,
+                            pdf_bytes,
+                            pdf_text,
+                            regions,
+                            diagnostics,
+                            candidate_payload,
+                            {
+                                **confirmation,
+                                "finalVerification": verification,
+                            },
+                        )
+
+                        result["outputDirectory"] = str(
+                            directory
+                        )
+
+                        successful.append(result)
+                        all_holdings.append(result)
+
+                        print(
+                            f"    SUCCESS: {len(holdings)} holdings"
+                        )
+
+                        for item in holdings:
+                            print(
+                                f"      {item['rank']}. "
+                                f"{item['name']} - "
+                                f"{item['weightText']}"
+                            )
+
+                    except Exception as error:
+                        error_text = clean_text(
+                            str(error)
+                        )
+
+                        # Rebuild rows for diagnostics if extraction failed
+                        # before rows were retained.
+                        if pdf_bytes and not rows:
+                            try:
+                                rows = build_positioned_rows(
+                                    pdf_bytes
+                                )
+                            except Exception:
+                                rows = []
+
+                        failure_directory = save_failure(
+                            entry,
+                            pdf_bytes,
+                            pdf_text,
+                            rows,
+                            regions,
+                            diagnostics,
+                            candidate_payload,
+                            error_text,
+                        )
+
+                        failed.append(
+                            {
+                                "status": "failed",
+                                "excelRow": row,
+                                "prudentialUrl": entry[
+                                    "prudentialUrl"
+                                ],
+                                "pruAccessName": entry.get(
+                                    "pruAccessName"
+                                ),
+                                "error": error_text,
+                                "outputDirectory": str(
+                                    failure_directory
+                                ),
+                                "recovery1Error": entry.get(
+                                    "recovery1Error"
+                                ),
+                            }
+                        )
+
+                        print(
+                            f"    FAILED: {error_text}"
+                        )
+
+            finally:
+                browser.close()
+
+    except Exception as error:
+        # A configuration-level failure is different from an individual fund
+        # failure. Preserve the diagnostic summary and return 1.
+        completed_at = utc_now_iso()
+
         summary = {
-            "status": "success",
+            "status": "error",
             "startedAtUtc": started_at,
-            "completedAtUtc": utc_now(),
-            "excelFile": str(
-                EXCEL_FILE
-            ),
+            "completedAtUtc": completed_at,
             "recovery1RunSummary": str(
-                RECOVERY_1_RUN_SUMMARY_FILE
+                RECOVERY_1_SUMMARY_FILE
             ),
-            "recovery1FailureSource": failure_source,
-            "recovery1ExcelFundUniverse": recovery_1_summary.get(
-                "excelFundUniverse"
-            ),
+            "recovery1FailureSource": "stillFailedFundsDetail",
             "recovery1FailedFunds": len(
-                recovery_1_failures
+                recovery_funds
             ),
-            "recovery1FailedRows": failed_rows,
-            "recovery2Universe": 0,
-            "recovery2UniverseRows": [],
-            "successfulFunds": 0,
-            "diagnosticFunds": 0,
-            "failedFunds": 0,
-            "totalPublishedTopHoldings": 0,
-            "successfulFundsDetail": [],
-            "diagnosticFundsDetail": [],
-            "failedFundsDetail": [],
-            "missingExcelRows": missing_excel_rows,
-            "rules": build_rules(),
+            "recovery1FailedRows": [
+                item["excelRow"]
+                for item in recovery_funds
+            ],
+            "recovery2Universe": len(universe),
+            "recovery2UniverseRows": [
+                item["excelRow"]
+                for item in universe
+            ],
+            "successfulFunds": len(successful),
+            "failedFunds": len(failed),
+            "fatalError": clean_text(str(error)),
+            "rules": {
+                "frozenBaselineUntouched": True,
+                "recovery1Untouched": True,
+                "failedFundsDetailIsExclusiveRecoveryUniverse": True,
+                "recovery1FailureField": "stillFailedFundsDetail",
+                "officialPrudentialFactsheetOnly": True,
+                "officialPrudentialSingaporeOnly": True,
+                "maximumHoldings": MAX_HOLDINGS,
+                "fewerThanTenHoldingsAllowed": True,
+                "noInferredHoldings": True,
+                "noInferredRanks": True,
+                "noInferredNames": True,
+                "noFabricatedHoldingWeights": True,
+                "noProximityNameWeightMatching": True,
+                "finalVerificationRequiresExactSignature": True,
+            },
         }
 
-        json_dump(
-            RECOVERY_RUN_SUMMARY_FILE,
+        save_json(
+            RUN_SUMMARY_FILE,
             summary,
         )
 
-        json_dump(
-            RECOVERY_ALL_HOLDINGS_FILE,
-            [],
+        save_json(
+            ALL_HOLDINGS_FILE,
+            {
+                "status": "error",
+                "holdings": [],
+            },
         )
 
         print()
-        print(
-            "Recovery 1 has no failed funds."
-        )
-        print(
-            "Recovery 2 has nothing to recover."
-        )
+        print("FATAL RECOVERY 2 ERROR")
+        print(clean_text(str(error)))
+        return 1
 
-        return 0
+    completed_at = utc_now_iso()
 
-    # ------------------------------------------------------------------
-    # Playwright availability.
-    # ------------------------------------------------------------------
-
-    if sync_playwright is None:
-        reason = (
-            "Playwright is unavailable in the Python environment."
-        )
-
-        diagnostic_details = []
-
-        for fund in recovery_universe:
-            excel_row = int(
-                fund["excelRow"]
-            )
-
-            fund_dir = fund_output_directory(
-                excel_row,
-                fund[
-                    "excelPruAccessName"
-                ],
-            )
-
-            fund_dir.mkdir(
-                parents=True,
-                exist_ok=True,
-            )
-
-            write_failure_outputs(
-                fund_dir,
-                fund,
-                reason,
-            )
-
-            diagnostic_details.append(
-                {
-                    "status": "failed",
-                    "excelRow": excel_row,
-                    "error": reason,
-                }
-            )
-
-        summary = {
-            "status": "success",
-            "startedAtUtc": started_at,
-            "completedAtUtc": utc_now(),
-            "excelFile": str(
-                EXCEL_FILE
-            ),
-            "recovery1RunSummary": str(
-                RECOVERY_1_RUN_SUMMARY_FILE
-            ),
-            "recovery1FailureSource": failure_source,
-            "recovery1FailedFunds": len(
-                recovery_1_failures
-            ),
-            "recovery1FailedRows": failed_rows,
-            "recovery2Universe": len(
-                recovery_universe
-            ),
-            "recovery2UniverseRows": [
-                int(
-                    item["excelRow"]
-                )
-                for item in recovery_universe
-            ],
-            "successfulFunds": 0,
-            "diagnosticFunds": 0,
-            "failedFunds": len(
-                diagnostic_details
-            ),
-            "totalPublishedTopHoldings": 0,
-            "successfulFundsDetail": [],
-            "diagnosticFundsDetail": [],
-            "failedFundsDetail": diagnostic_details,
-            "rules": build_rules(),
-        }
-
-        json_dump(
-            RECOVERY_RUN_SUMMARY_FILE,
-            summary,
-        )
-
-        json_dump(
-            RECOVERY_ALL_HOLDINGS_FILE,
-            [],
-        )
-
-        return 0
-
-    # ------------------------------------------------------------------
-    # Run browser.
-    # ------------------------------------------------------------------
-
-    successful_details = []
-    diagnostic_details = []
-    failed_details = []
-
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(
-            headless=BROWSER_HEADLESS
-        )
-
-        context = browser.new_context(
-            accept_downloads=True,
-            ignore_https_errors=False,
-        )
-
-        page = context.new_page()
-
-        page.set_default_timeout(
-            PAGE_TIMEOUT_MS
-        )
-
-        for fund_index, fund in enumerate(
-            recovery_universe,
-            start=1,
-        ):
-            excel_row = int(
-                fund["excelRow"]
-            )
-
-            fund_name = (
-                fund[
-                    "excelPruAccessName"
-                ]
-                or f"Fund Row {excel_row}"
-            )
-
-            print()
-            print(
-                "-" * 72
-            )
-            print(
-                f"RECOVERY 2 FUND {fund_index}/"
-                f"{len(recovery_universe)}"
-            )
-            print(
-                f"Excel row: {excel_row}"
-            )
-            print(
-                f"Fund: {fund_name}"
-            )
-            print(
-                "-" * 72
-            )
-
-            result = recover_single_fund(
-                page,
-                fund,
-            )
-
-            status = result.get(
-                "status"
-            )
-
-            if status == "success":
-                successful_details.append(
-                    result
-                )
-
-                print(
-                    f"SUCCESS Row {excel_row}: "
-                    f"{result.get('holdingsCount', 0)} holdings"
-                )
-
-            elif status == (
-                "DIAGNOSTIC_NO_CONFIRMED_RESULT"
-            ):
-                diagnostic_details.append(
-                    result
-                )
-
-                print(
-                    f"DIAGNOSTIC Row {excel_row}: "
-                    f"{result.get('error', 'unresolved')}"
-                )
-
-            else:
-                failed_details.append(
-                    result
-                )
-
-                print(
-                    f"FAILED Row {excel_row}: "
-                    f"{result.get('error', 'unknown error')}"
-                )
-
-        context.close()
-        browser.close()
-
-    # ------------------------------------------------------------------
-    # Aggregate successful holdings.
-    # ------------------------------------------------------------------
-
-    all_holdings = []
-
-    for successful in successful_details:
-        all_holdings.append(
-            {
-                "excelRow": successful[
-                    "excelRow"
-                ],
-                "holdingsCount": successful[
-                    "holdingsCount"
-                ],
-                "holdings": successful[
-                    "holdings"
-                ],
-                "signature": successful[
-                    "signature"
-                ],
-            }
-        )
-
-    total_holdings = sum(
-        int(
-            item["holdingsCount"]
-        )
-        for item in successful_details
-    )
-
-    # ------------------------------------------------------------------
-    # Always write aggregate artifacts.
-    # ------------------------------------------------------------------
-
-    json_dump(
-        RECOVERY_ALL_HOLDINGS_FILE,
-        all_holdings,
+    status = (
+        "success"
+        if not failed
+        else "partial"
     )
 
     summary = {
-        "status": "success",
+        "status": status,
         "startedAtUtc": started_at,
-        "completedAtUtc": utc_now(),
-        "excelFile": str(
-            EXCEL_FILE
-        ),
+        "completedAtUtc": completed_at,
         "recovery1RunSummary": str(
-            RECOVERY_1_RUN_SUMMARY_FILE
+            RECOVERY_1_SUMMARY_FILE
         ),
-        "recovery1FailureSource": failure_source,
-        "recovery1ExcelFundUniverse": recovery_1_summary.get(
-            "excelFundUniverse"
-        ),
+        "excelFile": str(EXCEL_FILE),
+        "recovery1FailureSource": "stillFailedFundsDetail",
         "recovery1FailedFunds": len(
-            recovery_1_failures
+            recovery_funds
         ),
-        "recovery1FailedRows": failed_rows,
-        "recovery2Universe": len(
-            recovery_universe
-        ),
-        "recovery2UniverseRows": [
-            int(
-                item["excelRow"]
-            )
-            for item in recovery_universe
+        "recovery1FailedRows": [
+            item["excelRow"]
+            for item in recovery_funds
         ],
-        "successfulFunds": len(
-            successful_details
+        "recovery2Universe": len(universe),
+        "recovery2UniverseRows": [
+            item["excelRow"]
+            for item in universe
+        ],
+        "successfulFunds": len(successful),
+        "failedFunds": len(failed),
+        "totalPublishedTopHoldings": sum(
+            item["topHoldingsCount"]
+            for item in successful
         ),
-        "diagnosticFunds": len(
-            diagnostic_details
-        ),
-        "failedFunds": len(
-            failed_details
-        ),
-        "totalPublishedTopHoldings": total_holdings,
-        "successfulFundsDetail": successful_details,
-        "diagnosticFundsDetail": diagnostic_details,
-        "failedFundsDetail": failed_details,
-        "missingExcelRows": missing_excel_rows,
-        "rules": build_rules(),
+        "successfulFundsDetail": successful,
+        "failedFundsDetail": failed,
+        "rules": {
+            "frozenBaselineUntouched": True,
+            "recovery1Untouched": True,
+            "failedFundsDetailIsExclusiveRecoveryUniverse": True,
+            "recovery1FailureField": "stillFailedFundsDetail",
+            "excelColumnAControlsMasterUniverse": True,
+            "excelUsedOnlyForRecovery1RowConsistency": True,
+            "officialPrudentialFactsheetOnly": True,
+            "officialPrudentialSingaporeOnly": True,
+            "maximumHoldings": MAX_HOLDINGS,
+            "publishedHoldingCountUsedExactly": True,
+            "fewerThanTenHoldingsAllowed": True,
+            "noForcedTenEntries": True,
+            "noInferredHoldings": True,
+            "noInferredRanks": True,
+            "noInferredNames": True,
+            "noFabricatedHoldingWeights": True,
+            "duplicateHoldingNamesAllowed": True,
+            "duplicateHoldingPercentagesAllowed": True,
+            "multilineHoldingNamesSupported": True,
+            "fixedIncomeLastPercentageOnlyAfterPhysicalRowConfirmation": True,
+            "noProximityNameWeightMatching": True,
+            "spatialFallbackUsesOfficialPdfCoordinates": True,
+            "finalVerificationUsesFreshOfficialPdf": True,
+            "finalVerificationRequiresExactSignature": True,
+        },
     }
 
-    json_dump(
-        RECOVERY_RUN_SUMMARY_FILE,
+    save_json(
+        RUN_SUMMARY_FILE,
         summary,
     )
 
-    # ------------------------------------------------------------------
-    # Console summary.
-    # ------------------------------------------------------------------
+    save_json(
+        ALL_HOLDINGS_FILE,
+        {
+            "status": status,
+            "source": str(
+                RECOVERY_1_SUMMARY_FILE
+            ),
+            "sourceField": "stillFailedFundsDetail",
+            "fundCount": len(successful),
+            "totalPublishedTopHoldings": sum(
+                item["topHoldingsCount"]
+                for item in successful
+            ),
+            "funds": all_holdings,
+        },
+    )
 
     print()
-    print("=" * 72)
-    print("RECOVERY 2 COMPLETE")
-    print("=" * 72)
-    print()
+    print("============================================================")
+    print("STEP 3 COMPLETE")
+    print("============================================================")
+    print(f"Recovery 2 universe: {len(universe)}")
+    print(f"Successful funds:    {len(successful)}")
+    print(f"Failed funds:        {len(failed)}")
     print(
-        "Recovery 1 failed funds:",
-        len(
-            recovery_1_failures
-        ),
+        "Published holdings:  "
+        f"{sum(item['topHoldingsCount'] for item in successful)}"
     )
     print(
-        "Recovery 2 universe:",
-        len(
-            recovery_universe
-        ),
+        "Recovery 2 summary:  "
+        f"{RUN_SUMMARY_FILE}"
     )
     print(
-        "Successful funds:",
-        len(
-            successful_details
-        ),
+        "All holdings:        "
+        f"{ALL_HOLDINGS_FILE}"
     )
-    print(
-        "Diagnostic/unresolved funds:",
-        len(
-            diagnostic_details
-        ),
-    )
-    print(
-        "Hard failures:",
-        len(
-            failed_details
-        ),
-    )
-    print(
-        "Published holdings recovered:",
-        total_holdings,
-    )
+    print("============================================================")
 
-    if diagnostic_details:
-        print()
-        print(
-            "STILL UNRESOLVED:"
-        )
-
-        for item in diagnostic_details:
-            print(
-                f" - Row {item['excelRow']}: "
-                f"{item.get('error', 'unresolved')}"
-            )
-
-    if failed_details:
-        print()
-        print(
-            "HARD FAILURES:"
-        )
-
-        for item in failed_details:
-            print(
-                f" - Row {item['excelRow']}: "
-                f"{item.get('error', 'failed')}"
-            )
-
-    print()
-    print(
-        "Output:",
-        RECOVERY_OUTPUT_DIR,
-    )
-    print(
-        "Summary:",
-        RECOVERY_RUN_SUMMARY_FILE,
-    )
-    print(
-        "All holdings:",
-        RECOVERY_ALL_HOLDINGS_FILE,
-    )
-    print()
-    print("=" * 72)
-
-    # Intentionally return zero so GitHub Actions can upload diagnostics
-    # even when one or more funds remain unresolved.
+    # Intentionally return 0 even when individual funds remain unresolved.
+    # This keeps GitHub Actions artifacts available for diagnosis.
     return 0
 
 
-# ============================================================================
-# ENTRY POINT
-# ============================================================================
-
-
 if __name__ == "__main__":
-    sys.exit(
-        main()
-    )
+    sys.exit(main())
