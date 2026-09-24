@@ -1,4 +1,4 @@
-name: Prudential Holdings Full Pipeline
+name: Top Holding - All Fund Full
 
 on:
   workflow_dispatch:
