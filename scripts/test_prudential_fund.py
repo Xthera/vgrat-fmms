@@ -10,10 +10,10 @@ from playwright.async_api import async_playwright
 # ============================================================
 
 TEST_URL = (
-    "https://www.prudential.com.sg/en/products/wealth/ilp/"
+    "https://www.prudential.com.sg/content/"
+    "prudential-aem-lbu/pacs/en/products/wealth/ilp/"
     "prulink-funds/"
-    "prulink-asian-fixed-income-fund-distribution/"
-    "?citicode=ASF7A&tab=performance&perfRange=1y&priceRange=1y"
+    "prulink-strategicinvest-income-fund-distribution.html"
 )
 
 
