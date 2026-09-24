@@ -39,7 +39,7 @@ Recovery 2 does NOT read:
 
 Recovery 2 does NOT use the original baseline failedFundsDetail directly.
 
-The Recovery 1 failedFundsDetail list controls the Recovery 2 universe.
+The Recovery 1 failed-fund details control the Recovery 2 universe.
 
 The Excel workbook remains authoritative for the actual Prudential URL and
 PruAccess fund name after the failed Excel row has been identified.
@@ -48,7 +48,7 @@ PruAccess fund name after the failed Excel row has been identified.
 HARD RULES
 ==========
 
-- Recovery 1 failedFundsDetail controls the Recovery 2 universe.
+- Recovery 1 failed funds control the Recovery 2 universe.
 - No fallback to baseline run_summary.json.
 - Excel Column A controls the master fund URL.
 - No hardcoded 67-fund limit.
@@ -346,7 +346,171 @@ class HoldingsParseFailure(
 # RECOVERY 1 RUN SUMMARY
 # =============================================================================
 
+def _normalize_failed_fund_entries(
+    candidate,
+) -> list[dict]:
+
+    """
+    Normalize Recovery 1 failure details into:
+
+        [
+            {
+                "excelRow": 11,
+                ...
+            },
+            ...
+        ]
+
+    Recovery 1 is the sole source for the Recovery 2 universe.
+
+    This helper deliberately does NOT look at the baseline summary.
+    """
+
+    if isinstance(
+        candidate,
+        list,
+    ):
+
+        entries = candidate
+
+    elif isinstance(
+        candidate,
+        dict,
+    ):
+
+        entries = []
+
+        for key, value in candidate.items():
+
+            if isinstance(
+                value,
+                dict,
+            ):
+
+                entry = dict(
+                    value
+                )
+
+                if (
+                    "excelRow"
+                    not in entry
+                ):
+
+                    for row_key in (
+                        "row",
+                        "rowNumber",
+                        "excel_row",
+                        "ExcelRow",
+                    ):
+
+                        if row_key in entry:
+
+                            try:
+
+                                entry[
+                                    "excelRow"
+                                ] = int(
+                                    entry[
+                                        row_key
+                                    ]
+                                )
+
+                            except Exception:
+
+                                pass
+
+                            break
+
+                if (
+                    "excelRow"
+                    not in entry
+                ):
+
+                    try:
+
+                        entry[
+                            "excelRow"
+                        ] = int(
+                            key
+                        )
+
+                    except Exception:
+
+                        pass
+
+                entries.append(
+                    entry
+                )
+
+            elif isinstance(
+                value,
+                str,
+            ):
+
+                entry = {
+                    "error":
+                        clean_text(
+                            value
+                        ),
+                }
+
+                try:
+
+                    entry[
+                        "excelRow"
+                    ] = int(
+                        key
+                    )
+
+                except Exception:
+
+                    pass
+
+                entries.append(
+                    entry
+                )
+
+    else:
+
+        return []
+
+    normalized = []
+
+    for entry in entries:
+
+        if not isinstance(
+            entry,
+            dict,
+        ):
+
+            raise RuntimeError(
+                "A Recovery 1 failed-fund entry "
+                "is not a JSON object."
+            )
+
+        normalized.append(
+            dict(
+                entry
+            )
+        )
+
+    return normalized
+
+
 def load_recovery_1_run_summary() -> dict:
+
+    """
+    Load Recovery 1's run summary.
+
+    IMPORTANT:
+    - Recovery 2 reads ONLY:
+          output_holdings_recovery/run_summary.json
+    - It never reads the baseline summary.
+    - The function tolerates different Recovery 1 failure-detail shapes.
+    - The resulting payload always exposes:
+          payload["failedFundsDetail"]
+      as a normalized list.
+    """
 
     if not RECOVERY_1_RUN_SUMMARY_FILE.exists():
 
@@ -379,19 +543,130 @@ def load_recovery_1_run_summary() -> dict:
             "Recovery 1 run summary is not a JSON object."
         )
 
-    failed = payload.get(
+    # -------------------------------------------------------------------------
+    # Preferred field
+    # -------------------------------------------------------------------------
+
+    failed_candidate = payload.get(
         "failedFundsDetail"
     )
 
-    if not isinstance(
-        failed,
-        list,
-    ):
+    normalized_failed = []
 
-        raise RuntimeError(
-            "Recovery 1 run summary does not contain "
-            "a valid failedFundsDetail list."
+    if failed_candidate is not None:
+
+        normalized_failed = (
+            _normalize_failed_fund_entries(
+                failed_candidate
+            )
         )
+
+    # -------------------------------------------------------------------------
+    # Recovery 1 may use a different failure-detail field.
+    #
+    # These alternatives are checked ONLY inside the Recovery 1 summary.
+    # They are NOT baseline data.
+    # -------------------------------------------------------------------------
+
+    if not normalized_failed:
+
+        alternative_keys = (
+            "failedFunds",
+            "failures",
+            "failed",
+            "failedFundsList",
+            "failureDetails",
+        )
+
+        for key in alternative_keys:
+
+            candidate = payload.get(
+                key
+            )
+
+            if candidate is None:
+
+                continue
+
+            candidate_entries = (
+                _normalize_failed_fund_entries(
+                    candidate
+                )
+            )
+
+            if candidate_entries:
+
+                normalized_failed = (
+                    candidate_entries
+                )
+
+                break
+
+    # -------------------------------------------------------------------------
+    # Validate and normalize Excel row numbers.
+    # -------------------------------------------------------------------------
+
+    cleaned_failed = []
+
+    for failure in normalized_failed:
+
+        entry = dict(
+            failure
+        )
+
+        excel_row = None
+
+        for key in (
+            "excelRow",
+            "row",
+            "rowNumber",
+            "excel_row",
+            "ExcelRow",
+        ):
+
+            if key not in entry:
+
+                continue
+
+            try:
+
+                excel_row = int(
+                    entry[
+                        key
+                    ]
+                )
+
+            except Exception:
+
+                excel_row = None
+
+            if excel_row is not None:
+
+                break
+
+        if excel_row is None:
+
+            raise RuntimeError(
+                "A Recovery 1 failed-fund entry has no "
+                "identifiable excelRow. "
+                "Recovery 2 will not guess the row."
+            )
+
+        entry[
+            "excelRow"
+        ] = excel_row
+
+        cleaned_failed.append(
+            entry
+        )
+
+    # -------------------------------------------------------------------------
+    # Normalize into the exact shape expected by build_recovery_universe().
+    # -------------------------------------------------------------------------
+
+    payload[
+        "failedFundsDetail"
+    ] = cleaned_failed
 
     return payload
 
@@ -3103,7 +3378,7 @@ def main() -> int:
     )
 
     print(
-        "\nRecovery source: Recovery 1 failedFundsDetail ONLY"
+        "\nRecovery source: Recovery 1 failed-fund details ONLY"
     )
 
     recovery_1 = (
