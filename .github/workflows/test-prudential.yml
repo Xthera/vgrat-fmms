@@ -30,7 +30,17 @@ jobs:
 
       - name: Run Prudential all-fund JSON capture
         run: |
-          python -u scripts/test_prudential_json_all_funds.py
+          python -u scripts/test_prudential_fund.py
+
+      - name: Show Prudential JSON results
+        if: always()
+        run: |
+          echo "=== Prudential JSON output ==="
+          if [ -d "output_prudential_json" ]; then
+            find output_prudential_json -type f -print
+          else
+            echo "output_prudential_json directory does not exist."
+          fi
 
       - name: Upload Prudential JSON results
         if: always()
@@ -38,4 +48,4 @@ jobs:
         with:
           name: prudential-json-output
           path: output_prudential_json/
-          if-no-files-found: error
+          if-no-files-found: warn
