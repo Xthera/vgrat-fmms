@@ -43,9 +43,6 @@ Read every populated URL in Column A
         v
 Open one Prudential fund page
         |
-        v
-Capture official Prudential JSON
-        |
         +---- ilpfunds.json
         |
         +---- ilpseries.json
@@ -100,11 +97,8 @@ IMPORTANT_PARTS = [
 ]
 
 PAGE_TIMEOUT_MS = 120000
-
 JAVASCRIPT_WAIT_MS = 15000
-
 LAZY_LOAD_WAIT_MS = 5000
-
 DELAY_BETWEEN_FUNDS_MS = 1000
 
 
@@ -113,27 +107,13 @@ DELAY_BETWEEN_FUNDS_MS = 1000
 # ============================================================
 
 def safe_filename(value):
-    """
-    Make a string safe for use as a directory/file name.
-    """
-
     value = str(value or "").strip()
 
     if not value:
         return "unnamed"
 
-    value = re.sub(
-        r'[<>:"/\\|?*]',
-        "_",
-        value
-    )
-
-    value = re.sub(
-        r"\s+",
-        " ",
-        value
-    )
-
+    value = re.sub(r'[<>:"/\\|?*]', "_", value)
+    value = re.sub(r"\s+", " ", value)
     value = value.strip(" .")
 
     if not value:
@@ -143,10 +123,6 @@ def safe_filename(value):
 
 
 def save_json(path, data):
-    """
-    Save JSON using UTF-8.
-    """
-
     path.parent.mkdir(
         parents=True,
         exist_ok=True
@@ -173,7 +149,6 @@ def load_funds_from_excel():
     """
 
     if not EXCEL_FILE.exists():
-
         raise FileNotFoundError(
             f"Excel file not found: {EXCEL_FILE.resolve()}"
         )
@@ -185,16 +160,13 @@ def load_funds_from_excel():
     )
 
     try:
-
         worksheet = workbook.active
-
         funds = []
 
         for row_number in range(
             2,
             worksheet.max_row + 1
         ):
-
             url_value = worksheet.cell(
                 row=row_number,
                 column=1
@@ -229,7 +201,6 @@ def load_funds_from_excel():
         return funds
 
     finally:
-
         workbook.close()
 
 
@@ -243,24 +214,9 @@ async def process_fund(
     fund_number,
     total_funds
 ):
-    """
-    Extract all matching Prudential JSON responses for
-    one fund.
-    """
-
     excel_row = fund["excelRow"]
-
-    prudential_url = fund[
-        "prudentialUrl"
-    ]
-
-    excel_pruaccess_name = fund[
-        "excelPruAccessName"
-    ]
-
-    # --------------------------------------------------------
-    # Fund output directory
-    # --------------------------------------------------------
+    prudential_url = fund["prudentialUrl"]
+    excel_pruaccess_name = fund["excelPruAccessName"]
 
     name_part = safe_filename(
         excel_pruaccess_name
@@ -278,24 +234,14 @@ async def process_fund(
 
     print()
     print("=" * 80)
-    print(
-        f"FUND {fund_number}/{total_funds}"
-    )
-    print(
-        f"Excel row: {excel_row}"
-    )
+    print(f"FUND {fund_number}/{total_funds}")
+    print(f"Excel row: {excel_row}")
     print(
         f"Fund name: "
         f"{excel_pruaccess_name or '(Column B blank)'}"
     )
-    print(
-        f"URL: {prudential_url}"
-    )
+    print(f"URL: {prudential_url}")
     print("=" * 80)
-
-    # --------------------------------------------------------
-    # Save fund information
-    # --------------------------------------------------------
 
     save_json(
         fund_dir / "fund_info.json",
@@ -308,12 +254,7 @@ async def process_fund(
     )
 
     captured_json = []
-
     captured_requests = []
-
-    # --------------------------------------------------------
-    # Create browser context
-    # --------------------------------------------------------
 
     context = await browser.new_context(
         viewport={
@@ -324,12 +265,7 @@ async def process_fund(
 
     page = await context.new_page()
 
-    # --------------------------------------------------------
-    # Response handler
-    # --------------------------------------------------------
-
     async def handle_response(response):
-
         url = response.url
 
         if not any(
@@ -339,30 +275,17 @@ async def process_fund(
             return
 
         print()
-        print(
-            "FOUND PRUDENTIAL JSON:"
-        )
+        print("FOUND PRUDENTIAL JSON:")
         print(url)
-        print(
-            "STATUS:",
-            response.status
-        )
+        print("STATUS:", response.status)
 
         try:
-
             body = await response.text()
 
-            response_number = (
-                len(captured_json) + 1
-            )
+            response_number = len(captured_json) + 1
+            filename = f"response_{response_number}.json"
 
-            filename = (
-                f"response_{response_number}.json"
-            )
-
-            output_file = (
-                fund_dir / filename
-            )
+            output_file = fund_dir / filename
 
             output_file.write_text(
                 body,
@@ -373,34 +296,25 @@ async def process_fund(
                 "filename": filename,
                 "url": url,
                 "status": response.status,
-                "contentType": (
-                    response.headers.get(
-                        "content-type",
-                        ""
-                    )
+                "contentType": response.headers.get(
+                    "content-type",
+                    ""
                 )
             })
 
         except Exception as e:
-
             print(
                 "Could not read response:",
                 repr(e)
             )
 
-    # --------------------------------------------------------
-    # Request handler
-    # --------------------------------------------------------
-
     async def handle_request(request):
-
         url = request.url
 
         if any(
             part in url
             for part in IMPORTANT_PARTS
         ):
-
             captured_requests.append({
                 "method": request.method,
                 "url": request.url,
@@ -417,19 +331,11 @@ async def process_fund(
         handle_request
     )
 
-    # --------------------------------------------------------
-    # Open Prudential page
-    # --------------------------------------------------------
-
     try:
-
         print()
-        print(
-            "Opening Prudential page..."
-        )
+        print("Opening Prudential page...")
 
         try:
-
             await page.goto(
                 prudential_url,
                 wait_until="domcontentloaded",
@@ -437,33 +343,22 @@ async def process_fund(
             )
 
         except Exception as e:
-
             print()
+            print("PAGE NAVIGATION ERROR:")
+            print(repr(e))
             print(
-                "PAGE NAVIGATION ERROR:"
+                "Continuing because the page may have "
+                "already triggered network requests."
             )
-            print(
-                repr(e)
-            )
-
-            # Continue because the page may have already
-            # triggered useful network requests.
 
         print()
-        print(
-            "Waiting for Prudential JavaScript..."
-        )
+        print("Waiting for Prudential JavaScript...")
 
         await page.wait_for_timeout(
             JAVASCRIPT_WAIT_MS
         )
 
-        # ----------------------------------------------------
-        # Scroll page
-        # ----------------------------------------------------
-
         try:
-
             await page.evaluate(
                 """
                 window.scrollTo(
@@ -472,9 +367,7 @@ async def process_fund(
                 );
                 """
             )
-
         except Exception as e:
-
             print(
                 "Scroll warning:",
                 repr(e)
@@ -484,12 +377,7 @@ async def process_fund(
             LAZY_LOAD_WAIT_MS
         )
 
-        # ----------------------------------------------------
-        # Save rendered HTML
-        # ----------------------------------------------------
-
         try:
-
             html = await page.content()
 
             (
@@ -500,18 +388,12 @@ async def process_fund(
             )
 
         except Exception as e:
-
             print(
                 "Could not save rendered HTML:",
                 repr(e)
             )
 
-        # ----------------------------------------------------
-        # Save visible text
-        # ----------------------------------------------------
-
         try:
-
             visible_text = await page.locator(
                 "body"
             ).inner_text()
@@ -524,35 +406,22 @@ async def process_fund(
             )
 
         except Exception as e:
-
             print(
                 "Could not save visible text:",
                 repr(e)
             )
-
-        # ----------------------------------------------------
-        # Save request list
-        # ----------------------------------------------------
 
         save_json(
             fund_dir / "requests.json",
             captured_requests
         )
 
-        # ----------------------------------------------------
-        # Save summary
-        # ----------------------------------------------------
-
         summary = {
             "fundNumber": fund_number,
             "excelRow": excel_row,
             "prudentialUrl": prudential_url,
-            "excelPruAccessName": (
-                excel_pruaccess_name
-            ),
-            "jsonResponsesCaptured": (
-                len(captured_json)
-            ),
+            "excelPruAccessName": excel_pruaccess_name,
+            "jsonResponsesCaptured": len(captured_json),
             "responses": captured_json
         }
 
@@ -561,87 +430,47 @@ async def process_fund(
             summary
         )
 
-        # ----------------------------------------------------
-        # Determine result
-        # ----------------------------------------------------
-
-        has_prudential_json = (
-            len(captured_json) > 0
-        )
-
-        print()
-        print(
-            "----------------------------------------"
-        )
+        if captured_json:
+            status = "success"
+            print()
+            print("STATUS: SUCCESS")
+        else:
+            status = "no_json"
+            print()
+            print("STATUS: NO PRUDENTIAL JSON CAPTURED")
 
         print(
             "JSON responses captured:",
             len(captured_json)
         )
 
-        if has_prudential_json:
-
-            print(
-                "STATUS: SUCCESS"
-            )
-
-        else:
-
-            print(
-                "STATUS: NO PRUDENTIAL JSON CAPTURED"
-            )
-
-        print(
-            "----------------------------------------"
-        )
-
         return {
-            "status": (
-                "success"
-                if has_prudential_json
-                else "no_json"
-            ),
+            "status": status,
             "fundNumber": fund_number,
             "excelRow": excel_row,
             "prudentialUrl": prudential_url,
-            "excelPruAccessName": (
-                excel_pruaccess_name
-            ),
-            "jsonResponsesCaptured": (
-                len(captured_json)
-            ),
-            "outputDirectory": str(
-                fund_dir
-            ),
+            "excelPruAccessName": excel_pruaccess_name,
+            "jsonResponsesCaptured": len(captured_json),
+            "outputDirectory": str(fund_dir),
             "responses": captured_json
         }
 
     except Exception as e:
-
         print()
-        print(
-            "FUND EXTRACTION ERROR:"
-        )
-        print(
-            repr(e)
-        )
+        print("FUND EXTRACTION ERROR:")
+        print(repr(e))
 
         return {
             "status": "failed",
             "fundNumber": fund_number,
             "excelRow": excel_row,
             "prudentialUrl": prudential_url,
-            "excelPruAccessName": (
-                excel_pruaccess_name
-            ),
+            "excelPruAccessName": excel_pruaccess_name,
             "error": repr(e),
-            "outputDirectory": str(
-                fund_dir
-            )
+            "outputDirectory": str(fund_dir)
         }
 
     finally:
-
         await page.close()
         await context.close()
 
@@ -654,14 +483,8 @@ async def main():
 
     print()
     print("=" * 80)
-    print(
-        "VGrat FMS - PRUDENTIAL ALL-FUND JSON CAPTURE"
-    )
+    print("VGrat FMS - PRUDENTIAL ALL-FUND JSON CAPTURE")
     print("=" * 80)
-
-    # --------------------------------------------------------
-    # Prepare output directories
-    # --------------------------------------------------------
 
     OUTPUT_DIR.mkdir(
         parents=True,
@@ -673,18 +496,10 @@ async def main():
         exist_ok=True
     )
 
-    # --------------------------------------------------------
-    # Read Excel
-    # --------------------------------------------------------
-
     print()
-    print(
-        "Reading:",
-        EXCEL_FILE
-    )
+    print("Reading:", EXCEL_FILE)
 
     funds = load_funds_from_excel()
-
     total_funds = len(funds)
 
     print()
@@ -694,27 +509,15 @@ async def main():
     )
 
     if total_funds == 0:
-
         print()
-        print(
-            "ERROR: No populated fund URLs found."
-        )
-
+        print("ERROR: No populated fund URLs found.")
         return
-
-    # --------------------------------------------------------
-    # Results
-    # --------------------------------------------------------
 
     results = []
 
     successful = 0
     no_json = 0
     failed = 0
-
-    # --------------------------------------------------------
-    # Launch browser
-    # --------------------------------------------------------
 
     async with async_playwright() as p:
 
@@ -723,10 +526,6 @@ async def main():
         )
 
         try:
-
-            # ------------------------------------------------
-            # Process funds ONE AT A TIME
-            # ------------------------------------------------
 
             for fund_number, fund in enumerate(
                 funds,
@@ -740,32 +539,21 @@ async def main():
                     total_funds=total_funds
                 )
 
-                results.append(
-                    result
-                )
+                results.append(result)
 
                 if result["status"] == "success":
-
                     successful += 1
 
                 elif result["status"] == "no_json":
-
                     no_json += 1
 
                 else:
-
                     failed += 1
-
-                # --------------------------------------------
-                # Save progress after every fund
-                # --------------------------------------------
 
                 progress_summary = {
                     "status": "running",
                     "totalFunds": total_funds,
-                    "processedFunds": len(
-                        results
-                    ),
+                    "processedFunds": len(results),
                     "successfulFunds": successful,
                     "noJsonFunds": no_json,
                     "failedFunds": failed,
@@ -773,29 +561,17 @@ async def main():
                 }
 
                 save_json(
-                    OUTPUT_DIR
-                    / "run_summary.json",
+                    OUTPUT_DIR / "run_summary.json",
                     progress_summary
                 )
 
-                # --------------------------------------------
-                # Delay before next fund
-                # --------------------------------------------
-
                 if fund_number < total_funds:
-
                     await asyncio.sleep(
-                        DELAY_BETWEEN_FUNDS_MS
-                        / 1000
+                        DELAY_BETWEEN_FUNDS_MS / 1000
                     )
 
         finally:
-
             await browser.close()
-
-    # --------------------------------------------------------
-    # Final summary
-    # --------------------------------------------------------
 
     final_summary = {
         "status": (
@@ -804,9 +580,7 @@ async def main():
             else "completed_with_failures"
         ),
         "totalFunds": total_funds,
-        "processedFunds": len(
-            results
-        ),
+        "processedFunds": len(results),
         "successfulFunds": successful,
         "noJsonFunds": no_json,
         "failedFunds": failed,
@@ -814,63 +588,28 @@ async def main():
     }
 
     save_json(
-        OUTPUT_DIR
-        / "run_summary.json",
+        OUTPUT_DIR / "run_summary.json",
         final_summary
     )
 
-    # --------------------------------------------------------
-    # Final console output
-    # --------------------------------------------------------
-
     print()
     print("=" * 80)
-    print(
-        "PRUDENTIAL ALL-FUND JSON CAPTURE COMPLETE"
-    )
+    print("PRUDENTIAL ALL-FUND JSON CAPTURE COMPLETE")
     print("=" * 80)
-
-    print(
-        "Total funds:",
-        total_funds
-    )
-
-    print(
-        "Successful:",
-        successful
-    )
-
-    print(
-        "No JSON:",
-        no_json
-    )
-
-    print(
-        "Failed:",
-        failed
-    )
-
+    print("Total funds:", total_funds)
+    print("Successful:", successful)
+    print("No JSON:", no_json)
+    print("Failed:", failed)
     print()
-    print(
-        "Output directory:"
-    )
-
-    print(
-        OUTPUT_DIR.resolve()
-    )
-
+    print("Output directory:")
+    print(OUTPUT_DIR.resolve())
     print()
-    print(
-        "Run summary:"
-    )
-
+    print("Run summary:")
     print(
         (
-            OUTPUT_DIR
-            / "run_summary.json"
+            OUTPUT_DIR / "run_summary.json"
         ).resolve()
     )
-
     print("=" * 80)
 
 
