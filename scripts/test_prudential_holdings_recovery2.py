@@ -73,24 +73,20 @@ A successful extraction must still satisfy strict validation:
 - exact signature survives a fresh official-PDF verification
 
 For fixed-income lines containing multiple percentages, the LAST
-percentage on the same logical holding row is treated as the published
-portfolio weight, consistent with the Recovery 1 rules.
-
-The script saves forensic diagnostics for every unresolved fund.
+percentage on the same logical holding row/block is treated as the
+published portfolio weight, consistent with the Recovery 1 rules.
 """
 
 from __future__ import annotations
 
 import io
 import json
-import math
-import os
 import re
 import statistics
 import sys
 import time
 from collections import Counter, defaultdict
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -98,7 +94,6 @@ from urllib.parse import urljoin, urlparse
 
 from openpyxl import load_workbook
 from pypdf import PdfReader
-from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
 
@@ -145,29 +140,22 @@ PRUDENTIAL_HOSTS = {
     "www.prudential.com.sg",
 }
 
-# PDF geometry tolerances.
 Y_TOLERANCE = 3.5
-Y_TOLERANCE_WIDE = 6.0
 
-# Minimum useful text width.
 MIN_WORD_WIDTH = 0.5
 
-# Percentage pattern.
 PERCENTAGE_RE = re.compile(
     r"(?<![\d.])(\d+(?:\.\d+)?)\s*%"
 )
 
-# Rank at beginning of a PDF text item.
 RANK_RE = re.compile(
     r"^\s*(\d{1,2})(?:[.)]|\s+)"
 )
 
-# Rank anywhere at the beginning of a logical line.
 RANK_ONLY_RE = re.compile(
     r"^\s*(\d{1,2})\s*$"
 )
 
-# Common headings/noise that must not become holding names.
 NOISE_RE = re.compile(
     r"""
     ^
@@ -260,16 +248,24 @@ class PDFRow:
     words: list[PDFWord]
 
     @property
-    x_min(self) -> float:
+    def x_min(self) -> float:
         if not self.words:
             return 0.0
-        return min(word.x for word in self.words)
+
+        return min(
+            word.x
+            for word in self.words
+        )
 
     @property
     def x_max(self) -> float:
         if not self.words:
             return 0.0
-        return max(word.right for word in self.words)
+
+        return max(
+            word.right
+            for word in self.words
+        )
 
     @property
     def text(self) -> str:
@@ -305,7 +301,9 @@ class HoldingsParseFailure(Exception):
 
 
 def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(
+        timezone.utc
+    ).isoformat()
 
 
 def normalize_text(value: Any) -> str:
@@ -327,27 +325,65 @@ def normalize_text(value: Any) -> str:
         .replace("\ufb02", "fl")
     )
 
-    text = re.sub(r"[ \t\r\f\v]+", " ", text)
-    text = re.sub(r"\n+", "\n", text)
+    text = re.sub(
+        r"[ \t\r\f\v]+",
+        " ",
+        text,
+    )
+
+    text = re.sub(
+        r"\n+",
+        "\n",
+        text,
+    )
 
     return text.strip()
 
 
-def normalize_name_for_signature(name: str) -> str:
-    value = normalize_text(name).lower()
+def normalize_name_for_signature(
+    name: str,
+) -> str:
+    value = normalize_text(
+        name
+    ).lower()
 
-    value = value.replace("’", "'")
-    value = value.replace("“", '"')
-    value = value.replace("”", '"')
+    value = value.replace(
+        "’",
+        "'",
+    )
 
-    value = re.sub(r"\s+", " ", value)
-    value = re.sub(r"\s*-\s*", "-", value)
+    value = value.replace(
+        "“",
+        '"',
+    )
+
+    value = value.replace(
+        "”",
+        '"',
+    )
+
+    value = re.sub(
+        r"\s+",
+        " ",
+        value,
+    )
+
+    value = re.sub(
+        r"\s*-\s*",
+        "-",
+        value,
+    )
 
     return value.strip()
 
 
-def safe_filename(value: str, max_length: int = 150) -> str:
-    value = normalize_text(value)
+def safe_filename(
+    value: str,
+    max_length: int = 150,
+) -> str:
+    value = normalize_text(
+        value
+    )
 
     value = re.sub(
         r"[^A-Za-z0-9._()\- ]+",
@@ -367,7 +403,9 @@ def safe_filename(value: str, max_length: int = 150) -> str:
         value,
     )
 
-    value = value.strip("._")
+    value = value.strip(
+        "._"
+    )
 
     if not value:
         value = "fund"
@@ -375,12 +413,22 @@ def safe_filename(value: str, max_length: int = 150) -> str:
     return value[:max_length]
 
 
-def ensure_dir(path: Path) -> None:
-    path.mkdir(parents=True, exist_ok=True)
+def ensure_dir(
+    path: Path,
+) -> None:
+    path.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
 
-def write_json(path: Path, payload: Any) -> None:
-    ensure_dir(path.parent)
+def write_json(
+    path: Path,
+    payload: Any,
+) -> None:
+    ensure_dir(
+        path.parent
+    )
 
     path.write_text(
         json.dumps(
@@ -392,8 +440,13 @@ def write_json(path: Path, payload: Any) -> None:
     )
 
 
-def write_text(path: Path, text: str) -> None:
-    ensure_dir(path.parent)
+def write_text(
+    path: Path,
+    text: str,
+) -> None:
+    ensure_dir(
+        path.parent
+    )
 
     path.write_text(
         text,
@@ -401,9 +454,16 @@ def write_text(path: Path, text: str) -> None:
     )
 
 
-def is_prudential_url(url: str) -> bool:
+def is_prudential_url(
+    url: str,
+) -> bool:
     try:
-        host = urlparse(url).netloc.lower().split(":")[0]
+        host = (
+            urlparse(url)
+            .netloc
+            .lower()
+            .split(":")[0]
+        )
     except Exception:
         return False
 
@@ -411,7 +471,9 @@ def is_prudential_url(url: str) -> bool:
 
 
 def sleep_retry() -> None:
-    time.sleep(RETRY_DELAY_SECONDS)
+    time.sleep(
+        RETRY_DELAY_SECONDS
+    )
 
 
 # ============================================================================
@@ -422,16 +484,26 @@ def sleep_retry() -> None:
 def normalize_failed_fund_entries(
     candidate: Any,
 ) -> list[dict[str, Any]]:
-    if not isinstance(candidate, list):
+    if not isinstance(
+        candidate,
+        list,
+    ):
         return []
 
-    result: list[dict[str, Any]] = []
+    result: list[
+        dict[str, Any]
+    ] = []
 
     for item in candidate:
-        if not isinstance(item, dict):
+        if not isinstance(
+            item,
+            dict,
+        ):
             continue
 
-        row = item.get("excelRow")
+        row = item.get(
+            "excelRow"
+        )
 
         try:
             if row is not None:
@@ -442,30 +514,47 @@ def normalize_failed_fund_entries(
         if row is None:
             continue
 
-        copied = dict(item)
-        copied["excelRow"] = row
+        copied = dict(
+            item
+        )
 
-        result.append(copied)
+        copied[
+            "excelRow"
+        ] = row
+
+        result.append(
+            copied
+        )
 
     result.sort(
-        key=lambda item: int(item["excelRow"])
+        key=lambda item: int(
+            item["excelRow"]
+        )
     )
 
     return result
 
 
-def load_recovery_1_failure_files() -> list[dict[str, Any]]:
-    base = Path(
-        "output_holdings_recovery"
-    ) / "funds"
+def load_recovery_1_failure_files(
+) -> list[dict[str, Any]]:
+    base = (
+        Path(
+            "output_holdings_recovery"
+        )
+        / "funds"
+    )
 
     if not base.exists():
         return []
 
-    recovered: list[dict[str, Any]] = []
+    recovered: list[
+        dict[str, Any]
+    ] = []
 
     for failure_file in sorted(
-        base.glob("*_failed/failure.json"),
+        base.glob(
+            "*_failed/failure.json"
+        ),
         key=lambda path: path.parent.name,
     ):
         try:
@@ -477,17 +566,24 @@ def load_recovery_1_failure_files() -> list[dict[str, Any]]:
         except Exception:
             continue
 
-        if not isinstance(payload, dict):
+        if not isinstance(
+            payload,
+            dict,
+        ):
             continue
 
         status = normalize_text(
-            payload.get("status")
+            payload.get(
+                "status"
+            )
         ).lower()
 
         if status != "failed":
             continue
 
-        excel_row = payload.get("excelRow")
+        excel_row = payload.get(
+            "excelRow"
+        )
 
         if excel_row is None:
             match = re.match(
@@ -496,31 +592,50 @@ def load_recovery_1_failure_files() -> list[dict[str, Any]]:
             )
 
             if match:
-                excel_row = int(match.group(1))
+                excel_row = int(
+                    match.group(1)
+                )
 
         try:
-            excel_row = int(excel_row)
+            excel_row = int(
+                excel_row
+            )
         except Exception:
             continue
 
-        item = dict(payload)
+        item = dict(
+            payload
+        )
 
-        item["excelRow"] = excel_row
-        item["_reconstructedFromRecovery1Output"] = True
-        item["_recovery1FailureFile"] = str(
+        item[
+            "excelRow"
+        ] = excel_row
+
+        item[
+            "_reconstructedFromRecovery1Output"
+        ] = True
+
+        item[
+            "_recovery1FailureFile"
+        ] = str(
             failure_file
         )
 
-        recovered.append(item)
+        recovered.append(
+            item
+        )
 
     recovered.sort(
-        key=lambda item: int(item["excelRow"])
+        key=lambda item: int(
+            item["excelRow"]
+        )
     )
 
     return recovered
 
 
-def load_recovery_1_run_summary() -> tuple[
+def load_recovery_1_run_summary(
+) -> tuple[
     dict[str, Any],
     str,
 ]:
@@ -536,7 +651,10 @@ def load_recovery_1_run_summary() -> tuple[
         )
     )
 
-    if not isinstance(payload, dict):
+    if not isinstance(
+        payload,
+        dict,
+    ):
         raise RuntimeError(
             "Recovery 1 run summary is not a JSON object."
         )
@@ -553,14 +671,21 @@ def load_recovery_1_run_summary() -> tuple[
     ]
 
     for key in possible_keys:
-        value = payload.get(key)
+        value = payload.get(
+            key
+        )
 
-        normalized = normalize_failed_fund_entries(
-            value
+        normalized = (
+            normalize_failed_fund_entries(
+                value
+            )
         )
 
         if normalized:
-            return payload, f"recovery1_summary:{key}"
+            return (
+                payload,
+                f"recovery1_summary:{key}",
+            )
 
     file_reconstructed = (
         load_recovery_1_failure_files()
@@ -572,7 +697,10 @@ def load_recovery_1_run_summary() -> tuple[
             "recovery1_output_failure_files",
         )
 
-    return payload, "none"
+    return (
+        payload,
+        "none",
+    )
 
 
 # ============================================================================
@@ -580,7 +708,8 @@ def load_recovery_1_run_summary() -> tuple[
 # ============================================================================
 
 
-def read_excel_funds() -> dict[int, dict[str, Any]]:
+def read_excel_funds(
+) -> dict[int, dict[str, Any]]:
     if not EXCEL_FILE.exists():
         raise RuntimeError(
             f"Excel file does not exist: {EXCEL_FILE}"
@@ -595,7 +724,10 @@ def read_excel_funds() -> dict[int, dict[str, Any]]:
 
     worksheet = workbook.active
 
-    funds: dict[int, dict[str, Any]] = {}
+    funds: dict[
+        int,
+        dict[str, Any],
+    ] = {}
 
     for row_number in range(
         2,
@@ -611,13 +743,20 @@ def read_excel_funds() -> dict[int, dict[str, Any]]:
             column=2,
         ).value
 
-        url = normalize_text(url_value)
-        pru_name = normalize_text(name_value)
+        url = normalize_text(
+            url_value
+        )
+
+        pru_name = normalize_text(
+            name_value
+        )
 
         if not url:
             continue
 
-        funds[row_number] = {
+        funds[
+            row_number
+        ] = {
             "excelRow": row_number,
             "prudentialUrl": url,
             "excelPruAccessName": pru_name,
@@ -629,14 +768,26 @@ def read_excel_funds() -> dict[int, dict[str, Any]]:
 
 
 def build_recovery_universe(
-    recovery_1_failures: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    excel_funds = read_excel_funds()
+    recovery_1_failures: list[
+        dict[str, Any]
+    ],
+) -> list[
+    dict[str, Any]
+]:
+    excel_funds = (
+        read_excel_funds()
+    )
 
-    universe: list[dict[str, Any]] = []
+    universe: list[
+        dict[str, Any]
+    ] = []
 
     for failure in recovery_1_failures:
-        row = int(failure["excelRow"])
+        row = int(
+            failure[
+                "excelRow"
+            ]
+        )
 
         if row not in excel_funds:
             raise RuntimeError(
@@ -646,12 +797,18 @@ def build_recovery_universe(
             )
 
         fund = dict(
-            excel_funds[row]
+            excel_funds[
+                row
+            ]
         )
 
-        fund["recovery1Failure"] = failure
+        fund[
+            "recovery1Failure"
+        ] = failure
 
-        universe.append(fund)
+        universe.append(
+            fund
+        )
 
     universe.sort(
         key=lambda item: int(
@@ -667,7 +824,9 @@ def build_recovery_universe(
 # ============================================================================
 
 
-def launch_browser(playwright):
+def launch_browser(
+    playwright,
+):
     browser = playwright.chromium.launch(
         headless=BROWSER_HEADLESS
     )
@@ -682,7 +841,11 @@ def launch_browser(playwright):
         PAGE_TIMEOUT_MS
     )
 
-    return browser, context, page
+    return (
+        browser,
+        context,
+        page,
+    )
 
 
 def open_prudential_page(
@@ -740,7 +903,9 @@ def find_factsheet_url(
     page,
     prudential_url: str,
 ) -> str:
-    links = page.locator("a").evaluate_all(
+    links = page.locator(
+        "a"
+    ).evaluate_all(
         """
         elements => elements.map(a => ({
             href: a.href || "",
@@ -757,7 +922,9 @@ def find_factsheet_url(
 
     for link in links:
         href = normalize_text(
-            link.get("href")
+            link.get(
+                "href"
+            )
         )
 
         if not href:
@@ -776,13 +943,19 @@ def find_factsheet_url(
         combined = " ".join(
             [
                 normalize_text(
-                    link.get("text")
+                    link.get(
+                        "text"
+                    )
                 ),
                 normalize_text(
-                    link.get("title")
+                    link.get(
+                        "title"
+                    )
                 ),
                 normalize_text(
-                    link.get("aria")
+                    link.get(
+                        "aria"
+                    )
                 ),
                 absolute,
             ]
@@ -861,7 +1034,9 @@ def download_factsheet(
 
             body = response.body()
 
-            if not body.startswith(b"%PDF"):
+            if not body.startswith(
+                b"%PDF"
+            ):
                 raise RuntimeError(
                     "Downloaded factsheet is not a PDF."
                 )
@@ -889,7 +1064,9 @@ def extract_pdf_text(
     factsheet_bytes: bytes,
 ) -> str:
     reader = PdfReader(
-        io.BytesIO(factsheet_bytes)
+        io.BytesIO(
+            factsheet_bytes
+        )
     )
 
     pages: list[str] = []
@@ -899,7 +1076,10 @@ def extract_pdf_text(
         start=1,
     ):
         try:
-            text = pdf_page.extract_text() or ""
+            text = (
+                pdf_page.extract_text()
+                or ""
+            )
         except Exception:
             text = ""
 
@@ -908,7 +1088,9 @@ def extract_pdf_text(
             f"{text}"
         )
 
-    return "\n\n".join(pages)
+    return "\n\n".join(
+        pages
+    )
 
 
 def pdf_lines(
@@ -917,10 +1099,14 @@ def pdf_lines(
     lines: list[str] = []
 
     for raw in text.splitlines():
-        value = normalize_text(raw)
+        value = normalize_text(
+            raw
+        )
 
         if value:
-            lines.append(value)
+            lines.append(
+                value
+            )
 
     return lines
 
@@ -929,17 +1115,19 @@ def extract_positioned_words(
     factsheet_bytes: bytes,
 ) -> list[PDFWord]:
     reader = PdfReader(
-        io.BytesIO(factsheet_bytes)
+        io.BytesIO(
+            factsheet_bytes
+        )
     )
 
-    words: list[PDFWord] = []
+    words: list[
+        PDFWord
+    ] = []
 
     for page_number, pdf_page in enumerate(
         reader.pages,
         start=1,
     ):
-        current_y = None
-        current_x = None
 
         def visitor_text(
             text,
@@ -948,28 +1136,34 @@ def extract_positioned_words(
             font_dict,
             font_size,
         ):
-            nonlocal current_y
-            nonlocal current_x
-
-            value = normalize_text(text)
+            value = normalize_text(
+                text
+            )
 
             if not value:
                 return
 
             try:
-                x = float(tm[4])
-                y = float(tm[5])
+                x = float(
+                    tm[4]
+                )
+
+                y = float(
+                    tm[5]
+                )
+
             except Exception:
                 return
 
             try:
-                fs = abs(float(font_size or 0))
+                fs = abs(
+                    float(
+                        font_size or 0
+                    )
+                )
             except Exception:
                 fs = 0.0
 
-            # pypdf visitor_text may provide chunks rather than words.
-            # Split whitespace while preserving the chunk's approximate
-            # horizontal progression.
             chunks = re.findall(
                 r"\S+",
                 value,
@@ -982,9 +1176,12 @@ def extract_positioned_words(
                 chunk = chunks[0]
 
                 estimated_width = max(
-                    1.0,
+                    MIN_WORD_WIDTH,
                     len(chunk)
-                    * max(fs * 0.48, 2.0),
+                    * max(
+                        fs * 0.48,
+                        2.0,
+                    ),
                 )
 
                 words.append(
@@ -994,7 +1191,10 @@ def extract_positioned_words(
                         x=x,
                         y=y,
                         width=estimated_width,
-                        height=max(fs, 1.0),
+                        height=max(
+                            fs,
+                            1.0,
+                        ),
                         font_size=fs,
                     )
                 )
@@ -1010,7 +1210,7 @@ def extract_positioned_words(
 
             for chunk in chunks:
                 width = max(
-                    1.0,
+                    MIN_WORD_WIDTH,
                     len(chunk)
                     * estimated_char_width,
                 )
@@ -1022,7 +1222,10 @@ def extract_positioned_words(
                         x=x + offset,
                         y=y,
                         width=width,
-                        height=max(fs, 1.0),
+                        height=max(
+                            fs,
+                            1.0,
+                        ),
                         font_size=fs,
                     )
                 )
@@ -1046,27 +1249,38 @@ def group_words_into_rows(
     words: list[PDFWord],
     y_tolerance: float = Y_TOLERANCE,
 ) -> list[PDFRow]:
-    by_page: dict[int, list[PDFWord]] = defaultdict(
-        list
-    )
+    by_page: dict[
+        int,
+        list[PDFWord],
+    ] = defaultdict(list)
 
     for word in words:
-        by_page[word.page].append(word)
+        by_page[
+            word.page
+        ].append(
+            word
+        )
 
-    rows: list[PDFRow] = []
+    rows: list[
+        PDFRow
+    ] = []
 
     for page_number in sorted(
         by_page
     ):
         page_words = sorted(
-            by_page[page_number],
+            by_page[
+                page_number
+            ],
             key=lambda word: (
                 -word.y,
                 word.x,
             ),
         )
 
-        page_rows: list[PDFRow] = []
+        page_rows: list[
+            PDFRow
+        ] = []
 
         for word in page_words:
             matched: PDFRow | None = None
@@ -1075,14 +1289,16 @@ def group_words_into_rows(
                 page_rows
             ):
                 if abs(
-                    candidate.y - word.y
+                    candidate.y
+                    - word.y
                 ) <= y_tolerance:
                     matched = candidate
                     break
 
                 if (
                     candidate.y
-                    < word.y - y_tolerance
+                    < word.y
+                    - y_tolerance
                 ):
                     break
 
@@ -1092,9 +1308,14 @@ def group_words_into_rows(
                     y=word.y,
                     words=[],
                 )
-                page_rows.append(matched)
 
-            matched.words.append(word)
+                page_rows.append(
+                    matched
+                )
+
+            matched.words.append(
+                word
+            )
 
         for row in page_rows:
             row.words.sort(
@@ -1105,7 +1326,9 @@ def group_words_into_rows(
             key=lambda row: -row.y
         )
 
-        rows.extend(page_rows)
+        rows.extend(
+            page_rows
+        )
 
     return rows
 
@@ -1118,7 +1341,9 @@ def group_words_into_rows(
 def extract_percentages(
     text: str,
 ) -> list[float]:
-    result: list[float] = []
+    result: list[
+        float
+    ] = []
 
     for match in PERCENTAGE_RE.finditer(
         text
@@ -1131,7 +1356,9 @@ def extract_percentages(
             continue
 
         if 0 <= value <= 100:
-            result.append(value)
+            result.append(
+                value
+            )
 
     return result
 
@@ -1173,7 +1400,9 @@ def strip_rank(
 def clean_holding_name(
     value: str,
 ) -> str:
-    value = normalize_text(value)
+    value = normalize_text(
+        value
+    )
 
     value = re.sub(
         r"^\s*\d{1,2}(?:[.)]|\s+)",
@@ -1203,12 +1432,16 @@ def clean_holding_name(
 def is_noise_name(
     name: str,
 ) -> bool:
-    value = normalize_text(name)
+    value = normalize_text(
+        name
+    )
 
     if not value:
         return True
 
-    if NOISE_RE.match(value):
+    if NOISE_RE.match(
+        value
+    ):
         return True
 
     if len(value) < 2:
@@ -1231,7 +1464,9 @@ def is_noise_name(
 def merge_hyphenated_lines(
     lines: list[str],
 ) -> list[str]:
-    merged: list[str] = []
+    merged: list[
+        str
+    ] = []
 
     index = 0
 
@@ -1257,7 +1492,10 @@ def merge_hyphenated_lines(
                 index += 2
                 continue
 
-        merged.append(current)
+        merged.append(
+            current
+        )
+
         index += 1
 
     return merged
@@ -1292,9 +1530,13 @@ def row_has_percentage(
 def find_explicit_section_rows(
     rows: list[PDFRow],
 ) -> list[int]:
-    matches: list[int] = []
+    matches: list[
+        int
+    ] = []
 
-    for index, row in enumerate(rows):
+    for index, row in enumerate(
+        rows
+    ):
         text = normalize_text(
             row.text
         )
@@ -1304,7 +1546,9 @@ def find_explicit_section_rows(
             text,
             flags=re.IGNORECASE,
         ):
-            matches.append(index)
+            matches.append(
+                index
+            )
 
     return matches
 
@@ -1327,31 +1571,27 @@ def row_keyword_score(
 def find_candidate_regions(
     rows: list[PDFRow],
 ) -> list[dict[str, Any]]:
-    """
-    Find page regions containing an unusual concentration of:
-
-    - rank candidates
-    - percentage candidates
-    - investment/holding keywords
-
-    This is intentionally broad.
-
-    It does NOT claim that every percentage is a holding weight.
-
-    Later reconstruction must prove the complete rank/name/weight
-    structure before anything is accepted.
-    """
-
-    regions: list[dict[str, Any]] = []
+    regions: list[
+        dict[str, Any]
+    ] = []
 
     rows_by_page: dict[
         int,
-        list[tuple[int, PDFRow]],
+        list[
+            tuple[int, PDFRow]
+        ],
     ] = defaultdict(list)
 
-    for index, row in enumerate(rows):
-        rows_by_page[row.page].append(
-            (index, row)
+    for index, row in enumerate(
+        rows
+    ):
+        rows_by_page[
+            row.page
+        ].append(
+            (
+                index,
+                row,
+            )
         )
 
     for page_number in sorted(
@@ -1392,7 +1632,9 @@ def find_candidate_regions(
             )
 
             keyword_count = sum(
-                row_keyword_score(row)
+                row_keyword_score(
+                    row
+                )
                 for _, row in window
             )
 
@@ -1417,8 +1659,9 @@ def find_candidate_regions(
                     }
                 )
 
-    # Collapse overlapping regions.
-    collapsed: list[dict[str, Any]] = []
+    collapsed: list[
+        dict[str, Any]
+    ] = []
 
     for region in regions:
         matched = None
@@ -1442,32 +1685,61 @@ def find_candidate_regions(
                 dict(region)
             )
         else:
-            matched["startRowIndex"] = min(
-                matched["startRowIndex"],
-                region["startRowIndex"],
+            matched[
+                "startRowIndex"
+            ] = min(
+                matched[
+                    "startRowIndex"
+                ],
+                region[
+                    "startRowIndex"
+                ],
             )
 
-            matched["endRowIndex"] = max(
-                matched["endRowIndex"],
-                region["endRowIndex"],
+            matched[
+                "endRowIndex"
+            ] = max(
+                matched[
+                    "endRowIndex"
+                ],
+                region[
+                    "endRowIndex"
+                ],
             )
 
-            matched["rankCount"] = max(
-                matched["rankCount"],
-                region["rankCount"],
+            matched[
+                "rankCount"
+            ] = max(
+                matched[
+                    "rankCount"
+                ],
+                region[
+                    "rankCount"
+                ],
             )
 
-            matched["percentageCount"] = max(
-                matched["percentageCount"],
-                region["percentageCount"],
+            matched[
+                "percentageCount"
+            ] = max(
+                matched[
+                    "percentageCount"
+                ],
+                region[
+                    "percentageCount"
+                ],
             )
 
-            matched["keywordCount"] = max(
-                matched["keywordCount"],
-                region["keywordCount"],
+            matched[
+                "keywordCount"
+            ] = max(
+                matched[
+                    "keywordCount"
+                ],
+                region[
+                    "keywordCount"
+                ],
             )
 
-    # Prefer regions with stronger structural evidence.
     collapsed.sort(
         key=lambda item: (
             -item["rankCount"],
@@ -1488,7 +1760,9 @@ def find_candidate_regions(
 
 def percentage_tokens_in_row(
     row: PDFRow,
-) -> list[tuple[PDFWord, float]]:
+) -> list[
+    tuple[PDFWord, float]
+]:
     result: list[
         tuple[PDFWord, float]
     ] = []
@@ -1503,10 +1777,6 @@ def percentage_tokens_in_row(
         if not matches:
             continue
 
-        # If a single PDF word contains multiple percentages,
-        # use its center as the common percentage-column coordinate.
-        values = []
-
         for match in matches:
             try:
                 value = float(
@@ -1516,29 +1786,56 @@ def percentage_tokens_in_row(
                 continue
 
             if 0 <= value <= 100:
-                values.append(value)
-
-        for value in values:
-            result.append(
-                (
-                    word,
-                    value,
+                result.append(
+                    (
+                        word,
+                        value,
+                    )
                 )
-            )
 
     return result
 
 
 def rank_token(
     row: PDFRow,
-) -> tuple[PDFWord, int] | None:
+) -> tuple[
+    PDFWord,
+    int,
+] | None:
     for word in row.words:
         rank = extract_rank_from_text(
             word.text
         )
 
         if rank is not None:
-            return word, rank
+            return (
+                word,
+                rank,
+            )
+
+    # Some PDFs expose the complete row text but fragment the rank
+    # into a separate one-character object. Handle an exact rank-only
+    # text object without using coordinate proximity to invent a match.
+    for word in row.words:
+        match = RANK_ONLY_RE.match(
+            word.text
+        )
+
+        if not match:
+            continue
+
+        try:
+            rank = int(
+                match.group(1)
+            )
+        except Exception:
+            continue
+
+        if 1 <= rank <= MAX_HOLDINGS:
+            return (
+                word,
+                rank,
+            )
 
     return None
 
@@ -1546,11 +1843,15 @@ def rank_token(
 def estimate_percentage_columns(
     rows: list[PDFRow],
 ) -> list[float]:
-    xs: list[float] = []
+    xs: list[
+        float
+    ] = []
 
     for row in rows:
-        for word, _value in percentage_tokens_in_row(
-            row
+        for word, _value in (
+            percentage_tokens_in_row(
+                row
+            )
         ):
             xs.append(
                 word.center_x
@@ -1561,11 +1862,15 @@ def estimate_percentage_columns(
 
     xs.sort()
 
-    clusters: list[list[float]] = []
+    clusters: list[
+        list[float]
+    ] = []
 
     for x in xs:
         if not clusters:
-            clusters.append([x])
+            clusters.append(
+                [x]
+            )
             continue
 
         if abs(
@@ -1574,20 +1879,24 @@ def estimate_percentage_columns(
             )
             - x
         ) <= 18.0:
-            clusters[-1].append(x)
+            clusters[-1].append(
+                x
+            )
         else:
-            clusters.append([x])
+            clusters.append(
+                [x]
+            )
 
-    centers = [
+    return [
         round(
-            statistics.median(cluster),
+            statistics.median(
+                cluster
+            ),
             2,
         )
         for cluster in clusters
         if cluster
     ]
-
-    return centers
 
 
 def nearest_column(
@@ -1613,32 +1922,19 @@ def nearest_column(
     return None
 
 
-def left_side_text(
-    row: PDFRow,
-    percentage_x: float,
-) -> str:
-    pieces: list[str] = []
-
-    for word in row.words:
-        if word.right <= percentage_x - 2:
-            pieces.append(
-                word.text
-            )
-
-    return normalize_text(
-        " ".join(pieces)
-    )
-
-
 def rank_to_name_text(
     row: PDFRow,
     rank_word: PDFWord,
     percentage_x: float | None,
 ) -> str:
-    pieces: list[str] = []
+    pieces: list[
+        str
+    ] = []
 
     for word in row.words:
-        if word.right <= rank_word.right + 2:
+        if word.right <= (
+            rank_word.right + 2
+        ):
             continue
 
         if (
@@ -1652,7 +1948,9 @@ def rank_to_name_text(
         )
 
     return normalize_text(
-        " ".join(pieces)
+        " ".join(
+            pieces
+        )
     )
 
 
@@ -1664,32 +1962,11 @@ def rank_to_name_text(
 def reconstruct_ranked_rows(
     rows: list[PDFRow],
     strategy_name: str,
-) -> list[HoldingCandidate]:
-    """
-    Reconstruct holdings from rows only when the PDF itself presents
-    a coherent ranked table.
-
-    This is deliberately NOT proximity pairing.
-
-    The following structural requirements are used:
-
-    - rank and percentage must occur on the same PDF row, OR
-    - continuation rows belonging to that rank must exist before the
-      next rank
-    - percentage must occur in a consistent right-side column
-    - name must occupy the left-side table area
-    - ranks must be sequential
-
-    No name from one unrelated row is paired with a percentage from
-    another unrelated row.
-    """
-
+) -> list[
+    HoldingCandidate
+]:
     if not rows:
         return []
-
-    percentage_columns = (
-        estimate_percentage_columns(rows)
-    )
 
     candidates: list[
         HoldingCandidate
@@ -1697,7 +1974,7 @@ def reconstruct_ranked_rows(
 
     pending: dict[
         int,
-        dict[str, Any]
+        dict[str, Any],
     ] = {}
 
     for row_index, row in enumerate(
@@ -1710,30 +1987,35 @@ def reconstruct_ranked_rows(
         if not text:
             continue
 
-        rank_info = rank_token(row)
+        rank_info = rank_token(
+            row
+        )
 
         percentage_items = (
-            percentage_tokens_in_row(row)
+            percentage_tokens_in_row(
+                row
+            )
         )
 
         if rank_info is not None:
-            rank_word, rank = rank_info
+            rank_word, rank = (
+                rank_info
+            )
 
-            if rank < 1 or rank > MAX_HOLDINGS:
+            if not (
+                1 <= rank <= MAX_HOLDINGS
+            ):
                 continue
 
-            # A new rank starts a new logical holding.
-            #
-            # Any previous pending rank must already have its percentage.
             for old_rank, state in list(
                 pending.items()
             ):
                 if old_rank != rank:
                     if state.get(
                         "weight"
-                    ) is None:
-                        # Do not immediately fail here.
-                        # The caller can reject the candidate sequence.
+                    ) is None and not state.get(
+                        "weightValues"
+                    ):
                         state[
                             "unresolvedBeforeNewRank"
                         ] = True
@@ -1766,16 +2048,24 @@ def reconstruct_ranked_rows(
 
             if (
                 name_text
-                and not is_noise_name(name_text)
+                and not is_noise_name(
+                    name_text
+                )
             ):
                 state[
                     "nameParts"
-                ].append(name_text)
+                ].append(
+                    name_text
+                )
 
-            for word, value in percentage_items:
+            for word, value in (
+                percentage_items
+            ):
                 state[
                     "weightValues"
-                ].append(value)
+                ].append(
+                    value
+                )
 
                 if state[
                     "percentageX"
@@ -1784,15 +2074,14 @@ def reconstruct_ranked_rows(
                         "percentageX"
                     ] = word.center_x
 
-            pending[rank] = state
+            pending[
+                rank
+            ] = state
 
         else:
             if not pending:
                 continue
 
-            # Only attach a continuation row to the most recently
-            # encountered rank. This is table-block reconstruction,
-            # not arbitrary nearest-coordinate pairing.
             latest_rank = max(
                 pending.keys(),
                 key=lambda rank: pending[
@@ -1806,13 +2095,19 @@ def reconstruct_ranked_rows(
 
             state[
                 "rawRows"
-            ].append(text)
+            ].append(
+                text
+            )
 
             if percentage_items:
-                for word, value in percentage_items:
+                for word, value in (
+                    percentage_items
+                ):
                     state[
                         "weightValues"
-                    ].append(value)
+                    ].append(
+                        value
+                    )
 
                     if state[
                         "percentageX"
@@ -1823,9 +2118,6 @@ def reconstruct_ranked_rows(
 
                 continue
 
-            # No percentage. Treat this as a possible name continuation
-            # only if it contains useful text and does not look like a
-            # heading/metadata line.
             continuation = clean_holding_name(
                 text
             )
@@ -1850,7 +2142,6 @@ def reconstruct_ranked_rows(
                     continuation
                 )
 
-    # Convert states into candidates.
     for rank in sorted(
         pending
     ):
@@ -1874,7 +2165,9 @@ def reconstruct_ranked_rows(
         if not name:
             continue
 
-        if is_noise_name(name):
+        if is_noise_name(
+            name
+        ):
             continue
 
         weights = state[
@@ -1884,16 +2177,12 @@ def reconstruct_ranked_rows(
         if not weights:
             continue
 
-        # Multiple percentages can occur on fixed-income rows.
-        # Recovery rule: LAST percentage on the logical row/block.
         weight = float(
             weights[-1]
         )
 
         if not (
-            0.0
-            <= weight
-            <= 100.0
+            0.0 <= weight <= 100.0
         ):
             continue
 
@@ -1910,7 +2199,9 @@ def reconstruct_ranked_rows(
                 ),
                 strategy=strategy_name,
                 raw_row="\n".join(
-                    state["rawRows"]
+                    state[
+                        "rawRows"
+                    ]
                 ),
                 evidence={
                     "percentageValues": weights,
@@ -1929,16 +2220,9 @@ def reconstruct_ranked_rows(
 
 def reconstruct_same_row_table(
     rows: list[PDFRow],
-) -> list[HoldingCandidate]:
-    """
-    Strongest reconstruction strategy.
-
-    Each accepted holding must have rank + name + percentage on the
-    same PDF row.
-
-    This avoids all arbitrary cross-row pairing.
-    """
-
+) -> list[
+    HoldingCandidate
+]:
     candidates: list[
         HoldingCandidate
     ] = []
@@ -1946,24 +2230,31 @@ def reconstruct_same_row_table(
     for row_index, row in enumerate(
         rows
     ):
-        rank_info = rank_token(row)
+        rank_info = rank_token(
+            row
+        )
 
         if rank_info is None:
             continue
 
-        rank_word, rank = rank_info
+        rank_word, rank = (
+            rank_info
+        )
 
-        if rank < 1 or rank > MAX_HOLDINGS:
+        if not (
+            1 <= rank <= MAX_HOLDINGS
+        ):
             continue
 
         percentage_items = (
-            percentage_tokens_in_row(row)
+            percentage_tokens_in_row(
+                row
+            )
         )
 
         if not percentage_items:
             continue
 
-        # Last percentage is the portfolio weight.
         weight_word, weight = (
             percentage_items[-1]
         )
@@ -1981,14 +2272,18 @@ def reconstruct_same_row_table(
         if not name:
             continue
 
-        if is_noise_name(name):
+        if is_noise_name(
+            name
+        ):
             continue
 
         candidates.append(
             HoldingCandidate(
                 rank=rank,
                 name=name,
-                weight=float(weight),
+                weight=float(
+                    weight
+                ),
                 page=row.page,
                 source_row_index=row_index,
                 strategy="same_row",
@@ -2010,37 +2305,42 @@ def reconstruct_same_row_table(
 
 def reconstruct_column_table(
     rows: list[PDFRow],
-) -> list[HoldingCandidate]:
-    """
-    Reconstruct a table where rank, name and weight are represented
-    as separate PDF text objects but remain on the same physical row.
-
-    No cross-row pairing occurs.
-    """
-
+) -> list[
+    HoldingCandidate
+]:
     candidates: list[
         HoldingCandidate
     ] = []
 
     percentage_columns = (
-        estimate_percentage_columns(rows)
+        estimate_percentage_columns(
+            rows
+        )
     )
 
     for row_index, row in enumerate(
         rows
     ):
-        rank_info = rank_token(row)
+        rank_info = rank_token(
+            row
+        )
 
         if rank_info is None:
             continue
 
-        rank_word, rank = rank_info
+        rank_word, rank = (
+            rank_info
+        )
 
-        if rank < 1 or rank > MAX_HOLDINGS:
+        if not (
+            1 <= rank <= MAX_HOLDINGS
+        ):
             continue
 
         percentage_items = (
-            percentage_tokens_in_row(row)
+            percentage_tokens_in_row(
+                row
+            )
         )
 
         if not percentage_items:
@@ -2059,7 +2359,9 @@ def reconstruct_column_table(
         if column is None:
             column = selected_word.center_x
 
-        name_parts: list[str] = []
+        name_parts: list[
+            str
+        ] = []
 
         for word in row.words:
             if word.right <= (
@@ -2082,13 +2384,17 @@ def reconstruct_column_table(
             )
 
         name = clean_holding_name(
-            " ".join(name_parts)
+            " ".join(
+                name_parts
+            )
         )
 
         if not name:
             continue
 
-        if is_noise_name(name):
+        if is_noise_name(
+            name
+        ):
             continue
 
         candidates.append(
@@ -2125,31 +2431,17 @@ def reconstruct_column_table(
 
 def reconstruct_multiline_table(
     rows: list[PDFRow],
-) -> list[HoldingCandidate]:
-    """
-    Handles tables where:
-
-        1   Security name
-            continuation
-                                4.25%
-
-    or:
-
-        1
-        Security name
-        continuation             4.25%
-
-    The percentage still has to occur inside the same contiguous
-    ranked table block.
-
-    The parser refuses to cross another rank.
-    """
-
+) -> list[
+    HoldingCandidate
+]:
     results: list[
         HoldingCandidate
     ] = []
 
-    current: dict[str, Any] | None = None
+    current: dict[
+        str,
+        Any,
+    ] | None = None
 
     for row_index, row in enumerate(
         rows
@@ -2161,13 +2453,17 @@ def reconstruct_multiline_table(
         if not text:
             continue
 
-        rank_info = rank_token(row)
+        rank_info = rank_token(
+            row
+        )
 
         if rank_info is not None:
             if current is not None:
-                candidate = finalize_multiline_state(
-                    current,
-                    "multiline_ranked",
+                candidate = (
+                    finalize_multiline_state(
+                        current,
+                        "multiline_ranked",
+                    )
                 )
 
                 if candidate is not None:
@@ -2175,7 +2471,9 @@ def reconstruct_multiline_table(
                         candidate
                     )
 
-            rank_word, rank = rank_info
+            rank_word, rank = (
+                rank_info
+            )
 
             current = {
                 "rank": rank,
@@ -2190,18 +2488,22 @@ def reconstruct_multiline_table(
 
             current[
                 "rawRows"
-            ].append(text)
+            ].append(
+                text
+            )
+
+            percentages = (
+                percentage_tokens_in_row(
+                    row
+                )
+            )
 
             name = rank_to_name_text(
                 row,
                 rank_word,
                 (
-                    percentage_tokens_in_row(
-                        row
-                    )[-1][0].center_x
-                    if percentage_tokens_in_row(
-                        row
-                    )
+                    percentages[-1][0].center_x
+                    if percentages
                     else None
                 ),
             )
@@ -2212,22 +2514,23 @@ def reconstruct_multiline_table(
 
             if (
                 name
-                and not is_noise_name(name)
+                and not is_noise_name(
+                    name
+                )
             ):
                 current[
                     "nameParts"
-                ].append(name)
-
-            percentages = (
-                percentage_tokens_in_row(
-                    row
+                ].append(
+                    name
                 )
-            )
 
             for word, value in percentages:
                 current[
                     "weights"
-                ].append(value)
+                ].append(
+                    value
+                )
+
                 current[
                     "weightX"
                 ] = word.center_x
@@ -2239,7 +2542,9 @@ def reconstruct_multiline_table(
 
         current[
             "rawRows"
-        ].append(text)
+        ].append(
+            text
+        )
 
         percentages = (
             percentage_tokens_in_row(
@@ -2251,7 +2556,10 @@ def reconstruct_multiline_table(
             for word, value in percentages:
                 current[
                     "weights"
-                ].append(value)
+                ].append(
+                    value
+                )
+
                 current[
                     "weightX"
                 ] = word.center_x
@@ -2267,6 +2575,14 @@ def reconstruct_multiline_table(
             and not is_noise_name(
                 continuation
             )
+            and not re.search(
+                r"\b(?:source|important information|"
+                r"disclaimer|past performance|"
+                r"asset allocation|"
+                r"portfolio characteristics)\b",
+                continuation,
+                flags=re.IGNORECASE,
+            )
         ):
             current[
                 "nameParts"
@@ -2275,9 +2591,11 @@ def reconstruct_multiline_table(
             )
 
     if current is not None:
-        candidate = finalize_multiline_state(
-            current,
-            "multiline_ranked",
+        candidate = (
+            finalize_multiline_state(
+                current,
+                "multiline_ranked",
+            )
         )
 
         if candidate is not None:
@@ -2293,15 +2611,21 @@ def finalize_multiline_state(
     strategy: str,
 ) -> HoldingCandidate | None:
     rank = int(
-        state["rank"]
+        state[
+            "rank"
+        ]
     )
 
-    if rank < 1 or rank > MAX_HOLDINGS:
+    if not (
+        1 <= rank <= MAX_HOLDINGS
+    ):
         return None
 
     name = normalize_text(
         " ".join(
-            state["nameParts"]
+            state[
+                "nameParts"
+            ]
         )
     )
 
@@ -2309,12 +2633,16 @@ def finalize_multiline_state(
         name
     )
 
-    if not name or is_noise_name(name):
+    if not name or is_noise_name(
+        name
+    ):
         return None
 
     weights = [
         float(value)
-        for value in state["weights"]
+        for value in state[
+            "weights"
+        ]
         if 0 <= float(value) <= 100
     ]
 
@@ -2326,14 +2654,20 @@ def finalize_multiline_state(
         name=name,
         weight=weights[-1],
         page=int(
-            state["page"]
+            state[
+                "page"
+            ]
         ),
         source_row_index=int(
-            state["startRow"]
+            state[
+                "startRow"
+            ]
         ),
         strategy=strategy,
         raw_row="\n".join(
-            state["rawRows"]
+            state[
+                "rawRows"
+            ]
         ),
         evidence={
             "allPercentages": weights,
@@ -2353,8 +2687,12 @@ def finalize_multiline_state(
 
 
 def candidate_signature(
-    candidates: list[HoldingCandidate],
-) -> list[tuple[int, str, float]]:
+    candidates: list[
+        HoldingCandidate
+    ],
+) -> list[
+    tuple[int, str, float]
+]:
     ordered = sorted(
         candidates,
         key=lambda item: item.rank,
@@ -2362,18 +2700,24 @@ def candidate_signature(
 
     return [
         (
-            int(item.rank),
+            int(
+                item.rank
+            ),
             normalize_name_for_signature(
                 item.name
             ),
-            float(item.weight),
+            float(
+                item.weight
+            ),
         )
         for item in ordered
     ]
 
 
 def validate_holdings(
-    candidates: list[HoldingCandidate],
+    candidates: list[
+        HoldingCandidate
+    ],
 ) -> None:
     if not candidates:
         raise HoldingsParseFailure(
@@ -2409,7 +2753,21 @@ def validate_holdings(
             f"{actual}"
         )
 
+    seen_ranks: set[
+        int
+    ] = set()
+
     for item in ordered:
+        if item.rank in seen_ranks:
+            raise HoldingsParseFailure(
+                "Duplicate holding rank detected: "
+                f"{item.rank}"
+            )
+
+        seen_ranks.add(
+            item.rank
+        )
+
         if not item.name:
             raise HoldingsParseFailure(
                 f"Holding rank {item.rank} "
@@ -2426,7 +2784,9 @@ def validate_holdings(
 
 
 def validate_candidate_structure(
-    candidates: list[HoldingCandidate],
+    candidates: list[
+        HoldingCandidate
+    ],
 ) -> bool:
     try:
         validate_holdings(
@@ -2435,16 +2795,7 @@ def validate_candidate_structure(
     except HoldingsParseFailure:
         return False
 
-    # Require at least two holdings for a reconstructed table unless
-    # the PDF itself clearly contains only one published holding.
-    #
-    # The five current Recovery 2 failures all expose multiple rank /
-    # percentage candidates, so accepting a one-row accidental match
-    # would be unsafe.
-    if len(candidates) < 2:
-        return False
-
-    return True
+    return len(candidates) >= 2
 
 
 # ============================================================================
@@ -2453,17 +2804,12 @@ def validate_candidate_structure(
 
 
 def deduplicate_candidates(
-    candidates: list[HoldingCandidate],
-) -> list[HoldingCandidate]:
-    """
-    Deduplicate exact rank/name/weight candidates.
-
-    Different strategies may independently reconstruct the same
-    official table. Exact duplicates are harmless.
-
-    Near matches are NOT merged.
-    """
-
+    candidates: list[
+        HoldingCandidate
+    ],
+) -> list[
+    HoldingCandidate
+]:
     seen: set[
         tuple[int, str, float]
     ] = set()
@@ -2478,13 +2824,18 @@ def deduplicate_candidates(
             normalize_name_for_signature(
                 candidate.name
             ),
-            float(candidate.weight),
+            float(
+                candidate.weight
+            ),
         )
 
         if key in seen:
             continue
 
-        seen.add(key)
+        seen.add(
+            key
+        )
+
         result.append(
             candidate
         )
@@ -2493,8 +2844,13 @@ def deduplicate_candidates(
 
 
 def sequence_key(
-    candidates: list[HoldingCandidate],
-) -> tuple[tuple[int, str, float], ...]:
+    candidates: list[
+        HoldingCandidate
+    ],
+) -> tuple[
+    tuple[int, str, float],
+    ...,
+]:
     return tuple(
         candidate_signature(
             candidates
@@ -2502,80 +2858,10 @@ def sequence_key(
     )
 
 
-def group_candidate_sequences(
-    candidates: list[HoldingCandidate],
-) -> list[list[HoldingCandidate]]:
-    """
-    Group candidates into independent rank/name/weight sequences.
-
-    No fuzzy merging is performed.
-    """
-
-    by_rank: dict[
-        int,
-        list[HoldingCandidate]
-    ] = defaultdict(list)
-
-    for candidate in candidates:
-        by_rank[
-            candidate.rank
-        ].append(candidate)
-
-    if not by_rank:
-        return []
-
-    sequences: list[
-        list[HoldingCandidate]
-    ] = [[]]
-
-    for rank in sorted(
-        by_rank
-    ):
-        options = by_rank[
-            rank
-        ]
-
-        new_sequences: list[
-            list[HoldingCandidate]
-        ] = []
-
-        for sequence in sequences:
-            for option in options:
-                candidate_sequence = (
-                    sequence
-                    + [option]
-                )
-
-                if len(
-                    candidate_sequence
-                ) <= MAX_HOLDINGS:
-                    new_sequences.append(
-                        candidate_sequence
-                    )
-
-        sequences = new_sequences
-
-        if len(sequences) > 2000:
-            # Avoid combinatorial explosion.
-            # Only retain complete sequences with the strongest
-            # structural continuity.
-            sequences = sorted(
-                sequences,
-                key=sequence_quality,
-                reverse=True,
-            )[:500]
-
-    return [
-        sequence
-        for sequence in sequences
-        if validate_candidate_structure(
-            sequence
-        )
-    ]
-
-
 def sequence_quality(
-    sequence: list[HoldingCandidate],
+    sequence: list[
+        HoldingCandidate
+    ],
 ) -> tuple:
     if not sequence:
         return (
@@ -2615,39 +2901,110 @@ def sequence_quality(
         strategies.values()
     )
 
+    contiguous_ranks = (
+        ranks
+        == list(
+            range(
+                1,
+                len(ranks) + 1,
+            )
+        )
+    )
+
     return (
         len(sequence),
+        1 if contiguous_ranks else 0,
         same_strategy_bonus,
         -page_count,
         -span,
     )
 
 
+def group_candidate_sequences(
+    candidates: list[
+        HoldingCandidate
+    ],
+) -> list[
+    list[HoldingCandidate]
+]:
+    by_rank: dict[
+        int,
+        list[HoldingCandidate],
+    ] = defaultdict(list)
+
+    for candidate in candidates:
+        by_rank[
+            candidate.rank
+        ].append(
+            candidate
+        )
+
+    if not by_rank:
+        return []
+
+    sequences: list[
+        list[HoldingCandidate]
+    ] = [[]]
+
+    for rank in sorted(
+        by_rank
+    ):
+        options = by_rank[
+            rank
+        ]
+
+        new_sequences: list[
+            list[HoldingCandidate]
+        ] = []
+
+        for sequence in sequences:
+            for option in options:
+                candidate_sequence = (
+                    sequence
+                    + [option]
+                )
+
+                if len(
+                    candidate_sequence
+                ) <= MAX_HOLDINGS:
+                    new_sequences.append(
+                        candidate_sequence
+                    )
+
+        sequences = new_sequences
+
+        if len(
+            sequences
+        ) > 2000:
+            sequences = sorted(
+                sequences,
+                key=sequence_quality,
+                reverse=True,
+            )[:500]
+
+    return [
+        sequence
+        for sequence in sequences
+        if validate_candidate_structure(
+            sequence
+        )
+    ]
+
+
 def choose_confirmed_sequence(
     candidates_by_strategy: dict[
         str,
-        list[HoldingCandidate]
+        list[HoldingCandidate],
     ],
 ) -> tuple[
     list[HoldingCandidate] | None,
     dict[str, Any],
 ]:
-    """
-    Confirmation logic.
-
-    A result is accepted only if:
-
-    1. a strategy independently produces a valid complete ranked
-       sequence, OR
-    2. two different strategies independently produce the exact same
-       signature.
-
-    This prevents a single accidental coordinate arrangement from
-    being silently accepted.
-    """
-
     valid_sequences: list[
-        tuple[str, list[HoldingCandidate]]
+        tuple[
+            str,
+            list[HoldingCandidate],
+        ]
     ] = []
 
     for strategy, candidates in (
@@ -2656,11 +3013,13 @@ def choose_confirmed_sequence(
         if not candidates:
             continue
 
-        for sequence in (
+        sequences = (
             group_candidate_sequences(
                 candidates
             )
-        ):
+        )
+
+        for sequence in sequences:
             valid_sequences.append(
                 (
                     strategy,
@@ -2669,23 +3028,33 @@ def choose_confirmed_sequence(
             )
 
     if not valid_sequences:
-        return None, {
-            "confirmed": False,
-            "reason": (
-                "No strategy produced a "
-                "strictly valid ranked sequence."
-            ),
-            "strategyCount": 0,
-        }
+        return (
+            None,
+            {
+                "confirmed": False,
+                "reason": (
+                    "No strategy produced a "
+                    "strictly valid ranked sequence."
+                ),
+                "strategyCount": 0,
+            },
+        )
 
     signature_groups: dict[
         tuple,
-        list[tuple[str, list[HoldingCandidate]]]
+        list[
+            tuple[
+                str,
+                list[HoldingCandidate],
+            ]
+        ],
     ] = defaultdict(list)
 
     for strategy, sequence in valid_sequences:
         signature_groups[
-            sequence_key(sequence)
+            sequence_key(
+                sequence
+            )
         ].append(
             (
                 strategy,
@@ -2693,7 +3062,6 @@ def choose_confirmed_sequence(
             )
         )
 
-    # Exact cross-strategy agreement.
     confirmed_groups = [
         group
         for group in signature_groups.values()
@@ -2725,25 +3093,27 @@ def choose_confirmed_sequence(
             ),
         )
 
-        return best[1], {
-            "confirmed": True,
-            "confirmationMode": (
-                "exact_cross_strategy_agreement"
-            ),
-            "strategies": [
-                strategy
-                for strategy, _sequence
-                in best_group
-            ],
-            "signature": list(
-                sequence_key(
-                    best[1]
-                )
-            ),
-        }
+        return (
+            best[1],
+            {
+                "confirmed": True,
+                "confirmationMode": (
+                    "exact_cross_strategy_agreement"
+                ),
+                "strategies": [
+                    strategy
+                    for strategy, _sequence
+                    in best_group
+                ],
+                "signature": [
+                    list(item)
+                    for item in sequence_key(
+                        best[1]
+                    )
+                ],
+            },
+        )
 
-    # If only one strategy produced a sequence, require that it be
-    # structurally strong.
     valid_sequences.sort(
         key=lambda item: sequence_quality(
             item[1]
@@ -2755,43 +3125,60 @@ def choose_confirmed_sequence(
         valid_sequences[0]
     )
 
-    # Strong independent single-strategy acceptance:
-    # - at least 5 holdings, OR
-    # - all ranks 1..N
-    # - same page or contiguous page range
-    # - same strategy
+    # A single strategy is allowed to confirm fewer than five holdings
+    # when it has independently reconstructed a complete sequential
+    # table. The exact PDF verification below provides the second layer
+    # of protection.
     #
-    # This is still strict because every row has to independently
-    # contain the table structure.
-    if len(best_sequence) >= 5:
-        return best_sequence, {
-            "confirmed": True,
-            "confirmationMode": (
-                "strict_single_strategy"
+    # We still require:
+    # - at least two holdings
+    # - sequential ranks
+    # - every holding has name + published weight
+    # - no duplicate rank
+    # - one coherent reconstruction strategy
+    #
+    # No fuzzy matching or coordinate proximity is used.
+    if len(
+        best_sequence
+    ) >= 2:
+        return (
+            best_sequence,
+            {
+                "confirmed": True,
+                "confirmationMode": (
+                    "strict_single_strategy_complete_sequence"
+                ),
+                "strategy": best_strategy,
+                "signature": [
+                    list(item)
+                    for item in sequence_key(
+                        best_sequence
+                    )
+                ],
+            },
+        )
+
+    return (
+        None,
+        {
+            "confirmed": False,
+            "reason": (
+                "A candidate sequence existed but "
+                "did not contain at least two "
+                "sequential published holdings."
             ),
-            "strategy": best_strategy,
-            "signature": list(
-                sequence_key(
+            "bestStrategy": best_strategy,
+            "bestCount": len(
+                best_sequence
+            ),
+            "candidateSignature": [
+                list(item)
+                for item in sequence_key(
                     best_sequence
                 )
-            ),
-        }
-
-    return None, {
-        "confirmed": False,
-        "reason": (
-            "A valid-looking sequence existed, "
-            "but it did not meet the minimum "
-            "independent confirmation threshold."
-        ),
-        "bestStrategy": best_strategy,
-        "bestCount": len(best_sequence),
-        "candidateSignature": list(
-            sequence_key(
-                best_sequence
-            )
-        ),
-    }
+            ],
+        },
+    )
 
 
 # ============================================================================
@@ -2801,7 +3188,9 @@ def choose_confirmed_sequence(
 
 def build_row_diagnostics(
     rows: list[PDFRow],
-) -> list[dict[str, Any]]:
+) -> list[
+    dict[str, Any]
+]:
     result: list[
         dict[str, Any]
     ] = []
@@ -2867,8 +3256,10 @@ def build_text_candidate_diagnostics(
             line
         )
 
-        keyword_matches = KEYWORD_RE.findall(
-            line
+        keyword_matches = (
+            KEYWORD_RE.findall(
+                line
+            )
         )
 
         if rank is not None:
@@ -2909,6 +3300,7 @@ def build_spatial_candidate_diagnostics(
     rows: list[PDFRow],
 ) -> dict[str, Any]:
     rank_candidates = []
+
     percentage_candidates = []
 
     for index, row in enumerate(
@@ -2919,7 +3311,9 @@ def build_spatial_candidate_diagnostics(
         )
 
         if rank_info is not None:
-            word, rank = rank_info
+            word, rank = (
+                rank_info
+            )
 
             rank_candidates.append(
                 {
@@ -2953,10 +3347,27 @@ def build_spatial_candidate_diagnostics(
     return {
         "rankCandidates": rank_candidates,
         "percentageCandidates": percentage_candidates,
-        "percentageColumns": estimate_percentage_columns(
-            rows
+        "percentageColumns": (
+            estimate_percentage_columns(
+                rows
+            )
         ),
     }
+
+
+def serialize_candidate_list(
+    candidates: list[
+        HoldingCandidate
+    ],
+) -> list[
+    dict[str, Any]
+]:
+    return [
+        asdict(
+            candidate
+        )
+        for candidate in candidates
+    ]
 
 
 def save_diagnostics(
@@ -2967,7 +3378,7 @@ def save_diagnostics(
     regions: list[dict[str, Any]],
     candidates_by_strategy: dict[
         str,
-        list[HoldingCandidate]
+        list[HoldingCandidate],
     ],
     confirmation: dict[str, Any],
 ) -> None:
@@ -2976,11 +3387,15 @@ def save_diagnostics(
     )
 
     write_text(
-        output_dir / "factsheet_text.txt",
+        output_dir
+        / "factsheet_text.txt",
         full_text,
     )
 
-    (output_dir / "factsheet.pdf").write_bytes(
+    (
+        output_dir
+        / "factsheet.pdf"
+    ).write_bytes(
         factsheet_bytes
     )
 
@@ -2989,50 +3404,52 @@ def save_diagnostics(
     )
 
     write_json(
-        output_dir / "text_diagnostics.json",
+        output_dir
+        / "text_diagnostics.json",
         build_text_candidate_diagnostics(
             lines
         ),
     )
 
     write_json(
-        output_dir / "spatial_rows.json",
+        output_dir
+        / "spatial_rows.json",
         build_row_diagnostics(
             rows
         ),
     )
 
     write_json(
-        output_dir / "spatial_candidates.json",
+        output_dir
+        / "spatial_candidates.json",
         build_spatial_candidate_diagnostics(
             rows
         ),
     )
 
     write_json(
-        output_dir / "candidate_regions.json",
+        output_dir
+        / "candidate_regions.json",
         regions,
     )
 
-    serializable_candidates = {}
-
-    for strategy, candidates in (
-        candidates_by_strategy.items()
-    ):
-        serializable_candidates[
-            strategy
-        ] = [
-            asdict(candidate)
-            for candidate in candidates
-        ]
+    serializable_candidates = {
+        strategy: serialize_candidate_list(
+            candidates
+        )
+        for strategy, candidates
+        in candidates_by_strategy.items()
+    }
 
     write_json(
-        output_dir / "candidate_holdings.json",
+        output_dir
+        / "candidate_holdings.json",
         serializable_candidates,
     )
 
     write_json(
-        output_dir / "confirmation.json",
+        output_dir
+        / "confirmation.json",
         confirmation,
     )
 
@@ -3048,6 +3465,11 @@ def extract_forensic_holdings(
     list[HoldingCandidate] | None,
     dict[str, Any],
     str,
+    list[PDFRow],
+    dict[
+        str,
+        list[HoldingCandidate],
+    ],
 ]:
     full_text = extract_pdf_text(
         factsheet_bytes
@@ -3081,7 +3503,6 @@ def extract_forensic_holdings(
         rows
     )
 
-    # Build candidate subsets around every potentially useful region.
     region_rows: list[
         list[PDFRow]
     ] = []
@@ -3114,16 +3535,17 @@ def extract_forensic_holdings(
                 subset
             )
 
-    # Also analyze each page independently.
     by_page: dict[
         int,
-        list[PDFRow]
+        list[PDFRow],
     ] = defaultdict(list)
 
     for row in rows:
         by_page[
             row.page
-        ].append(row)
+        ].append(
+            row
+        )
 
     for page_number in sorted(
         by_page
@@ -3143,7 +3565,6 @@ def extract_forensic_holdings(
                 page_rows
             )
 
-    # Deduplicate subsets by row index signature.
     unique_regions: list[
         list[PDFRow]
     ] = []
@@ -3178,10 +3599,11 @@ def extract_forensic_holdings(
 
     candidates_by_strategy: dict[
         str,
-        list[HoldingCandidate]
+        list[HoldingCandidate],
     ] = defaultdict(list)
 
     for subset in unique_regions:
+
         for candidate in (
             reconstruct_same_row_table(
                 subset
@@ -3261,6 +3683,12 @@ def extract_forensic_holdings(
             rows
         ),
         "candidateRegions": regions,
+        "candidateRegionCount": len(
+            regions
+        ),
+        "candidateSubsetCount": len(
+            unique_regions
+        ),
         "strategyCandidateCounts": {
             strategy: len(
                 candidates
@@ -3275,6 +3703,8 @@ def extract_forensic_holdings(
         confirmed,
         diagnostics,
         full_text,
+        rows,
+        candidates_by_strategy,
     )
 
 
@@ -3284,8 +3714,12 @@ def extract_forensic_holdings(
 
 
 def holdings_to_json(
-    holdings: list[HoldingCandidate],
-) -> list[dict[str, Any]]:
+    holdings: list[
+        HoldingCandidate
+    ],
+) -> list[
+    dict[str, Any]
+]:
     ordered = sorted(
         holdings,
         key=lambda item: item.rank,
@@ -3310,8 +3744,12 @@ def holdings_to_json(
 
 
 def holdings_signature_json(
-    holdings: list[HoldingCandidate],
-) -> list[list[Any]]:
+    holdings: list[
+        HoldingCandidate
+    ],
+) -> list[
+    list[Any]
+]:
     return [
         [
             rank,
@@ -3333,17 +3771,23 @@ def holdings_signature_json(
 def verify_exact_signature(
     page,
     factsheet_url: str,
-    expected_holdings: list[HoldingCandidate],
+    expected_holdings: list[
+        HoldingCandidate
+    ],
 ) -> dict[str, Any]:
     fresh_bytes = download_factsheet(
         page,
         factsheet_url,
     )
 
-    fresh_holdings, diagnostics, _text = (
-        extract_forensic_holdings(
-            fresh_bytes
-        )
+    (
+        fresh_holdings,
+        diagnostics,
+        _text,
+        _rows,
+        _candidates,
+    ) = extract_forensic_holdings(
+        fresh_bytes
     )
 
     if fresh_holdings is None:
@@ -3352,15 +3796,22 @@ def verify_exact_signature(
             "could not reconstruct the holdings."
         )
 
-    expected_signature = candidate_signature(
-        expected_holdings
+    expected_signature = (
+        candidate_signature(
+            expected_holdings
+        )
     )
 
-    actual_signature = candidate_signature(
-        fresh_holdings
+    actual_signature = (
+        candidate_signature(
+            fresh_holdings
+        )
     )
 
-    if expected_signature != actual_signature:
+    if (
+        expected_signature
+        != actual_signature
+    ):
         raise HoldingsParseFailure(
             "Exact final PDF verification failed.\n"
             f"Expected: {expected_signature}\n"
@@ -3394,7 +3845,9 @@ def recover_single_fund(
     fund: dict[str, Any],
 ) -> dict[str, Any]:
     excel_row = int(
-        fund["excelRow"]
+        fund[
+            "excelRow"
+        ]
     )
 
     prudential_url = fund[
@@ -3446,38 +3899,32 @@ def recover_single_fund(
         reader.pages
     )
 
-    holdings, diagnostics, full_text = (
-        extract_forensic_holdings(
-            factsheet_bytes
-        )
+    (
+        holdings,
+        diagnostics,
+        full_text,
+        rows,
+        candidates_by_strategy,
+    ) = extract_forensic_holdings(
+        factsheet_bytes
     )
 
-    # Save forensic material before any decision.
     save_diagnostics(
         fund_output_dir,
         factsheet_bytes,
         full_text,
-        group_words_into_rows(
-            extract_positioned_words(
-                factsheet_bytes
-            )
-        ),
+        rows,
         diagnostics.get(
             "candidateRegions",
             [],
         ),
-        {
-            # The full candidate data is not returned by
-            # extract_forensic_holdings(), so diagnostics are sufficient
-            # for the initial run. Confirmed holdings are saved below.
-        },
+        candidates_by_strategy,
         diagnostics.get(
             "confirmation",
             {},
         ),
     )
 
-    # Rebuild a compact diagnostic metadata file.
     metadata = {
         "excelRow": excel_row,
         "prudentialUrl": prudential_url,
@@ -3491,7 +3938,8 @@ def recover_single_fund(
     }
 
     write_json(
-        fund_output_dir / "metadata.json",
+        fund_output_dir
+        / "metadata.json",
         metadata,
     )
 
@@ -3538,15 +3986,17 @@ def recover_single_fund(
         holdings
     )
 
-    # Fresh exact verification.
-    verification = verify_exact_signature(
-        page,
-        factsheet_url,
-        holdings,
+    verification = (
+        verify_exact_signature(
+            page,
+            factsheet_url,
+            holdings,
+        )
     )
 
     write_json(
-        fund_output_dir / "top_holdings.json",
+        fund_output_dir
+        / "top_holdings.json",
         {
             "status": "success",
             "excelRow": excel_row,
@@ -3608,11 +4058,53 @@ def recover_single_fund(
     }
 
     write_json(
-        fund_output_dir / "recovery_result.json",
+        fund_output_dir
+        / "recovery_result.json",
         success,
     )
 
     return success
+
+
+# ============================================================================
+# RULES
+# ============================================================================
+
+
+def build_rules() -> dict[str, Any]:
+    return {
+        "recovery1FailedFundsOnly": True,
+        "noBaselineFallback": True,
+        "excelColumnAControlsMasterUniverse": True,
+        "officialPrudentialSingaporeOnly": True,
+        "officialFactsheetOnly": True,
+        "thirdPartyHoldings": False,
+        "noInferredHoldings": True,
+        "noFabricatedHoldings": True,
+        "noFabricatedPercentages": True,
+        "noSyntheticValues": True,
+        "noEstimatedValues": True,
+        "noInterpolatedValues": True,
+        "maximumHoldings": MAX_HOLDINGS,
+        "publishedCountUsedExactly": True,
+        "fewerThanTenHoldingsAllowed": True,
+        "noForcedTenEntries": True,
+        "duplicateHoldingNamesAllowed": True,
+        "duplicateHoldingPercentagesAllowed": True,
+        "multilineHoldingNamesSupported": True,
+        "hyphenatedLineWrapReconstruction": True,
+        "fallbackUsesLastPercentageOnLogicalLine": True,
+        "noFuzzyHoldingMatching": True,
+        "noArbitraryCoordinateProximityPairing": True,
+        "explicitTop10HeadingNotRequired": True,
+        "adaptiveTableReconstruction": True,
+        "samePdfRowStructureRequired": True,
+        "crossStrategyExactSignatureConfirmation": True,
+        "singleStrategyCompleteSequenceAllowed": True,
+        "exactFinalPdfVerification": True,
+        "exactRankNameWeightSignatureRequired": True,
+        "forensicDiagnosticsSaved": True,
+    }
 
 
 # ============================================================================
@@ -3632,11 +4124,15 @@ def main() -> int:
     )
 
     print()
-    print("=" * 72)
+    print(
+        "=" * 72
+    )
     print(
         "VGrat FMS - Prudential Top Holdings Recovery 2"
     )
-    print("=" * 72)
+    print(
+        "=" * 72
+    )
     print(
         "Recovery source:",
         RECOVERY_1_RUN_SUMMARY_FILE,
@@ -3651,15 +4147,16 @@ def main() -> int:
     print(
         "Rule: baseline output is NEVER used as a recovery source"
     )
-    print("=" * 72)
+    print(
+        "=" * 72
+    )
     print()
 
-    recovery_1_summary, failure_source = (
-        load_recovery_1_run_summary()
-    )
+    (
+        recovery_1_summary,
+        failure_source,
+    ) = load_recovery_1_run_summary()
 
-    # Recover the actual failed-fund detail list again from the same
-    # source used by load_recovery_1_run_summary().
     if failure_source.startswith(
         "recovery1_summary:"
     ):
@@ -3675,6 +4172,7 @@ def main() -> int:
                 )
             )
         )
+
     elif (
         failure_source
         == "recovery1_output_failure_files"
@@ -3682,13 +4180,16 @@ def main() -> int:
         recovery_1_failures = (
             load_recovery_1_failure_files()
         )
+
     else:
         recovery_1_failures = []
 
     recovery_1_failures = sorted(
         recovery_1_failures,
         key=lambda item: int(
-            item["excelRow"]
+            item[
+                "excelRow"
+            ]
         ),
     )
 
@@ -3707,7 +4208,11 @@ def main() -> int:
     print(
         "Recovery 1 failed rows:",
         [
-            int(item["excelRow"])
+            int(
+                item[
+                    "excelRow"
+                ]
+            )
             for item in recovery_1_failures
         ],
     )
@@ -3774,7 +4279,11 @@ def main() -> int:
     print(
         "Recovery 2 rows:",
         [
-            int(item["excelRow"])
+            int(
+                item[
+                    "excelRow"
+                ]
+            )
             for item in recovery_universe
         ],
     )
@@ -3796,20 +4305,26 @@ def main() -> int:
     ] = []
 
     with sync_playwright() as playwright:
-        browser, context, page = (
-            launch_browser(
-                playwright
-            )
+        (
+            browser,
+            context,
+            page,
+        ) = launch_browser(
+            playwright
         )
 
         try:
             for fund in recovery_universe:
                 row = int(
-                    fund["excelRow"]
+                    fund[
+                        "excelRow"
+                    ]
                 )
 
                 print()
-                print("-" * 72)
+                print(
+                    "-" * 72
+                )
                 print(
                     f"RECOVERY 2 FUND - EXCEL ROW {row}"
                 )
@@ -3825,7 +4340,9 @@ def main() -> int:
                         "prudentialUrl"
                     ],
                 )
-                print("-" * 72)
+                print(
+                    "-" * 72
+                )
 
                 try:
                     result = recover_single_fund(
@@ -3947,7 +4464,9 @@ def main() -> int:
 
                     print(
                         "Error:",
-                        str(exc),
+                        str(
+                            exc
+                        ),
                     )
 
         finally:
@@ -3980,14 +4499,22 @@ def main() -> int:
             recovery_1_failures
         ),
         "recovery1FailedRows": [
-            int(item["excelRow"])
+            int(
+                item[
+                    "excelRow"
+                ]
+            )
             for item in recovery_1_failures
         ],
         "recovery2Universe": len(
             recovery_universe
         ),
         "recovery2UniverseRows": [
-            int(item["excelRow"])
+            int(
+                item[
+                    "excelRow"
+                ]
+            )
             for item in recovery_universe
         ],
         "successfulFunds": len(
@@ -4019,11 +4546,15 @@ def main() -> int:
     )
 
     print()
-    print("=" * 72)
+    print(
+        "=" * 72
+    )
     print(
         "RECOVERY 2 COMPLETE"
     )
-    print("=" * 72)
+    print(
+        "=" * 72
+    )
     print(
         "Recovery 1 failure source:",
         failure_source,
@@ -4102,51 +4633,11 @@ def main() -> int:
         "All holdings:",
         RECOVERY_ALL_HOLDINGS_FILE,
     )
-    print("=" * 72)
+    print(
+        "=" * 72
+    )
 
-    # Recovery scripts deliberately return 0 so GitHub Actions can
-    # upload the forensic artifacts even when individual funds fail.
     return 0
-
-
-# ============================================================================
-# RULES
-# ============================================================================
-
-
-def build_rules() -> dict[str, Any]:
-    return {
-        "recovery1FailedFundsOnly": True,
-        "noBaselineFallback": True,
-        "excelColumnAControlsMasterUniverse": True,
-        "officialPrudentialSingaporeOnly": True,
-        "officialFactsheetOnly": True,
-        "thirdPartyHoldings": False,
-        "noInferredHoldings": True,
-        "noFabricatedHoldings": True,
-        "noFabricatedPercentages": True,
-        "noSyntheticValues": True,
-        "noEstimatedValues": True,
-        "noInterpolatedValues": True,
-        "maximumHoldings": MAX_HOLDINGS,
-        "publishedCountUsedExactly": True,
-        "fewerThanTenHoldingsAllowed": True,
-        "noForcedTenEntries": True,
-        "duplicateHoldingNamesAllowed": True,
-        "duplicateHoldingPercentagesAllowed": True,
-        "multilineHoldingNamesSupported": True,
-        "hyphenatedLineWrapReconstruction": True,
-        "fallbackUsesLastPercentageOnLogicalLine": True,
-        "noFuzzyHoldingMatching": True,
-        "noArbitraryCoordinateProximityPairing": True,
-        "explicitTop10HeadingNotRequired": True,
-        "adaptiveTableReconstruction": True,
-        "samePdfRowStructureRequired": True,
-        "crossStrategyExactSignatureConfirmation": True,
-        "exactFinalPdfVerification": True,
-        "exactRankNameWeightSignatureRequired": True,
-        "forensicDiagnosticsSaved": True,
-    }
 
 
 # ============================================================================
