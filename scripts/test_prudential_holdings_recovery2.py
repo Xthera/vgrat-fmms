@@ -1918,522 +1918,897 @@ def holding_signature(
 # SPATIAL PDF EXTRACTION
 # =============================================================================
 
-def positioned_pdf_lines(
+def _positioned_pdf_lines(
     pdf_bytes: bytes,
 ) -> list[dict]:
+    """
+    Extract PDF text together with its physical x/y position.
 
-    reader = PdfReader(
-        BytesIO(
-            pdf_bytes
-        )
-    )
+    This is a FALLBACK ONLY. The normal text parser remains unchanged and is
+    always attempted first.
+
+    The purpose is to recover Prudential factsheets where the PDF's visual
+    columns are interleaved by normal text extraction, such as:
+
+        Top 10 Holdings       Dividend History
+        Company A      8.9%   Date
+        Company B      5.8%   1.50%
+
+    The returned records are page-local visual lines. No holding is inferred
+    here; this function only reconstructs the visible PDF layout.
+    """
+
+    reader = PdfReader(BytesIO(pdf_bytes))
 
     all_lines = []
 
-    for page_number, page in enumerate(
-        reader.pages,
-        start=1,
-    ):
-
+    for page_number, pdf_page in enumerate(reader.pages, start=1):
         fragments = []
 
-        def visitor_text(
-            text,
-            cm,
-            tm,
-            font_dict,
-            font_size,
-        ):
+        def visitor_text(text, cm, tm, font_dict, font_size):
+            if text is None:
+                return
 
-            value = clean_text(
-                text
-            )
-
-            if not value:
+            raw = str(text)
+            if not raw.strip():
                 return
 
             try:
-
-                x = float(
-                    tm[4]
-                )
-
-                y = float(
-                    tm[5]
-                )
-
+                x = float(tm[4])
+                y = float(tm[5])
             except Exception:
-
                 return
 
-            fragments.append(
-                {
-                    "text":
-                        value,
+            # pypdf normally gives one visual line plus a trailing newline.
+            # Split embedded newlines so that each visible text unit can be
+            # grouped independently.
+            parts = raw.splitlines()
+            if not parts:
+                parts = [raw]
 
-                    "x":
-                        x,
+            for part_index, part in enumerate(parts):
+                part = clean_text(part)
+                if not part:
+                    continue
 
-                    "y":
-                        y,
+                adjusted_y = y
+                if part_index:
+                    try:
+                        adjusted_y = y - (float(font_size or 8) * part_index * 1.15)
+                    except Exception:
+                        adjusted_y = y
 
-                    "fontSize":
-                        float(
-                            font_size
-                            or
-                            0
-                        ),
-                }
-            )
+                fragments.append(
+                    {
+                        "x0": x,
+                        "x1": x,
+                        "y": adjusted_y,
+                        "text": part,
+                    }
+                )
 
         try:
-
-            page.extract_text(
-                visitor_text=visitor_text
-            )
-
+            pdf_page.extract_text(visitor_text=visitor_text)
         except Exception:
-
+            # Some PDFs do not support visitor extraction cleanly. The normal
+            # parser has already failed before this fallback is called, so a
+            # clear fallback failure is preferable to fabricated data.
             continue
 
-        fragments.sort(
-            key=lambda item: (
-                -item["y"],
-                item["x"],
-            )
-        )
+        # Group fragments that share the same visual baseline.
+        groups = []
+        y_tolerance = 3.0
 
-        page_lines = []
+        for fragment in sorted(
+            fragments,
+            key=lambda item: (-item["y"], item["x0"]),
+        ):
+            target = None
 
-        tolerance = 3.0
+            for group in groups:
+                if abs(group["y"] - fragment["y"]) <= y_tolerance:
+                    target = group
+                    break
 
-        for fragment in fragments:
+            if target is None:
+                target = {
+                    "page": page_number,
+                    "y": fragment["y"],
+                    "fragments": [],
+                }
+                groups.append(target)
 
-            if not page_lines:
+            target["fragments"].append(fragment)
+            target["y"] = sum(
+                item["y"] for item in target["fragments"]
+            ) / len(target["fragments"])
 
-                page_lines.append(
-                    {
-                        "page":
-                            page_number,
-
-                        "y":
-                            fragment[
-                                "y"
-                            ],
-
-                        "fragments":
-                            [
-                                fragment
-                            ],
-                    }
-                )
-
-                continue
-
-            current = page_lines[
-                -1
-            ]
-
-            if abs(
-                current["y"]
-                -
-                fragment["y"]
-            ) <= tolerance:
-
-                current[
-                    "fragments"
-                ].append(
-                    fragment
-                )
-
-            else:
-
-                page_lines.append(
-                    {
-                        "page":
-                            page_number,
-
-                        "y":
-                            fragment[
-                                "y"
-                            ],
-
-                        "fragments":
-                            [
-                                fragment
-                            ],
-                    }
-                )
-
-        for line in page_lines:
-
+        for group in groups:
             fragments_sorted = sorted(
-                line[
-                    "fragments"
-                ],
-                key=lambda item: item[
-                    "x"
-                ],
+                group["fragments"],
+                key=lambda item: item["x0"],
             )
 
-            text = clean_text(
-                " ".join(
-                    item[
-                        "text"
-                    ]
-                    for item
-                    in fragments_sorted
-                )
-            )
+            text_parts = []
+            x0 = None
+            x1 = None
 
-            if not text:
+            for fragment in fragments_sorted:
+                text_parts.append(fragment["text"])
+                x0 = fragment["x0"] if x0 is None else min(x0, fragment["x0"])
+                x1 = fragment["x1"] if x1 is None else max(x1, fragment["x1"])
+
+            line_text = clean_text(" ".join(text_parts))
+            if not line_text:
                 continue
 
             all_lines.append(
                 {
-                    "page":
-                        line[
-                            "page"
-                        ],
-
-                    "y":
-                        line[
-                            "y"
-                        ],
-
-                    "xMin":
-                        min(
-                            item[
-                                "x"
-                            ]
-                            for item
-                            in fragments_sorted
-                        ),
-
-                    "xMax":
-                        max(
-                            item[
-                                "x"
-                            ]
-                            for item
-                            in fragments_sorted
-                        ),
-
-                    "text":
-                        text,
+                    "page": page_number,
+                    "y": group["y"],
+                    "x0": x0 or 0.0,
+                    "x1": x1 or 0.0,
+                    "text": line_text,
+                    "fragments": fragments_sorted,
                 }
             )
 
     return all_lines
 
 
-def find_spatial_heading(
-    lines: list[dict],
-) -> int | None:
-
-    for index, line in enumerate(
-        lines
-    ):
-
-        normalized = normalize_text(
-            line[
-                "text"
-            ]
-        )
-
-        if (
-            "top 10 holdings"
-            in normalized
-            or
-            "top ten holdings"
-            in normalized
-        ):
-
-            return index
-
-    return None
-
-
-def spatial_line_has_weight(
-    line: dict,
-) -> bool:
-
+def _is_spatial_top_holdings_heading(text: str) -> bool:
+    normalized = normalize_text(text)
     return bool(
-        percentage_matches(
-            line[
-                "text"
-            ]
+        re.search(
+            r"\btop\s+(?:10|ten)\s+holdings",
+            normalized,
+            re.IGNORECASE,
         )
     )
 
 
-def build_spatial_candidates(
-    lines: list[dict],
-    heading_index: int,
-) -> list[dict]:
+def _spatial_column_boundary(
+    page_lines: list[dict],
+    heading: dict,
+    page_width: float,
+) -> float:
+    """
+    Find the right edge of the Top Holdings visual column.
 
-    heading = lines[
-        heading_index
-    ]
+    Prudential often places Dividend History immediately beside Top Holdings.
+    We use the physical position of that adjacent heading/header when it is
+    available. Otherwise we use a conservative page-relative boundary.
+    """
 
-    heading_page = heading[
-        "page"
-    ]
+    heading_x = heading["x0"]
+    heading_y = heading["y"]
 
-    heading_y = heading[
-        "y"
-    ]
+    explicit_right_headers = []
 
-    candidates = []
-
-    for index in range(
-        heading_index + 1,
-        min(
-            len(lines),
-            heading_index
-            +
-            SPATIAL_MAX_LINES_AFTER_HEADING
-            +
-            1,
-        ),
-    ):
-
-        line = lines[
-            index
-        ]
-
-        if line[
-            "page"
-        ] != heading_page:
-
-            break
-
-        text = clean_text(
-            line[
-                "text"
-            ]
-        )
-
-        if not text:
+    for line in page_lines:
+        if abs(line["y"] - heading_y) > 45:
             continue
 
-        if is_holdings_end(
-            text
-        ):
+        for fragment in line.get("fragments", []):
+            if fragment["x0"] <= heading_x + 20:
+                continue
 
-            break
+            normalized = normalize_text(fragment["text"])
 
-        if normalize_text(
-            text
-        ) in {
-            "name",
-            "holding",
-            "holdings",
-            "weight",
-            "weights",
-            "allocation",
-        }:
+            if any(
+                marker in normalized
+                for marker in (
+                    "dividend history",
+                    "distribution history",
+                    "date",
+                    "frequency",
+                    "performance history",
+                )
+            ):
+                explicit_right_headers.append(fragment["x0"])
 
-            continue
+    if explicit_right_headers:
+        return min(explicit_right_headers) - 8.0
 
-        candidates.append(
-            line
-        )
+    # Look for a strong horizontal gap in the lines immediately below the
+    # heading. This catches two-column layouts whose right header is extracted
+    # without a useful label.
+    nearby_x = []
+    for line in page_lines:
+        if heading_y - 70 <= line["y"] <= heading_y - 5:
+            for fragment in line.get("fragments", []):
+                if fragment["x0"] > heading_x + 20:
+                    nearby_x.append(fragment["x0"])
 
-    return candidates
+    if nearby_x:
+        candidate = min(nearby_x)
+        if candidate > heading_x + page_width * 0.18:
+            return candidate - 8.0
 
-
-def choose_spatial_left_column(
-    lines: list[dict],
-) -> list[dict]:
-
-    if not lines:
-        return []
-
-    weight_lines = [
-        line
-        for line in lines
-        if spatial_line_has_weight(
-            line
-        )
-    ]
-
-    if not weight_lines:
-        return []
-
-    rightmost_weight_x = max(
-        line[
-            "xMax"
-        ]
-        for line
-        in weight_lines
+    # Final conservative fallback: keep the left 68% of the page. This is
+    # deliberately only used when the PDF exposes no usable second-column
+    # marker.
+    return max(
+        heading_x + 180.0,
+        page_width * 0.68,
     )
 
-    # The holdings name column normally occupies the area left of the
-    # portfolio-weight column. We do not pair coordinates here.
-    # We only reconstruct the textual left-side section.
-    boundary = rightmost_weight_x
+
+def _spatial_row_text(line: dict) -> str:
+    """Return the text from one physical left-column visual row."""
+
+    fragments = list(line.get("fragments", []))
+    fragments.sort(key=lambda item: item["x0"])
+
+    return clean_text(
+        " ".join(
+            fragment["text"]
+            for fragment in fragments
+        )
+    )
+
+
+def _is_spatial_nonholding_row(text: str) -> bool:
+    """
+    Reject obvious page/chart material from a spatial candidate.
+
+    This is deliberately conservative. A row is not rejected merely because
+    it contains a percentage; fixed-income holding rows legitimately contain
+    coupon percentages plus the final portfolio weight.
+    """
+
+    normalized = normalize_text(text)
+
+    if not normalized:
+        return True
+
+    if normalized in {
+        "date",
+        "frequency",
+        "dividend history",
+        "distribution history",
+        "performance",
+        "calendar year performance",
+        "year",
+        "fund",
+        "benchmark",
+        "holding",
+        "holdings",
+        "weight",
+        "weights",
+        "source",
+        "source:",
+        "important information",
+    }:
+        return True
+
+    if normalized.startswith("source:"):
+        return True
+
+    if normalized.startswith("important information"):
+        return True
+
+    if normalized.startswith("top 10 holdings"):
+        return True
+
+    return False
+
+
+def _build_spatial_holdings_section(
+    page_lines: list[dict],
+    heading: dict,
+    page_width: float,
+) -> str:
+    """
+    Build a visual-order Top Holdings section from one page.
+
+    IMPORTANT:
+    ----------
+    This function only reconstructs the physical left-hand holdings column.
+    It does not parse or infer holdings itself.
+    """
+
+    left_edge = max(
+        0.0,
+        heading["x0"] - 15.0,
+    )
+
+    right_edge = _spatial_column_boundary(
+        page_lines,
+        heading,
+        page_width,
+    )
 
     selected = []
 
-    for line in lines:
+    # PDF coordinates normally increase upward, so visible content below the
+    # heading has a smaller y coordinate.
+    for line in page_lines:
+        if line["y"] >= heading["y"] - 2.0:
+            continue
 
-        text = line[
-            "text"
-        ]
+        if line["y"] < heading["y"] - 520.0:
+            continue
+
+        cropped_fragments = []
+
+        for fragment in line.get("fragments", []):
+            x0 = float(fragment.get("x0", 0.0))
+
+            if x0 < left_edge:
+                continue
+
+            if x0 >= right_edge:
+                continue
+
+            cropped_fragments.append(
+                fragment
+            )
+
+        if not cropped_fragments:
+            continue
+
+        cropped_fragments.sort(
+            key=lambda item: item["x0"]
+        )
+
+        cropped_text = clean_text(
+            " ".join(
+                fragment["text"]
+                for fragment in cropped_fragments
+            )
+        )
+
+        if not cropped_text:
+            continue
+
+        normalized = normalize_text(
+            cropped_text
+        )
+
+        # A second visible Top Holdings heading means this candidate has
+        # reached another section on the same page.
+        if _is_spatial_top_holdings_heading(
+            cropped_text
+        ):
+            break
+
+        if is_holdings_end(
+            cropped_text
+        ):
+            break
+
+        if normalized in {
+            "dividend history",
+            "distribution history",
+            "date",
+            "frequency",
+        }:
+            continue
+
+        cropped_line = dict(line)
+        cropped_line["text"] = cropped_text
+        cropped_line["fragments"] = cropped_fragments
+        cropped_line["x0"] = min(
+            fragment["x0"]
+            for fragment in cropped_fragments
+        )
+        cropped_line["x1"] = max(
+            fragment["x0"]
+            for fragment in cropped_fragments
+        )
+
+        selected.append(
+            cropped_line
+        )
+
+    selected.sort(
+        key=lambda item: -item["y"]
+    )
+
+    return "\n".join(
+        _spatial_row_text(line)
+        for line in selected
+        if _spatial_row_text(line)
+    )
+
+
+def _parse_spatial_holdings_rows(
+    section_lines: list[dict],
+) -> list[dict]:
+    """
+    Parse holdings directly from physical visual rows.
+
+    This is intentionally separate from ``parse_holdings_fallback``.
+    The text fallback cannot safely pair detached names and weights because
+    PDF object order may differ from visual order. The spatial parser instead
+    uses the row's physical y position and the left-column x position.
+
+    Supported layouts include:
+
+        COMPANY A                         1.7%
+        COMPANY B                         1.6%
+
+    and fixed-income rows such as:
+
+        SINGAPORE (REPUBLIC OF) 2.375% 1-JUL-2039 5.8%
+
+    If a name and weight are visually separated into adjacent rows, they may
+    be paired only when their physical y positions are within the strict
+    spatial tolerance below. No arbitrary name/weight pairing is performed.
+    """
+
+    holdings = []
+
+    pending_name_fragments: list[str] = []
+    pending_name_y: float | None = None
+
+    pending_weight: tuple[float, str, float] | None = None
+
+    def commit(
+        name: str,
+        percentage: float,
+        percentage_text: str,
+    ) -> None:
+        name = clean_holding_name(name)
+
+        if not name:
+            raise RuntimeError(
+                "Spatial parser found a published holding percentage "
+                "but no holding name could be extracted."
+            )
+
+        if len(holdings) >= MAX_HOLDINGS:
+            raise RuntimeError(
+                "Spatial parser produced more than 10 holdings."
+            )
+
+        holdings.append(
+            {
+                "rank": len(holdings) + 1,
+                "name": name,
+                "weightPercent": percentage,
+                "weightText": percentage_text,
+            }
+        )
+
+    def clear_name() -> None:
+        nonlocal pending_name_fragments, pending_name_y
+        pending_name_fragments = []
+        pending_name_y = None
+
+    def clear_weight() -> None:
+        nonlocal pending_weight
+        pending_weight = None
+
+    for line in sorted(
+        section_lines,
+        key=lambda item: -item["y"],
+    ):
+        text = clean_text(
+            line.get("text")
+            or _spatial_row_text(line)
+        )
 
         if not text:
             continue
 
-        if line[
-            "xMin"
-        ] < boundary:
+        if _is_spatial_nonholding_row(text):
+            continue
 
-            selected.append(
-                line
+        y = float(line["y"])
+
+        matches = list(
+            re.finditer(
+                r"(?<![\d.])([0-9]+(?:\.[0-9]+)?)\s*%",
+                text,
+            )
+        )
+
+        # More than two percentages with no meaningful name is characteristic
+        # of chart axes, not a holding row. Do not turn chart labels into
+        # holdings.
+        if len(matches) > 2:
+            if not clean_text(
+                re.sub(
+                    r"(?<![\d.])([0-9]+(?:\.[0-9]+)?)\s*%",
+                    "",
+                    text,
+                )
+            ):
+                continue
+
+        if matches:
+            match = matches[-1]
+
+            percentage = float(
+                match.group(1)
             )
 
-    return selected
+            if percentage < 0 or percentage > 100:
+                continue
 
+            percentage_text = clean_text(
+                match.group(0)
+            )
 
-def spatial_lines_to_section(
-    lines: list[dict],
-) -> str:
+            name_fragment = clean_text(
+                text[:match.start()]
+            )
 
-    if not lines:
-        return ""
+            # Direct visual row: name and final weight are together.
+            if name_fragment:
+                combined_name = name_fragment
 
-    # Preserve PDF reading order.
-    lines = sorted(
-        lines,
-        key=lambda item: (
-            item[
-                "page"
-            ],
-            -item[
-                "y"
-            ],
-            item[
-                "xMin"
-            ],
+                if pending_name_fragments:
+                    combined_name = combine_holding_name_fragments(
+                        pending_name_fragments
+                        + [name_fragment]
+                    )
+
+                if pending_weight is not None:
+                    weight_value, weight_text, weight_y = pending_weight
+
+                    if abs(y - weight_y) <= y_tolerance:
+                        # A later name visually paired with an earlier detached
+                        # weight. The current row's own percentage takes
+                        # precedence only when it belongs to this same visual
+                        # row; therefore the detached weight is not reused.
+                        clear_weight()
+
+                commit(
+                    combined_name,
+                    percentage,
+                    percentage_text,
+                )
+                clear_name()
+                continue
+
+            # A percentage-only visual row is not safe to pair with a
+            # name-only row from another PDF row. The strict Recovery 2 rule
+            # is that a published weight must be attached to the same
+            # reconstructed visual row as its holding name.
+            if len(matches) == 1:
+                raise RuntimeError(
+                    "Spatial parser found a percentage-only row; no arbitrary "
+                    "cross-row name/weight pairing is permitted."
+                )
+
+            # Multiple percentages without a name are not a safe holding row.
+            continue
+
+        # No percentage on this row: it may be a wrapped holding name.
+        fragment = clean_holding_fragment(text)
+
+        if not fragment:
+            continue
+
+        # Detached weights are never borrowed from another visual row.
+        if pending_weight is not None:
+            raise RuntimeError(
+                "Spatial parser found a detached holding weight without a "
+                "same-row holding name; cross-row pairing is not permitted."
+            )
+
+        pending_name_fragments.append(
+            fragment
+        )
+
+        if pending_name_y is None:
+            pending_name_y = y
+
+        # A large vertical jump between name-only rows usually means the
+        # previous name is unrelated page/chart text. Keep only a small local
+        # wrapped-name group.
+        elif abs(y - pending_name_y) > 24.0:
+            pending_name_fragments = [
+                fragment
+            ]
+            pending_name_y = y
+
+        if len(holdings) >= MAX_HOLDINGS:
+            break
+
+    if pending_weight is not None:
+        raise RuntimeError(
+            "Spatial parser found a published holding percentage but could "
+            "not match it to a visually adjacent holding name."
+        )
+
+    if pending_name_fragments and len(holdings) < MAX_HOLDINGS:
+        # A trailing unweighted name is not accepted. No percentage may be
+        # fabricated or borrowed from another row.
+        trailing_name = combine_holding_name_fragments(
+            pending_name_fragments
+        )
+        if trailing_name:
+            raise RuntimeError(
+                "Spatial parser found a holding name without a published "
+                "percentage."
+            )
+
+    if not holdings:
+        raise RuntimeError(
+            "Spatial parser found the Top 10 holdings area but could not "
+            "extract any holding/percentage pairs."
+        )
+
+    if len(holdings) > MAX_HOLDINGS:
+        raise RuntimeError(
+            "Spatial parser produced more than 10 holdings."
+        )
+
+    ranks = [
+        item["rank"]
+        for item in holdings
+    ]
+
+    expected = list(
+        range(
+            1,
+            len(holdings) + 1,
         )
     )
 
-    return "\n".join(
-        clean_text(
-            line[
-                "text"
-            ]
+    if ranks != expected:
+        raise RuntimeError(
+            "Spatial parser holding ranks are not sequential."
         )
-        for line
-        in lines
-        if clean_text(
-            line[
-                "text"
-            ]
-        )
-    )
+
+    for holding in holdings:
+        if not holding["name"]:
+            raise RuntimeError(
+                "Spatial parser produced an empty holding name."
+            )
+
+        if not isinstance(
+            holding["weightPercent"],
+            (int, float),
+        ):
+            raise RuntimeError(
+                "Spatial parser produced an invalid holding weight."
+            )
+
+    return holdings
 
 
-def extract_spatial_fallback(
+def extract_holdings_spatial_fallback(
     pdf_bytes: bytes,
-) -> tuple[
-    list[dict],
-    str,
-    dict,
-]:
+) -> tuple[list[dict], str]:
+    """
+    Recover Top Holdings from the physical PDF layout.
 
-    lines = positioned_pdf_lines(
+    This fallback scans every page containing a visible "Top 10 Holdings"
+    heading, reconstructs the left visual column, and parses the physical rows
+    directly. It does NOT pass the reconstructed text through the ordinary
+    rank-based parser because PDF object order can detach names from weights.
+    """
+
+    positioned = _positioned_pdf_lines(
         pdf_bytes
     )
 
-    diagnostics = {
-        "positionedLineCount":
-            len(lines),
+    if not positioned:
+        raise RuntimeError(
+            "Spatial PDF fallback could not extract positioned text."
+        )
 
-        "headingFound":
-            False,
+    candidates = []
 
-        "candidateLineCount":
-            0,
+    pages = sorted({
+        line["page"]
+        for line in positioned
+    })
 
-        "selectedLineCount":
-            0,
+    for page_number in pages:
+        page_lines = [
+            line
+            for line in positioned
+            if line["page"] == page_number
+        ]
 
-        "parser":
-            "fallback",
-    }
+        if not page_lines:
+            continue
 
-    heading_index = find_spatial_heading(
-        lines
-    )
+        max_x = max(
+            line["x1"]
+            for line in page_lines
+        )
 
-    if heading_index is None:
+        min_x = min(
+            line["x0"]
+            for line in page_lines
+        )
+
+        page_width = max(
+            595.0,
+            max_x + 20.0,
+            min_x + 595.0,
+        )
+
+        headings = [
+            line
+            for line in page_lines
+            if _is_spatial_top_holdings_heading(
+                line["text"]
+            )
+        ]
+
+        for heading in headings:
+            section = _build_spatial_holdings_section(
+                page_lines,
+                heading,
+                page_width,
+            )
+
+            if not clean_text(section):
+                continue
+
+            # Recover the exact visual rows again so the spatial parser can
+            # use y/x evidence rather than the flattened text representation.
+            left_edge = max(
+                0.0,
+                heading["x0"] - 15.0,
+            )
+
+            right_edge = _spatial_column_boundary(
+                page_lines,
+                heading,
+                page_width,
+            )
+
+            candidate_rows = []
+
+            for line in page_lines:
+                if line["y"] >= heading["y"] - 2.0:
+                    continue
+
+                if line["y"] < heading["y"] - 520.0:
+                    continue
+
+                fragments = []
+
+                for fragment in line.get("fragments", []):
+                    x0 = float(
+                        fragment.get(
+                            "x0",
+                            0.0,
+                        )
+                    )
+
+                    if x0 < left_edge:
+                        continue
+
+                    if x0 >= right_edge:
+                        continue
+
+                    fragments.append(
+                        fragment
+                    )
+
+                if not fragments:
+                    continue
+
+                fragments.sort(
+                    key=lambda item: item["x0"]
+                )
+
+                row_text = clean_text(
+                    " ".join(
+                        fragment["text"]
+                        for fragment in fragments
+                    )
+                )
+
+                if not row_text:
+                    continue
+
+                if _is_spatial_top_holdings_heading(
+                    row_text
+                ):
+                    break
+
+                if is_holdings_end(
+                    row_text
+                ):
+                    break
+
+                candidate_rows.append(
+                    {
+                        "page": page_number,
+                        "y": line["y"],
+                        "x0": min(
+                            fragment["x0"]
+                            for fragment in fragments
+                        ),
+                        "x1": max(
+                            fragment["x0"]
+                            for fragment in fragments
+                        ),
+                        "text": row_text,
+                        "fragments": fragments,
+                    }
+                )
+
+            candidate_rows.sort(
+                key=lambda item: -item["y"]
+            )
+
+            try:
+                holdings = _parse_spatial_holdings_rows(
+                    candidate_rows
+                )
+            except Exception as error:
+                candidates.append(
+                    {
+                        "page": page_number,
+                        "section": section,
+                        "holdings": None,
+                        "error": clean_text(
+                            str(error)
+                        ),
+                    }
+                )
+                continue
+
+            candidates.append(
+                {
+                    "page": page_number,
+                    "section": section,
+                    "holdings": holdings,
+                    "error": None,
+                }
+            )
+
+    valid = [
+        candidate
+        for candidate in candidates
+        if candidate.get("holdings")
+    ]
+
+    if not valid:
+        errors = [
+            candidate.get("error")
+            for candidate in candidates
+            if candidate.get("error")
+        ]
+
+        detail = (
+            "; ".join(errors[:3])
+            if errors
+            else "No usable Top Holdings visual candidate was found."
+        )
 
         raise RuntimeError(
-            "Spatial recovery could not locate "
-            "Top 10 holdings heading."
+            "Spatial PDF fallback failed: "
+            f"{detail}"
         )
 
-    diagnostics[
-        "headingFound"
-    ] = True
-
-    candidate_lines = (
-        build_spatial_candidates(
-            lines,
-            heading_index,
-        )
+    valid.sort(
+        key=lambda candidate: (
+            len(candidate["holdings"]),
+            sum(
+                len(item["name"])
+                for item in candidate["holdings"]
+            ),
+        ),
+        reverse=True,
     )
 
-    diagnostics[
-        "candidateLineCount"
-    ] = len(
-        candidate_lines
-    )
+    selected = valid[0]
 
-    selected_lines = (
-        choose_spatial_left_column(
-            candidate_lines
-        )
-    )
-
-    diagnostics[
-        "selectedLineCount"
-    ] = len(
-        selected_lines
-    )
-
-    section = spatial_lines_to_section(
-        selected_lines
-    )
-
-    if not section:
-
-        raise RuntimeError(
-            "Spatial recovery reconstructed an empty "
-            "Top 10 holdings section."
-        )
-
-    # IMPORTANT:
-    #
-    # Spatial recovery is only allowed to reconstruct the section.
-    # It MUST then use the normal fallback parser.
-    holdings = parse_holdings_fallback(
-        section
-    )
-
-    diagnostics[
-        "parsedHoldingCount"
-    ] = len(
-        holdings
+    print(
+        "Spatial PDF fallback recovered Top Holdings "
+        f"from page {selected['page']} with "
+        f"{len(selected['holdings'])} holdings."
     )
 
     return (
-        holdings,
-        section,
-        diagnostics,
+        selected["holdings"],
+        selected["section"],
     )
+
+
 
 
 # =============================================================================
@@ -2447,19 +2822,24 @@ def parse_holdings_fixed_income_recovery(
     """
     Conservative fixed-income recovery parser.
 
-    This parser is deliberately used ONLY after the complete Recovery 2
-    engine has failed a fund.  It is designed for official Prudential
-    fixed-income tables where a security description can legitimately
-    contain coupon percentages, for example:
+    This stage runs ONLY after the complete Recovery 2 engine has failed a
+    fund.  It handles two official-PDF text layouts without using coordinate
+    proximity pairing:
 
-        SINGAPORE (REPUBLIC OF) 2.375% 1-JUL-2039 5.8%
+    1. Row-oriented layout:
+         rank -> security description -> published weight
 
-    The LAST percentage on a logical holding line is treated as the
-    published portfolio weight.  Earlier percentages remain part of the
-    security description and are never discarded.
+    2. Split-column text layout:
+         ranked security descriptions first, followed by the published
+         portfolio-weight column in the same published order.
 
-    No coordinate pairing, fuzzy matching, estimation, interpolation, or
-    third-party data is used.
+    Fixed-income security descriptions may contain coupon/rate percentages.
+    Earlier percentages remain part of the security name.  A portfolio weight
+    is selected only when the text structure provides an unambiguous published
+    weight for that holding.
+
+    No coordinate proximity pairing, fuzzy matching, estimation,
+    interpolation, fabrication, or third-party data is used.
     """
 
     lines = build_logical_holding_lines(
@@ -2471,115 +2851,462 @@ def parse_holdings_fixed_income_recovery(
             "Fixed-income recovery parser received an empty section."
         )
 
-    holdings = []
-    pending_fragments = []
-    pending_rank = None
-    multiple_percentage_lines = 0
-    weight_lines = 0
+    def extract_fixed_rank(
+        line: str,
+    ) -> tuple[int | None, str]:
+        """
+        Extract a genuine published holding rank.
 
-    for raw_line in lines:
-        line = clean_text(raw_line)
+        This deliberately does NOT treat date fragments such as
+        1-JUL-2039 as holding rank 1.
+        """
 
-        if not line:
-            continue
+        text = clean_text(line)
+        if not text:
+            return None, ""
 
-        if is_holding_header_or_noise(line):
-            continue
+        match = re.match(
+            r"^(\d{1,2})(?:[.)]|:)[ \t]+(.+)$",
+            text,
+        )
 
-        detected_rank, remainder = extract_leading_rank(line)
+        if match:
+            rank = int(match.group(1))
+            if 1 <= rank <= MAX_HOLDINGS:
+                return rank, clean_text(match.group(2))
 
-        if detected_rank is not None:
-            # A new published rank cannot appear until the preceding holding
-            # has been completed.  This prevents accidental cross-row pairing.
-            if pending_fragments:
-                raise RuntimeError(
-                    "Fixed-income parser encountered a new rank before "
-                    "the previous holding received a published weight."
+        match = re.match(
+            r"^(\d{1,2})[ \t]+(.+)$",
+            text,
+        )
+
+        if match:
+            rank = int(match.group(1))
+            remainder = clean_text(match.group(2))
+            if (
+                1 <= rank <= MAX_HOLDINGS
+                and not re.match(
+                    r"^[A-Za-z]{3,9}-\d{4}\b",
+                    remainder,
                 )
+                and not re.match(
+                    r"^[A-Za-z]{3,9}-",
+                    remainder,
+                )
+            ):
+                return rank, remainder
 
-            pending_rank = detected_rank
-            line = remainder
+        if re.fullmatch(r"(?:10|[1-9])", text):
+            return int(text), ""
 
+        return None, text
+
+    def append_name_fragment(
+        fragments: list[str],
+        value: str,
+    ) -> None:
+        fragment = clean_holding_fragment(value)
+        if fragment:
+            fragments.append(fragment)
+
+    def build_ranked_blocks() -> list[dict]:
+        """
+        Build textual blocks beginning at explicit published ranks.
+
+        Blocks are purely text-order constructs.  No x/y coordinate is used.
+        """
+
+        blocks: list[dict] = []
+        current: dict | None = None
+
+        for raw_line in lines:
+            line = clean_text(raw_line)
             if not line:
                 continue
 
-        matches = percentage_matches(line)
+            if is_holding_header_or_noise(line):
+                continue
 
-        if len(matches) > 1:
-            multiple_percentage_lines += 1
+            rank, remainder = extract_fixed_rank(line)
 
-        percentage_info = find_last_percentage_in_line(line)
+            if rank is not None:
+                if current is not None:
+                    blocks.append(current)
 
-        if percentage_info:
-            (
-                weight,
-                weight_text,
-                start,
-                _end,
-            ) = percentage_info
+                current = {
+                    "rank": rank,
+                    "lines": [],
+                }
 
-            fragment = clean_text(line[:start])
+                if remainder:
+                    current["lines"].append(remainder)
 
-            if fragment:
-                pending_fragments.append(fragment)
+                continue
+
+            if current is not None:
+                current["lines"].append(line)
+
+        if current is not None:
+            blocks.append(current)
+
+        return blocks
+
+    def validate_rank_sequence(
+        blocks: list[dict],
+    ) -> None:
+        ranks = [int(block["rank"]) for block in blocks]
+        if not ranks:
+            raise RuntimeError(
+                "Fixed-income recovery parser found no published holding ranks."
+            )
+
+        expected = list(range(1, len(ranks) + 1))
+        if ranks != expected:
+            raise RuntimeError(
+                "Fixed-income recovery published ranks are not sequential. "
+                f"Parsed={ranks}; Expected={expected}"
+            )
+
+    def parse_row_oriented_blocks(
+        blocks: list[dict],
+    ) -> tuple[list[dict], int]:
+        """
+        Parse a normal row-oriented representation.
+
+        A portfolio weight is accepted only when it is structurally the final
+        percentage of the holding block.  If a block contains only one
+        percentage, that percentage must be on a standalone line; otherwise
+        it is too ambiguous to distinguish a coupon from the portfolio weight.
+        """
+
+        holdings: list[dict] = []
+        multiple_percentage_blocks = 0
+
+        for block in blocks:
+            block_lines = [
+                clean_text(line)
+                for line in block["lines"]
+                if clean_text(line)
+                and not is_holding_header_or_noise(line)
+            ]
+
+            if not block_lines:
+                raise RuntimeError(
+                    f"Rank {block['rank']} has no security description text."
+                )
+
+            all_matches: list[tuple[float, str, int, int, str]] = []
+
+            for line in block_lines:
+                for match in percentage_matches(line):
+                    value = float(match.group(1))
+                    if 0 <= value <= 100:
+                        all_matches.append(
+                            (
+                                value,
+                                clean_text(match.group(0)),
+                                match.start(),
+                                match.end(),
+                                line,
+                            )
+                        )
+
+            if not all_matches:
+                raise RuntimeError(
+                    f"Rank {block['rank']} has no published percentage in its "
+                    "text block."
+                )
+
+            if len(all_matches) > 1:
+                multiple_percentage_blocks += 1
+
+            selected = all_matches[-1]
+            weight, weight_text, start, end, selected_line = selected
+
+            selected_line_index = len(block_lines) - 1
+            for index in range(len(block_lines) - 1, -1, -1):
+                if block_lines[index] == selected_line:
+                    selected_line_index = index
+                    break
+
+            is_trailing_percentage = (
+                selected_line_index == len(block_lines) - 1
+                and end == len(selected_line)
+            )
+
+            if not is_trailing_percentage:
+                raise RuntimeError(
+                    f"Rank {block['rank']} has a percentage that is not the "
+                    "final token of its holding block."
+                )
+
+            if len(all_matches) == 1:
+                # A lone inline percentage can be a coupon and cannot be
+                # distinguished safely from a portfolio weight.  Only a
+                # standalone final percentage is unambiguous in this case.
+                if clean_text(selected_line) != weight_text:
+                    raise RuntimeError(
+                        f"Rank {block['rank']} has only one percentage and it "
+                        "is not a standalone published weight."
+                    )
+
+            fragments: list[str] = []
+            selected_consumed = False
+
+            for line in block_lines:
+                if not selected_consumed and line == selected_line:
+                    matches = percentage_matches(line)
+                    last = matches[-1] if matches else None
+                    if (
+                        last is not None
+                        and last.start() == start
+                        and last.end() == end
+                    ):
+                        prefix = clean_text(line[:start])
+                        if prefix:
+                            append_name_fragment(
+                                fragments,
+                                prefix,
+                            )
+                        selected_consumed = True
+                        continue
+
+                append_name_fragment(
+                    fragments,
+                    line,
+                )
 
             name = combine_holding_name_fragments(
-                pending_fragments
+                fragments
             )
 
             if not name:
                 raise RuntimeError(
-                    "Fixed-income parser found a published percentage "
-                    "without a holding name."
+                    f"Rank {block['rank']} has a published percentage but no "
+                    "holding name."
                 )
-
-            rank = (
-                pending_rank
-                if pending_rank is not None
-                else len(holdings) + 1
-            )
 
             holdings.append(
                 {
-                    "rank": rank,
+                    "rank": int(block["rank"]),
                     "name": name,
                     "weightPercent": weight,
                     "weightText": weight_text,
                 }
             )
 
-            weight_lines += 1
-            pending_fragments = []
-            pending_rank = None
+        return holdings, multiple_percentage_blocks
 
-            if len(holdings) >= MAX_HOLDINGS:
-                break
+    def parse_split_column_layout(
+        blocks: list[dict],
+    ) -> tuple[list[dict], int]:
+        """
+        Parse a text extraction where ranked security descriptions are emitted
+        first and the portfolio-weight column is emitted after the final
+        ranked description.
 
-            continue
+        The only accepted pairing is published text order:
 
-        fragment = clean_holding_fragment(line)
+            rank/name 1 ... rank/name N -> weight 1 ... weight N
 
-        if fragment:
-            pending_fragments.append(fragment)
+        No coordinate proximity is used.  The parser requires an exact count
+        match between ranked names and trailing published weights.
+        """
 
-    if pending_fragments:
+        count = len(blocks)
+        if count < 1:
+            raise RuntimeError("No ranked security blocks found.")
+
+        names: list[str] = []
+
+        for block_index, block in enumerate(blocks):
+            block_lines = [
+                clean_text(line)
+                for line in block["lines"]
+                if clean_text(line)
+                and not is_holding_header_or_noise(line)
+            ]
+
+            if not block_lines:
+                raise RuntimeError(
+                    f"Rank {block['rank']} has no security description text."
+                )
+
+            # For every block except the final one, all text belongs to the
+            # security description because the trailing weight column cannot
+            # begin until the final ranked security has been emitted.
+            if block_index < count - 1:
+                fragments = []
+                for line in block_lines:
+                    append_name_fragment(fragments, line)
+                name = combine_holding_name_fragments(fragments)
+                if not name:
+                    raise RuntimeError(
+                        f"Rank {block['rank']} has an empty security description."
+                    )
+                names.append(name)
+                continue
+
+            # The final rank block may contain the beginning of a separate
+            # weight column.  Locate a trailing run of standalone percentage
+            # lines.  These are structurally different from coupon text such
+            # as "2.375% 1-JUL-2039" because the whole line is the percentage.
+            weight_lines: list[str] = []
+            name_lines = list(block_lines)
+
+            while name_lines:
+                candidate = name_lines[-1]
+                matches = percentage_matches(candidate)
+                if not matches:
+                    break
+
+                if any(
+                    match.start() != 0
+                    or match.end() != len(candidate)
+                    for match in matches
+                ):
+                    break
+
+                name_lines.pop()
+                weight_lines.insert(0, candidate)
+
+            # Also support one trailing line containing the complete weight
+            # column, e.g. "5.8% 5.1% 4.9% ...".
+            if not weight_lines and name_lines:
+                candidate = name_lines[-1]
+                matches = percentage_matches(candidate)
+                if (
+                    len(matches) == count
+                    and all(
+                        0 <= float(match.group(1)) <= 100
+                        for match in matches
+                    )
+                ):
+                    weight_lines = [candidate]
+                    name_lines.pop()
+
+            if not weight_lines:
+                raise RuntimeError(
+                    "Split-column structure did not expose a trailing "
+                    "published weight column."
+                )
+
+            trailing_weights: list[tuple[float, str]] = []
+            for weight_line in weight_lines:
+                matches = percentage_matches(weight_line)
+                for match in matches:
+                    value = float(match.group(1))
+                    if not 0 <= value <= 100:
+                        raise RuntimeError(
+                            "Split-column published weight is outside 0-100%."
+                        )
+                    trailing_weights.append(
+                        (
+                            value,
+                            clean_text(match.group(0)),
+                        )
+                    )
+
+            if len(trailing_weights) != count:
+                raise RuntimeError(
+                    "Split-column fixed-income structure was not established: "
+                    f"found {len(trailing_weights)} trailing published "
+                    f"weights for {count} ranked holdings."
+                )
+
+            # The final security name is everything remaining before the
+            # trailing weight column.  Earlier coupon percentages are kept.
+            fragments = []
+            for line in name_lines:
+                append_name_fragment(fragments, line)
+            final_name = combine_holding_name_fragments(fragments)
+            if not final_name:
+                raise RuntimeError(
+                    f"Rank {block['rank']} has an empty security description."
+                )
+            names.append(final_name)
+
+            holdings = []
+            for index, block_for_holding in enumerate(blocks):
+                weight, weight_text = trailing_weights[index]
+                name = clean_holding_name(names[index])
+                if not name:
+                    raise RuntimeError(
+                        f"Rank {block_for_holding['rank']} has an empty "
+                        "security description."
+                    )
+                holdings.append(
+                    {
+                        "rank": int(block_for_holding["rank"]),
+                        "name": name,
+                        "weightPercent": weight,
+                        "weightText": weight_text,
+                    }
+                )
+
+            coupon_evidence = sum(
+                len(percentage_matches(name))
+                for name in names
+            )
+
+            if coupon_evidence == 0:
+                raise RuntimeError(
+                    "Split-column structure was established, but no coupon "
+                    "percentage evidence was found in the security names."
+                )
+
+            return holdings, coupon_evidence
+
         raise RuntimeError(
-            "Fixed-income parser reached the end of the holdings section "
-            "with an incomplete holding that has no published weight."
+            "Split-column parser could not construct published holdings."
         )
+
+    blocks = build_ranked_blocks()
+
+    # The first ten published ranks are the only valid target universe for
+    # this stage.  Anything after rank 10 is not silently consumed as a new
+    # holding universe.
+    if len(blocks) > MAX_HOLDINGS:
+        blocks = blocks[:MAX_HOLDINGS]
+
+    validate_rank_sequence(blocks)
+
+    row_error = None
+    try:
+        holdings, multiple_percentage_blocks = parse_row_oriented_blocks(
+            blocks
+        )
+    except Exception as error:
+        row_error = clean_text(str(error))
+        holdings = []
+        multiple_percentage_blocks = 0
+
+    if not holdings:
+        try:
+            holdings, split_evidence = parse_split_column_layout(
+                blocks
+            )
+            multiple_percentage_blocks = max(
+                multiple_percentage_blocks,
+                split_evidence,
+            )
+        except Exception as split_error:
+            raise RuntimeError(
+                "Fixed-income parser could not establish an unambiguous "
+                "ranked holding/weight structure. "
+                f"Row-oriented={row_error or 'not attempted'}; "
+                f"Split-column={clean_text(str(split_error))}"
+            ) from split_error
 
     if not holdings:
         raise RuntimeError(
             "Fixed-income parser found no published holdings."
         )
 
-    # This stage exists specifically for the fixed-income ambiguity.  Require
-    # actual evidence of the ambiguity rather than silently becoming another
-    # generic parser for an unrelated failed fund.
-    if multiple_percentage_lines == 0:
+    if multiple_percentage_blocks == 0:
         raise RuntimeError(
-            "Fixed-income recovery evidence not found: no logical holding "
-            "line contained multiple percentages."
+            "Fixed-income recovery evidence not found: no coupon/portfolio "
+            "percentage ambiguity was detected."
         )
 
     holdings = validate_holdings(
@@ -2612,58 +3339,112 @@ def extract_fixed_income_recovery_engine(
     pdf_bytes: bytes,
 ) -> dict:
     """
-    Run the next specialised recovery engine against an official PDF.
+    Run the next specialised recovery engine against an official Prudential PDF.
 
-    The normal text extraction and official Top Holdings section locator are
-    reused.  Only the holding parser changes.
+    Stage order:
+
+        1. Existing strict fixed-income text parser.
+        2. Physical-PDF spatial recovery using the successful row-59/60
+           extraction architecture.
+
+    The spatial stage uses the physical PDF only to reconstruct genuine visual
+    rows. It never pairs an arbitrary name with an arbitrary nearby weight.
+    A name and weight must be present on the same reconstructed visual row;
+    otherwise the candidate is rejected. Fixed-income rows use the LAST % as
+    the published portfolio weight, preserving earlier coupon % values inside
+    the security name.
     """
 
-    (
-        full_text,
-        page_count,
-    ) = extract_pdf_text(pdf_bytes)
+    full_text, page_count = extract_pdf_text(pdf_bytes)
+    section_text, section_status = extract_holdings_section(full_text)
 
-    (
-        section_text,
-        section_status,
-    ) = extract_holdings_section(full_text)
+    fixed_income_error = None
 
-    if section_status == "not_published":
+    # -------------------------------------------------------------------------
+    # Stage 1: existing strict fixed-income parser
+    # -------------------------------------------------------------------------
+    if section_status != "not_published" and clean_text(section_text):
+        try:
+            holdings = parse_holdings_fixed_income_recovery(section_text)
+
+            return {
+                "status": "success",
+                "holdings": holdings,
+                "parser": "fixed_income_table",
+                "fixedIncomeParserError": None,
+                "spatialRecoveryError": None,
+                "fullText": full_text,
+                "sectionText": section_text,
+                "pageCount": page_count,
+            }
+        except Exception as error:
+            fixed_income_error = clean_text(str(error))
+    else:
+        fixed_income_error = (
+            "Normal text extraction did not expose a published Top Holdings "
+            "section."
+        )
+
+    # -------------------------------------------------------------------------
+    # Stage 2: physical-PDF visual-row recovery
+    # -------------------------------------------------------------------------
+    spatial_error = None
+
+    try:
+        spatial_holdings, spatial_section = extract_holdings_spatial_fallback(
+            pdf_bytes
+        )
+
+        spatial_holdings = validate_holdings(
+            spatial_holdings,
+            "Fixed-income spatial recovery",
+        )
+
+        ranks = [int(item["rank"]) for item in spatial_holdings]
+        expected_ranks = list(range(1, len(spatial_holdings) + 1))
+        if ranks != expected_ranks:
+            raise RuntimeError(
+                "Fixed-income spatial recovery published ranks are not "
+                f"sequential. Parsed={ranks}; Expected={expected_ranks}"
+            )
+
+        # Require fixed-income evidence. This specialised stage must not become
+        # a generic rescue parser for unrelated failed funds.
+        coupon_evidence = sum(
+            len(percentage_matches(item["name"]))
+            for item in spatial_holdings
+        )
+        if coupon_evidence == 0:
+            raise RuntimeError(
+                "Fixed-income spatial recovery found no coupon/rate "
+                "percentage evidence in the published security names."
+            )
+
         return {
-            "status": "no_holdings_section",
-            "holdings": [],
-            "parser": None,
-            "fixedIncomeParserError": None,
+            "status": "success",
+            "holdings": spatial_holdings,
+            "parser": "fixed_income_spatial_fallback",
+            "fixedIncomeParserError": fixed_income_error,
+            "spatialRecoveryError": None,
             "fullText": full_text,
-            "sectionText": "",
+            "sectionText": spatial_section,
             "pageCount": page_count,
         }
 
-    try:
-        holdings = parse_holdings_fixed_income_recovery(
-            section_text
-        )
     except Exception as error:
-        raise HoldingsParseFailure(
-            "Fixed-income recovery parser failed: "
-            f"{clean_text(str(error))}",
-            section_text=section_text,
-            full_text=full_text,
-            diagnostics={
-                "fixedIncomeParserError": clean_text(str(error)),
-            },
-        ) from error
+        spatial_error = clean_text(str(error))
 
-    return {
-        "status": "success",
-        "holdings": holdings,
-        "parser": "fixed_income_table",
-        "fixedIncomeParserError": None,
-        "fullText": full_text,
-        "sectionText": section_text,
-        "pageCount": page_count,
-    }
-
+    raise HoldingsParseFailure(
+        "Fixed-income recovery failed after both the text parser and the "
+        "physical-PDF spatial recovery. "
+        f"FixedIncome={fixed_income_error}; Spatial={spatial_error}",
+        section_text=section_text or "",
+        full_text=full_text,
+        diagnostics={
+            "fixedIncomeParserError": fixed_income_error,
+            "spatialRecoveryError": spatial_error,
+        },
+    )
 
 def recover_single_fund_fixed_income(
     page,
@@ -2945,10 +3726,14 @@ def extract_with_recovery_engine(
         (
             spatial_holdings,
             spatial_section,
-            spatial_diagnostics,
-        ) = extract_spatial_fallback(
+        ) = extract_holdings_spatial_fallback(
             pdf_bytes
         )
+
+        spatial_diagnostics = {
+            "parser": "spatial_fallback",
+            "parsedHoldingCount": len(spatial_holdings),
+        }
 
         return {
             "status":
@@ -3952,7 +4737,11 @@ def save_next_recovery_failure(
     failure = {
         "status": "failed",
         "recoveryStage": "recovery2_next",
-        "recoveryMethod": "fixed_income_table",
+        "recoveryMethod": (
+                    final_next_result.get("holdingsParser")
+                    if final_next_result
+                    else "fixed_income_table"
+                ),
         "excelRow": excel_row,
         "prudentialUrl": excel_fund["prudentialUrl"],
         "excelPruAccessName": excel_fund.get("pruAccessName"),
@@ -4686,7 +5475,7 @@ def main() -> int:
                             "verifiedParser"
                         ]
                         result["recoveryStage"] = "recovery2_next"
-                        result["recoveryMethod"] = "fixed_income_table"
+                        result["recoveryMethod"] = result.get("holdingsParser") or "fixed_income_table"
 
                         final_next_result = result
 
@@ -4816,7 +5605,11 @@ def main() -> int:
                     else "Unknown next-stage recovery failure."
                 ),
                 "recoveryStage": "recovery2_next",
-                "recoveryMethod": "fixed_income_table",
+                "recoveryMethod": (
+                    final_next_result.get("holdingsParser")
+                    if final_next_result
+                    else "fixed_income_table"
+                ),
                 "initialRecovery2Failure": initial_failure,
                 "outputDirectory": str(next_failure_directory),
                 "attempts": attempt_diagnostics,
