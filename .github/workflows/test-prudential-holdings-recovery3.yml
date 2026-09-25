@@ -1,122 +1,144 @@
-name: Test Prudential Holdings Recovery 3
+name: Top Holdings - Recovery 3
 
 on:
   workflow_dispatch:
 
 jobs:
   recovery3:
+
     runs-on: ubuntu-latest
+
+    timeout-minutes: 60
 
     steps:
 
-      # ============================================================
+      # ------------------------------------------------------------
       # 1. Checkout repository
-      # ============================================================
+      # ------------------------------------------------------------
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
 
-      # ============================================================
+      # ------------------------------------------------------------
       # 2. Set up Python
-      # ============================================================
+      # ------------------------------------------------------------
 
-      - name: Set up Python 3.12
+      - name: Set up Python 3
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
 
-      # ============================================================
+      # ------------------------------------------------------------
       # 3. Install Python dependencies
-      # ============================================================
+      # ------------------------------------------------------------
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install openpyxl pypdf playwright
+          pip install -r scripts/requirement.txt
 
 
-      # ============================================================
+      # ------------------------------------------------------------
       # 4. Install Playwright Chromium
-      # ============================================================
+      # ------------------------------------------------------------
 
       - name: Install Playwright Chromium
         run: |
           python -m playwright install --with-deps chromium
 
 
-      # ============================================================
-      # 5. Verify required files
-      # ============================================================
+      # ------------------------------------------------------------
+      # 5. Verify Recovery 2 input exists
+      # ------------------------------------------------------------
 
-      - name: Verify Recovery 3 files
+      - name: Verify Recovery 2 output
         run: |
-          echo "Checking repository structure..."
+          if [ ! -f "output_holdings_recovery_2/run_summary.json" ]; then
+            echo "ERROR: Recovery 2 run_summary.json was not found."
+            echo "Run Recovery 2 first."
+            exit 1
+          fi
 
-          test -f "Funds Links.xlsm"
-          test -f "scripts/test_prudential_holdings_recovery3.py"
-          test -f "output_holdings_recovery_2/run_summary.json"
+          echo "Recovery 2 run summary found."
 
-          echo "Required files found."
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("output_holdings_recovery_2/run_summary.json")
+
+          data = json.loads(
+              path.read_text(encoding="utf-8")
+          )
+
+          failed = data.get("failedFundsDetail")
+
+          if not isinstance(failed, list):
+              raise SystemExit(
+                  "ERROR: Recovery 2 failedFundsDetail is missing or invalid."
+              )
+
+          print(
+              f"Recovery 2 failed funds available for Recovery 3: {len(failed)}"
+          )
+
+          for item in failed:
+              print(
+                  f"  Row {item.get('excelRow')}: "
+                  f"{item.get('error', '')}"
+              )
+          PY
 
 
-      # ============================================================
-      # 6. Compile Recovery 3
-      # ============================================================
+      # ------------------------------------------------------------
+      # 6. Verify Excel master exists
+      # ------------------------------------------------------------
 
-      - name: Compile Recovery 3
+      - name: Verify Funds Links.xlsm
         run: |
-          python -m py_compile \
-            scripts/test_prudential_holdings_recovery3.py
+          if [ ! -f "Funds Links.xlsm" ]; then
+            echo "ERROR: Funds Links.xlsm was not found."
+            exit 1
+          fi
+
+          echo "Funds Links.xlsm found."
 
 
-      # ============================================================
+      # ------------------------------------------------------------
       # 7. Run Recovery 3
-      # ============================================================
+      # ------------------------------------------------------------
 
       - name: Run Prudential Holdings Recovery 3
         run: |
-          python -u \
-            scripts/test_prudential_holdings_recovery3.py
+          python scripts/test_prudential_holdings_recovery3.py
 
 
-      # ============================================================
+      # ------------------------------------------------------------
       # 8. Display Recovery 3 summary
-      # ============================================================
+      # ------------------------------------------------------------
 
       - name: Display Recovery 3 summary
         if: always()
         run: |
-          echo "============================================================"
-          echo "RECOVERY 3 SUMMARY"
-          echo "============================================================"
-
           if [ -f "output_holdings_recovery_3/run_summary.json" ]; then
-            python - <<'PY'
-          import json
-
-          path = "output_holdings_recovery_3/run_summary.json"
-
-          with open(path, "r", encoding="utf-8") as f:
-              data = json.load(f)
-
-          print(json.dumps(data, indent=2, ensure_ascii=False))
-          PY
+            cat output_holdings_recovery_3/run_summary.json
           else
             echo "Recovery 3 run_summary.json was not created."
           fi
 
 
-      # ============================================================
-      # 9. Upload Recovery 3 evidence
-      # ============================================================
+      # ------------------------------------------------------------
+      # 9. Upload Recovery 3 artifacts
+      # ------------------------------------------------------------
 
-      - name: Upload Recovery 3 evidence
+      - name: Upload Recovery 3 artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: prudential-holdings-recovery3
+          name: prudential-holdings-recovery-3
           path: |
-            output_holdings_recovery_3/
+            output_holdings_recovery_3/**
           if-no-files-found: warn
+          retention-days: 30
