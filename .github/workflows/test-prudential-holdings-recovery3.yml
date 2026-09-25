@@ -1,0 +1,122 @@
+name: Test Prudential Holdings Recovery 3
+
+on:
+  workflow_dispatch:
+
+jobs:
+  recovery3:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # ============================================================
+      # 1. Checkout repository
+      # ============================================================
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # ============================================================
+      # 2. Set up Python
+      # ============================================================
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+
+      # ============================================================
+      # 3. Install Python dependencies
+      # ============================================================
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openpyxl pypdf playwright
+
+
+      # ============================================================
+      # 4. Install Playwright Chromium
+      # ============================================================
+
+      - name: Install Playwright Chromium
+        run: |
+          python -m playwright install --with-deps chromium
+
+
+      # ============================================================
+      # 5. Verify required files
+      # ============================================================
+
+      - name: Verify Recovery 3 files
+        run: |
+          echo "Checking repository structure..."
+
+          test -f "Funds Links.xlsm"
+          test -f "scripts/test_prudential_holdings_recovery3.py"
+          test -f "output_holdings_recovery_2/run_summary.json"
+
+          echo "Required files found."
+
+
+      # ============================================================
+      # 6. Compile Recovery 3
+      # ============================================================
+
+      - name: Compile Recovery 3
+        run: |
+          python -m py_compile \
+            scripts/test_prudential_holdings_recovery3.py
+
+
+      # ============================================================
+      # 7. Run Recovery 3
+      # ============================================================
+
+      - name: Run Prudential Holdings Recovery 3
+        run: |
+          python -u \
+            scripts/test_prudential_holdings_recovery3.py
+
+
+      # ============================================================
+      # 8. Display Recovery 3 summary
+      # ============================================================
+
+      - name: Display Recovery 3 summary
+        if: always()
+        run: |
+          echo "============================================================"
+          echo "RECOVERY 3 SUMMARY"
+          echo "============================================================"
+
+          if [ -f "output_holdings_recovery_3/run_summary.json" ]; then
+            python - <<'PY'
+          import json
+
+          path = "output_holdings_recovery_3/run_summary.json"
+
+          with open(path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          print(json.dumps(data, indent=2, ensure_ascii=False))
+          PY
+          else
+            echo "Recovery 3 run_summary.json was not created."
+          fi
+
+
+      # ============================================================
+      # 9. Upload Recovery 3 evidence
+      # ============================================================
+
+      - name: Upload Recovery 3 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prudential-holdings-recovery3
+          path: |
+            output_holdings_recovery_3/
+          if-no-files-found: warn
