@@ -2303,35 +2303,42 @@ def spatial_lines_to_section(
     if not lines:
         return ""
 
+    def line_x_min(line: dict) -> float:
+        # Recovery 3 positioned rows use {page, y, fragments, text};
+        # older spatial rows may also contain xMin.  Never let diagnostic
+        # formatting fail with KeyError("xMin") and mask the real parser
+        # error.
+        if "xMin" in line:
+            try:
+                return float(line["xMin"])
+            except (TypeError, ValueError):
+                pass
+
+        fragments = line.get("fragments") or []
+        xs = []
+
+        for fragment in fragments:
+            try:
+                xs.append(float(fragment["x"]))
+            except (KeyError, TypeError, ValueError):
+                continue
+
+        return min(xs) if xs else float("inf")
+
     # Preserve PDF reading order.
     lines = sorted(
         lines,
         key=lambda item: (
-            item[
-                "page"
-            ],
-            -item[
-                "y"
-            ],
-            item[
-                "xMin"
-            ],
+            item.get("page", 0),
+            -float(item.get("y", 0)),
+            line_x_min(item),
         )
     )
 
     return "\n".join(
-        clean_text(
-            line[
-                "text"
-            ]
-        )
-        for line
-        in lines
-        if clean_text(
-            line[
-                "text"
-            ]
-        )
+        clean_text(line.get("text", ""))
+        for line in lines
+        if clean_text(line.get("text", ""))
     )
 
 
