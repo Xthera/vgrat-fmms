@@ -1229,8 +1229,24 @@ def combine_holding_name_fragments(
     if not cleaned:
         return ""
 
+    # PDF text extraction can split a decimal coupon across physical
+    # fragments, e.g. ``2.`` + ``95%``.  A normal space-join would turn that
+    # into ``2. 95%`` and clean_holding_name() could then mistake ``2.`` for
+    # a holding rank.  Join decimal fragments without inserting a space.
+    combined_parts = []
+
+    for fragment in cleaned:
+        if (
+            combined_parts
+            and re.search(r"\d+\.$", combined_parts[-1])
+            and re.match(r"^\d+(?:%|\b)", fragment)
+        ):
+            combined_parts[-1] += fragment
+        else:
+            combined_parts.append(fragment)
+
     combined = " ".join(
-        cleaned
+        combined_parts
     )
 
     combined = re.sub(
@@ -4602,8 +4618,20 @@ def recovery3_reconstruct_table(
             else len(rows)
         )
 
+        # The physical PDF order for fixed-income holdings is not always
+        # ``issuer -> maturity -> weight``.  In this factsheet the SEATRIUM
+        # holding is physically laid out as:
+        #
+        #     SEATRIUM FINANCIAL SERVICES PTE LTD   1.6%
+        #     2.95% 28-APR-2031
+        #
+        # Therefore the logical block for a maturity row starts immediately
+        # after the PREVIOUS maturity row and ends AT the CURRENT maturity
+        # row.  This keeps an issuer/weight line that precedes its maturity
+        # attached to that same security, while keeping HSBC and BPCE in
+        # their own blocks.
         block_start = previous_maturity_index + 1
-        block_end = next_maturity_index - 1
+        block_end = maturity_index
 
         block_rows = rows[
             block_start:block_end + 1
@@ -4883,7 +4911,7 @@ def recovery3_reconstruct_table(
         "usedYValues": used_y_values,
         "reconstructedBlocks": reconstructed_blocks,
         "rejectedBlocks": rejected_blocks,
-        "algorithm": "maturity_anchored_physical_pdf_table_reconstruction",
+        "algorithm": "maturity_anchored_inclusive_physical_pdf_table_reconstruction",
     }
 
     return holdings, diagnostics
