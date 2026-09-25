@@ -1,4 +1,4 @@
-name: Top Holding - All Fund Full
+name: Top Holding - All Fund Final
 
 on:
   workflow_dispatch:
