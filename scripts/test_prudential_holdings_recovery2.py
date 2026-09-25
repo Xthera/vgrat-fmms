@@ -77,6 +77,16 @@ percentages.
 
 It does NOT silently accept a different result during final verification.
 
+Recovery 3 is intentionally NOT included in this script.
+
+Recovery 2 ends after its own:
+    1. primary parser
+    2. fallback parser
+    3. spatial recovery + fallback parser
+    4. exact final verification
+
+Any fund still failing those stages remains FAILED for Recovery 2.
+
 
 HARD RULES
 ==========
@@ -111,6 +121,7 @@ HARD RULES
   signature.
 - If exact verification fails, the fund remains FAILED.
 - A recovery result never overwrites the baseline result.
+- Recovery 3 is a separate script and is NOT executed here.
 """
 
 
@@ -2180,10 +2191,6 @@ def build_spatial_candidates(
         "page"
     ]
 
-    heading_y = heading[
-        "y"
-    ]
-
     candidates = []
 
     for index in range(
@@ -2252,7 +2259,8 @@ def choose_spatial_left_column(
 
     weight_lines = [
         line
-        for line in lines
+        for line
+        in lines
         if spatial_line_has_weight(
             line
         )
@@ -2434,360 +2442,6 @@ def extract_spatial_fallback(
         section,
         diagnostics,
     )
-
-
-# =============================================================================
-# NEXT-STAGE FIXED-INCOME RECOVERY
-# =============================================================================
-
-
-def parse_holdings_fixed_income_recovery(
-    section_text: str,
-) -> list[dict]:
-    """
-    Conservative fixed-income recovery parser.
-
-    This parser is deliberately used ONLY after the complete Recovery 2
-    engine has failed a fund.  It is designed for official Prudential
-    fixed-income tables where a security description can legitimately
-    contain coupon percentages, for example:
-
-        SINGAPORE (REPUBLIC OF) 2.375% 1-JUL-2039 5.8%
-
-    The LAST percentage on a logical holding line is treated as the
-    published portfolio weight.  Earlier percentages remain part of the
-    security description and are never discarded.
-
-    No coordinate pairing, fuzzy matching, estimation, interpolation, or
-    third-party data is used.
-    """
-
-    lines = build_logical_holding_lines(
-        section_text
-    )
-
-    if not lines:
-        raise RuntimeError(
-            "Fixed-income recovery parser received an empty section."
-        )
-
-    holdings = []
-    pending_fragments = []
-    pending_rank = None
-    multiple_percentage_lines = 0
-    weight_lines = 0
-
-    for raw_line in lines:
-        line = clean_text(raw_line)
-
-        if not line:
-            continue
-
-        if is_holding_header_or_noise(line):
-            continue
-
-        detected_rank, remainder = extract_leading_rank(line)
-
-        if detected_rank is not None:
-            # A new published rank cannot appear until the preceding holding
-            # has been completed.  This prevents accidental cross-row pairing.
-            if pending_fragments:
-                raise RuntimeError(
-                    "Fixed-income parser encountered a new rank before "
-                    "the previous holding received a published weight."
-                )
-
-            pending_rank = detected_rank
-            line = remainder
-
-            if not line:
-                continue
-
-        matches = percentage_matches(line)
-
-        if len(matches) > 1:
-            multiple_percentage_lines += 1
-
-        percentage_info = find_last_percentage_in_line(line)
-
-        if percentage_info:
-            (
-                weight,
-                weight_text,
-                start,
-                _end,
-            ) = percentage_info
-
-            fragment = clean_text(line[:start])
-
-            if fragment:
-                pending_fragments.append(fragment)
-
-            name = combine_holding_name_fragments(
-                pending_fragments
-            )
-
-            if not name:
-                raise RuntimeError(
-                    "Fixed-income parser found a published percentage "
-                    "without a holding name."
-                )
-
-            rank = (
-                pending_rank
-                if pending_rank is not None
-                else len(holdings) + 1
-            )
-
-            holdings.append(
-                {
-                    "rank": rank,
-                    "name": name,
-                    "weightPercent": weight,
-                    "weightText": weight_text,
-                }
-            )
-
-            weight_lines += 1
-            pending_fragments = []
-            pending_rank = None
-
-            if len(holdings) >= MAX_HOLDINGS:
-                break
-
-            continue
-
-        fragment = clean_holding_fragment(line)
-
-        if fragment:
-            pending_fragments.append(fragment)
-
-    if pending_fragments:
-        raise RuntimeError(
-            "Fixed-income parser reached the end of the holdings section "
-            "with an incomplete holding that has no published weight."
-        )
-
-    if not holdings:
-        raise RuntimeError(
-            "Fixed-income parser found no published holdings."
-        )
-
-    # This stage exists specifically for the fixed-income ambiguity.  Require
-    # actual evidence of the ambiguity rather than silently becoming another
-    # generic parser for an unrelated failed fund.
-    if multiple_percentage_lines == 0:
-        raise RuntimeError(
-            "Fixed-income recovery evidence not found: no logical holding "
-            "line contained multiple percentages."
-        )
-
-    holdings = validate_holdings(
-        holdings,
-        "Fixed-income recovery",
-    )
-
-    ranks = [
-        item["rank"]
-        for item in holdings
-    ]
-
-    expected_ranks = list(
-        range(
-            1,
-            len(holdings) + 1,
-        )
-    )
-
-    if ranks != expected_ranks:
-        raise RuntimeError(
-            "Fixed-income recovery published ranks are not sequential. "
-            f"Parsed={ranks}; Expected={expected_ranks}"
-        )
-
-    return holdings
-
-
-def extract_fixed_income_recovery_engine(
-    pdf_bytes: bytes,
-) -> dict:
-    """
-    Run the next specialised recovery engine against an official PDF.
-
-    The normal text extraction and official Top Holdings section locator are
-    reused.  Only the holding parser changes.
-    """
-
-    (
-        full_text,
-        page_count,
-    ) = extract_pdf_text(pdf_bytes)
-
-    (
-        section_text,
-        section_status,
-    ) = extract_holdings_section(full_text)
-
-    if section_status == "not_published":
-        return {
-            "status": "no_holdings_section",
-            "holdings": [],
-            "parser": None,
-            "fixedIncomeParserError": None,
-            "fullText": full_text,
-            "sectionText": "",
-            "pageCount": page_count,
-        }
-
-    try:
-        holdings = parse_holdings_fixed_income_recovery(
-            section_text
-        )
-    except Exception as error:
-        raise HoldingsParseFailure(
-            "Fixed-income recovery parser failed: "
-            f"{clean_text(str(error))}",
-            section_text=section_text,
-            full_text=full_text,
-            diagnostics={
-                "fixedIncomeParserError": clean_text(str(error)),
-            },
-        ) from error
-
-    return {
-        "status": "success",
-        "holdings": holdings,
-        "parser": "fixed_income_table",
-        "fixedIncomeParserError": None,
-        "fullText": full_text,
-        "sectionText": section_text,
-        "pageCount": page_count,
-    }
-
-
-def recover_single_fund_fixed_income(
-    page,
-    excel_fund: dict,
-) -> dict:
-    """
-    Re-download the official Prudential factsheet for one fund and run ONLY
-    the specialised fixed-income recovery parser.
-    """
-
-    excel_row = int(
-        excel_fund["excelRow"]
-    )
-
-    prudential_url = ensure_prudential_url(
-        excel_fund["prudentialUrl"]
-    )
-
-    page.goto(
-        prudential_url,
-        wait_until="domcontentloaded",
-        timeout=PAGE_TIMEOUT_MS,
-    )
-
-    try:
-        page.wait_for_load_state(
-            "networkidle",
-            timeout=25000,
-        )
-    except PlaywrightTimeoutError:
-        pass
-
-    page.wait_for_timeout(
-        POST_PAGE_WAIT_MS
-    )
-
-    final_url = clean_text(page.url)
-
-    if not is_prudential_url(final_url):
-        raise RuntimeError(
-            "Fixed-income recovery page redirected outside Prudential "
-            f"Singapore: {final_url}"
-        )
-
-    page_title = clean_text(page.title())
-    fund_name = extract_fund_page_name(page)
-    factsheet_url = find_factsheet_url(page)
-
-    print(
-        f"Fixed-income recovery row {excel_row}: "
-        f"{fund_name or '-'}"
-    )
-
-    factsheet_bytes = download_factsheet(
-        page,
-        factsheet_url,
-    )
-
-    engine = extract_fixed_income_recovery_engine(
-        factsheet_bytes
-    )
-
-    if engine["status"] == "no_holdings_section":
-        return {
-            "status": "no_holdings_section",
-            "excelRow": excel_row,
-            "prudentialUrl": prudential_url,
-            "finalUrl": final_url,
-            "pageTitle": page_title,
-            "fundName": fund_name,
-            "excelPruAccessName": excel_fund.get("pruAccessName"),
-            "factsheetUrl": factsheet_url,
-            "factsheetPageCount": engine["pageCount"],
-            "factsheetDocumentDate": extract_document_date(
-                engine["fullText"]
-            ),
-            "factsheetDataAsAt": extract_data_as_at(
-                engine["fullText"]
-            ),
-            "topHoldingsCount": 0,
-            "topHoldings": [],
-            "holdingsParser": None,
-            "recoveryEngine": "fixed_income_no_holdings_section",
-            "recoveryStage": "recovery2_next",
-            "_factsheetBytes": factsheet_bytes,
-            "_fullText": engine["fullText"],
-            "_sectionText": "",
-        }
-
-    holdings = engine["holdings"]
-
-    return {
-        "status": "success",
-        "excelRow": excel_row,
-        "prudentialUrl": prudential_url,
-        "finalUrl": final_url,
-        "pageTitle": page_title,
-        "fundName": fund_name,
-        "excelPruAccessName": excel_fund.get("pruAccessName"),
-        "factsheetUrl": factsheet_url,
-        "factsheetDocumentDate": extract_document_date(
-            engine["fullText"]
-        ),
-        "factsheetDataAsAt": extract_data_as_at(
-            engine["fullText"]
-        ),
-        "factsheetPageCount": engine["pageCount"],
-        "holdingsSectionStatus": "published",
-        "topHoldingsCount": len(holdings),
-        "topHoldings": holdings,
-        "holdingsParser": engine["parser"],
-        "recoveryEngine": "fixed_income_table",
-        "recoveryStage": "recovery2_next",
-        "primaryParserError": None,
-        "fallbackParserError": None,
-        "spatialRecoveryError": None,
-        "spatialDiagnostics": None,
-        "fixedIncomeParserError": None,
-        "_factsheetBytes": factsheet_bytes,
-        "_fullText": engine["fullText"],
-        "_sectionText": engine["sectionText"],
-    }
-
-
 
 
 # =============================================================================
@@ -2989,7 +2643,7 @@ def extract_with_recovery_engine(
         )
 
     raise HoldingsParseFailure(
-        "All recovery extraction engines failed. "
+        "All Recovery 2 extraction engines failed. "
         f"Primary={primary_error}; "
         f"Fallback={fallback_error}; "
         f"Spatial={spatial_error}",
@@ -3347,7 +3001,6 @@ def recover_single_fund(
 def verify_exact_against_official_pdf(
     page,
     result: dict,
-    extraction_engine=None,
 ) -> dict:
 
     print(
@@ -3382,10 +3035,7 @@ def verify_exact_against_official_pdf(
             "Final verification response was not a PDF."
         )
 
-    if extraction_engine is None:
-        extraction_engine = extract_with_recovery_engine
-
-    verification_engine = extraction_engine(
+    verification_engine = extract_with_recovery_engine(
         verification_bytes
     )
 
@@ -3452,11 +3102,6 @@ def verify_exact_against_official_pdf(
             "verificationSpatialDiagnostics":
                 verification_engine.get(
                     "spatialDiagnostics"
-                ),
-
-            "verificationFixedIncomeParserError":
-                verification_engine.get(
-                    "fixedIncomeParserError"
                 ),
         }
 
@@ -3924,76 +3569,6 @@ def save_failure(
 
 
 # =============================================================================
-# NEXT RECOVERY FAILURE OUTPUT
-# =============================================================================
-
-def save_next_recovery_failure(
-    excel_fund: dict,
-    error_text: str,
-    attempt_diagnostics: list[dict],
-    section_text: str | None = None,
-    full_text: str | None = None,
-    diagnostics: dict | None = None,
-) -> Path:
-    """Save next-stage diagnostics without destroying the Recovery 2 result."""
-
-    excel_row = int(excel_fund["excelRow"])
-
-    directory = (
-        RECOVERY_FUNDS_OUTPUT_DIR
-        / f"{excel_row}_failed"
-    )
-
-    directory.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    failure = {
-        "status": "failed",
-        "recoveryStage": "recovery2_next",
-        "recoveryMethod": "fixed_income_table",
-        "excelRow": excel_row,
-        "prudentialUrl": excel_fund["prudentialUrl"],
-        "excelPruAccessName": excel_fund.get("pruAccessName"),
-        "error": clean_text(error_text),
-        "attempts": attempt_diagnostics,
-        "failedAtUtc": utc_now_iso(),
-    }
-
-    save_json(
-        directory / "recovery2_next_failure.json",
-        failure,
-    )
-
-    if section_text:
-        (
-            directory / "recovery2_next_top_holdings_section.txt"
-        ).write_text(
-            section_text,
-            encoding="utf-8",
-        )
-
-    if full_text:
-        (
-            directory / "recovery2_next_factsheet_text.txt"
-        ).write_text(
-            full_text,
-            encoding="utf-8",
-        )
-
-    if diagnostics:
-        save_json(
-            directory / "recovery2_next_diagnostics.json",
-            diagnostics,
-        )
-
-    return directory
-
-
-
-
-# =============================================================================
 # MAIN
 # =============================================================================
 
@@ -4133,6 +3708,9 @@ def main() -> int:
 
                 "exactFinalVerification":
                     True,
+
+                "recovery3Excluded":
+                    True,
             },
         }
 
@@ -4160,11 +3738,6 @@ def main() -> int:
     fallback_recovered = []
 
     spatial_recovered = []
-
-    # Results from the automatic post-Recovery-2 specialised stage.
-    next_recovery_attempted = []
-    next_recovery_recovered = []
-    next_recovery_failed = []
 
     for index, excel_fund in enumerate(
         recovery_universe,
@@ -4549,296 +4122,6 @@ def main() -> int:
             )
 
     # =========================================================================
-    # AUTOMATIC NEXT RECOVERY STAGE
-    # =========================================================================
-    #
-    # IMPORTANT:
-    # This list is created ONLY after the complete Recovery 2 engine has
-    # finished processing and exact-verifying every Recovery 2 fund.
-    # Nothing is hardcoded by Excel row number.
-    #
-    # The next specialised parser is therefore isolated to funds that are
-    # genuinely still failed at this point.
-    # =========================================================================
-
-    recovery2_initial_failed = list(failed)
-
-    next_recovery_rows = {
-        int(item["excelRow"])
-        for item in recovery2_initial_failed
-    }
-
-    next_recovery_universe = [
-        excel_funds[row]
-        for row in sorted(next_recovery_rows)
-        if row in excel_funds
-    ]
-
-    print(
-        "\n"
-        + "=" * 78
-    )
-
-    print(
-        "AUTOMATIC NEXT RECOVERY STAGE"
-    )
-
-    print(
-        "=" * 78
-    )
-
-    print(
-        "This stage is running only against funds that remained FAILED "
-        "after the complete Recovery 2 engine."
-    )
-
-    print(
-        f"Next-stage universe: {len(next_recovery_universe)}"
-    )
-
-    for index, excel_fund in enumerate(
-        next_recovery_universe,
-        start=1,
-    ):
-        excel_row = int(excel_fund["excelRow"])
-
-        next_recovery_attempted.append(excel_row)
-
-        print(
-            "\n"
-            + "-" * 78
-        )
-
-        print(
-            f"NEXT RECOVERY {index}/{len(next_recovery_universe)} - "
-            f"Excel row {excel_row}"
-        )
-
-        print(
-            "Method: fixed_income_table"
-        )
-
-        attempt_diagnostics = []
-        final_next_result = None
-        last_next_exception = None
-
-        for attempt in range(
-            1,
-            RETRY_COUNT + 1,
-        ):
-            print(
-                f"\nNext-stage attempt {attempt}/{RETRY_COUNT}"
-            )
-
-            attempt_record = {
-                "attempt": attempt,
-                "startedAtUtc": utc_now_iso(),
-            }
-
-            try:
-                with sync_playwright() as playwright:
-                    browser = playwright.chromium.launch(
-                        headless=BROWSER_HEADLESS
-                    )
-
-                    context = browser.new_context(
-                        viewport={
-                            "width": 1440,
-                            "height": 1000,
-                        },
-                        user_agent=(
-                            "Mozilla/5.0 "
-                            "(Windows NT 10.0; Win64; x64) "
-                            "AppleWebKit/537.36 "
-                            "(KHTML, like Gecko) "
-                            "Chrome/153.0.0.0 Safari/537.36"
-                        ),
-                    )
-
-                    page = context.new_page()
-
-                    try:
-                        result = recover_single_fund_fixed_income(
-                            page,
-                            excel_fund,
-                        )
-
-                        if result["status"] != "success":
-                            raise RuntimeError(
-                                "Next-stage fixed-income recovery did not "
-                                "produce a published Top Holdings result."
-                            )
-
-                        verification = verify_exact_against_official_pdf(
-                            page,
-                            result,
-                            extraction_engine=extract_fixed_income_recovery_engine,
-                        )
-
-                        directory = save_success(
-                            result,
-                            verification,
-                        )
-
-                        result["outputDirectory"] = str(directory)
-                        result["exactVerification"] = True
-                        result["verificationParser"] = verification[
-                            "verifiedParser"
-                        ]
-                        result["recoveryStage"] = "recovery2_next"
-                        result["recoveryMethod"] = "fixed_income_table"
-
-                        final_next_result = result
-
-                    finally:
-                        context.close()
-                        browser.close()
-
-                attempt_record["status"] = "success"
-                attempt_record["completedAtUtc"] = utc_now_iso()
-                attempt_record["parser"] = (
-                    final_next_result.get("holdingsParser")
-                    if final_next_result
-                    else None
-                )
-                attempt_diagnostics.append(attempt_record)
-                last_next_exception = None
-                break
-
-            except Exception as error:
-                last_next_exception = error
-
-                attempt_record["status"] = "failed"
-                attempt_record["error"] = clean_text(str(error))
-                attempt_record["completedAtUtc"] = utc_now_iso()
-
-                if isinstance(error, HoldingsParseFailure):
-                    attempt_record["diagnostics"] = error.diagnostics
-
-                attempt_diagnostics.append(attempt_record)
-
-                print(
-                    f"Next-stage attempt failed: {clean_text(str(error))}"
-                )
-
-                if attempt < RETRY_COUNT:
-                    print(
-                        f"Retrying in {RETRY_DELAY_SECONDS} seconds..."
-                    )
-                    time.sleep(RETRY_DELAY_SECONDS)
-
-        if final_next_result is not None:
-            next_recovery_recovered.append(final_next_result)
-
-            # Replace the earlier Recovery 2 failure with the verified
-            # next-stage success in the final state.
-            failed = [
-                item
-                for item in failed
-                if int(item["excelRow"]) != excel_row
-            ]
-
-            recovered.append(final_next_result)
-
-            print(
-                "\nNEXT RECOVERY SUCCESS"
-            )
-
-            print(
-                f"Fund: {final_next_result.get('fundName') or '-'}"
-            )
-
-            print(
-                f"Holdings: {final_next_result.get('topHoldingsCount')}"
-            )
-
-            print(
-                "Exact fixed-income verification: PASS"
-            )
-
-            for holding in final_next_result["topHoldings"]:
-                print(
-                    f"  {holding['rank']}. "
-                    f"{holding['name']} - "
-                    f"{holding['weightText']}"
-                )
-
-            continue
-
-        initial_failure = next(
-            (
-                item
-                for item in recovery2_initial_failed
-                if int(item["excelRow"]) == excel_row
-            ),
-            {},
-        )
-
-        section_text = getattr(
-            last_next_exception,
-            "section_text",
-            None,
-        )
-
-        full_text = getattr(
-            last_next_exception,
-            "full_text",
-            None,
-        )
-
-        diagnostics = getattr(
-            last_next_exception,
-            "diagnostics",
-            None,
-        )
-
-        next_failure_directory = save_next_recovery_failure(
-            excel_fund,
-            clean_text(
-                str(last_next_exception)
-                if last_next_exception
-                else "Unknown next-stage recovery failure."
-            ),
-            attempt_diagnostics,
-            section_text=section_text,
-            full_text=full_text,
-            diagnostics=diagnostics,
-        )
-
-        next_recovery_failed.append(
-            {
-                "excelRow": excel_row,
-                "prudentialUrl": excel_fund["prudentialUrl"],
-                "pruAccessName": excel_fund.get("pruAccessName"),
-                "error": clean_text(
-                    str(last_next_exception)
-                    if last_next_exception
-                    else "Unknown next-stage recovery failure."
-                ),
-                "recoveryStage": "recovery2_next",
-                "recoveryMethod": "fixed_income_table",
-                "initialRecovery2Failure": initial_failure,
-                "outputDirectory": str(next_failure_directory),
-                "attempts": attempt_diagnostics,
-            }
-        )
-
-    # Keep the final failed records explicitly tied to their latest recovery
-    # stage while preserving the original Recovery 2 failure diagnostics.
-    final_failed_by_row = {
-        int(item["excelRow"]): item
-        for item in failed
-    }
-
-    for item in next_recovery_failed:
-        final_failed_by_row[int(item["excelRow"])] = item
-
-    failed = [
-        final_failed_by_row[row]
-        for row in sorted(final_failed_by_row)
-    ]
-
-    # =========================================================================
     # CONSOLIDATED SUMMARY
     # =========================================================================
 
@@ -4908,38 +4191,6 @@ def main() -> int:
             ),
 
         "failedFunds":
-            len(
-                failed
-            ),
-
-        "recovery2InitialFailedFunds":
-            len(
-                recovery2_initial_failed
-            ),
-
-        "recovery2InitialRecoveredFunds":
-            len(
-                recovered
-            ) - len(
-                next_recovery_recovered
-            ),
-
-        "nextRecoveryAttemptedFunds":
-            len(
-                next_recovery_attempted
-            ),
-
-        "nextRecoveryRecoveredFunds":
-            len(
-                next_recovery_recovered
-            ),
-
-        "nextRecoveryFailedFunds":
-            len(
-                next_recovery_failed
-            ),
-
-        "finalFailedFunds":
             len(
                 failed
             ),
@@ -5102,28 +4353,6 @@ def main() -> int:
         "failedFundsDetail":
             failed,
 
-        "nextRecoveryAttemptedRows":
-            next_recovery_attempted,
-
-        "nextRecoveryRecoveredFundsDetail":
-            [
-                {
-                    "excelRow": result.get("excelRow"),
-                    "fundName": result.get("fundName"),
-                    "topHoldingsCount": result.get("topHoldingsCount"),
-                    "holdingsParser": result.get("holdingsParser"),
-                    "recoveryStage": result.get("recoveryStage"),
-                    "recoveryMethod": result.get("recoveryMethod"),
-                    "exactVerification": result.get("exactVerification"),
-                    "verificationParser": result.get("verificationParser"),
-                    "outputDirectory": result.get("outputDirectory"),
-                }
-                for result in next_recovery_recovered
-            ],
-
-        "nextRecoveryFailedFundsDetail":
-            next_recovery_failed,
-
         "recovery1FailureField":
             "stillFailedFundsDetail",
 
@@ -5207,31 +4436,10 @@ def main() -> int:
                 "exactRankNameWeightSignatureRequired":
                     True,
 
-                "automaticNextRecoveryAfterRecovery2Failure":
+                "recovery3Excluded":
                     True,
 
-                "nextRecoveryUsesOnlyPostRecovery2Failures":
-                    True,
-
-                "nextRecoveryHardcodedRows":
-                    False,
-
-                "fixedIncomeLastPercentageIsPortfolioWeight":
-                    True,
-
-                "fixedIncomeEarlierPercentagesRemainInSecurityName":
-                    True,
-
-                "fixedIncomeRecoveryUsesOfficialPdfOnly":
-                    True,
-
-                "fixedIncomeRecoveryUsesNoCoordinateProximityPairing":
-                    True,
-
-                "fixedIncomeRecoveryRequiresMultiplePercentageEvidence":
-                    True,
-
-                "fixedIncomeRecoveryExactSecondPdfVerification":
+                "recovery3RunsSeparately":
                     True,
             },
     }
@@ -5289,26 +4497,6 @@ def main() -> int:
     )
 
     print(
-        f"Recovery 2 initial failed: "
-        f"{len(recovery2_initial_failed)}"
-    )
-
-    print(
-        f"Automatic next recovery attempted: "
-        f"{len(next_recovery_attempted)}"
-    )
-
-    print(
-        f"Automatic next recovery recovered: "
-        f"{len(next_recovery_recovered)}"
-    )
-
-    print(
-        f"Automatic next recovery still failed: "
-        f"{len(next_recovery_failed)}"
-    )
-
-    print(
         f"Recovered by fallback parser: "
         f"{len(fallback_recovered)}"
     )
@@ -5324,7 +4512,7 @@ def main() -> int:
     )
 
     print(
-        "\nRecovery order:"
+        "\nRecovery 2 order:"
     )
 
     print(
@@ -5356,13 +4544,12 @@ def main() -> int:
     )
 
     print(
-        "  8. Automatic next-stage fixed-income recovery "
-        "for remaining failures only"
+        "\nRecovery 3 is NOT executed by this script."
     )
 
     print(
-        "  9. Exact fixed-income re-download and "
-        "rank/name/weight verification"
+        "Recovery 3 must consume the final failed funds from "
+        "Recovery 2 separately."
     )
 
     print(
