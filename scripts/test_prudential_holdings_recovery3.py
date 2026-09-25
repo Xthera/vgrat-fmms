@@ -4485,42 +4485,31 @@ def recovery3_reconstruct_table(
     rows: list[dict],
 ) -> tuple[list[dict], dict]:
     """
-    Reconstruct the Top Holdings table from the physical PDF layout.
+    Reconstruct the published fixed-income Top Holdings table from its
+    physical PDF layout.
 
-    IMPORTANT FIX FOR WRAPPED FIXED-INCOME ROWS
-    ---------------------------------------------
+    IMPORTANT:
 
-    A PDF text extractor can place the security description and the published
-    portfolio weight on different physical lines.  For example, a bond can be
-    extracted as:
+    The maturity/security description is the PRIMARY row anchor.
+
+    A fixed-income security can be extracted as multiple physical PDF lines,
+    for example:
 
         SEATRIUM FINANCIAL SERVICES PTE LTD
         2.95% 28-APR-2031
         1.6%
 
-    The previous Recovery 3 implementation required the weight to be on the
-    same physical row as the maturity date.  That caused the SEATRIUM holding
-    to be dropped even though the PDF contained all ten published holdings.
+    The portfolio weight therefore cannot be required to share the exact
+    PositionedLine as the maturity date.
 
-    This implementation therefore treats the physical portfolio-weight
-    column as the row anchor.  Each detected weight-column percentage closes
-    one visual holding block.  The left/security-column fragments between the
-    previous weight anchor and the current weight anchor are reconstructed into
-    the holding name.
+    Recovery 3 first identifies the physical portfolio-weight column, then
+    identifies the published maturity rows.  Each logical holding block is
+    the physical table region between two consecutive maturity rows.  Any
+    percentage physically located in the established weight column inside
+    that block is the portfolio weight for that maturity row.
 
-    This is structural PDF-table reconstruction, not arbitrary nearest-name /
-    nearest-percentage matching.
-
-    Rules preserved:
-
-    - official PDF physical layout remains authoritative;
-    - the portfolio weight must be in the detected weight column;
-    - coupon/rate percentages remain inside the security name;
-    - wrapped security descriptions are rejoined;
-    - no holding names or percentages are hardcoded;
-    - no fuzzy matching is used;
-    - fewer than ten published holdings remain valid;
-    - published order is preserved.
+    This is structural table reconstruction.  It is NOT arbitrary nearest
+    name/percentage matching.
     """
 
     if not rows:
@@ -4528,113 +4517,15 @@ def recovery3_reconstruct_table(
             "Recovery 3 received an empty physical Top Holdings table."
         )
 
-    # ---------------------------------------------------------------------
-    # 1. Detect the physical portfolio-weight column.
-    # ---------------------------------------------------------------------
-    weight_column_x = recovery3_detect_weight_column(rows)
-
-    if weight_column_x is None:
-        raise RuntimeError(
-            "Recovery 3 could not detect a physical portfolio-weight column."
-        )
-
-    # ---------------------------------------------------------------------
-    # 2. Locate every percentage fragment physically belonging to the
-    #    detected weight column.
-    #
-    #    We intentionally do this independently from maturity detection.
-    #    Therefore a weight can occur on a different physical line from the
-    #    maturity date without being lost.
-    # ---------------------------------------------------------------------
-    WEIGHT_COLUMN_TOLERANCE = 18.0
-
-    weight_anchors = []
-
-    for row_index, row in enumerate(rows):
-        for fragment_index, fragment in enumerate(row["fragments"]):
-            parsed = recovery3_percentage_value(
-                fragment["text"]
-            )
-
-            if parsed is None:
-                continue
-
-            distance = abs(
-                fragment["x"] - weight_column_x
-            )
-
-            if distance > WEIGHT_COLUMN_TOLERANCE:
-                continue
-
-            weight_anchors.append(
-                {
-                    "rowIndex": row_index,
-                    "fragmentIndex": fragment_index,
-                    "x": fragment["x"],
-                    "y": fragment["y"],
-                    "value": parsed[0],
-                    "text": parsed[1],
-                }
-            )
-
-    if not weight_anchors:
-        raise RuntimeError(
-            "Recovery 3 detected a weight column but found no physical "
-            "percentage anchors inside that column."
-        )
-
-    # ---------------------------------------------------------------------
-    # 3. Deduplicate anchors emitted multiple times by PDF extraction.
-    # ---------------------------------------------------------------------
-    unique_anchors = []
-
-    for anchor in weight_anchors:
-        duplicate = False
-
-        for existing in unique_anchors:
-            if (
-                abs(existing["y"] - anchor["y"]) <= 3.0
-                and abs(existing["x"] - anchor["x"]) <= 12.0
-                and abs(existing["value"] - anchor["value"]) < 0.0001
-            ):
-                duplicate = True
-                break
-
-        if not duplicate:
-            unique_anchors.append(anchor)
-
-    unique_anchors.sort(
-        key=lambda item: (
-            item["rowIndex"],
-            item["fragmentIndex"],
-        )
-    )
-
-    # ---------------------------------------------------------------------
-    # 4. A genuine Top Holdings table normally has no more than ten
-    #    portfolio-weight anchors.  If extra percentages occur in the same
-    #    physical x-column, they must still resolve to a genuine security
-    #    block containing a maturity date; otherwise they are rejected below.
-    # ---------------------------------------------------------------------
     maturity_re = re.compile(
         r"\b\d{1,2}-(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-\d{4}\b",
         re.IGNORECASE,
     )
 
-    def row_has_maturity(row: dict) -> bool:
-        return bool(
-            maturity_re.search(
-                clean_text(row["text"])
-            )
-        )
-
-    def is_physical_header_or_noise(text: str) -> bool:
+    def is_header_or_noise(text: str) -> bool:
         normalized = normalize_text(text)
 
-        if not normalized:
-            return True
-
-        if normalized in {
+        return normalized in {
             "name",
             "holding",
             "holdings",
@@ -4644,70 +4535,91 @@ def recovery3_reconstruct_table(
             "security",
             "security name",
             "%",
-        }:
-            return True
+        } or normalized.startswith("top 10 holdings") or normalized.startswith(
+            "top ten holdings"
+        )
 
-        if normalized.startswith("top 10 holdings"):
-            return True
+    # ------------------------------------------------------------------
+    # 1. Identify genuine fixed-income maturity rows.
+    # ------------------------------------------------------------------
+    maturity_row_indices = [
+        index
+        for index, row in enumerate(rows)
+        if maturity_re.search(clean_text(row["text"]))
+    ]
 
-        if normalized.startswith("top ten holdings"):
-            return True
+    if not maturity_row_indices:
+        raise RuntimeError(
+            "Recovery 3 could not find any fixed-income maturity rows."
+        )
 
-        return False
+    # The weight column is detected from maturity-bearing rows, preserving
+    # the existing protection against unrelated percentages elsewhere on the
+    # factsheet.
+    weight_column_x = recovery3_detect_weight_column(rows)
 
-    # ---------------------------------------------------------------------
-    # 5. Reconstruct one visual holding block per weight anchor.
-    #
-    #    The block for anchor N starts immediately after anchor N-1 and ends
-    #    at anchor N.  This is the physical table sequence, not a nearest-X/Y
-    #    heuristic.
-    # ---------------------------------------------------------------------
+    if weight_column_x is None:
+        raise RuntimeError(
+            "Recovery 3 could not detect the physical portfolio-weight column."
+        )
+
+    WEIGHT_COLUMN_TOLERANCE = 18.0
+
     holdings = []
     reconstructed_blocks = []
+    rejected_blocks = []
     used_y_values = []
     multiple_percentage_rows = 0
-    rejected_weight_anchors = []
+    ambiguous_weight_blocks = 0
 
-    previous_anchor_row_index = -1
+    # ------------------------------------------------------------------
+    # 2. Reconstruct one physical block per maturity row.
+    #
+    # Block N starts immediately after the previous maturity row and ends
+    # immediately before the next maturity row.  This is the critical fix:
+    # a wrapped issuer line, maturity continuation line, and standalone
+    # portfolio-weight line all belong to the same logical holding block.
+    # ------------------------------------------------------------------
+    for maturity_position, maturity_index in enumerate(
+        maturity_row_indices
+    ):
+        previous_maturity_index = (
+            maturity_row_indices[maturity_position - 1]
+            if maturity_position > 0
+            else -1
+        )
 
-    for anchor_index, anchor in enumerate(unique_anchors):
-        current_row_index = anchor["rowIndex"]
+        next_maturity_index = (
+            maturity_row_indices[maturity_position + 1]
+            if maturity_position + 1 < len(maturity_row_indices)
+            else len(rows)
+        )
 
-        if current_row_index < previous_anchor_row_index:
-            continue
-
-        block_start = previous_anchor_row_index + 1
-        block_end = current_row_index
+        block_start = previous_maturity_index + 1
+        block_end = next_maturity_index - 1
 
         block_rows = rows[
             block_start:block_end + 1
         ]
 
-        previous_anchor_row_index = current_row_index
-
         if not block_rows:
-            rejected_weight_anchors.append(
+            rejected_blocks.append(
                 {
-                    "value": anchor["value"],
-                    "text": anchor["text"],
-                    "x": round(anchor["x"], 2),
-                    "y": round(anchor["y"], 2),
+                    "maturityRowIndex": maturity_index,
                     "reason": "empty_physical_block",
                 }
             )
             continue
 
-        # ---------------------------------------------------------------
-        # Only the left/security side of the table belongs in the holding
-        # name.  The portfolio-weight fragment and any right-side content
-        # are excluded by physical X coordinate.
-        # ---------------------------------------------------------------
+        # --------------------------------------------------------------
+        # Security-name side of the table.
+        # Only fragments physically left of the portfolio-weight column
+        # are allowed into the security description.
+        # --------------------------------------------------------------
         name_fragments = []
 
         for block_row in block_rows:
-            if is_physical_header_or_noise(
-                block_row["text"]
-            ):
+            if is_header_or_noise(block_row["text"]):
                 continue
 
             for fragment in block_row["fragments"]:
@@ -4720,57 +4632,133 @@ def recovery3_reconstruct_table(
                     fragment["text"]
                 )
 
-                if not fragment_text:
-                    continue
-
-                name_fragments.append(
-                    fragment_text
-                )
+                if fragment_text:
+                    name_fragments.append(
+                        fragment_text
+                    )
 
         name = combine_holding_name_fragments(
             name_fragments
         )
 
-        # ---------------------------------------------------------------
-        # A weight anchor is accepted only when its reconstructed security
-        # block contains a genuine fixed-income maturity date.  This stops
-        # unrelated percentages from another section becoming holdings.
-        # ---------------------------------------------------------------
-        if not maturity_re.search(name):
-            rejected_weight_anchors.append(
+        if not name:
+            rejected_blocks.append(
                 {
-                    "value": anchor["value"],
-                    "text": anchor["text"],
-                    "x": round(anchor["x"], 2),
-                    "y": round(anchor["y"], 2),
-                    "reason": "reconstructed_block_has_no_maturity_date",
+                    "maturityRowIndex": maturity_index,
+                    "reason": "empty_security_name",
+                    "blockText": clean_text(
+                        " ".join(
+                            row["text"]
+                            for row in block_rows
+                        )
+                    ),
+                }
+            )
+            continue
+
+        if not maturity_re.search(name):
+            rejected_blocks.append(
+                {
+                    "maturityRowIndex": maturity_index,
+                    "reason": "security_name_lost_maturity_date",
                     "blockText": name,
                 }
             )
             continue
 
-        if not name:
-            rejected_weight_anchors.append(
+        # --------------------------------------------------------------
+        # Portfolio-weight side of the same physical block.
+        # --------------------------------------------------------------
+        weight_candidates = []
+
+        for row_index in range(
+            block_start,
+            block_end + 1,
+        ):
+            row = rows[row_index]
+
+            for fragment_index, fragment in enumerate(
+                row["fragments"]
+            ):
+                parsed = recovery3_percentage_value(
+                    fragment["text"]
+                )
+
+                if parsed is None:
+                    continue
+
+                distance = abs(
+                    fragment["x"] - weight_column_x
+                )
+
+                if distance > WEIGHT_COLUMN_TOLERANCE:
+                    continue
+
+                weight_candidates.append(
+                    {
+                        "rowIndex": row_index,
+                        "fragmentIndex": fragment_index,
+                        "x": fragment["x"],
+                        "y": fragment["y"],
+                        "value": parsed[0],
+                        "text": parsed[1],
+                    }
+                )
+
+        # Deduplicate identical PDF fragments.
+        unique_weight_candidates = []
+
+        for candidate in weight_candidates:
+            duplicate = False
+
+            for existing in unique_weight_candidates:
+                if (
+                    abs(existing["y"] - candidate["y"]) <= 3.0
+                    and abs(existing["x"] - candidate["x"]) <= 12.0
+                    and abs(existing["value"] - candidate["value"]) < 0.0001
+                ):
+                    duplicate = True
+                    break
+
+            if not duplicate:
+                unique_weight_candidates.append(
+                    candidate
+                )
+
+        if len(unique_weight_candidates) != 1:
+            ambiguous_weight_blocks += 1
+
+            rejected_blocks.append(
                 {
-                    "value": anchor["value"],
-                    "text": anchor["text"],
-                    "x": round(anchor["x"], 2),
-                    "y": round(anchor["y"], 2),
-                    "reason": "empty_security_name",
+                    "maturityRowIndex": maturity_index,
+                    "reason": (
+                        "expected_exactly_one_weight_column_percentage"
+                    ),
+                    "candidateCount": len(
+                        unique_weight_candidates
+                    ),
+                    "weightCandidates": unique_weight_candidates,
+                    "blockText": clean_text(
+                        " ".join(
+                            row["text"]
+                            for row in block_rows
+                        )
+                    ),
+                    "securityName": name,
                 }
             )
             continue
 
-        # ---------------------------------------------------------------
-        # Preserve any coupon/rate percentage inside the security name.
-        # The only percentage removed/used as portfolio weight is the
-        # physically anchored right-hand percentage.
-        # ---------------------------------------------------------------
+        weight = unique_weight_candidates[0]
+
+        # --------------------------------------------------------------
+        # Preserve coupon/rate percentages in the security name.
+        # Only the physically anchored weight is excluded from the name.
+        # --------------------------------------------------------------
         name = clean_holding_name(
             name
         )
 
-        # Rejoin common fixed-income PDF spacing around maturity dates.
         name = re.sub(
             r"\s+(?=\d{1,2}-(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-\d{4}\b)",
             " ",
@@ -4781,9 +4769,6 @@ def recovery3_reconstruct_table(
         if not name:
             continue
 
-        # Count percentages in the reconstructed logical holding plus the
-        # published portfolio weight.  This correctly counts the SEATRIUM
-        # row as two percentages: 2.95% coupon + 1.6% portfolio weight.
         percentage_count = len(
             percentage_matches(name)
         ) + 1
@@ -4795,28 +4780,38 @@ def recovery3_reconstruct_table(
             {
                 "rank": len(holdings) + 1,
                 "name": name,
-                "weightPercent": anchor["value"],
-                "weightText": anchor["text"],
+                "weightPercent": weight["value"],
+                "weightText": weight["text"],
                 "percentageCountOnPhysicalRow": percentage_count,
             }
         )
 
         used_y_values.append(
-            round(anchor["y"], 2)
+            round(weight["y"], 2)
         )
 
         reconstructed_blocks.append(
             {
-                "weight": anchor["text"],
-                "weightValue": anchor["value"],
-                "weightX": round(anchor["x"], 2),
-                "weightY": round(anchor["y"], 2),
+                "maturityRowIndex": maturity_index,
                 "startRowIndex": block_start,
                 "endRowIndex": block_end,
                 "physicalLineCount": len(block_rows),
+                "maturityY": round(
+                    rows[maturity_index]["y"],
+                    2,
+                ),
+                "weightY": round(
+                    weight["y"],
+                    2,
+                ),
+                "weightX": round(
+                    weight["x"],
+                    2,
+                ),
+                "weightText": weight["text"],
+                "weightValue": weight["value"],
                 "reconstructedName": name,
                 "percentageCount": percentage_count,
-                "maturityFound": True,
             }
         )
 
@@ -4826,28 +4821,11 @@ def recovery3_reconstruct_table(
     if not holdings:
         raise RuntimeError(
             "Recovery 3 reconstructed no valid fixed-income Top Holdings "
-            "rows from the physical portfolio-weight column."
+            "rows from the physical maturity/weight table structure."
         )
 
-    # The physical order of the weight anchors is the published order.
-    # Ranks are assigned only after rejected non-holding anchors have been
-    # removed, so there are never artificial rank gaps.
-    holdings.sort(
-        key=lambda item: (
-            -float(
-                next(
-                    block["weightY"]
-                    for block in reconstructed_blocks
-                    if (
-                        block["weight"] == item["weightText"]
-                        and normalize_text(block["reconstructedName"])
-                        == normalize_text(item["name"])
-                    )
-                )
-            )
-        )
-    )
-
+    # The maturity rows were processed in published top-to-bottom order.
+    # Reassign ranks after rejected blocks have been removed.
     for rank, holding in enumerate(
         holdings,
         start=1,
@@ -4859,34 +4837,49 @@ def recovery3_reconstruct_table(
         "Recovery 3 physical table parser",
     )
 
+    ranks = [
+        int(item["rank"])
+        for item in holdings
+    ]
+
+    expected_ranks = list(
+        range(1, len(holdings) + 1)
+    )
+
+    if ranks != expected_ranks:
+        raise RuntimeError(
+            "Recovery 3 published ranks are not sequential. "
+            f"Parsed={ranks}; Expected={expected_ranks}"
+        )
+
     diagnostics = {
         "weightColumnX": round(
             weight_column_x,
             2,
         ),
-        "candidateLineCount": sum(
-            1
-            for row in rows
-            if row_has_maturity(row)
+        "candidateLineCount": len(
+            maturity_row_indices
         ),
-        "weightedCandidateLineCount": len(
-            unique_anchors
+        "weightedCandidateLineCount": sum(
+            1
+            for block in reconstructed_blocks
+            if block.get("weightText")
         ),
         "weightAnchorCount": len(
-            unique_anchors
+            reconstructed_blocks
         ),
         "processedPhysicalRows": len(rows),
         "weightRows": len(holdings),
         "multiplePercentageRows": multiple_percentage_rows,
+        "ambiguousWeightBlocks": ambiguous_weight_blocks,
         "usedRows": len(holdings),
         "usedYValues": used_y_values,
         "reconstructedBlocks": reconstructed_blocks,
-        "rejectedWeightAnchors": rejected_weight_anchors,
-        "algorithm": "physical_pdf_table_column_reconstruction",
+        "rejectedBlocks": rejected_blocks,
+        "algorithm": "maturity_anchored_physical_pdf_table_reconstruction",
     }
 
     return holdings, diagnostics
-
 
 def extract_recovery3_table_engine(
     pdf_bytes: bytes,
