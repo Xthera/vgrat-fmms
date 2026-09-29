@@ -40,28 +40,16 @@ BID HISTORY
 Read from output_pruaccess/funds/<row>_<id>/ (bid_history.json and
 prudential_fund.json). Observations are copied exactly as extracted.
 
-LAYOUT (both files)
-===================
+DIVIDEND NORMALIZATION
+======================
 
-{
-  "schemaVersion": 1,
-  "generatedAtUtc": "...",
-  "source": "Funds Links.xlsm",
-  "fundCount": N,
-  "summary": { ... },
-  "funds": [
-    {
-      "excelRow": 2,
-      "fundIdentifier": "...",
-      "fundCode": "...",
-      "fundName": "...",
-      "pruAccessName": "...",
-      "prudentialUrl": "...",
-      <payload>          # funds.json: "fund", "topHoldings"
-                         # bid_history.json: "bidHistory"
-    }
-  ]
-}
+Final funds.json rule:
+
+    - If dividendRate is non-empty -> hasDividend = true
+    - If dividendRate is empty/missing -> hasDividend = false
+
+This rule is applied during the final build so that hasDividend is always
+consistent with dividendRate in the published data.
 """
 
 from __future__ import annotations
@@ -131,13 +119,43 @@ def write_json_atomic(path: Path, data, compact: bool = False) -> None:
 
     if compact:
         text = json.dumps(
-            data, ensure_ascii=False, separators=(",", ":")
+            data,
+            ensure_ascii=False,
+            separators=(",", ":"),
         )
     else:
-        text = json.dumps(data, indent=2, ensure_ascii=False)
+        text = json.dumps(
+            data,
+            indent=2,
+            ensure_ascii=False,
+        )
 
     tmp.write_text(text + "\n", encoding="utf-8")
     tmp.replace(path)
+
+
+# =============================================================================
+# DIVIDEND NORMALIZATION
+# =============================================================================
+
+def normalize_dividend_fields(fund_info: dict) -> dict:
+    """
+    Ensure hasDividend is always consistent with dividendRate.
+
+    Rule:
+        non-empty dividendRate -> True
+        empty/missing dividendRate -> False
+
+    The existing dividendRate value itself is preserved unchanged.
+    """
+
+    dividend_rate = clean_text(
+        fund_info.get("dividendRate")
+    )
+
+    fund_info["hasDividend"] = bool(dividend_rate)
+
+    return fund_info
 
 
 # =============================================================================
@@ -146,10 +164,15 @@ def write_json_atomic(path: Path, data, compact: bool = False) -> None:
 
 def read_excel_funds() -> dict[int, dict]:
     if not EXCEL_FILE.exists():
-        raise FileNotFoundError(f"Excel file not found: {EXCEL_FILE}")
+        raise FileNotFoundError(
+            f"Excel file not found: {EXCEL_FILE}"
+        )
 
     workbook = load_workbook(
-        EXCEL_FILE, read_only=True, keep_vba=True, data_only=True
+        EXCEL_FILE,
+        read_only=True,
+        keep_vba=True,
+        data_only=True,
     )
 
     funds = {}
@@ -158,8 +181,12 @@ def read_excel_funds() -> dict[int, dict]:
         worksheet = workbook.active
 
         for row in range(2, worksheet.max_row + 1):
-            url = clean_text(worksheet.cell(row=row, column=1).value)
-            name = clean_text(worksheet.cell(row=row, column=2).value)
+            url = clean_text(
+                worksheet.cell(row=row, column=1).value
+            )
+            name = clean_text(
+                worksheet.cell(row=row, column=2).value
+            )
 
             if not url:
                 continue
@@ -169,11 +196,14 @@ def read_excel_funds() -> dict[int, dict]:
                 "prudentialUrl": url,
                 "pruAccessName": name,
             }
+
     finally:
         workbook.close()
 
     if not funds:
-        raise RuntimeError("No populated URLs in Excel Column A.")
+        raise RuntimeError(
+            "No populated URLs in Excel Column A."
+        )
 
     return funds
 
@@ -184,27 +214,36 @@ def read_excel_funds() -> dict[int, dict]:
 
 def clean_holdings(holdings, label: str) -> list[dict]:
     if not isinstance(holdings, list) or not holdings:
-        raise ValueError(f"{label}: holdings list is empty or invalid.")
+        raise ValueError(
+            f"{label}: holdings list is empty or invalid."
+        )
 
     if len(holdings) > MAX_HOLDINGS:
-        raise ValueError(f"{label}: more than {MAX_HOLDINGS} holdings.")
+        raise ValueError(
+            f"{label}: more than {MAX_HOLDINGS} holdings."
+        )
 
     cleaned = []
 
     for position, item in enumerate(holdings, start=1):
         if not isinstance(item, dict):
-            raise ValueError(f"{label}: holding {position} is not an object.")
+            raise ValueError(
+                f"{label}: holding {position} is not an object."
+            )
 
         name = clean_text(item.get("name"))
         weight = item.get("weightPercent")
 
         if item.get("rank") != position:
             raise ValueError(
-                f"{label}: rank {item.get('rank')} at position {position}."
+                f"{label}: rank {item.get('rank')} "
+                f"at position {position}."
             )
 
         if not name:
-            raise ValueError(f"{label}: holding {position} has no name.")
+            raise ValueError(
+                f"{label}: holding {position} has no name."
+            )
 
         if (
             isinstance(weight, bool)
@@ -212,7 +251,8 @@ def clean_holdings(holdings, label: str) -> list[dict]:
             or not 0 <= weight <= 100
         ):
             raise ValueError(
-                f"{label}: holding {position} has invalid weight {weight!r}."
+                f"{label}: holding {position} "
+                f"has invalid weight {weight!r}."
             )
 
         cleaned.append(
@@ -220,7 +260,9 @@ def clean_holdings(holdings, label: str) -> list[dict]:
                 "rank": position,
                 "name": name,
                 "weightPercent": weight,
-                "weightText": clean_text(item.get("weightText")),
+                "weightText": clean_text(
+                    item.get("weightText")
+                ),
             }
         )
 
@@ -236,12 +278,19 @@ def holdings_block(result: dict, stage: str, label: str):
         "source": stage,
         "parser": result.get("holdingsParser"),
         "factsheetUrl": result.get("factsheetUrl"),
-        "factsheetDocumentDate": result.get("factsheetDocumentDate"),
-        "factsheetDataAsAt": result.get("factsheetDataAsAt"),
+        "factsheetDocumentDate": result.get(
+            "factsheetDocumentDate"
+        ),
+        "factsheetDataAsAt": result.get(
+            "factsheetDataAsAt"
+        ),
     }
 
     if status == "success":
-        holdings = clean_holdings(result.get("topHoldings"), label)
+        holdings = clean_holdings(
+            result.get("topHoldings"),
+            label,
+        )
 
         return {
             "status": "published",
@@ -261,37 +310,61 @@ def holdings_block(result: dict, stage: str, label: str):
     return None
 
 
-def resolve_holdings(excel_funds: dict[int, dict]) -> dict[int, dict]:
+def resolve_holdings(
+    excel_funds: dict[int, dict],
+) -> dict[int, dict]:
+
     resolved: dict[int, dict] = {}
 
     def accept(result: dict, stage: str) -> None:
         if result.get("excelRow") is None:
-            raise RuntimeError(f"{stage}: result without excelRow.")
+            raise RuntimeError(
+                f"{stage}: result without excelRow."
+            )
 
         row = int(result["excelRow"])
 
         if row not in excel_funds:
-            raise RuntimeError(f"{stage}: row {row} is not in Excel.")
+            raise RuntimeError(
+                f"{stage}: row {row} is not in Excel."
+            )
 
         # A resolved fund is never replaced by a later stage.
         if row in resolved:
             return
 
-        result_url = clean_text(result.get("prudentialUrl"))
+        result_url = clean_text(
+            result.get("prudentialUrl")
+        )
 
-        if result_url and result_url != excel_funds[row]["prudentialUrl"]:
-            raise RuntimeError(f"{stage}: URL mismatch for row {row}.")
+        if (
+            result_url
+            and result_url
+            != excel_funds[row]["prudentialUrl"]
+        ):
+            raise RuntimeError(
+                f"{stage}: URL mismatch for row {row}."
+            )
 
-        block = holdings_block(result, stage, f"{stage} row {row}")
+        block = holdings_block(
+            result,
+            stage,
+            f"{stage} row {row}",
+        )
 
         if block is not None:
-            block["fundName"] = clean_text(result.get("fundName")) or None
+            block["fundName"] = (
+                clean_text(result.get("fundName"))
+                or None
+            )
             resolved[row] = block
 
     # ---- baseline --------------------------------------------------------
 
     if not BASELINE_FILE.exists():
-        raise FileNotFoundError(f"Baseline output not found: {BASELINE_FILE}")
+        raise FileNotFoundError(
+            f"Baseline output not found: {BASELINE_FILE}"
+        )
 
     baseline = load_json(BASELINE_FILE)
 
@@ -304,11 +377,19 @@ def resolve_holdings(excel_funds: dict[int, dict]) -> dict[int, dict]:
         funds_dir = stage_dir / "funds"
 
         if not funds_dir.exists():
-            print(f"WARNING: {funds_dir} not found; {stage} skipped.")
+            print(
+                f"WARNING: {funds_dir} not found; "
+                f"{stage} skipped."
+            )
             continue
 
-        for path in sorted(funds_dir.glob("*/top_holdings.json")):
-            accept(load_json(path), stage)
+        for path in sorted(
+            funds_dir.glob("*/top_holdings.json")
+        ):
+            accept(
+                load_json(path),
+                stage,
+            )
 
     return resolved
 
@@ -317,14 +398,22 @@ def resolve_holdings(excel_funds: dict[int, dict]) -> dict[int, dict]:
 # PRUACCESS
 # =============================================================================
 
-def validate_bid_history(history: dict, label: str) -> list[dict]:
+def validate_bid_history(
+    history: dict,
+    label: str,
+) -> list[dict]:
+
     observations = history.get("observations")
 
     if not isinstance(observations, list) or not observations:
-        raise ValueError(f"{label}: no BID observations.")
+        raise ValueError(
+            f"{label}: no BID observations."
+        )
 
     if history.get("observationCount") != len(observations):
-        raise ValueError(f"{label}: observationCount mismatch.")
+        raise ValueError(
+            f"{label}: observationCount mismatch."
+        )
 
     previous = None
     seen = set()
@@ -334,22 +423,36 @@ def validate_bid_history(history: dict, label: str) -> list[dict]:
         price = item.get("bidPrice")
 
         if not isinstance(date, str) or not date:
-            raise ValueError(f"{label}: invalid date {date!r}.")
+            raise ValueError(
+                f"{label}: invalid date {date!r}."
+            )
 
-        if isinstance(price, bool) or not isinstance(price, (int, float)):
-            raise ValueError(f"{label}: invalid BID price on {date}.")
+        if (
+            isinstance(price, bool)
+            or not isinstance(price, (int, float))
+        ):
+            raise ValueError(
+                f"{label}: invalid BID price on {date}."
+            )
 
         if date in seen:
-            raise ValueError(f"{label}: duplicate date {date}.")
+            raise ValueError(
+                f"{label}: duplicate date {date}."
+            )
 
         if previous is not None and date < previous:
-            raise ValueError(f"{label}: observations not chronological.")
+            raise ValueError(
+                f"{label}: observations not chronological."
+            )
 
         seen.add(date)
         previous = date
 
     return [
-        {"date": item["date"], "bidPrice": item["bidPrice"]}
+        {
+            "date": item["date"],
+            "bidPrice": item["bidPrice"],
+        }
         for item in observations
     ]
 
@@ -358,11 +461,18 @@ def load_pruaccess() -> dict[int, dict]:
     result = {}
 
     if not PRUACCESS_FUNDS_DIR.exists():
-        print(f"WARNING: {PRUACCESS_FUNDS_DIR} not found.")
+        print(
+            f"WARNING: {PRUACCESS_FUNDS_DIR} not found."
+        )
         return result
 
-    for directory in sorted(PRUACCESS_FUNDS_DIR.iterdir()):
-        match = re.match(r"^(\d+)_", directory.name)
+    for directory in sorted(
+        PRUACCESS_FUNDS_DIR.iterdir()
+    ):
+        match = re.match(
+            r"^(\d+)_",
+            directory.name,
+        )
 
         if not directory.is_dir() or not match:
             continue
@@ -370,8 +480,11 @@ def load_pruaccess() -> dict[int, dict]:
         bid_file = directory / "bid_history.json"
         fund_file = directory / "prudential_fund.json"
 
-        if not (bid_file.exists() and fund_file.exists()):
-            continue  # failed fund: only failure.json exists
+        if not (
+            bid_file.exists()
+            and fund_file.exists()
+        ):
+            continue
 
         row = int(match.group(1))
 
@@ -391,7 +504,9 @@ def main() -> int:
     print("=" * 72)
     print("VGRAT FMS - BUILD FUNDS DATA")
     print("=" * 72)
-    print(f"Allow unresolved: {ALLOW_UNRESOLVED}")
+    print(
+        f"Allow unresolved: {ALLOW_UNRESOLVED}"
+    )
 
     excel_funds = read_excel_funds()
     holdings = resolve_holdings(excel_funds)
@@ -404,25 +519,52 @@ def main() -> int:
     gaps = []
 
     stage_counts: dict[str, int] = {}
-    published = no_section = unresolved_holdings = 0
-    bid_ok = bid_missing = total_observations = 0
+    published = 0
+    no_section = 0
+    unresolved_holdings = 0
+
+    bid_ok = 0
+    bid_missing = 0
+    total_observations = 0
+
+    dividend_true = 0
+    dividend_false = 0
 
     for row in sorted(excel_funds):
         excel = excel_funds[row]
         pru = pruaccess.get(row)
-        prudential = (pru or {}).get("prudential") or {}
+        prudential = (
+            (pru or {}).get("prudential")
+            or {}
+        )
+
         block = holdings.get(row)
 
         identity = {
             "excelRow": row,
-            "fundIdentifier": clean_text(prudential.get("fundIdentifier")) or None,
-            "fundCode": clean_text(prudential.get("fundCode")) or None,
+            "fundIdentifier": (
+                clean_text(
+                    prudential.get("fundIdentifier")
+                )
+                or None
+            ),
+            "fundCode": (
+                clean_text(
+                    prudential.get("fundCode")
+                )
+                or None
+            ),
             "fundName": (
-                clean_text(prudential.get("fundName"))
+                clean_text(
+                    prudential.get("fundName")
+                )
                 or (block or {}).get("fundName")
                 or None
             ),
-            "pruAccessName": excel["pruAccessName"] or None,
+            "pruAccessName": (
+                excel["pruAccessName"]
+                or None
+            ),
             "prudentialUrl": excel["prudentialUrl"],
         }
 
@@ -430,7 +572,10 @@ def main() -> int:
 
         if block is None:
             unresolved_holdings += 1
-            gaps.append(f"Row {row}: holdings unresolved after Recovery 3.")
+            gaps.append(
+                f"Row {row}: holdings unresolved "
+                f"after Recovery 3."
+            )
 
             top_holdings = {
                 "status": "unresolved",
@@ -438,12 +583,20 @@ def main() -> int:
                 "count": 0,
                 "holdings": [],
             }
+
         else:
             top_holdings = {
-                k: v for k, v in block.items() if k != "fundName"
+                k: v
+                for k, v in block.items()
+                if k != "fundName"
             }
+
             stage_counts[block["source"]] = (
-                stage_counts.get(block["source"], 0) + 1
+                stage_counts.get(
+                    block["source"],
+                    0,
+                )
+                + 1
             )
 
             if block["status"] == "published":
@@ -459,18 +612,47 @@ def main() -> int:
             fund_info = {
                 k: v
                 for k, v in prudential.items()
-                if k not in {"raw", "fundIdentifier", "fundCode", "fundName"}
+                if k not in {
+                    "raw",
+                    "fundIdentifier",
+                    "fundCode",
+                    "fundName",
+                }
             }
 
+            # -------------------------------------------------------------
+            # DIVIDEND RULE
+            #
+            # If dividendRate contains a value, hasDividend is ALWAYS true.
+            # If dividendRate is empty or missing, hasDividend is false.
+            #
+            # dividendRate itself is NOT modified.
+            # -------------------------------------------------------------
+
+            fund_info = normalize_dividend_fields(
+                fund_info
+            )
+
+            if fund_info["hasDividend"]:
+                dividend_true += 1
+            else:
+                dividend_false += 1
+
         fund_records.append(
-            {**identity, "fund": fund_info, "topHoldings": top_holdings}
+            {
+                **identity,
+                "fund": fund_info,
+                "topHoldings": top_holdings,
+            }
         )
 
         # ---- bid history -------------------------------------------------
 
         if pru is None:
             bid_missing += 1
-            gaps.append(f"Row {row}: BID history missing.")
+            gaps.append(
+                f"Row {row}: BID history missing."
+            )
 
             bid_history = {
                 "status": "unresolved",
@@ -478,9 +660,14 @@ def main() -> int:
                 "observationCount": 0,
                 "observations": [],
             }
+
         else:
             history = pru["bidHistory"]
-            observations = validate_bid_history(history, f"row {row} BID")
+
+            observations = validate_bid_history(
+                history,
+                f"row {row} BID",
+            )
 
             bid_ok += 1
             total_observations += len(observations)
@@ -488,28 +675,44 @@ def main() -> int:
             bid_history = {
                 "status": "success",
                 "priceType": "BID",
-                "pruAccessFundId": history.get("fundId"),
-                "currency": history.get("currency"),
-                "startDate": history.get("startDate"),
-                "endDate": history.get("endDate"),
-                "observationCount": len(observations),
+                "pruAccessFundId": history.get(
+                    "fundId"
+                ),
+                "currency": history.get(
+                    "currency"
+                ),
+                "startDate": history.get(
+                    "startDate"
+                ),
+                "endDate": history.get(
+                    "endDate"
+                ),
+                "observationCount": len(
+                    observations
+                ),
                 "observations": observations,
             }
 
-        bid_records.append({**identity, "bidHistory": bid_history})
+        bid_records.append(
+            {
+                **identity,
+                "bidHistory": bid_history,
+            }
+        )
 
     # ---- gate ------------------------------------------------------------
 
     if gaps:
         print("\nUNRESOLVED:")
+
         for gap in gaps:
             print(f" - {gap}")
 
         if not ALLOW_UNRESOLVED:
             print(
                 "\nBUILD FAILED: unresolved funds present. "
-                "Nothing was written. Set ALLOW_UNRESOLVED=1 to publish "
-                "them as 'unresolved'."
+                "Nothing was written. Set ALLOW_UNRESOLVED=1 "
+                "to publish them as 'unresolved'."
             )
             return 1
 
@@ -529,6 +732,8 @@ def main() -> int:
                 "noHoldingsSection": no_section,
                 "holdingsUnresolved": unresolved_holdings,
                 "holdingsBySource": stage_counts,
+                "fundsWithDividend": dividend_true,
+                "fundsWithoutDividend": dividend_false,
             },
             "funds": fund_records,
         },
@@ -549,15 +754,39 @@ def main() -> int:
     )
 
     print("\nBUILD COMPLETE")
-    print(f"Funds:                 {len(fund_records)}")
-    print(f"Holdings published:    {published}")
-    print(f"No holdings section:   {no_section}")
-    print(f"Holdings unresolved:   {unresolved_holdings}")
-    print(f"Holdings by source:    {stage_counts}")
-    print(f"BID history funds:     {bid_ok}")
-    print(f"BID observations:      {total_observations}")
-    print(f"Wrote: {FUNDS_OUT}")
-    print(f"Wrote: {BID_OUT}")
+    print(
+        f"Funds:                 {len(fund_records)}"
+    )
+    print(
+        f"Holdings published:    {published}"
+    )
+    print(
+        f"No holdings section:   {no_section}"
+    )
+    print(
+        f"Holdings unresolved:   {unresolved_holdings}"
+    )
+    print(
+        f"Holdings by source:    {stage_counts}"
+    )
+    print(
+        f"BID history funds:     {bid_ok}"
+    )
+    print(
+        f"BID observations:      {total_observations}"
+    )
+    print(
+        f"Funds with dividend:   {dividend_true}"
+    )
+    print(
+        f"Funds without dividend:{dividend_false}"
+    )
+    print(
+        f"Wrote: {FUNDS_OUT}"
+    )
+    print(
+        f"Wrote: {BID_OUT}"
+    )
 
     return 0
 
@@ -566,5 +795,8 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except Exception as error:
-        print(f"\nFATAL BUILD ERROR: {error}", file=sys.stderr)
+        print(
+            f"\nFATAL BUILD ERROR: {error}",
+            file=sys.stderr,
+        )
         raise SystemExit(1)
