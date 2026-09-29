@@ -8,6 +8,7 @@ on:
         required: false
         default: "false"
         type: boolean
+
   # Uncomment to also run on a schedule:
   # schedule:
   #   - cron: "0 22 * * 0"   # every Sunday 22:00 UTC
@@ -78,7 +79,7 @@ jobs:
           test -f "scripts/test_prudential_holdings_recovery2.py"
           test -f "scripts/test_prudential_holdings_recovery3.py"
           test -f "scripts/test_pruaccess.py"
-          test -f "scripts/build_funds_data.py"
+          test -f "build_funds_data.py"
           echo "All required files found."
 
       # ============================================================
@@ -134,7 +135,11 @@ jobs:
             output_holdings_recovery_3/run_summary.json \
             output_pruaccess/run_summary.json ; do
             echo "----- $f -----"
-            if [ -f "$f" ]; then cat "$f"; else echo "(not found)"; fi
+            if [ -f "$f" ]; then
+              cat "$f"
+            else
+              echo "(not found)"
+            fi
             echo
           done
 
@@ -144,7 +149,7 @@ jobs:
       - name: Build funds data
         env:
           ALLOW_UNRESOLVED: ${{ github.event.inputs.allow_unresolved }}
-        run: python -u scripts/build_funds_data.py
+        run: python -u build_funds_data.py
 
       - name: Show build output
         if: always()
@@ -154,8 +159,11 @@ jobs:
           echo
           echo "=== funds.json summary ==="
           python - <<'PY'
-          import json, pathlib
+          import json
+          import pathlib
+
           path = pathlib.Path("data/funds.json")
+
           if path.exists():
               data = json.loads(path.read_text(encoding="utf-8"))
               print(json.dumps(data.get("summary", {}), indent=2))
