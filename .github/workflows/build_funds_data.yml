@@ -57,6 +57,19 @@ jobs:
       # ============================================================
       # 4. VERIFY REQUIRED FILES
       # ============================================================
+      - name: Debug - list repo root and any funds spreadsheet
+        run: |
+          echo "=== repo root ==="
+          ls -la
+          echo
+          echo "=== git-tracked files matching 'fund' (case-insensitive) ==="
+          git ls-files | grep -i fund || echo "(no match)"
+          echo
+          echo "=== exact bytes of any matching filename ==="
+          git ls-files | grep -i fund | while read -r f; do
+            echo "$f" | xxd | head -5
+          done
+
       - name: Verify pipeline files
         run: |
           test -f "Funds Links.xlsm"
