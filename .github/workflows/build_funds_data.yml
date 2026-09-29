@@ -1,0 +1,192 @@
+name: Build Funds Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      allow_unresolved:
+        description: "Publish funds still unresolved after Recovery 3 as 'unresolved' instead of failing the build"
+        required: false
+        default: "false"
+        type: boolean
+  # Uncomment to also run on a schedule:
+  # schedule:
+  #   - cron: "0 22 * * 0"   # every Sunday 22:00 UTC
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-funds-data
+  cancel-in-progress: false
+
+jobs:
+  build-funds-data:
+    name: Holdings pipeline -> PruAccess -> Build -> Commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      # ============================================================
+      # 1. CHECKOUT
+      # ============================================================
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ============================================================
+      # 2. SET UP PYTHON
+      # ============================================================
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # ============================================================
+      # 3. INSTALL DEPENDENCIES
+      # ============================================================
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements.txt
+
+      - name: Install Playwright Chromium
+        run: |
+          python -m playwright install --with-deps chromium
+
+      # ============================================================
+      # 4. VERIFY REQUIRED FILES
+      # ============================================================
+      - name: Verify pipeline files
+        run: |
+          test -f "Funds Links.xlsm"
+          test -f "scripts/test_prudential_holdings.py"
+          test -f "scripts/update_prudential_holdings.py"
+          test -f "scripts/test_prudential_holdings_recovery2.py"
+          test -f "scripts/test_prudential_holdings_recovery3.py"
+          test -f "scripts/test_pruaccess.py"
+          test -f "scripts/build_funds_data.py"
+          echo "All required files found."
+
+      # ============================================================
+      # 5. HOLDINGS - STEP 1: BASELINE
+      # ============================================================
+      - name: "Holdings 1/4 - Baseline"
+        run: python -u scripts/test_prudential_holdings.py
+
+      - name: Verify baseline output
+        run: test -f "output_holdings/run_summary.json"
+
+      # ============================================================
+      # 6. HOLDINGS - STEP 2: RECOVERY 1
+      # ============================================================
+      - name: "Holdings 2/4 - Recovery 1"
+        run: python -u scripts/update_prudential_holdings.py
+
+      # ============================================================
+      # 7. HOLDINGS - STEP 3: RECOVERY 2
+      # ============================================================
+      - name: "Holdings 3/4 - Recovery 2"
+        run: python -u scripts/test_prudential_holdings_recovery2.py
+
+      # ============================================================
+      # 8. HOLDINGS - STEP 4: RECOVERY 3
+      # ============================================================
+      - name: "Holdings 4/4 - Recovery 3"
+        run: python -u scripts/test_prudential_holdings_recovery3.py
+        continue-on-error: true
+        # Recovery 3 exits non-zero if any fund is still failed after it;
+        # that is a normal partial-recovery outcome, not a workflow crash.
+        # The build step below is what actually gates on unresolved funds.
+
+      # ============================================================
+      # 9. BID HISTORY
+      # ============================================================
+      - name: "PruAccess BID history"
+        run: python -u scripts/test_pruaccess.py
+        continue-on-error: true
+        # test_pruaccess.py also exits non-zero on any per-fund failure;
+        # the build step below decides whether that blocks publishing.
+
+      # ============================================================
+      # 10. SHOW INTERMEDIATE SUMMARIES
+      # ============================================================
+      - name: Display pipeline summaries
+        if: always()
+        run: |
+          for f in \
+            output_holdings/run_summary.json \
+            output_holdings_recovery/run_summary.json \
+            output_holdings_recovery_2/run_summary.json \
+            output_holdings_recovery_3/run_summary.json \
+            output_pruaccess/run_summary.json ; do
+            echo "----- $f -----"
+            if [ -f "$f" ]; then cat "$f"; else echo "(not found)"; fi
+            echo
+          done
+
+      # ============================================================
+      # 11. BUILD data/funds.json + data/bid_history.json
+      # ============================================================
+      - name: Build funds data
+        env:
+          ALLOW_UNRESOLVED: ${{ github.event.inputs.allow_unresolved }}
+        run: python -u scripts/build_funds_data.py
+
+      - name: Show build output
+        if: always()
+        run: |
+          echo "=== data/ ==="
+          ls -la data/ || true
+          echo
+          echo "=== funds.json summary ==="
+          python - <<'PY'
+          import json, pathlib
+          path = pathlib.Path("data/funds.json")
+          if path.exists():
+              data = json.loads(path.read_text(encoding="utf-8"))
+              print(json.dumps(data.get("summary", {}), indent=2))
+              print("fundCount:", data.get("fundCount"))
+          else:
+              print("data/funds.json not found.")
+          PY
+
+      # ============================================================
+      # 12. UPLOAD DIAGNOSTICS (always, even on failure)
+      # ============================================================
+      - name: Upload pipeline diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-funds-data-diagnostics-${{ github.run_number }}
+          path: |
+            output_holdings/
+            output_holdings_recovery/
+            output_holdings_recovery_2/
+            output_holdings_recovery_3/
+            output_pruaccess/
+            data/
+          if-no-files-found: warn
+          retention-days: 30
+
+      # ============================================================
+      # 13. COMMIT data/ BACK TO THE REPO
+      #
+      # Only runs if the build step above succeeded (job would already
+      # have stopped otherwise), only commits data/, and only creates a
+      # commit if something actually changed.
+      # ============================================================
+      - name: Commit updated funds data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add data/funds.json data/bid_history.json
+
+          if git diff --cached --quiet; then
+            echo "No changes to data/funds.json or data/bid_history.json; nothing to commit."
+            exit 0
+          fi
+
+          git commit -m "chore: update funds data ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+          git push
