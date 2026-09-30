@@ -19,20 +19,22 @@ Keep stories that materially relate to:
     - semiconductors / AI infrastructure
     - commodities / energy
     - economically significant geopolitics
+    - financial-market legal/regulatory matters
 
 Reject:
 
     - sports
     - entertainment
     - lifestyle
-    - crime / accidents
+    - crime / accidents / human interest
     - generic political commentary
     - generic diplomacy
-    - generic human-interest stories
+    - generic education/social policy
     - generic weather
+    - generic technology commentary without economic/business relevance
 
-ARCHITECTURE
-============
+CLASSIFICATION ARCHITECTURE
+===========================
 
 RSS
  |
@@ -44,13 +46,17 @@ TITLE-FIRST CLASSIFIER
  |
  +--> hard reject obvious non-market categories
  |
- +--> strong economic signal
+ +--> hard financial-market legal cases
  |
- +--> strong market signal
+ +--> strong economic title
  |
- +--> strong technology/business signal
+ +--> strong market title
  |
- +--> geopolitical + economic impact
+ +--> strong technology/business title
+ |
+ +--> geopolitical title + direct economic mechanism
+ |
+ +--> description supporting evidence
  |
  +--> reject
  |
@@ -69,17 +75,12 @@ rolling 14-day current.json
 IMPORTANT
 =========
 
-The RSS description can contain unrelated words from the article
-body or feed metadata.
+The headline is the primary classification source.
 
-Therefore:
+The RSS description is supporting evidence only.
 
-    TITLE = highest weight
-    DESCRIPTION = supporting evidence
-
-This avoids rejecting genuine economic stories simply because
-their descriptions contain words such as "team", "government",
-"court", etc.
+This prevents unrelated words appearing in an article description
+from changing the meaning of an otherwise clear headline.
 
 CURRENT NEWS
 ============
@@ -91,6 +92,15 @@ Maximum current records:
 This is a maximum, not a forced target.
 
 Historical records are unlimited.
+
+FINAL CATEGORIES
+================
+
+    MARKET
+    ECONOMIC
+    TECHNOLOGY
+    GEOPOLITICAL
+    REJECT
 """
 
 from __future__ import annotations
@@ -110,24 +120,21 @@ import trafilatura
 from bs4 import BeautifulSoup
 
 
-# ============================================================
+# ============================================================================
 # CONFIGURATION
-# ============================================================
+# ============================================================================
 
 SOURCE_NAME = "CNA"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 NEWS_DIR = BASE_DIR / "data" / "market_news"
-
 HISTORY_DIR = NEWS_DIR / "history"
 
 CURRENT_FILE = NEWS_DIR / "current.json"
-
 RUN_SUMMARY_FILE = NEWS_DIR / "run_summary.json"
 
 WINDOW_DAYS = 14
-
 MAX_CURRENT_ARTICLES = 100
 
 REQUEST_TIMEOUT = 25
@@ -139,44 +146,43 @@ USER_AGENT = (
 )
 
 
-# ============================================================
+# ============================================================================
 # CNA RSS FEEDS
-# ============================================================
+# ============================================================================
 
 CNA_FEEDS = {
-    "latest":
-        "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml",
-
-    "asia":
-        "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6511",
-
-    "business":
-        "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6936",
-
-    "singapore":
-        "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=10416",
-
-    "world":
-        "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6311",
+    "latest": (
+        "https://www.channelnewsasia.com/"
+        "api/v1/rss-outbound-feed?_format=xml"
+    ),
+    "asia": (
+        "https://www.channelnewsasia.com/"
+        "api/v1/rss-outbound-feed?_format=xml&category=6511"
+    ),
+    "business": (
+        "https://www.channelnewsasia.com/"
+        "api/v1/rss-outbound-feed?_format=xml&category=6936"
+    ),
+    "singapore": (
+        "https://www.channelnewsasia.com/"
+        "api/v1/rss-outbound-feed?_format=xml&category=10416"
+    ),
+    "world": (
+        "https://www.channelnewsasia.com/"
+        "api/v1/rss-outbound-feed?_format=xml&category=6311"
+    ),
 }
 
 
-# ============================================================
-# HARD / STRONG EXCLUSION TERMS
-# ============================================================
+# ============================================================================
+# HARD EXCLUSIONS
+# ============================================================================
 #
-# Deliberately narrow.
+# These are deliberately title-focused.
 #
-# DO NOT put broad words such as:
-#
-#     team
-#     government
-#     court
-#     market
-#     coach
-#
-# here because they can appear in legitimate financial stories.
-# ============================================================
+# A story should not be rejected merely because the description contains
+# one of these words.
+# ============================================================================
 
 SPORTS_STRONG = {
     "football",
@@ -200,8 +206,6 @@ SPORTS_STRONG = {
     "olympic games",
     "paralympics",
     "grand slam",
-    "bryce",
-    "battles for gold",
     "gold medal",
     "silver medal",
     "bronze medal",
@@ -221,10 +225,14 @@ SPORTS_STRONG = {
     "batting",
     "bowling",
     "tournament",
+    "tournaments",
     "championship",
     "championships",
     "match",
     "matches",
+    "squad",
+    "international football",
+    "international rugby",
 }
 
 
@@ -253,6 +261,8 @@ ENTERTAINMENT_STRONG = {
     "reality tv",
     "movie role",
     "film role",
+    "festival",
+    "writers festival",
 }
 
 
@@ -274,6 +284,8 @@ LIFESTYLE_STRONG = {
     "influencer",
     "pet",
     "pets",
+    "food outlet",
+    "opening first",
 }
 
 
@@ -298,6 +310,8 @@ ACCIDENT_STRONG = {
     "killed in accident",
     "swept away",
     "avalanche",
+    "landslide",
+    "drowning",
 }
 
 
@@ -312,6 +326,7 @@ CRIME_STRONG = {
     "drug trafficking",
     "drug trafficker",
     "drugs seized",
+    "drug seized",
     "charged with",
     "jailed for",
     "sentenced to jail",
@@ -323,6 +338,12 @@ CRIME_STRONG = {
     "criminal investigation",
     "crime investigation",
     "assaulted",
+    "stole",
+    "stolen",
+    "thieves",
+    "theft",
+    "jail for",
+    "prison for",
 }
 
 
@@ -335,327 +356,427 @@ WEATHER_STRONG = {
     "typhoon",
     "hurricane",
     "tornado",
-    "avalanche",
+    "rain brings relief",
+    "drought",
 }
 
 
-# ============================================================
+# ============================================================================
+# STRONG ECONOMIC SIGNALS
+# ============================================================================
+#
+# These are deliberately explicit.
+#
+# A direct macroeconomic indicator in the headline is sufficient by itself.
+# ============================================================================
+
+ECONOMIC_STRONG = {
+    "gdp",
+    "gross domestic product",
+    "inflation",
+    "deflation",
+    "consumer price index",
+    "producer price index",
+    "cpi",
+    "ppi",
+    "pmi",
+    "purchasing managers index",
+    "economic growth",
+    "economic contraction",
+    "economic recession",
+    "economic outlook",
+    "economic activity",
+    "economic data",
+    "economic indicators",
+    "industrial production",
+    "industrial output",
+    "factory output",
+    "factory production",
+    "manufacturing output",
+    "manufacturing production",
+    "manufacturing activity",
+    "manufacturing sector",
+    "retail sales",
+    "consumer spending",
+    "consumer confidence",
+    "business confidence",
+    "employment",
+    "unemployment",
+    "unemployment rate",
+    "jobs data",
+    "payroll",
+    "payrolls",
+    "wage growth",
+    "productivity",
+    "exports",
+    "export growth",
+    "imports",
+    "import growth",
+    "trade surplus",
+    "trade deficit",
+    "trade balance",
+    "trade data",
+    "industrial activity",
+    "business activity",
+    "cost of living",
+    "electricity tariffs",
+    "gas tariffs",
+    "utility tariffs",
+    "household tariffs",
+    "energy prices",
+}
+
+
+ECONOMIC_SUPPORTING = {
+    "economy",
+    "economic",
+    "growth",
+    "output",
+    "production",
+    "manufacturing",
+    "inflation",
+    "prices",
+    "consumer",
+    "business",
+    "trade",
+    "exports",
+    "imports",
+    "employment",
+    "unemployment",
+    "wages",
+    "productivity",
+    "tariff",
+    "tariffs",
+}
+
+
+# ============================================================================
 # MARKET SIGNALS
-# ============================================================
+# ============================================================================
 
-MARKET_SIGNALS = {
-    "stock": 6,
-    "stocks": 6,
-    "stock market": 9,
-    "stock markets": 9,
-    "shares": 6,
-    "share price": 8,
-    "share prices": 8,
-    "equities": 7,
-    "equity market": 8,
-    "financial markets": 8,
-    "investor": 5,
-    "investors": 5,
-    "investment": 5,
-    "investments": 5,
-    "portfolio": 5,
-    "portfolios": 5,
-    "asset manager": 7,
-    "asset managers": 7,
-    "asset management": 8,
-    "fund manager": 7,
-    "fund managers": 7,
-    "mutual fund": 7,
-    "mutual funds": 7,
-    "fundraising": 7,
-    "fundraise": 7,
-    "funding round": 7,
-    "ipo": 9,
-    "ipos": 9,
-    "initial public offering": 9,
-    "listing": 6,
-    "listed company": 7,
-    "earnings": 7,
-    "profit": 6,
-    "profits": 6,
-    "revenue": 6,
-    "revenues": 6,
-    "dividend": 6,
-    "dividends": 6,
-    "merger": 7,
-    "mergers": 7,
-    "acquisition": 7,
-    "acquisitions": 7,
-    "takeover": 7,
-    "takeovers": 7,
-    "valuation": 7,
-    "valuations": 7,
-    "capital expenditure": 7,
-    "capex": 7,
-    "credit line": 6,
-    "credit lines": 6,
-    "banking sector": 8,
-    "banking": 7,
-    "bank": 5,
-    "banks": 5,
-    "insurance": 7,
-    "insurer": 7,
-    "insurers": 7,
-    "bond": 7,
-    "bonds": 7,
-    "bond yields": 9,
-    "yield": 6,
-    "yields": 6,
-    "treasury yields": 9,
-    "interest rate": 9,
-    "interest rates": 9,
-    "rate hike": 9,
-    "rate hikes": 9,
-    "rate cut": 9,
-    "rate cuts": 9,
-    "central bank": 9,
-    "central banks": 9,
-    "monetary policy": 9,
-    "forex": 8,
-    "foreign exchange": 8,
-    "currency market": 8,
-    "commodities": 7,
-    "commodity prices": 8,
-    "oil prices": 9,
-    "oil rises": 9,
-    "oil gains": 9,
-    "oil falls": 9,
-    "oil down": 9,
-    "gold prices": 8,
-    "energy prices": 8,
-    "real estate market": 7,
-    "property market": 7,
-    "property prices": 7,
-    "reit": 8,
-    "reits": 8,
+MARKET_STRONG = {
+    "stock market",
+    "stock markets",
+    "stocks",
+    "shares",
+    "share price",
+    "share prices",
+    "equities",
+    "equity market",
+    "financial markets",
+    "investor",
+    "investors",
+    "investment",
+    "investments",
+    "portfolio",
+    "portfolios",
+    "asset manager",
+    "asset managers",
+    "asset management",
+    "fund manager",
+    "fund managers",
+    "mutual fund",
+    "mutual funds",
+    "fundraising",
+    "fundraise",
+    "funding",
+    "funding round",
+    "raises",
+    "raised",
+    "raise",
+    "ipo",
+    "ipos",
+    "initial public offering",
+    "listing",
+    "listed company",
+    "listed companies",
+    "earnings",
+    "profit",
+    "profits",
+    "revenue",
+    "revenues",
+    "dividend",
+    "dividends",
+    "merger",
+    "mergers",
+    "acquisition",
+    "acquisitions",
+    "takeover",
+    "takeovers",
+    "valuation",
+    "valuations",
+    "capital expenditure",
+    "capex",
+    "credit line",
+    "credit lines",
+    "banking sector",
+    "banking",
+    "bank",
+    "banks",
+    "insurance",
+    "insurer",
+    "insurers",
+    "bond",
+    "bonds",
+    "bond yields",
+    "yield",
+    "yields",
+    "treasury yields",
+    "interest rate",
+    "interest rates",
+    "rate hike",
+    "rate hikes",
+    "rate cut",
+    "rate cuts",
+    "central bank",
+    "central banks",
+    "monetary policy",
+    "forex",
+    "foreign exchange",
+    "currency market",
+    "commodities",
+    "commodity prices",
+    "oil prices",
+    "oil rises",
+    "oil gains",
+    "oil falls",
+    "oil down",
+    "oil rises",
+    "gold prices",
+    "real estate market",
+    "property market",
+    "property prices",
+    "reit",
+    "reits",
+    "payments",
+    "payment",
+    "digital payments",
+    "mobile payments",
+    "fintech",
 }
 
 
-# ============================================================
-# ECONOMIC SIGNALS
-# ============================================================
-
-ECONOMIC_SIGNALS = {
-    "economy": 5,
-    "economic": 5,
-    "economic growth": 9,
-    "economic outlook": 8,
-    "gdp": 10,
-    "gross domestic product": 10,
-    "inflation": 10,
-    "deflation": 10,
-    "cpi": 10,
-    "consumer price index": 10,
-    "ppi": 10,
-    "producer price index": 10,
-    "interest rate": 9,
-    "interest rates": 9,
-    "central bank": 9,
-    "central banks": 9,
-    "monetary policy": 9,
-    "fiscal policy": 8,
-    "economic policy": 8,
-    "business confidence": 8,
-    "consumer confidence": 8,
-    "consumer spending": 8,
-    "retail sales": 9,
-    "industrial production": 12,
-    "industrial output": 12,
-    "factory output": 12,
-    "factory production": 12,
-    "manufacturing output": 12,
-    "manufacturing production": 12,
-    "manufacturing activity": 9,
-    "manufacturing": 6,
-    "pmi": 10,
-    "purchasing managers": 9,
-    "exports": 8,
-    "export growth": 10,
-    "imports": 8,
-    "import growth": 10,
-    "trade surplus": 10,
-    "trade deficit": 10,
-    "trade balance": 9,
-    "trade data": 8,
-    "tariff": 8,
-    "tariffs": 8,
-    "trade war": 10,
-    "supply chain": 7,
-    "employment": 7,
-    "unemployment": 9,
-    "jobs data": 9,
-    "payroll": 8,
-    "payrolls": 8,
-    "wage growth": 8,
-    "productivity": 7,
-    "business activity": 7,
-    "economic activity": 8,
-    "cost of living": 6,
-    "electricity tariffs": 10,
-    "gas tariffs": 10,
-    "utility tariffs": 9,
-    "household tariffs": 8,
+MARKET_SUPPORTING = {
+    "market",
+    "markets",
+    "finance",
+    "financial",
+    "bank",
+    "banking",
+    "investment",
+    "investor",
+    "company",
+    "companies",
+    "fund",
+    "funds",
+    "capital",
+    "valuation",
+    "business",
 }
 
 
-# ============================================================
-# TECHNOLOGY / AI / SEMICONDUCTOR SIGNALS
-# ============================================================
+# ============================================================================
+# TECHNOLOGY SIGNALS
+# ============================================================================
 
-TECHNOLOGY_SIGNALS = {
-    "semiconductor": 10,
-    "semiconductors": 10,
-    "semiconductor industry": 12,
-    "semiconductor sector": 12,
-    "chip": 6,
-    "chips": 6,
-    "chipmaking": 10,
-    "chip maker": 10,
-    "chipmakers": 10,
-    "chip hub": 10,
-    "chip hubs": 10,
-    "advanced chip": 10,
-    "advanced chips": 10,
-    "ai chip": 12,
-    "ai chips": 12,
-    "ai infrastructure": 10,
-    "ai infra": 10,
-    "data centre": 9,
-    "data centres": 9,
-    "data center": 9,
-    "data centers": 9,
-    "cloud computing": 8,
-    "technology investment": 9,
-    "technology investments": 9,
-    "technology funding": 9,
-    "technology standards": 9,
-    "technology sector": 8,
-    "technology company": 6,
-    "technology companies": 6,
-    "tech company": 6,
-    "tech companies": 6,
-    "venture capital": 9,
-    "private equity": 9,
-    "startup funding": 9,
-    "funding round": 8,
-    "artificial intelligence": 5,
-    "ai sector": 8,
-    "ai safety": 7,
-    "ai policy": 8,
-    "ai regulation": 9,
-    "ai regulations": 9,
-    "ai investment": 10,
-    "ai investments": 10,
-    "ai spending": 9,
-    "ai capex": 10,
-    "ai infrastructure": 10,
-    "technology stocktake": 9,
-    "digital infrastructure": 8,
-    "digital economy": 8,
-    "nvidia": 6,
-    "deepseek": 7,
-    "openai": 7,
-    "anthropic": 8,
-    "tesla": 6,
-    "apple": 5,
-    "microsoft": 5,
-    "google": 5,
-    "amazon": 5,
-    "meta": 5,
+TECHNOLOGY_STRONG = {
+    "semiconductor",
+    "semiconductors",
+    "semiconductor industry",
+    "semiconductor sector",
+    "chipmaking",
+    "chip maker",
+    "chipmakers",
+    "chip hub",
+    "chip hubs",
+    "advanced chip",
+    "advanced chips",
+    "ai chip",
+    "ai chips",
+    "ai infrastructure",
+    "ai infra",
+    "data centre",
+    "data centres",
+    "data center",
+    "data centers",
+    "cloud computing",
+    "technology investment",
+    "technology investments",
+    "technology funding",
+    "technology standards",
+    "technology sector",
+    "technology company",
+    "technology companies",
+    "tech company",
+    "tech companies",
+    "tech executives",
+    "technology executives",
+    "venture capital",
+    "private equity",
+    "startup funding",
+    "funding round",
+    "artificial intelligence",
+    "ai sector",
+    "ai safety",
+    "ai policy",
+    "ai regulation",
+    "ai regulations",
+    "ai investment",
+    "ai investments",
+    "ai spending",
+    "ai capex",
+    "ai accord",
+    "ai agreement",
+    "ai pact",
+    "ai safety pact",
+    "ai document",
+    "ai standards",
+    "technology stocktake",
+    "digital infrastructure",
+    "digital economy",
+    "digital payments",
+    "mobile payments",
+    "fintech",
+    "chip programming",
+    "chip programming tools",
+    "chip development",
+    "chip development tools",
+    "nvidia",
+    "deepseek",
+    "openai",
+    "anthropic",
+    "tesla",
+    "apple",
+    "microsoft",
+    "google",
+    "amazon",
+    "meta",
+    "apple pay",
+    "ai hack",
 }
 
 
-# ============================================================
-# FINANCIAL / BUSINESS LEGAL SIGNALS
-# ============================================================
+TECHNOLOGY_SUPPORTING = {
+    "technology",
+    "tech",
+    "artificial intelligence",
+    "ai",
+    "digital",
+    "software",
+    "cyber",
+    "cybersecurity",
+    "chip",
+    "chips",
+    "semiconductor",
+    "semiconductors",
+    "cloud",
+    "data centre",
+    "data center",
+}
+
+
+# ============================================================================
+# FINANCIAL LEGAL / REGULATORY SIGNALS
+# ============================================================================
 #
-# These are useful for cases such as:
-#
-#     Goh Jin Hian false trading trial
-#
-# A legal/criminal term alone should not make it market news,
-# but legal proceedings involving listed companies, market
-# manipulation, securities or financial markets should qualify.
-# ============================================================
+# These are MARKET stories even if the article is framed as a court case.
+# ============================================================================
 
-FINANCIAL_LEGAL_SIGNALS = {
-    "false trading": 10,
-    "market manipulation": 12,
-    "securities fraud": 12,
-    "securities law": 9,
-    "insider trading": 12,
-    "insider dealing": 12,
-    "shareholder": 7,
-    "shareholders": 7,
-    "listed company": 8,
-    "listed companies": 8,
-    "financial misconduct": 9,
-    "market-making": 10,
-    "market making": 10,
-    "market maker": 10,
-    "market makers": 10,
-    "trading services": 7,
-    "brokerage": 8,
-    "broker": 7,
-    "brokers": 7,
-    "securities": 8,
-    "exchange": 6,
-    "stock exchange": 9,
+FINANCIAL_LEGAL_STRONG = {
+    "false trading",
+    "market manipulation",
+    "securities fraud",
+    "securities law",
+    "insider trading",
+    "insider dealing",
+    "shareholder",
+    "shareholders",
+    "listed company",
+    "listed companies",
+    "financial misconduct",
+    "market-making",
+    "market making",
+    "market maker",
+    "market makers",
+    "trading services",
+    "brokerage",
+    "broker",
+    "brokers",
+    "securities",
+    "stock exchange",
+    "exchange operator",
+    "financial regulator",
+    "financial regulators",
+    "banking regulator",
+    "banking regulators",
+    "market regulator",
+    "market regulators",
 }
 
 
-# ============================================================
-# GEOPOLITICAL SIGNALS
-# ============================================================
+# ============================================================================
+# GEOPOLITICAL ECONOMIC-IMPACT SIGNALS
+# ============================================================================
+#
+# A geopolitical story is only accepted when there is a concrete economic,
+# financial, energy, trade, shipping, or strategic-technology mechanism.
+# ============================================================================
 
-GEOPOLITICAL_SIGNALS = {
-    "sanction": 7,
-    "sanctions": 7,
-    "export controls": 8,
-    "trade restrictions": 8,
-    "import restrictions": 8,
-    "trade war": 9,
-    "tariff": 7,
-    "tariffs": 7,
-    "shipping disruption": 10,
-    "shipping disruptions": 10,
-    "shipping route": 7,
-    "shipping routes": 7,
-    "strait of hormuz": 12,
-    "hormuz": 10,
-    "taiwan strait": 9,
-    "south china sea": 7,
-    "rare earth": 9,
-    "rare earths": 9,
-    "strategic minerals": 9,
-    "energy security": 8,
-    "oil supply": 10,
-    "oil shipments": 10,
-    "oil loading": 10,
-    "gas supply": 8,
-    "pipeline": 7,
-    "pipelines": 7,
-    "shipping": 5,
-    "trade": 5,
-    "energy": 5,
-    "semiconductor": 9,
-    "semiconductors": 9,
+GEOPOLITICAL_ECONOMIC_STRONG = {
+    "sanction",
+    "sanctions",
+    "export controls",
+    "trade restrictions",
+    "import restrictions",
+    "trade war",
+    "tariff",
+    "tariffs",
+    "shipping disruption",
+    "shipping disruptions",
+    "shipping route",
+    "shipping routes",
+    "shipping lanes",
+    "strait of hormuz",
+    "hormuz",
+    "taiwan strait",
+    "south china sea",
+    "rare earth",
+    "rare earths",
+    "strategic minerals",
+    "energy security",
+    "oil supply",
+    "oil shipments",
+    "oil loading",
+    "gas supply",
+    "gas shipments",
+    "pipeline",
+    "pipelines",
+    "energy supply",
+    "energy exports",
+    "energy imports",
+    "oil exports",
+    "oil imports",
+    "trade flows",
+    "trade",
+    "energy",
+    "semiconductor",
+    "semiconductors",
+    "chip supply",
+    "chip supplies",
+    "chip exports",
+    "chip imports",
 }
 
 
-# ============================================================
+# ============================================================================
 # GENERIC POLITICAL TERMS
-# ============================================================
+# ============================================================================
 
 POLITICAL_TERMS = {
     "president",
     "prime minister",
     "minister",
+    "ministers",
     "lawmaker",
     "lawmakers",
     "politician",
@@ -667,6 +788,7 @@ POLITICAL_TERMS = {
     "parliament",
     "parliamentary",
     "government",
+    "government's",
     "diplomatic",
     "diplomacy",
     "ambassador",
@@ -674,20 +796,47 @@ POLITICAL_TERMS = {
     "summit",
     "resignation",
     "resigns",
+    "resigned",
     "pledge",
     "pledged",
     "statement",
-    "says",
-    "said",
+    "statements",
+    "commentary",
+    "comment",
 }
 
 
-# ============================================================
+# ============================================================================
+# GENERIC NON-ECONOMIC POLICY TOPICS
+# ============================================================================
+
+NON_ECONOMIC_POLICY_TERMS = {
+    "psle",
+    "primary school leaving examination",
+    "dsa",
+    "direct school admission",
+    "school admission",
+    "school admissions",
+    "education policy",
+    "education system",
+    "school system",
+    "hdb household",
+    "hdb households",
+    "u-save",
+    "s&cc",
+    "s&cc rebates",
+    "rebates",
+}
+
+
+# ============================================================================
 # TEXT HELPERS
-# ============================================================
+# ============================================================================
 
 def clean_text(value: Any) -> str:
-
+    """
+    Convert HTML/text input to normalized plain text.
+    """
     if value is None:
         return ""
 
@@ -711,27 +860,22 @@ def clean_text(value: Any) -> str:
 
 
 def canonicalize_url(url: str) -> str:
-
+    """
+    Remove common tracking parameters while preserving meaningful query data.
+    """
     if not url:
         return ""
 
     try:
-
-        parts = urlsplit(
-            url.strip()
-        )
+        parts = urlsplit(url.strip())
 
         query = []
 
         for item in parts.query.split("&"):
-
             if not item:
                 continue
 
-            key = item.split(
-                "=",
-                1,
-            )[0].lower()
+            key = item.split("=", 1)[0].lower()
 
             if key.startswith("utm_"):
                 continue
@@ -757,7 +901,6 @@ def canonicalize_url(url: str) -> str:
         )
 
     except Exception:
-
         return url.strip()
 
 
@@ -765,40 +908,37 @@ def article_id(
     source: str,
     url: str,
 ) -> str:
-
+    """
+    Stable SHA-256 identifier based on source + canonical URL.
+    """
     raw = (
-        f"{source}|"
-        f"{canonicalize_url(url)}"
+        f"{source}|{canonicalize_url(url)}"
     ).encode(
         "utf-8"
     )
 
-    return hashlib.sha256(
-        raw
-    ).hexdigest()
+    return hashlib.sha256(raw).hexdigest()
 
 
 def shorten(
     text: str,
     max_chars: int = 700,
 ) -> str:
-
-    text = clean_text(
-        text
-    )
+    """
+    Keep generated summaries compact.
+    """
+    text = clean_text(text)
 
     if len(text) <= max_chars:
         return text
 
-    value = (
-        text[:max_chars]
-        .rsplit(
-            " ",
-            1,
-        )[0]
-        .rstrip(
-            " .,;:"
-        )
+    value = text[:max_chars]
+
+    value = value.rsplit(
+        " ",
+        1,
+    )[0].rstrip(
+        " .,;:"
     )
 
     return value + "..."
@@ -808,13 +948,12 @@ def find_matches(
     text: str,
     signals: dict[str, int] | set[str],
 ) -> list[str]:
-
+    """
+    Return all signal phrases found in text.
+    """
     lower = text.lower()
 
-    if isinstance(
-        signals,
-        dict,
-    ):
+    if isinstance(signals, dict):
         values = signals.keys()
     else:
         values = signals
@@ -826,524 +965,739 @@ def find_matches(
     ]
 
 
-def score_signals(
+def count_matches(
     text: str,
-    signals: dict[str, int],
-) -> tuple[int, list[str]]:
-
-    lower = text.lower()
-
-    score = 0
-    matches = []
-
-    for signal, weight in signals.items():
-
-        if signal.lower() in lower:
-
-            score += weight
-
-            matches.append(
-                signal
-            )
-
-    return score, matches
+    signals: set[str] | dict[str, int],
+) -> list[str]:
+    """
+    Alias used for semantic readability.
+    """
+    return find_matches(
+        text,
+        signals,
+    )
 
 
-# ============================================================
-# CLASSIFIER
-# ============================================================
+# ============================================================================
+# TITLE CLASSIFICATION HELPERS
+# ============================================================================
+
+def is_obvious_sports_title(
+    title: str,
+) -> list[str]:
+    return count_matches(
+        title,
+        SPORTS_STRONG,
+    )
+
+
+def is_obvious_entertainment_title(
+    title: str,
+) -> list[str]:
+    return count_matches(
+        title,
+        ENTERTAINMENT_STRONG,
+    )
+
+
+def is_obvious_lifestyle_title(
+    title: str,
+) -> list[str]:
+    return count_matches(
+        title,
+        LIFESTYLE_STRONG,
+    )
+
+
+def is_obvious_accident_title(
+    title: str,
+) -> list[str]:
+    return count_matches(
+        title,
+        ACCIDENT_STRONG,
+    )
+
+
+def is_obvious_crime_title(
+    title: str,
+) -> list[str]:
+    return count_matches(
+        title,
+        CRIME_STRONG,
+    )
+
+
+def is_obvious_weather_title(
+    title: str,
+) -> list[str]:
+    return count_matches(
+        title,
+        WEATHER_STRONG,
+    )
+
+
+def is_non_economic_policy_title(
+    title: str,
+) -> list[str]:
+    return count_matches(
+        title,
+        NON_ECONOMIC_POLICY_TERMS,
+    )
+
+
+def has_financial_context(
+    title: str,
+) -> bool:
+    """
+    Determine whether an otherwise criminal/legal headline is actually
+    about a financial-market matter.
+
+    Examples:
+
+        false trading
+        market manipulation
+        insider trading
+        securities fraud
+        market-making
+        shareholder dispute
+    """
+    matches = count_matches(
+        title,
+        FINANCIAL_LEGAL_STRONG,
+    )
+
+    if matches:
+        return True
+
+    return bool(
+        count_matches(
+            title,
+            {
+                "stock",
+                "stocks",
+                "shares",
+                "share price",
+                "market",
+                "securities",
+                "trading",
+                "investor",
+                "investors",
+                "bank",
+                "banking",
+                "fund",
+                "funds",
+            },
+        )
+    )
+
+
+def has_strong_economic_title(
+    title: str,
+) -> list[str]:
+    return count_matches(
+        title,
+        ECONOMIC_STRONG,
+    )
+
+
+def has_strong_market_title(
+    title: str,
+) -> list[str]:
+    return count_matches(
+        title,
+        MARKET_STRONG,
+    )
+
+
+def has_strong_technology_title(
+    title: str,
+) -> list[str]:
+    return count_matches(
+        title,
+        TECHNOLOGY_STRONG,
+    )
+
+
+def has_strong_geopolitical_economic_title(
+    title: str,
+) -> list[str]:
+    return count_matches(
+        title,
+        GEOPOLITICAL_ECONOMIC_STRONG,
+    )
+
+
+# ============================================================================
+# TECHNOLOGY CONTEXT RULES
+# ============================================================================
+
+def technology_business_context(
+    title: str,
+) -> bool:
+    """
+    Determine whether a technology headline has a concrete business,
+    investment, infrastructure, semiconductor, payments, regulatory,
+    or economic angle.
+
+    This deliberately rejects generic AI commentary.
+    """
+
+    lower = title.lower()
+
+    direct_contexts = [
+        (
+            {
+                "apple pay",
+                "digital payments",
+                "mobile payments",
+                "fintech",
+            },
+            {
+                "bank",
+                "banks",
+                "payment",
+                "payments",
+                "launches",
+                "partnership",
+                "partnerships",
+            },
+        ),
+        (
+            {
+                "deepseek",
+                "huawei",
+                "nvidia",
+            },
+            {
+                "chip",
+                "chips",
+                "semiconductor",
+                "semiconductors",
+                "chipmaking",
+                "programming",
+                "technology",
+            },
+        ),
+        (
+            {
+                "ai",
+                "artificial intelligence",
+            },
+            {
+                "accord",
+                "agreement",
+                "pact",
+                "standards",
+                "regulation",
+                "regulations",
+                "policy",
+                "investment",
+                "investments",
+                "funding",
+                "fund",
+                "valuation",
+                "ipo",
+                "capex",
+                "data centre",
+                "data center",
+                "infrastructure",
+                "executives",
+                "ceos",
+                "safety pact",
+                "safety",
+                "technology standards",
+            },
+        ),
+        (
+            {
+                "chip",
+                "chips",
+                "semiconductor",
+                "semiconductors",
+            },
+            {
+                "industry",
+                "sector",
+                "hub",
+                "hubs",
+                "race",
+                "manufacturing",
+                "manufacture",
+                "production",
+                "exports",
+                "imports",
+                "supply",
+                "programming",
+                "tools",
+                "investment",
+                "investments",
+            },
+        ),
+    ]
+
+    for subject_terms, context_terms in direct_contexts:
+        if any(
+            term in lower
+            for term in subject_terms
+        ) and any(
+            term in lower
+            for term in context_terms
+        ):
+            return True
+
+    return False
+
+
+# ============================================================================
+# FINANCIAL MARKET CONTEXT
+# ============================================================================
+
+def market_business_context(
+    title: str,
+) -> bool:
+    """
+    Detect concrete financial-market/business events.
+    """
+
+    lower = title.lower()
+
+    strong_pairs = [
+        (
+            {
+                "funding",
+                "fundraise",
+                "fundraising",
+                "raised",
+                "raises",
+                "raise",
+            },
+            {
+                "$",
+                "billion",
+                "million",
+                "valuation",
+                "ipo",
+                "invest",
+                "investment",
+                "fund",
+            },
+        ),
+        (
+            {
+                "bank",
+                "banks",
+                "banking",
+            },
+            {
+                "regulator",
+                "regulators",
+                "sector",
+                "market",
+                "customers",
+                "customer impacts",
+                "ai use",
+            },
+        ),
+        (
+            {
+                "payment",
+                "payments",
+                "apple pay",
+                "fintech",
+            },
+            {
+                "bank",
+                "banks",
+                "partnership",
+                "launches",
+                "market",
+            },
+        ),
+    ]
+
+    for event_terms, context_terms in strong_pairs:
+        if any(
+            term in lower
+            for term in event_terms
+        ) and any(
+            term in lower
+            for term in context_terms
+        ):
+            return True
+
+    return False
+
+
+# ============================================================================
+# MAIN CLASSIFIER
+# ============================================================================
 
 def classify_relevance(
     title: str,
     description: str,
 ) -> dict[str, Any]:
-
     """
-    TITLE-FIRST CLASSIFICATION
+    Classify one CNA article.
 
-    Title gets 3x signal weight.
+    Classification priority:
 
-    Description gets 1x signal weight.
+        1. hard exclusions
+        2. financial-market legal
+        3. strong economic title
+        4. strong market title
+        5. strong technology/business title
+        6. geopolitical + economic mechanism
+        7. supporting description evidence
+        8. reject
 
-    This is important because CNA RSS descriptions may contain
-    related but secondary material.
-
-    Decision priority:
-
-        1. obvious sports/entertainment/lifestyle
-        2. strong economic
-        3. strong market
-        4. strong technology/business
-        5. financial legal
-        6. geopolitical economic impact
-        7. reject
+    The title is always the primary evidence.
     """
 
-    title = clean_text(
-        title
-    )
-
-    description = clean_text(
-        description
-    )
+    title = clean_text(title)
+    description = clean_text(description)
 
     title_lower = title.lower()
-
     description_lower = description.lower()
 
-    # --------------------------------------------------------
-    # Hard category detection
-    # --------------------------------------------------------
+    # ------------------------------------------------------------------
+    # 1. HARD EXCLUSIONS
+    # ------------------------------------------------------------------
 
-    sports_title = find_matches(
+    sports_matches = is_obvious_sports_title(
+        title_lower
+    )
+
+    entertainment_matches = is_obvious_entertainment_title(
+        title_lower
+    )
+
+    lifestyle_matches = is_obvious_lifestyle_title(
+        title_lower
+    )
+
+    accident_matches = is_obvious_accident_title(
+        title_lower
+    )
+
+    crime_matches = is_obvious_crime_title(
+        title_lower
+    )
+
+    weather_matches = is_obvious_weather_title(
+        title_lower
+    )
+
+    policy_matches = is_non_economic_policy_title(
+        title_lower
+    )
+
+    financial_legal_matches = count_matches(
         title_lower,
-        SPORTS_STRONG,
+        FINANCIAL_LEGAL_STRONG,
     )
 
-    entertainment_title = find_matches(
-        title_lower,
-        ENTERTAINMENT_STRONG,
-    )
+    # Financial/legal stories override generic crime/legal exclusions.
+    if financial_legal_matches:
+        return {
+            "relevant": True,
+            "category": "MARKET",
+            "score": 100,
+            "reason": "financial_market_legal_story",
+            "matchedKeywords": financial_legal_matches,
+        }
 
-    lifestyle_title = find_matches(
-        title_lower,
-        LIFESTYLE_STRONG,
-    )
-
-    accident_title = find_matches(
-        title_lower,
-        ACCIDENT_STRONG,
-    )
-
-    crime_title = find_matches(
-        title_lower,
-        CRIME_STRONG,
-    )
-
-    weather_title = find_matches(
-        title_lower,
-        WEATHER_STRONG,
-    )
-
-    # --------------------------------------------------------
-    # Calculate all positive signals FIRST.
-    #
-    # This allows a genuine economic story to override generic
-    # contextual words.
-    # --------------------------------------------------------
-
-    title_market, title_market_matches = score_signals(
-        title_lower,
-        MARKET_SIGNALS,
-    )
-
-    desc_market, desc_market_matches = score_signals(
-        description_lower,
-        MARKET_SIGNALS,
-    )
-
-    title_economic, title_economic_matches = score_signals(
-        title_lower,
-        ECONOMIC_SIGNALS,
-    )
-
-    desc_economic, desc_economic_matches = score_signals(
-        description_lower,
-        ECONOMIC_SIGNALS,
-    )
-
-    title_technology, title_technology_matches = score_signals(
-        title_lower,
-        TECHNOLOGY_SIGNALS,
-    )
-
-    desc_technology, desc_technology_matches = score_signals(
-        description_lower,
-        TECHNOLOGY_SIGNALS,
-    )
-
-    title_legal, title_legal_matches = score_signals(
-        title_lower,
-        FINANCIAL_LEGAL_SIGNALS,
-    )
-
-    desc_legal, desc_legal_matches = score_signals(
-        description_lower,
-        FINANCIAL_LEGAL_SIGNALS,
-    )
-
-    title_geo, title_geo_matches = score_signals(
-        title_lower,
-        GEOPOLITICAL_SIGNALS,
-    )
-
-    desc_geo, desc_geo_matches = score_signals(
-        description_lower,
-        GEOPOLITICAL_SIGNALS,
-    )
-
-    # Title gets 3x importance.
-    market_score = (
-        title_market * 3
-        + desc_market
-    )
-
-    economic_score = (
-        title_economic * 3
-        + desc_economic
-    )
-
-    technology_score = (
-        title_technology * 3
-        + desc_technology
-    )
-
-    legal_score = (
-        title_legal * 3
-        + desc_legal
-    )
-
-    geopolitical_score = (
-        title_geo * 3
-        + desc_geo
-    )
-
-    # --------------------------------------------------------
-    # 1. SPORTS
-    #
-    # A clear sports title remains excluded unless it contains
-    # an extremely strong financial/business signal.
-    # --------------------------------------------------------
-
-    if sports_title:
-
-        combined_financial = (
-            market_score
-            + economic_score
-            + technology_score
-            + legal_score
+    # Sports are rejected unless the title contains a genuine financial
+    # market event. This protects against words like "player investment"
+    # in unrelated sports stories.
+    if sports_matches:
+        market_title_matches = has_strong_market_title(
+            title_lower
         )
 
-        if combined_financial < 20:
-
+        if not market_title_matches:
             return {
                 "relevant": False,
                 "category": "REJECT",
                 "score": 0,
                 "reason": "sports",
-                "matchedKeywords": sports_title,
+                "matchedKeywords": sports_matches,
             }
 
-    # --------------------------------------------------------
-    # 2. ENTERTAINMENT
-    # --------------------------------------------------------
+    # Entertainment stories are rejected unless there is an explicit
+    # market/technology/business event.
+    if entertainment_matches:
+        market_title_matches = has_strong_market_title(
+            title_lower
+        )
 
-    if entertainment_title:
+        technology_title_matches = has_strong_technology_title(
+            title_lower
+        )
 
-        if (
-            market_score < 20
-            and technology_score < 20
+        if not (
+            market_title_matches
+            or technology_title_matches
+            or market_business_context(title_lower)
         ):
-
             return {
                 "relevant": False,
                 "category": "REJECT",
                 "score": 0,
                 "reason": "entertainment",
-                "matchedKeywords": entertainment_title,
+                "matchedKeywords": entertainment_matches,
             }
 
-    # --------------------------------------------------------
-    # 3. LIFESTYLE
-    # --------------------------------------------------------
+    # Lifestyle stories are normally excluded.
+    if lifestyle_matches:
+        market_title_matches = has_strong_market_title(
+            title_lower
+        )
 
-    if lifestyle_title:
+        technology_title_matches = has_strong_technology_title(
+            title_lower
+        )
 
-        if (
-            market_score < 20
-            and economic_score < 20
+        if not (
+            market_title_matches
+            or technology_title_matches
+            or market_business_context(title_lower)
         ):
-
             return {
                 "relevant": False,
                 "category": "REJECT",
                 "score": 0,
                 "reason": "lifestyle",
-                "matchedKeywords": lifestyle_title,
+                "matchedKeywords": lifestyle_matches,
             }
 
-    # --------------------------------------------------------
-    # 4. ACCIDENT
-    # --------------------------------------------------------
+    # Accident/human-interest stories are excluded before description
+    # scoring can introduce irrelevant economic words.
+    if accident_matches:
+        return {
+            "relevant": False,
+            "category": "REJECT",
+            "score": 0,
+            "reason": "accident_human_interest",
+            "matchedKeywords": accident_matches,
+        }
 
-    if accident_title:
+    # Generic crime is excluded before economic scoring.
+    if crime_matches:
+        return {
+            "relevant": False,
+            "category": "REJECT",
+            "score": 0,
+            "reason": "crime_human_interest",
+            "matchedKeywords": crime_matches,
+        }
 
-        if (
-            market_score < 25
-            and economic_score < 25
+    if weather_matches:
+        economic_title_matches = has_strong_economic_title(
+            title_lower
+        )
+
+        market_title_matches = has_strong_market_title(
+            title_lower
+        )
+
+        if not (
+            economic_title_matches
+            or market_title_matches
         ):
-
-            return {
-                "relevant": False,
-                "category": "REJECT",
-                "score": 0,
-                "reason": "accident_human_interest",
-                "matchedKeywords": accident_title,
-            }
-
-    # --------------------------------------------------------
-    # 5. WEATHER
-    # --------------------------------------------------------
-
-    if weather_title:
-
-        if (
-            economic_score < 20
-            and market_score < 20
-        ):
-
             return {
                 "relevant": False,
                 "category": "REJECT",
                 "score": 0,
                 "reason": "weather",
-                "matchedKeywords": weather_title,
+                "matchedKeywords": weather_matches,
             }
 
-    # --------------------------------------------------------
-    # 6. ECONOMIC
-    #
-    # Strong title signals alone are enough.
-    #
-    # This specifically fixes:
-    #
-    # Thai factory output
-    # Japan factory output
-    # semiconductor ambitions
-    # tariff / inflation / GDP stories
-    # --------------------------------------------------------
+    # Generic social/education policy is excluded.
+    if policy_matches:
+        return {
+            "relevant": False,
+            "category": "REJECT",
+            "score": 0,
+            "reason": "non_economic_social_policy",
+            "matchedKeywords": policy_matches,
+        }
 
-    if economic_score >= 20:
+    # ------------------------------------------------------------------
+    # 2. STRONG ECONOMIC TITLE
+    # ------------------------------------------------------------------
 
+    economic_title_matches = has_strong_economic_title(
+        title_lower
+    )
+
+    if economic_title_matches:
         return {
             "relevant": True,
             "category": "ECONOMIC",
-            "score": economic_score,
-            "reason": "strong_economic_signal",
-            "matchedKeywords": (
-                title_economic_matches
-                + desc_economic_matches
-            ),
+            "score": 100 + len(economic_title_matches),
+            "reason": "strong_economic_title",
+            "matchedKeywords": economic_title_matches,
         }
 
-    # --------------------------------------------------------
-    # 7. MARKET
-    # --------------------------------------------------------
+    # ------------------------------------------------------------------
+    # 3. STRONG MARKET TITLE
+    # ------------------------------------------------------------------
 
-    if market_score >= 18:
+    market_title_matches = has_strong_market_title(
+        title_lower
+    )
 
+    if market_title_matches:
         return {
             "relevant": True,
             "category": "MARKET",
-            "score": market_score,
-            "reason": "strong_market_signal",
-            "matchedKeywords": (
-                title_market_matches
-                + desc_market_matches
-            ),
+            "score": 90 + len(market_title_matches),
+            "reason": "strong_market_title",
+            "matchedKeywords": market_title_matches,
         }
 
-    # --------------------------------------------------------
-    # 8. TECHNOLOGY
-    #
-    # Generic AI commentary is not enough.
-    #
-    # Business / infrastructure / semiconductor / funding /
-    # policy / investment signals are required.
-    # --------------------------------------------------------
+    # ------------------------------------------------------------------
+    # 4. SPECIFIC BUSINESS / MARKET CONTEXT
+    # ------------------------------------------------------------------
 
-    strong_technology_terms = {
-        "semiconductor",
-        "semiconductors",
-        "semiconductor industry",
-        "semiconductor sector",
-        "chipmaking",
-        "chip maker",
-        "chipmakers",
-        "chip hub",
-        "chip hubs",
-        "advanced chip",
-        "advanced chips",
-        "ai chip",
-        "ai chips",
-        "ai infrastructure",
-        "ai infra",
-        "data centre",
-        "data centres",
-        "data center",
-        "data centers",
-        "venture capital",
-        "private equity",
-        "startup funding",
-        "funding round",
-        "technology investment",
-        "technology investments",
-        "technology funding",
-        "technology standards",
-        "technology sector",
-        "ai sector",
-        "ai policy",
-        "ai regulation",
-        "ai regulations",
-        "ai investment",
-        "ai investments",
-        "ai spending",
-        "ai capex",
-        "technology stocktake",
-        "digital infrastructure",
-        "digital economy",
-    }
-
-    title_strong_tech = [
-        item
-        for item in title_technology_matches
-        if item in strong_technology_terms
-    ]
-
-    desc_strong_tech = [
-        item
-        for item in desc_technology_matches
-        if item in strong_technology_terms
-    ]
-
-    if (
-        technology_score >= 15
-        and (
-            title_strong_tech
-            or desc_strong_tech
-        )
-    ):
-
-        return {
-            "relevant": True,
-            "category": "TECHNOLOGY",
-            "score": technology_score,
-            "reason": "technology_business_or_infrastructure",
-            "matchedKeywords": (
-                title_technology_matches
-                + desc_technology_matches
-            ),
-        }
-
-    # --------------------------------------------------------
-    # 9. FINANCIAL / BUSINESS LEGAL
-    #
-    # This fixes stories such as:
-    #
-    # Goh Jin Hian false trading trial
-    #
-    # while still rejecting ordinary criminal cases.
-    # --------------------------------------------------------
-
-    if legal_score >= 18:
-
+    if market_business_context(title_lower):
         return {
             "relevant": True,
             "category": "MARKET",
-            "score": legal_score,
-            "reason": "financial_market_legal_story",
-            "matchedKeywords": (
-                title_legal_matches
-                + desc_legal_matches
-            ),
+            "score": 85,
+            "reason": "business_market_event",
+            "matchedKeywords": [],
         }
 
-    # --------------------------------------------------------
-    # 10. GEOPOLITICAL + ECONOMIC IMPACT
-    #
-    # Country names and military activity alone are NOT enough.
-    #
-    # Require a direct economic transmission mechanism:
-    #
-    # oil
-    # shipping
-    # sanctions
-    # trade
-    # semiconductors
-    # energy
-    # strategic minerals
-    # etc.
-    # --------------------------------------------------------
+    # ------------------------------------------------------------------
+    # 5. STRONG TECHNOLOGY / BUSINESS TITLE
+    # ------------------------------------------------------------------
 
-    economic_geo_terms = {
-        "sanction",
-        "sanctions",
-        "export controls",
-        "trade restrictions",
-        "import restrictions",
-        "trade war",
-        "tariff",
-        "tariffs",
-        "shipping disruption",
-        "shipping disruptions",
-        "shipping route",
-        "shipping routes",
-        "strait of hormuz",
-        "hormuz",
-        "taiwan strait",
-        "rare earth",
-        "rare earths",
-        "strategic minerals",
-        "energy security",
-        "oil supply",
-        "oil shipments",
-        "oil loading",
-        "gas supply",
-        "pipeline",
-        "pipelines",
-        "shipping",
-        "trade",
-        "energy",
-        "semiconductor",
-        "semiconductors",
-    }
+    technology_title_matches = has_strong_technology_title(
+        title_lower
+    )
 
-    geo_economic_matches = [
-        item
-        for item in (
-            title_geo_matches
-            + desc_geo_matches
-        )
-        if item in economic_geo_terms
-    ]
+    if technology_title_matches:
+        if technology_business_context(title_lower):
+            return {
+                "relevant": True,
+                "category": "TECHNOLOGY",
+                "score": 80 + len(technology_title_matches),
+                "reason": "technology_business_or_infrastructure",
+                "matchedKeywords": technology_title_matches,
+            }
 
-    if (
-        geopolitical_score >= 18
-        and geo_economic_matches
-    ):
+    # ------------------------------------------------------------------
+    # 6. GEOPOLITICAL + DIRECT ECONOMIC MECHANISM
+    # ------------------------------------------------------------------
 
+    geo_matches = has_strong_geopolitical_economic_title(
+        title_lower
+    )
+
+    if geo_matches:
         return {
             "relevant": True,
             "category": "GEOPOLITICAL",
-            "score": geopolitical_score,
+            "score": 70 + len(geo_matches),
             "reason": "geopolitical_with_direct_economic_impact",
-            "matchedKeywords": (
-                title_geo_matches
-                + desc_geo_matches
-            ),
+            "matchedKeywords": geo_matches,
         }
 
-    # --------------------------------------------------------
-    # 11. GENERIC POLITICAL / DIPLOMATIC
-    # --------------------------------------------------------
+    # ------------------------------------------------------------------
+    # 7. DESCRIPTION SUPPORT
+    # ------------------------------------------------------------------
+    #
+    # Description can rescue a borderline title only when it provides
+    # concrete evidence AND the title itself does not indicate an
+    # obviously excluded topic.
+    #
+    # Description alone cannot override hard exclusions.
+    # ------------------------------------------------------------------
 
-    political_matches = find_matches(
+    description_economic_matches = count_matches(
+        description_lower,
+        ECONOMIC_STRONG,
+    )
+
+    description_market_matches = count_matches(
+        description_lower,
+        MARKET_STRONG,
+    )
+
+    description_technology_matches = count_matches(
+        description_lower,
+        TECHNOLOGY_STRONG,
+    )
+
+    description_geo_matches = count_matches(
+        description_lower,
+        GEOPOLITICAL_ECONOMIC_STRONG,
+    )
+
+    # A description with multiple strong economic indicators can rescue
+    # a neutral business headline.
+    if len(description_economic_matches) >= 2:
+        return {
+            "relevant": True,
+            "category": "ECONOMIC",
+            "score": 60 + len(description_economic_matches),
+            "reason": "supporting_economic_description",
+            "matchedKeywords": description_economic_matches,
+        }
+
+    # A concrete market description can rescue a neutral headline.
+    if len(description_market_matches) >= 2:
+        return {
+            "relevant": True,
+            "category": "MARKET",
+            "score": 55 + len(description_market_matches),
+            "reason": "supporting_market_description",
+            "matchedKeywords": description_market_matches,
+        }
+
+    # Technology requires actual technology/business context.
+    if len(description_technology_matches) >= 2:
+        if (
+            "technology"
+            in description_lower
+            or "artificial intelligence"
+            in description_lower
+            or "semiconductor"
+            in description_lower
+            or "chip"
+            in description_lower
+            or "ai"
+            in description_lower
+        ):
+            return {
+                "relevant": True,
+                "category": "TECHNOLOGY",
+                "score": 50 + len(description_technology_matches),
+                "reason": "supporting_technology_description",
+                "matchedKeywords": description_technology_matches,
+            }
+
+    # Geopolitical stories still require a concrete economic mechanism.
+    if len(description_geo_matches) >= 2:
+        return {
+            "relevant": True,
+            "category": "GEOPOLITICAL",
+            "score": 50 + len(description_geo_matches),
+            "reason": "supporting_geopolitical_economic_description",
+            "matchedKeywords": description_geo_matches,
+        }
+
+    # ------------------------------------------------------------------
+    # 8. GENERIC POLITICAL / COMMENTARY REJECTION
+    # ------------------------------------------------------------------
+
+    political_matches = count_matches(
         title_lower,
         POLITICAL_TERMS,
     )
 
     if political_matches:
-
         return {
             "relevant": False,
             "category": "REJECT",
@@ -1352,29 +1706,9 @@ def classify_relevance(
             "matchedKeywords": political_matches,
         }
 
-    # --------------------------------------------------------
-    # 12. CRIME
-    #
-    # A crime word alone in the description should NOT reject
-    # an otherwise genuine market story.
-    #
-    # However, a clearly crime-focused title with no financial
-    # relevance is rejected.
-    # --------------------------------------------------------
-
-    if crime_title:
-
-        return {
-            "relevant": False,
-            "category": "REJECT",
-            "score": 0,
-            "reason": "crime_human_interest",
-            "matchedKeywords": crime_title,
-        }
-
-    # --------------------------------------------------------
-    # DEFAULT
-    # --------------------------------------------------------
+    # ------------------------------------------------------------------
+    # 9. DEFAULT REJECTION
+    # ------------------------------------------------------------------
 
     return {
         "relevant": False,
@@ -1385,14 +1719,13 @@ def classify_relevance(
     }
 
 
-# ============================================================
-# RSS
-# ============================================================
+# ============================================================================
+# RSS DATE PARSING
+# ============================================================================
 
 def parse_entry_datetime(
     entry: Any,
 ) -> datetime:
-
     parsed = getattr(
         entry,
         "published_parsed",
@@ -1400,7 +1733,6 @@ def parse_entry_datetime(
     )
 
     if parsed is None:
-
         parsed = getattr(
             entry,
             "updated_parsed",
@@ -1408,14 +1740,11 @@ def parse_entry_datetime(
         )
 
     if parsed:
-
         try:
-
             return datetime.fromtimestamp(
                 timegm(parsed),
                 tz=timezone.utc,
             )
-
         except Exception:
             pass
 
@@ -1424,17 +1753,19 @@ def parse_entry_datetime(
     )
 
 
+# ============================================================================
+# RSS FETCHING
+# ============================================================================
+
 def fetch_feed(
     feed_name: str,
     feed_url: str,
 ) -> list[dict[str, Any]]:
-
     print(
         f"\nFetching CNA feed: {feed_name}"
     )
 
     try:
-
         response = requests.get(
             feed_url,
             headers={
@@ -1457,7 +1788,6 @@ def fetch_feed(
         records = []
 
         for entry in parsed.entries:
-
             title = clean_text(
                 getattr(
                     entry,
@@ -1498,17 +1828,11 @@ def fetch_feed(
                     "feed": feed_name,
                     "title": title,
                     "description": description,
-                    "url": canonicalize_url(
-                        url
-                    ),
+                    "url": canonicalize_url(url),
                     "publishedAtUtc": (
                         published
-                        .astimezone(
-                            timezone.utc
-                        )
-                        .replace(
-                            microsecond=0
-                        )
+                        .astimezone(timezone.utc)
+                        .replace(microsecond=0)
                         .isoformat()
                         .replace(
                             "+00:00",
@@ -1525,21 +1849,19 @@ def fetch_feed(
         return records
 
     except Exception as exc:
-
         print(
-            f"  ERROR: "
-            f"{type(exc).__name__}: {exc}"
+            "  ERROR:",
+            type(exc).__name__,
+            str(exc),
         )
 
         return []
 
 
 def collect_rss() -> list[dict[str, Any]]:
-
     records = []
 
     for feed_name, feed_url in CNA_FEEDS.items():
-
         records.extend(
             fetch_feed(
                 feed_name,
@@ -1550,14 +1872,13 @@ def collect_rss() -> list[dict[str, Any]]:
     return records
 
 
-# ============================================================
+# ============================================================================
 # ARTICLE EXTRACTION
-# ============================================================
+# ============================================================================
 
 def fetch_article_text(
     url: str,
 ) -> str:
-
     response = requests.get(
         url,
         headers={
@@ -1582,7 +1903,6 @@ def fetch_article_text(
     )
 
     if extracted:
-
         return clean_text(
             extracted
         )
@@ -1602,7 +1922,6 @@ def fetch_article_text(
             "header",
         ]
     ):
-
         tag.decompose()
 
     paragraphs = []
@@ -1610,7 +1929,6 @@ def fetch_article_text(
     for paragraph in soup.find_all(
         "p"
     ):
-
         value = clean_text(
             paragraph.get_text(
                 " ",
@@ -1619,26 +1937,22 @@ def fetch_article_text(
         )
 
         if len(value) >= 40:
-
             paragraphs.append(
                 value
             )
 
     return clean_text(
-        " ".join(
-            paragraphs
-        )
+        " ".join(paragraphs)
     )
 
 
-# ============================================================
-# SUMMARY
-# ============================================================
+# ============================================================================
+# SUMMARY GENERATION
+# ============================================================================
 
 def split_sentences(
     text: str,
 ) -> list[str]:
-
     text = clean_text(
         text
     )
@@ -1661,13 +1975,11 @@ def generate_summary(
     description: str,
     article_text: str,
 ) -> str:
-
     sentences = split_sentences(
         article_text
     )
 
     if not sentences:
-
         fallback = (
             description
             or title
@@ -1712,7 +2024,9 @@ def generate_summary(
         "imports",
         "ipo",
         "funding",
-        "investment",
+        "valuation",
+        "payments",
+        "fintech",
     ]
 
     scored = []
@@ -1720,7 +2034,6 @@ def generate_summary(
     for index, sentence in enumerate(
         sentences
     ):
-
         lower = sentence.lower()
 
         score = sum(
@@ -1757,52 +2070,44 @@ def generate_summary(
     ][:3]
 
     return shorten(
-        " ".join(
-            ordered
-        )
+        " ".join(ordered)
     )
 
 
-# ============================================================
-# JSON
-# ============================================================
+# ============================================================================
+# JSON HELPERS
+# ============================================================================
 
 def load_json(
     path: Path,
     default: Any,
 ) -> Any:
-
     if not path.exists():
         return default
 
     try:
-
         with path.open(
             "r",
             encoding="utf-8",
         ) as handle:
-
             return json.load(
                 handle
             )
 
     except Exception as exc:
-
         print(
-            f"WARNING: Failed reading "
-            f"{path}: "
+            f"WARNING: Failed reading {path}: "
             f"{type(exc).__name__}: {exc}"
         )
 
         return default
 
 
-# ============================================================
+# ============================================================================
 # HISTORY
-# ============================================================
+# ============================================================================
 
 def load_existing_history_ids() -> set[str]:
-
     result = set()
 
     if not HISTORY_DIR.exists():
@@ -1811,7 +2116,6 @@ def load_existing_history_ids() -> set[str]:
     for path in HISTORY_DIR.rglob(
         "*.json"
     ):
-
         data = load_json(
             path,
             {},
@@ -1821,12 +2125,10 @@ def load_existing_history_ids() -> set[str]:
             "articles",
             [],
         ):
-
             if isinstance(
                 article,
                 dict,
             ):
-
                 value = article.get(
                     "id"
                 )
@@ -1840,7 +2142,6 @@ def load_existing_history_ids() -> set[str]:
 
 
 def load_all_history_articles() -> list[dict[str, Any]]:
-
     result = []
 
     if not HISTORY_DIR.exists():
@@ -1849,7 +2150,6 @@ def load_all_history_articles() -> list[dict[str, Any]]:
     for path in HISTORY_DIR.rglob(
         "*.json"
     ):
-
         data = load_json(
             path,
             {},
@@ -1859,12 +2159,10 @@ def load_all_history_articles() -> list[dict[str, Any]]:
             "articles",
             [],
         ):
-
             if isinstance(
                 article,
                 dict,
             ):
-
                 result.append(
                     article
                 )
@@ -1875,9 +2173,7 @@ def load_all_history_articles() -> list[dict[str, Any]]:
 def history_file_for_date(
     published_at: str,
 ) -> Path:
-
     try:
-
         dt = datetime.fromisoformat(
             published_at.replace(
                 "Z",
@@ -1886,7 +2182,6 @@ def history_file_for_date(
         )
 
     except Exception:
-
         dt = datetime.now(
             timezone.utc
         )
@@ -1911,11 +2206,8 @@ def history_file_for_date(
 def save_history_article(
     article: dict[str, Any],
 ) -> bool:
-
     path = history_file_for_date(
-        article[
-            "publishedAtUtc"
-        ]
+        article["publishedAtUtc"]
     )
 
     data = load_json(
@@ -1958,28 +2250,28 @@ def save_history_article(
         reverse=True,
     )
 
-    data[
-        "articleCount"
-    ] = len(
+    data["articleCount"] = len(
         articles
     )
 
-    data[
-        "updatedAtUtc"
-    ] = datetime.now(
-        timezone.utc
-    ).replace(
-        microsecond=0
-    ).isoformat().replace(
-        "+00:00",
-        "Z",
+    data["updatedAtUtc"] = (
+        datetime.now(
+            timezone.utc
+        )
+        .replace(
+            microsecond=0
+        )
+        .isoformat()
+        .replace(
+            "+00:00",
+            "Z",
+        )
     )
 
     with path.open(
         "w",
         encoding="utf-8",
     ) as handle:
-
         json.dump(
             data,
             handle,
@@ -1994,14 +2286,13 @@ def save_history_article(
     return True
 
 
-# ============================================================
-# CURRENT INDEX
-# ============================================================
+# ============================================================================
+# CURRENT 14-DAY INDEX
+# ============================================================================
 
 def build_current_index(
     articles: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-
     cutoff = (
         datetime.now(
             timezone.utc
@@ -2014,9 +2305,7 @@ def build_current_index(
     unique = {}
 
     for article in articles:
-
         try:
-
             published = datetime.fromisoformat(
                 article[
                     "publishedAtUtc"
@@ -2027,7 +2316,6 @@ def build_current_index(
             )
 
         except Exception:
-
             continue
 
         if published < cutoff:
@@ -2038,7 +2326,6 @@ def build_current_index(
         )
 
         if article_key:
-
             unique[
                 article_key
             ] = article
@@ -2063,7 +2350,6 @@ def build_current_index(
 def write_current_index(
     articles: list[dict[str, Any]],
 ) -> None:
-
     NEWS_DIR.mkdir(
         parents=True,
         exist_ok=True,
@@ -2096,7 +2382,6 @@ def write_current_index(
         "w",
         encoding="utf-8",
     ) as handle:
-
         json.dump(
             data,
             handle,
@@ -2109,23 +2394,25 @@ def write_current_index(
         )
 
 
-# ============================================================
+# ============================================================================
 # MAIN
-# ============================================================
+# ============================================================================
 
 def main() -> None:
-
-    print("=" * 80)
+    print(
+        "=" * 80
+    )
 
     print(
         "VGrat FMS - CNA Market News Collector"
     )
 
-    print("=" * 80)
+    print(
+        "=" * 80
+    )
 
     print(
-        f"Rolling window: "
-        f"{WINDOW_DAYS} days"
+        f"Rolling window: {WINDOW_DAYS} days"
     )
 
     print(
@@ -2164,6 +2451,7 @@ def main() -> None:
         "rejectedAccident": 0,
         "rejectedCrime": 0,
         "rejectedPolitical": 0,
+        "rejectedSocialPolicy": 0,
         "rejectedGeneral": 0,
         "articleExtractionAttempts": 0,
         "articleExtractionSuccess": 0,
@@ -2171,9 +2459,9 @@ def main() -> None:
         "newHistoricalRecords": 0,
     }
 
-    # ========================================================
+    # ------------------------------------------------------------------
     # RSS
-    # ========================================================
+    # ------------------------------------------------------------------
 
     rss_records = collect_rss()
 
@@ -2183,14 +2471,9 @@ def main() -> None:
         rss_records
     )
 
-    # ========================================================
-    # DEDUPLICATION
-    # ========================================================
-
     unique_records = {}
 
     for record in rss_records:
-
         url = record.get(
             "url",
             "",
@@ -2205,7 +2488,6 @@ def main() -> None:
         )
 
         if key in unique_records:
-
             stats[
                 "duplicates"
             ] += 1
@@ -2225,20 +2507,15 @@ def main() -> None:
                 feed
                 and feed not in feeds
             ):
-
                 feeds.append(
                     feed
                 )
 
             continue
 
-        record[
-            "id"
-        ] = key
+        record["id"] = key
 
-        record[
-            "feeds"
-        ] = [
+        record["feeds"] = [
             record.get(
                 "feed",
                 "unknown",
@@ -2256,6 +2533,7 @@ def main() -> None:
     )
 
     print()
+
     print(
         f"RSS entries: "
         f"{stats['rssEntries']}"
@@ -2271,26 +2549,30 @@ def main() -> None:
         f"{stats['duplicates']}"
     )
 
-    # ========================================================
+    # ------------------------------------------------------------------
     # CLASSIFICATION
-    # ========================================================
+    # ------------------------------------------------------------------
 
     relevant_records = []
 
     print()
-    print("=" * 80)
-    print("CLASSIFICATION")
-    print("=" * 80)
+
+    print(
+        "=" * 80
+    )
+
+    print(
+        "CLASSIFICATION"
+    )
+
+    print(
+        "=" * 80
+    )
 
     for record in unique_records.values():
-
         result = classify_relevance(
-            record[
-                "title"
-            ],
-            record[
-                "description"
-            ],
+            record["title"],
+            record["description"],
         )
 
         record[
@@ -2304,7 +2586,6 @@ def main() -> None:
         if result[
             "relevant"
         ]:
-
             category = result[
                 "category"
             ]
@@ -2314,25 +2595,21 @@ def main() -> None:
             ] += 1
 
             if category == "MARKET":
-
                 stats[
                     "relevantMarket"
                 ] += 1
 
             elif category == "ECONOMIC":
-
                 stats[
                     "relevantEconomic"
                 ] += 1
 
             elif category == "TECHNOLOGY":
-
                 stats[
                     "relevantTechnology"
                 ] += 1
 
             elif category == "GEOPOLITICAL":
-
                 stats[
                     "relevantGeopolitical"
                 ] += 1
@@ -2350,7 +2627,6 @@ def main() -> None:
             )
 
         else:
-
             reason = result[
                 "reason"
             ]
@@ -2380,11 +2656,14 @@ def main() -> None:
                     "rejectedCrime"
                 ] += 1
 
-            elif reason == (
-                "political_without_market_or_economic_impact"
-            ):
+            elif reason == "political_without_market_or_economic_impact":
                 stats[
                     "rejectedPolitical"
+                ] += 1
+
+            elif reason == "non_economic_social_policy":
+                stats[
+                    "rejectedSocialPolicy"
                 ] += 1
 
             else:
@@ -2398,25 +2677,19 @@ def main() -> None:
                 f"reason={reason}",
             )
 
-    # ========================================================
-    # EXISTING HISTORY
-    # ========================================================
+    # ------------------------------------------------------------------
+    # HISTORY
+    # ------------------------------------------------------------------
 
     existing_ids = (
         load_existing_history_ids()
     )
 
-    # ========================================================
-    # ARTICLE EXTRACTION
-    # ========================================================
-
     for record in relevant_records:
-
         key = record[
             "id"
         ]
 
-        # Already permanently archived.
         if key in existing_ids:
             continue
 
@@ -2425,9 +2698,10 @@ def main() -> None:
         ]
 
         print()
+
         print(
             "PROCESS:",
-            title
+            title,
         )
 
         stats[
@@ -2435,15 +2709,11 @@ def main() -> None:
         ] += 1
 
         try:
-
             article_text = fetch_article_text(
-                record[
-                    "url"
-                ]
+                record["url"]
             )
 
             if not article_text:
-
                 raise RuntimeError(
                     "No article text extracted"
                 )
@@ -2461,7 +2731,6 @@ def main() -> None:
             )
 
         except Exception as exc:
-
             stats[
                 "articleExtractionFailures"
             ] += 1
@@ -2527,7 +2796,6 @@ def main() -> None:
         if save_history_article(
             permanent_record
         ):
-
             stats[
                 "newHistoricalRecords"
             ] += 1
@@ -2540,9 +2808,9 @@ def main() -> None:
                 "  Saved."
             )
 
-    # ========================================================
+    # ------------------------------------------------------------------
     # CURRENT INDEX
-    # ========================================================
+    # ------------------------------------------------------------------
 
     history_articles = (
         load_all_history_articles()
@@ -2558,9 +2826,9 @@ def main() -> None:
         current_articles
     )
 
-    # ========================================================
+    # ------------------------------------------------------------------
     # RUN SUMMARY
-    # ========================================================
+    # ------------------------------------------------------------------
 
     completed = datetime.now(
         timezone.utc
@@ -2608,7 +2876,6 @@ def main() -> None:
         "w",
         encoding="utf-8",
     ) as handle:
-
         json.dump(
             run_summary,
             handle,
@@ -2620,14 +2887,23 @@ def main() -> None:
             "\n"
         )
 
-    # ========================================================
-    # FINAL
-    # ========================================================
+    # ------------------------------------------------------------------
+    # CONSOLE SUMMARY
+    # ------------------------------------------------------------------
 
     print()
-    print("=" * 80)
-    print("COLLECTION COMPLETE")
-    print("=" * 80)
+
+    print(
+        "=" * 80
+    )
+
+    print(
+        "COLLECTION COMPLETE"
+    )
+
+    print(
+        "=" * 80
+    )
 
     print(
         f"Relevant:              "
@@ -2687,6 +2963,11 @@ def main() -> None:
     )
 
     print(
+        f"Rejected social policy:"
+        f" {stats['rejectedSocialPolicy']}"
+    )
+
+    print(
         f"Rejected general:      "
         f"{stats['rejectedGeneral']}"
     )
@@ -2713,7 +2994,9 @@ def main() -> None:
         f"{MAX_CURRENT_ARTICLES}"
     )
 
-    print("=" * 80)
+    print(
+        "=" * 80
+    )
 
 
 if __name__ == "__main__":
