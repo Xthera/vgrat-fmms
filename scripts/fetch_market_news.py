@@ -6,93 +6,6 @@ VGrat FMS - CNA Market News Collector
 
 Collect relevant CNA news for VGrat FMS.
 
-PRIMARY OBJECTIVE
-=================
-
-Keep stories that materially relate to:
-
-    - financial markets
-    - investing
-    - macroeconomics
-    - business
-    - technology with economic/business significance
-    - semiconductors / AI infrastructure
-    - commodities / energy
-    - economically significant geopolitics
-    - financial-market legal/regulatory matters
-
-Reject:
-
-    - sports
-    - entertainment
-    - lifestyle
-    - crime / accidents / human interest
-    - generic political commentary
-    - generic diplomacy
-    - generic education/social policy
-    - generic weather
-    - generic technology commentary without economic/business relevance
-
-CLASSIFICATION ARCHITECTURE
-===========================
-
-RSS
- |
- v
-deduplicate
- |
- v
-TITLE-FIRST CLASSIFIER
- |
- +--> hard reject obvious non-market categories
- |
- +--> hard financial-market legal cases
- |
- +--> strong economic title
- |
- +--> strong market title
- |
- +--> strong technology/business title
- |
- +--> geopolitical title + direct economic mechanism
- |
- +--> description supporting evidence
- |
- +--> reject
- |
- v
-article extraction
- |
- v
-summary
- |
- v
-historical archive
- |
- v
-rolling 14-day current.json
-
-IMPORTANT
-=========
-
-The headline is the primary classification source.
-
-The RSS description is supporting evidence only.
-
-This prevents unrelated words appearing in an article description
-from changing the meaning of an otherwise clear headline.
-
-CURRENT NEWS
-============
-
-Maximum current records:
-
-    100
-
-This is a maximum, not a forced target.
-
-Historical records are unlimited.
-
 FINAL CATEGORIES
 ================
 
@@ -101,6 +14,58 @@ FINAL CATEGORIES
     TECHNOLOGY
     GEOPOLITICAL
     REJECT
+
+CLASSIFICATION PRINCIPLES
+=========================
+
+1. The headline is the primary source of truth.
+
+2. Exact words / phrases are matched using word boundaries.
+   This prevents false substring matches such as:
+
+       factory -> actor
+       markets -> market
+       forecast -> ?
+
+3. Hard exclusions are applied to clearly non-financial stories.
+
+4. Strong economic indicators in the headline are sufficient by
+   themselves.
+
+5. Financial-market legal stories are retained.
+
+6. Technology stories require a concrete business, infrastructure,
+   semiconductor, AI policy, AI investment, payments, cybersecurity,
+   or technology-government angle.
+
+7. Geopolitical stories require a direct economic mechanism such as:
+
+       oil
+       energy
+       shipping
+       Hormuz
+       sanctions
+       tariffs
+       trade
+       semiconductor supply
+       export controls
+
+8. Description text is supporting evidence only.
+
+9. A generic political/commentary headline cannot be rescued solely
+   by economic/geopolitical words appearing in the description.
+
+CURRENT NEWS
+============
+
+Rolling window:
+    14 days
+
+Maximum current records:
+    100
+
+Historical archive:
+    unlimited
 """
 
 from __future__ import annotations
@@ -177,12 +142,6 @@ CNA_FEEDS = {
 # ============================================================================
 # HARD EXCLUSIONS
 # ============================================================================
-#
-# These are deliberately title-focused.
-#
-# A story should not be rejected merely because the description contains
-# one of these words.
-# ============================================================================
 
 SPORTS_STRONG = {
     "football",
@@ -231,8 +190,14 @@ SPORTS_STRONG = {
     "match",
     "matches",
     "squad",
+    "coach",
+    "football club",
+    "football clubs",
+    "man city",
+    "manchester city",
     "international football",
     "international rugby",
+    "international cricket",
 }
 
 
@@ -261,8 +226,9 @@ ENTERTAINMENT_STRONG = {
     "reality tv",
     "movie role",
     "film role",
-    "festival",
     "writers festival",
+    "film festival",
+    "music festival",
 }
 
 
@@ -356,18 +322,11 @@ WEATHER_STRONG = {
     "typhoon",
     "hurricane",
     "tornado",
-    "rain brings relief",
-    "drought",
 }
 
 
 # ============================================================================
-# STRONG ECONOMIC SIGNALS
-# ============================================================================
-#
-# These are deliberately explicit.
-#
-# A direct macroeconomic indicator in the headline is sufficient by itself.
+# ECONOMIC SIGNALS
 # ============================================================================
 
 ECONOMIC_STRONG = {
@@ -423,30 +382,6 @@ ECONOMIC_STRONG = {
     "gas tariffs",
     "utility tariffs",
     "household tariffs",
-    "energy prices",
-}
-
-
-ECONOMIC_SUPPORTING = {
-    "economy",
-    "economic",
-    "growth",
-    "output",
-    "production",
-    "manufacturing",
-    "inflation",
-    "prices",
-    "consumer",
-    "business",
-    "trade",
-    "exports",
-    "imports",
-    "employment",
-    "unemployment",
-    "wages",
-    "productivity",
-    "tariff",
-    "tariffs",
 }
 
 
@@ -541,7 +476,6 @@ MARKET_STRONG = {
     "oil gains",
     "oil falls",
     "oil down",
-    "oil rises",
     "gold prices",
     "real estate market",
     "property market",
@@ -553,25 +487,6 @@ MARKET_STRONG = {
     "digital payments",
     "mobile payments",
     "fintech",
-}
-
-
-MARKET_SUPPORTING = {
-    "market",
-    "markets",
-    "finance",
-    "financial",
-    "bank",
-    "banking",
-    "investment",
-    "investor",
-    "company",
-    "companies",
-    "fund",
-    "funds",
-    "capital",
-    "valuation",
-    "business",
 }
 
 
@@ -653,33 +568,14 @@ TECHNOLOGY_STRONG = {
     "meta",
     "apple pay",
     "ai hack",
-}
-
-
-TECHNOLOGY_SUPPORTING = {
-    "technology",
-    "tech",
-    "artificial intelligence",
-    "ai",
-    "digital",
-    "software",
-    "cyber",
     "cybersecurity",
-    "chip",
-    "chips",
-    "semiconductor",
-    "semiconductors",
-    "cloud",
-    "data centre",
-    "data center",
+    "cyber attack",
+    "cyber attack",
 }
 
 
 # ============================================================================
-# FINANCIAL LEGAL / REGULATORY SIGNALS
-# ============================================================================
-#
-# These are MARKET stories even if the article is framed as a court case.
+# FINANCIAL LEGAL SIGNALS
 # ============================================================================
 
 FINANCIAL_LEGAL_STRONG = {
@@ -715,11 +611,7 @@ FINANCIAL_LEGAL_STRONG = {
 
 
 # ============================================================================
-# GEOPOLITICAL ECONOMIC-IMPACT SIGNALS
-# ============================================================================
-#
-# A geopolitical story is only accepted when there is a concrete economic,
-# financial, energy, trade, shipping, or strategic-technology mechanism.
+# GEOPOLITICAL ECONOMIC IMPACT SIGNALS
 # ============================================================================
 
 GEOPOLITICAL_ECONOMIC_STRONG = {
@@ -769,7 +661,7 @@ GEOPOLITICAL_ECONOMIC_STRONG = {
 
 
 # ============================================================================
-# GENERIC POLITICAL TERMS
+# POLITICAL TERMS
 # ============================================================================
 
 POLITICAL_TERMS = {
@@ -807,7 +699,7 @@ POLITICAL_TERMS = {
 
 
 # ============================================================================
-# GENERIC NON-ECONOMIC POLICY TOPICS
+# NON-ECONOMIC POLICY
 # ============================================================================
 
 NON_ECONOMIC_POLICY_TERMS = {
@@ -830,13 +722,12 @@ NON_ECONOMIC_POLICY_TERMS = {
 
 
 # ============================================================================
-# TEXT HELPERS
+# TEXT MATCHING
 # ============================================================================
 
-def clean_text(value: Any) -> str:
-    """
-    Convert HTML/text input to normalized plain text.
-    """
+def normalize_text(
+    value: Any,
+) -> str:
     if value is None:
         return ""
 
@@ -859,330 +750,133 @@ def clean_text(value: Any) -> str:
     return text.strip()
 
 
-def canonicalize_url(url: str) -> str:
+def phrase_matches(
+    text: str,
+    phrases: set[str] | list[str],
+) -> list[str]:
     """
-    Remove common tracking parameters while preserving meaningful query data.
+    Match complete words / phrases.
+
+    IMPORTANT:
+    We do NOT use:
+
+        phrase in text
+
+    because that creates errors such as:
+
+        factory -> actor
+
+    Instead each phrase is treated as a word-boundary expression.
     """
-    if not url:
-        return ""
 
-    try:
-        parts = urlsplit(url.strip())
+    text = normalize_text(
+        text
+    ).lower()
 
-        query = []
+    matches = []
 
-        for item in parts.query.split("&"):
-            if not item:
-                continue
+    for phrase in phrases:
+        phrase = phrase.strip().lower()
 
-            key = item.split("=", 1)[0].lower()
+        if not phrase:
+            continue
 
-            if key.startswith("utm_"):
-                continue
+        pattern = (
+            r"(?<!\w)"
+            + re.escape(phrase)
+            + r"(?!\w)"
+        )
 
-            if key in {
-                "fbclid",
-                "gclid",
-                "mc_cid",
-                "mc_eid",
-            }:
-                continue
-
-            query.append(item)
-
-        return urlunsplit(
-            (
-                parts.scheme.lower(),
-                parts.netloc.lower(),
-                parts.path.rstrip("/"),
-                "&".join(query),
-                "",
+        if re.search(
+            pattern,
+            text,
+        ):
+            matches.append(
+                phrase
             )
-        )
 
-    except Exception:
-        return url.strip()
+    return matches
 
 
-def article_id(
-    source: str,
-    url: str,
-) -> str:
-    """
-    Stable SHA-256 identifier based on source + canonical URL.
-    """
-    raw = (
-        f"{source}|{canonicalize_url(url)}"
-    ).encode(
-        "utf-8"
-    )
-
-    return hashlib.sha256(raw).hexdigest()
-
-
-def shorten(
+def has_any_phrase(
     text: str,
-    max_chars: int = 700,
-) -> str:
-    """
-    Keep generated summaries compact.
-    """
-    text = clean_text(text)
-
-    if len(text) <= max_chars:
-        return text
-
-    value = text[:max_chars]
-
-    value = value.rsplit(
-        " ",
-        1,
-    )[0].rstrip(
-        " .,;:"
-    )
-
-    return value + "..."
-
-
-def find_matches(
-    text: str,
-    signals: dict[str, int] | set[str],
-) -> list[str]:
-    """
-    Return all signal phrases found in text.
-    """
-    lower = text.lower()
-
-    if isinstance(signals, dict):
-        values = signals.keys()
-    else:
-        values = signals
-
-    return [
-        signal
-        for signal in values
-        if signal.lower() in lower
-    ]
-
-
-def count_matches(
-    text: str,
-    signals: set[str] | dict[str, int],
-) -> list[str]:
-    """
-    Alias used for semantic readability.
-    """
-    return find_matches(
-        text,
-        signals,
-    )
-
-
-# ============================================================================
-# TITLE CLASSIFICATION HELPERS
-# ============================================================================
-
-def is_obvious_sports_title(
-    title: str,
-) -> list[str]:
-    return count_matches(
-        title,
-        SPORTS_STRONG,
-    )
-
-
-def is_obvious_entertainment_title(
-    title: str,
-) -> list[str]:
-    return count_matches(
-        title,
-        ENTERTAINMENT_STRONG,
-    )
-
-
-def is_obvious_lifestyle_title(
-    title: str,
-) -> list[str]:
-    return count_matches(
-        title,
-        LIFESTYLE_STRONG,
-    )
-
-
-def is_obvious_accident_title(
-    title: str,
-) -> list[str]:
-    return count_matches(
-        title,
-        ACCIDENT_STRONG,
-    )
-
-
-def is_obvious_crime_title(
-    title: str,
-) -> list[str]:
-    return count_matches(
-        title,
-        CRIME_STRONG,
-    )
-
-
-def is_obvious_weather_title(
-    title: str,
-) -> list[str]:
-    return count_matches(
-        title,
-        WEATHER_STRONG,
-    )
-
-
-def is_non_economic_policy_title(
-    title: str,
-) -> list[str]:
-    return count_matches(
-        title,
-        NON_ECONOMIC_POLICY_TERMS,
-    )
-
-
-def has_financial_context(
-    title: str,
+    phrases: set[str],
 ) -> bool:
-    """
-    Determine whether an otherwise criminal/legal headline is actually
-    about a financial-market matter.
-
-    Examples:
-
-        false trading
-        market manipulation
-        insider trading
-        securities fraud
-        market-making
-        shareholder dispute
-    """
-    matches = count_matches(
-        title,
-        FINANCIAL_LEGAL_STRONG,
-    )
-
-    if matches:
-        return True
-
     return bool(
-        count_matches(
-            title,
-            {
-                "stock",
-                "stocks",
-                "shares",
-                "share price",
-                "market",
-                "securities",
-                "trading",
-                "investor",
-                "investors",
-                "bank",
-                "banking",
-                "fund",
-                "funds",
-            },
+        phrase_matches(
+            text,
+            phrases,
         )
     )
 
 
-def has_strong_economic_title(
-    title: str,
-) -> list[str]:
-    return count_matches(
-        title,
-        ECONOMIC_STRONG,
-    )
-
-
-def has_strong_market_title(
-    title: str,
-) -> list[str]:
-    return count_matches(
-        title,
-        MARKET_STRONG,
-    )
-
-
-def has_strong_technology_title(
-    title: str,
-) -> list[str]:
-    return count_matches(
-        title,
-        TECHNOLOGY_STRONG,
-    )
-
-
-def has_strong_geopolitical_economic_title(
-    title: str,
-) -> list[str]:
-    return count_matches(
-        title,
-        GEOPOLITICAL_ECONOMIC_STRONG,
-    )
-
-
 # ============================================================================
-# TECHNOLOGY CONTEXT RULES
+# SPECIALIZED CONTEXT RULES
 # ============================================================================
 
 def technology_business_context(
     title: str,
 ) -> bool:
     """
-    Determine whether a technology headline has a concrete business,
-    investment, infrastructure, semiconductor, payments, regulatory,
-    or economic angle.
-
-    This deliberately rejects generic AI commentary.
+    Determine whether technology has a concrete economic/business/
+    infrastructure/regulatory significance.
     """
 
-    lower = title.lower()
+    lower = normalize_text(
+        title
+    ).lower()
 
-    direct_contexts = [
-        (
-            {
-                "apple pay",
-                "digital payments",
-                "mobile payments",
-                "fintech",
-            },
-            {
-                "bank",
-                "banks",
-                "payment",
-                "payments",
-                "launches",
-                "partnership",
-                "partnerships",
-            },
-        ),
-        (
-            {
-                "deepseek",
-                "huawei",
-                "nvidia",
-            },
-            {
-                "chip",
-                "chips",
-                "semiconductor",
-                "semiconductors",
-                "chipmaking",
-                "programming",
-                "technology",
-            },
-        ),
-        (
-            {
-                "ai",
-                "artificial intelligence",
-            },
+    # These are inherently relevant technology/business stories.
+    direct_technology_topics = {
+        "technology stocktake",
+        "ai hack",
+        "apple pay",
+        "digital payments",
+        "mobile payments",
+        "fintech",
+        "chip programming",
+        "chip programming tools",
+        "semiconductor industry",
+        "semiconductor sector",
+        "chip hubs",
+        "chip hub",
+        "ai infrastructure",
+        "ai infra",
+        "data centre",
+        "data centres",
+        "data center",
+        "data centers",
+        "ai accord",
+        "ai agreement",
+        "ai pact",
+        "ai safety pact",
+        "technology standards",
+        "ai standards",
+        "ai regulation",
+        "ai regulations",
+        "ai policy",
+        "ai investment",
+        "ai investments",
+        "ai spending",
+        "ai capex",
+    }
+
+    if has_any_phrase(
+        lower,
+        direct_technology_topics,
+    ):
+        return True
+
+    # AI + concrete business/policy/infrastructure term.
+    if has_any_phrase(
+        lower,
+        {
+            "ai",
+            "artificial intelligence",
+        },
+    ):
+        if has_any_phrase(
+            lower,
             {
                 "accord",
                 "agreement",
@@ -1203,18 +897,24 @@ def technology_business_context(
                 "infrastructure",
                 "executives",
                 "ceos",
-                "safety pact",
                 "safety",
-                "technology standards",
+                "hack",
             },
-        ),
-        (
-            {
-                "chip",
-                "chips",
-                "semiconductor",
-                "semiconductors",
-            },
+        ):
+            return True
+
+    # Chip/semiconductor + concrete industrial context.
+    if has_any_phrase(
+        lower,
+        {
+            "chip",
+            "chips",
+            "semiconductor",
+            "semiconductors",
+        },
+    ):
+        if has_any_phrase(
+            lower,
             {
                 "industry",
                 "sector",
@@ -1231,46 +931,66 @@ def technology_business_context(
                 "tools",
                 "investment",
                 "investments",
+                "nvidia",
+                "huawei",
+                "deepseek",
             },
-        ),
-    ]
+        ):
+            return True
 
-    for subject_terms, context_terms in direct_contexts:
-        if any(
-            term in lower
-            for term in subject_terms
-        ) and any(
-            term in lower
-            for term in context_terms
+    # Cybersecurity + government/technology infrastructure.
+    if has_any_phrase(
+        lower,
+        {
+            "cybersecurity",
+            "cyber attack",
+            "ai hack",
+        },
+    ):
+        if has_any_phrase(
+            lower,
+            {
+                "government",
+                "technology",
+                "tech",
+                "company",
+                "companies",
+                "infrastructure",
+                "data",
+                "systems",
+                "stocktake",
+            },
         ):
             return True
 
     return False
 
 
-# ============================================================================
-# FINANCIAL MARKET CONTEXT
-# ============================================================================
-
 def market_business_context(
     title: str,
 ) -> bool:
     """
-    Detect concrete financial-market/business events.
+    Detect concrete market/business events.
     """
 
-    lower = title.lower()
+    lower = normalize_text(
+        title
+    ).lower()
 
-    strong_pairs = [
-        (
-            {
-                "funding",
-                "fundraise",
-                "fundraising",
-                "raised",
-                "raises",
-                "raise",
-            },
+    # Funding / capital raising with a financial quantity or valuation.
+    if has_any_phrase(
+        lower,
+        {
+            "funding",
+            "fundraise",
+            "fundraising",
+            "raised",
+            "raises",
+            "raise",
+        },
+    ):
+        if has_any_phrase(
+            lower,
             {
                 "$",
                 "billion",
@@ -1281,30 +1001,21 @@ def market_business_context(
                 "investment",
                 "fund",
             },
-        ),
-        (
-            {
-                "bank",
-                "banks",
-                "banking",
-            },
-            {
-                "regulator",
-                "regulators",
-                "sector",
-                "market",
-                "customers",
-                "customer impacts",
-                "ai use",
-            },
-        ),
-        (
-            {
-                "payment",
-                "payments",
-                "apple pay",
-                "fintech",
-            },
+        ):
+            return True
+
+    # Payments / fintech + banking/business.
+    if has_any_phrase(
+        lower,
+        {
+            "payment",
+            "payments",
+            "apple pay",
+            "fintech",
+        },
+    ):
+        if has_any_phrase(
+            lower,
             {
                 "bank",
                 "banks",
@@ -1312,255 +1023,254 @@ def market_business_context(
                 "launches",
                 "market",
             },
-        ),
-    ]
-
-    for event_terms, context_terms in strong_pairs:
-        if any(
-            term in lower
-            for term in event_terms
-        ) and any(
-            term in lower
-            for term in context_terms
         ):
             return True
 
     return False
 
 
+def is_commentary_title(
+    title: str,
+) -> bool:
+    return bool(
+        phrase_matches(
+            title,
+            {
+                "commentary",
+                "comment:",
+                "analysis:",
+                "opinion:",
+                "explainer:",
+            },
+        )
+    )
+
+
 # ============================================================================
-# MAIN CLASSIFIER
+# CLASSIFIER
 # ============================================================================
 
 def classify_relevance(
     title: str,
     description: str,
 ) -> dict[str, Any]:
-    """
-    Classify one CNA article.
 
-    Classification priority:
+    title = normalize_text(
+        title
+    )
 
-        1. hard exclusions
-        2. financial-market legal
-        3. strong economic title
-        4. strong market title
-        5. strong technology/business title
-        6. geopolitical + economic mechanism
-        7. supporting description evidence
-        8. reject
-
-    The title is always the primary evidence.
-    """
-
-    title = clean_text(title)
-    description = clean_text(description)
+    description = normalize_text(
+        description
+    )
 
     title_lower = title.lower()
     description_lower = description.lower()
 
     # ------------------------------------------------------------------
-    # 1. HARD EXCLUSIONS
+    # PRE-CALCULATE TITLE SIGNALS
     # ------------------------------------------------------------------
 
-    sports_matches = is_obvious_sports_title(
-        title_lower
+    sports = phrase_matches(
+        title_lower,
+        SPORTS_STRONG,
     )
 
-    entertainment_matches = is_obvious_entertainment_title(
-        title_lower
+    entertainment = phrase_matches(
+        title_lower,
+        ENTERTAINMENT_STRONG,
     )
 
-    lifestyle_matches = is_obvious_lifestyle_title(
-        title_lower
+    lifestyle = phrase_matches(
+        title_lower,
+        LIFESTYLE_STRONG,
     )
 
-    accident_matches = is_obvious_accident_title(
-        title_lower
+    accident = phrase_matches(
+        title_lower,
+        ACCIDENT_STRONG,
     )
 
-    crime_matches = is_obvious_crime_title(
-        title_lower
+    crime = phrase_matches(
+        title_lower,
+        CRIME_STRONG,
     )
 
-    weather_matches = is_obvious_weather_title(
-        title_lower
+    weather = phrase_matches(
+        title_lower,
+        WEATHER_STRONG,
     )
 
-    policy_matches = is_non_economic_policy_title(
-        title_lower
+    policy = phrase_matches(
+        title_lower,
+        NON_ECONOMIC_POLICY_TERMS,
     )
 
-    financial_legal_matches = count_matches(
+    economic = phrase_matches(
+        title_lower,
+        ECONOMIC_STRONG,
+    )
+
+    market = phrase_matches(
+        title_lower,
+        MARKET_STRONG,
+    )
+
+    technology = phrase_matches(
+        title_lower,
+        TECHNOLOGY_STRONG,
+    )
+
+    financial_legal = phrase_matches(
         title_lower,
         FINANCIAL_LEGAL_STRONG,
     )
 
-    # Financial/legal stories override generic crime/legal exclusions.
-    if financial_legal_matches:
+    geopolitical = phrase_matches(
+        title_lower,
+        GEOPOLITICAL_ECONOMIC_STRONG,
+    )
+
+    political = phrase_matches(
+        title_lower,
+        POLITICAL_TERMS,
+    )
+
+    # ------------------------------------------------------------------
+    # 1. FINANCIAL-MARKET LEGAL STORIES
+    # ------------------------------------------------------------------
+    #
+    # These must survive the normal crime/legal exclusion.
+    # ------------------------------------------------------------------
+
+    if financial_legal:
         return {
             "relevant": True,
             "category": "MARKET",
             "score": 100,
             "reason": "financial_market_legal_story",
-            "matchedKeywords": financial_legal_matches,
+            "matchedKeywords": financial_legal,
         }
 
-    # Sports are rejected unless the title contains a genuine financial
-    # market event. This protects against words like "player investment"
-    # in unrelated sports stories.
-    if sports_matches:
-        market_title_matches = has_strong_market_title(
-            title_lower
-        )
+    # ------------------------------------------------------------------
+    # 2. HARD NON-MARKET EXCLUSIONS
+    # ------------------------------------------------------------------
 
-        if not market_title_matches:
-            return {
-                "relevant": False,
-                "category": "REJECT",
-                "score": 0,
-                "reason": "sports",
-                "matchedKeywords": sports_matches,
-            }
+    if sports:
+        return {
+            "relevant": False,
+            "category": "REJECT",
+            "score": 0,
+            "reason": "sports",
+            "matchedKeywords": sports,
+        }
 
-    # Entertainment stories are rejected unless there is an explicit
-    # market/technology/business event.
-    if entertainment_matches:
-        market_title_matches = has_strong_market_title(
-            title_lower
-        )
+    if accident:
+        return {
+            "relevant": False,
+            "category": "REJECT",
+            "score": 0,
+            "reason": "accident_human_interest",
+            "matchedKeywords": accident,
+        }
 
-        technology_title_matches = has_strong_technology_title(
-            title_lower
-        )
+    if crime:
+        return {
+            "relevant": False,
+            "category": "REJECT",
+            "score": 0,
+            "reason": "crime_human_interest",
+            "matchedKeywords": crime,
+        }
 
+    if entertainment:
+        # Allow only if the same title clearly contains a market or
+        # technology event.
         if not (
-            market_title_matches
-            or technology_title_matches
-            or market_business_context(title_lower)
+            market
+            or technology_business_context(
+                title_lower
+            )
+            or market_business_context(
+                title_lower
+            )
         ):
             return {
                 "relevant": False,
                 "category": "REJECT",
                 "score": 0,
                 "reason": "entertainment",
-                "matchedKeywords": entertainment_matches,
+                "matchedKeywords": entertainment,
             }
 
-    # Lifestyle stories are normally excluded.
-    if lifestyle_matches:
-        market_title_matches = has_strong_market_title(
-            title_lower
-        )
-
-        technology_title_matches = has_strong_technology_title(
-            title_lower
-        )
-
+    if lifestyle:
         if not (
-            market_title_matches
-            or technology_title_matches
-            or market_business_context(title_lower)
+            market
+            or technology_business_context(
+                title_lower
+            )
+            or market_business_context(
+                title_lower
+            )
         ):
             return {
                 "relevant": False,
                 "category": "REJECT",
                 "score": 0,
                 "reason": "lifestyle",
-                "matchedKeywords": lifestyle_matches,
+                "matchedKeywords": lifestyle,
             }
 
-    # Accident/human-interest stories are excluded before description
-    # scoring can introduce irrelevant economic words.
-    if accident_matches:
-        return {
-            "relevant": False,
-            "category": "REJECT",
-            "score": 0,
-            "reason": "accident_human_interest",
-            "matchedKeywords": accident_matches,
-        }
-
-    # Generic crime is excluded before economic scoring.
-    if crime_matches:
-        return {
-            "relevant": False,
-            "category": "REJECT",
-            "score": 0,
-            "reason": "crime_human_interest",
-            "matchedKeywords": crime_matches,
-        }
-
-    if weather_matches:
-        economic_title_matches = has_strong_economic_title(
-            title_lower
-        )
-
-        market_title_matches = has_strong_market_title(
-            title_lower
-        )
-
+    if weather:
         if not (
-            economic_title_matches
-            or market_title_matches
+            economic
+            or market
         ):
             return {
                 "relevant": False,
                 "category": "REJECT",
                 "score": 0,
                 "reason": "weather",
-                "matchedKeywords": weather_matches,
+                "matchedKeywords": weather,
             }
 
-    # Generic social/education policy is excluded.
-    if policy_matches:
+    if policy:
         return {
             "relevant": False,
             "category": "REJECT",
             "score": 0,
             "reason": "non_economic_social_policy",
-            "matchedKeywords": policy_matches,
+            "matchedKeywords": policy,
         }
 
     # ------------------------------------------------------------------
-    # 2. STRONG ECONOMIC TITLE
+    # 3. STRONG ECONOMIC HEADLINE
     # ------------------------------------------------------------------
 
-    economic_title_matches = has_strong_economic_title(
-        title_lower
-    )
-
-    if economic_title_matches:
+    if economic:
         return {
             "relevant": True,
             "category": "ECONOMIC",
-            "score": 100 + len(economic_title_matches),
+            "score": 100 + len(economic),
             "reason": "strong_economic_title",
-            "matchedKeywords": economic_title_matches,
+            "matchedKeywords": economic,
         }
 
     # ------------------------------------------------------------------
-    # 3. STRONG MARKET TITLE
+    # 4. STRONG MARKET HEADLINE
     # ------------------------------------------------------------------
 
-    market_title_matches = has_strong_market_title(
-        title_lower
-    )
-
-    if market_title_matches:
+    if market:
         return {
             "relevant": True,
             "category": "MARKET",
-            "score": 90 + len(market_title_matches),
+            "score": 90 + len(market),
             "reason": "strong_market_title",
-            "matchedKeywords": market_title_matches,
+            "matchedKeywords": market,
         }
 
-    # ------------------------------------------------------------------
-    # 4. SPECIFIC BUSINESS / MARKET CONTEXT
-    # ------------------------------------------------------------------
-
-    if market_business_context(title_lower):
+    if market_business_context(
+        title_lower
+    ):
         return {
             "relevant": True,
             "category": "MARKET",
@@ -1570,140 +1280,168 @@ def classify_relevance(
         }
 
     # ------------------------------------------------------------------
-    # 5. STRONG TECHNOLOGY / BUSINESS TITLE
+    # 5. TECHNOLOGY HEADLINE
     # ------------------------------------------------------------------
 
-    technology_title_matches = has_strong_technology_title(
-        title_lower
-    )
-
-    if technology_title_matches:
-        if technology_business_context(title_lower):
-            return {
-                "relevant": True,
-                "category": "TECHNOLOGY",
-                "score": 80 + len(technology_title_matches),
-                "reason": "technology_business_or_infrastructure",
-                "matchedKeywords": technology_title_matches,
-            }
-
-    # ------------------------------------------------------------------
-    # 6. GEOPOLITICAL + DIRECT ECONOMIC MECHANISM
-    # ------------------------------------------------------------------
-
-    geo_matches = has_strong_geopolitical_economic_title(
-        title_lower
-    )
-
-    if geo_matches:
-        return {
-            "relevant": True,
-            "category": "GEOPOLITICAL",
-            "score": 70 + len(geo_matches),
-            "reason": "geopolitical_with_direct_economic_impact",
-            "matchedKeywords": geo_matches,
-        }
-
-    # ------------------------------------------------------------------
-    # 7. DESCRIPTION SUPPORT
-    # ------------------------------------------------------------------
-    #
-    # Description can rescue a borderline title only when it provides
-    # concrete evidence AND the title itself does not indicate an
-    # obviously excluded topic.
-    #
-    # Description alone cannot override hard exclusions.
-    # ------------------------------------------------------------------
-
-    description_economic_matches = count_matches(
-        description_lower,
-        ECONOMIC_STRONG,
-    )
-
-    description_market_matches = count_matches(
-        description_lower,
-        MARKET_STRONG,
-    )
-
-    description_technology_matches = count_matches(
-        description_lower,
-        TECHNOLOGY_STRONG,
-    )
-
-    description_geo_matches = count_matches(
-        description_lower,
-        GEOPOLITICAL_ECONOMIC_STRONG,
-    )
-
-    # A description with multiple strong economic indicators can rescue
-    # a neutral business headline.
-    if len(description_economic_matches) >= 2:
-        return {
-            "relevant": True,
-            "category": "ECONOMIC",
-            "score": 60 + len(description_economic_matches),
-            "reason": "supporting_economic_description",
-            "matchedKeywords": description_economic_matches,
-        }
-
-    # A concrete market description can rescue a neutral headline.
-    if len(description_market_matches) >= 2:
-        return {
-            "relevant": True,
-            "category": "MARKET",
-            "score": 55 + len(description_market_matches),
-            "reason": "supporting_market_description",
-            "matchedKeywords": description_market_matches,
-        }
-
-    # Technology requires actual technology/business context.
-    if len(description_technology_matches) >= 2:
-        if (
-            "technology"
-            in description_lower
-            or "artificial intelligence"
-            in description_lower
-            or "semiconductor"
-            in description_lower
-            or "chip"
-            in description_lower
-            or "ai"
-            in description_lower
+    if technology:
+        if technology_business_context(
+            title_lower
         ):
             return {
                 "relevant": True,
                 "category": "TECHNOLOGY",
-                "score": 50 + len(description_technology_matches),
-                "reason": "supporting_technology_description",
-                "matchedKeywords": description_technology_matches,
+                "score": 80 + len(technology),
+                "reason": "technology_business_or_infrastructure",
+                "matchedKeywords": technology,
             }
 
-    # Geopolitical stories still require a concrete economic mechanism.
-    if len(description_geo_matches) >= 2:
+    # Even if the exact technology signal list didn't catch every
+    # phrase, the specialized context detector can.
+    if technology_business_context(
+        title_lower
+    ):
         return {
             "relevant": True,
-            "category": "GEOPOLITICAL",
-            "score": 50 + len(description_geo_matches),
-            "reason": "supporting_geopolitical_economic_description",
-            "matchedKeywords": description_geo_matches,
+            "category": "TECHNOLOGY",
+            "score": 80,
+            "reason": "technology_business_or_infrastructure",
+            "matchedKeywords": technology,
         }
 
     # ------------------------------------------------------------------
-    # 8. GENERIC POLITICAL / COMMENTARY REJECTION
+    # 6. GEOPOLITICAL + ECONOMIC IMPACT
     # ------------------------------------------------------------------
 
-    political_matches = count_matches(
-        title_lower,
-        POLITICAL_TERMS,
-    )
+    if geopolitical:
+        return {
+            "relevant": True,
+            "category": "GEOPOLITICAL",
+            "score": 70 + len(geopolitical),
+            "reason": "geopolitical_with_direct_economic_impact",
+            "matchedKeywords": geopolitical,
+        }
 
-    if political_matches:
+    # ------------------------------------------------------------------
+    # 7. COMMENTARY / POLITICAL HEADLINES
+    # ------------------------------------------------------------------
+    #
+    # IMPORTANT:
+    #
+    # Do this BEFORE description rescue.
+    #
+    # This prevents:
+    #
+    # Commentary: Who in Iran can make a deal with the US?
+    #
+    # from becoming GEOPOLITICAL simply because the article description
+    # discusses oil, sanctions, Hormuz, etc.
+    # ------------------------------------------------------------------
+
+    if is_commentary_title(
+        title_lower
+    ):
+        return {
+            "relevant": False,
+            "category": "REJECT",
+            "score": 0,
+            "reason": "political_commentary_without_direct_market_signal",
+            "matchedKeywords": phrase_matches(
+                title_lower,
+                {
+                    "commentary",
+                    "comment:",
+                    "analysis:",
+                    "opinion:",
+                    "explainer:",
+                },
+            ),
+        }
+
+    if political:
         return {
             "relevant": False,
             "category": "REJECT",
             "score": 0,
             "reason": "political_without_market_or_economic_impact",
-            "matchedKeywords": political_matches,
+            "matchedKeywords": political,
+        }
+
+    # ------------------------------------------------------------------
+    # 8. DESCRIPTION SUPPORT
+    # ------------------------------------------------------------------
+    #
+    # Only neutral headlines reach this stage.
+    #
+    # Hard exclusions and political/commentary headlines cannot be
+    # rescued here.
+    # ------------------------------------------------------------------
+
+    description_economic = phrase_matches(
+        description_lower,
+        ECONOMIC_STRONG,
+    )
+
+    description_market = phrase_matches(
+        description_lower,
+        MARKET_STRONG,
+    )
+
+    description_technology = phrase_matches(
+        description_lower,
+        TECHNOLOGY_STRONG,
+    )
+
+    description_geopolitical = phrase_matches(
+        description_lower,
+        GEOPOLITICAL_ECONOMIC_STRONG,
+    )
+
+    if len(description_economic) >= 2:
+        return {
+            "relevant": True,
+            "category": "ECONOMIC",
+            "score": 60 + len(description_economic),
+            "reason": "supporting_economic_description",
+            "matchedKeywords": description_economic,
+        }
+
+    if len(description_market) >= 2:
+        return {
+            "relevant": True,
+            "category": "MARKET",
+            "score": 55 + len(description_market),
+            "reason": "supporting_market_description",
+            "matchedKeywords": description_market,
+        }
+
+    if len(description_technology) >= 2:
+        if has_any_phrase(
+            description_lower,
+            {
+                "technology",
+                "artificial intelligence",
+                "semiconductor",
+                "chip",
+                "ai",
+                "digital",
+                "cyber",
+            },
+        ):
+            return {
+                "relevant": True,
+                "category": "TECHNOLOGY",
+                "score": 50 + len(description_technology),
+                "reason": "supporting_technology_description",
+                "matchedKeywords": description_technology,
+            }
+
+    if len(description_geopolitical) >= 2:
+        return {
+            "relevant": True,
+            "category": "GEOPOLITICAL",
+            "score": 50 + len(description_geopolitical),
+            "reason": "supporting_geopolitical_economic_description",
+            "matchedKeywords": description_geopolitical,
         }
 
     # ------------------------------------------------------------------
@@ -1726,6 +1464,7 @@ def classify_relevance(
 def parse_entry_datetime(
     entry: Any,
 ) -> datetime:
+
     parsed = getattr(
         entry,
         "published_parsed",
@@ -1754,13 +1493,14 @@ def parse_entry_datetime(
 
 
 # ============================================================================
-# RSS FETCHING
+# RSS FETCH
 # ============================================================================
 
 def fetch_feed(
     feed_name: str,
     feed_url: str,
 ) -> list[dict[str, Any]]:
+
     print(
         f"\nFetching CNA feed: {feed_name}"
     )
@@ -1788,7 +1528,8 @@ def fetch_feed(
         records = []
 
         for entry in parsed.entries:
-            title = clean_text(
+
+            title = normalize_text(
                 getattr(
                     entry,
                     "title",
@@ -1796,7 +1537,7 @@ def fetch_feed(
                 )
             )
 
-            description = clean_text(
+            description = normalize_text(
                 getattr(
                     entry,
                     "summary",
@@ -1808,7 +1549,7 @@ def fetch_feed(
                 )
             )
 
-            url = clean_text(
+            url = normalize_text(
                 getattr(
                     entry,
                     "link",
@@ -1828,11 +1569,17 @@ def fetch_feed(
                     "feed": feed_name,
                     "title": title,
                     "description": description,
-                    "url": canonicalize_url(url),
+                    "url": canonicalize_url(
+                        url
+                    ),
                     "publishedAtUtc": (
                         published
-                        .astimezone(timezone.utc)
-                        .replace(microsecond=0)
+                        .astimezone(
+                            timezone.utc
+                        )
+                        .replace(
+                            microsecond=0
+                        )
                         .isoformat()
                         .replace(
                             "+00:00",
@@ -1849,6 +1596,7 @@ def fetch_feed(
         return records
 
     except Exception as exc:
+
         print(
             "  ERROR:",
             type(exc).__name__,
@@ -1859,6 +1607,7 @@ def fetch_feed(
 
 
 def collect_rss() -> list[dict[str, Any]]:
+
     records = []
 
     for feed_name, feed_url in CNA_FEEDS.items():
@@ -1873,12 +1622,94 @@ def collect_rss() -> list[dict[str, Any]]:
 
 
 # ============================================================================
+# URL CANONICALIZATION
+# ============================================================================
+
+def canonicalize_url(
+    url: str,
+) -> str:
+
+    if not url:
+        return ""
+
+    try:
+        parts = urlsplit(
+            url.strip()
+        )
+
+        query = []
+
+        for item in parts.query.split(
+            "&"
+        ):
+            if not item:
+                continue
+
+            key = item.split(
+                "=",
+                1,
+            )[0].lower()
+
+            if key.startswith(
+                "utm_"
+            ):
+                continue
+
+            if key in {
+                "fbclid",
+                "gclid",
+                "mc_cid",
+                "mc_eid",
+            }:
+                continue
+
+            query.append(
+                item
+            )
+
+        return urlunsplit(
+            (
+                parts.scheme.lower(),
+                parts.netloc.lower(),
+                parts.path.rstrip("/"),
+                "&".join(query),
+                "",
+            )
+        )
+
+    except Exception:
+        return url.strip()
+
+
+# ============================================================================
+# ARTICLE ID
+# ============================================================================
+
+def article_id(
+    source: str,
+    url: str,
+) -> str:
+
+    raw = (
+        f"{source}|"
+        f"{canonicalize_url(url)}"
+    ).encode(
+        "utf-8"
+    )
+
+    return hashlib.sha256(
+        raw
+    ).hexdigest()
+
+
+# ============================================================================
 # ARTICLE EXTRACTION
 # ============================================================================
 
 def fetch_article_text(
     url: str,
 ) -> str:
+
     response = requests.get(
         url,
         headers={
@@ -1903,7 +1734,7 @@ def fetch_article_text(
     )
 
     if extracted:
-        return clean_text(
+        return normalize_text(
             extracted
         )
 
@@ -1929,7 +1760,8 @@ def fetch_article_text(
     for paragraph in soup.find_all(
         "p"
     ):
-        value = clean_text(
+
+        value = normalize_text(
             paragraph.get_text(
                 " ",
                 strip=True,
@@ -1941,19 +1773,22 @@ def fetch_article_text(
                 value
             )
 
-    return clean_text(
-        " ".join(paragraphs)
+    return normalize_text(
+        " ".join(
+            paragraphs
+        )
     )
 
 
 # ============================================================================
-# SUMMARY GENERATION
+# SUMMARY
 # ============================================================================
 
 def split_sentences(
     text: str,
 ) -> list[str]:
-    text = clean_text(
+
+    text = normalize_text(
         text
     )
 
@@ -1966,7 +1801,9 @@ def split_sentences(
             r"(?<=[.!?])\s+",
             text,
         )
-        if len(item.strip()) >= 45
+        if len(
+            item.strip()
+        ) >= 45
     ]
 
 
@@ -1975,6 +1812,7 @@ def generate_summary(
     description: str,
     article_text: str,
 ) -> str:
+
     sentences = split_sentences(
         article_text
     )
@@ -2034,12 +1872,18 @@ def generate_summary(
     for index, sentence in enumerate(
         sentences
     ):
+
         lower = sentence.lower()
 
         score = sum(
             1
             for term in important_terms
-            if term in lower
+            if re.search(
+                r"(?<!\w)"
+                + re.escape(term)
+                + r"(?!\w)",
+                lower,
+            )
         )
 
         scored.append(
@@ -2070,7 +1914,9 @@ def generate_summary(
     ][:3]
 
     return shorten(
-        " ".join(ordered)
+        " ".join(
+            ordered
+        )
     )
 
 
@@ -2082,6 +1928,7 @@ def load_json(
     path: Path,
     default: Any,
 ) -> Any:
+
     if not path.exists():
         return default
 
@@ -2095,6 +1942,7 @@ def load_json(
             )
 
     except Exception as exc:
+
         print(
             f"WARNING: Failed reading {path}: "
             f"{type(exc).__name__}: {exc}"
@@ -2108,6 +1956,7 @@ def load_json(
 # ============================================================================
 
 def load_existing_history_ids() -> set[str]:
+
     result = set()
 
     if not HISTORY_DIR.exists():
@@ -2116,6 +1965,7 @@ def load_existing_history_ids() -> set[str]:
     for path in HISTORY_DIR.rglob(
         "*.json"
     ):
+
         data = load_json(
             path,
             {},
@@ -2125,10 +1975,12 @@ def load_existing_history_ids() -> set[str]:
             "articles",
             [],
         ):
+
             if isinstance(
                 article,
                 dict,
             ):
+
                 value = article.get(
                     "id"
                 )
@@ -2142,6 +1994,7 @@ def load_existing_history_ids() -> set[str]:
 
 
 def load_all_history_articles() -> list[dict[str, Any]]:
+
     result = []
 
     if not HISTORY_DIR.exists():
@@ -2150,6 +2003,7 @@ def load_all_history_articles() -> list[dict[str, Any]]:
     for path in HISTORY_DIR.rglob(
         "*.json"
     ):
+
         data = load_json(
             path,
             {},
@@ -2159,10 +2013,12 @@ def load_all_history_articles() -> list[dict[str, Any]]:
             "articles",
             [],
         ):
+
             if isinstance(
                 article,
                 dict,
             ):
+
                 result.append(
                     article
                 )
@@ -2173,6 +2029,7 @@ def load_all_history_articles() -> list[dict[str, Any]]:
 def history_file_for_date(
     published_at: str,
 ) -> Path:
+
     try:
         dt = datetime.fromisoformat(
             published_at.replace(
@@ -2206,8 +2063,11 @@ def history_file_for_date(
 def save_history_article(
     article: dict[str, Any],
 ) -> bool:
+
     path = history_file_for_date(
-        article["publishedAtUtc"]
+        article[
+            "publishedAtUtc"
+        ]
     )
 
     data = load_json(
@@ -2227,7 +2087,9 @@ def save_history_article(
     )
 
     existing_ids = {
-        item.get("id")
+        item.get(
+            "id"
+        )
         for item in articles
         if isinstance(
             item,
@@ -2235,7 +2097,9 @@ def save_history_article(
         )
     }
 
-    if article["id"] in existing_ids:
+    if article[
+        "id"
+    ] in existing_ids:
         return False
 
     articles.append(
@@ -2250,11 +2114,15 @@ def save_history_article(
         reverse=True,
     )
 
-    data["articleCount"] = len(
+    data[
+        "articleCount"
+    ] = len(
         articles
     )
 
-    data["updatedAtUtc"] = (
+    data[
+        "updatedAtUtc"
+    ] = (
         datetime.now(
             timezone.utc
         )
@@ -2272,6 +2140,7 @@ def save_history_article(
         "w",
         encoding="utf-8",
     ) as handle:
+
         json.dump(
             data,
             handle,
@@ -2287,12 +2156,13 @@ def save_history_article(
 
 
 # ============================================================================
-# CURRENT 14-DAY INDEX
+# CURRENT INDEX
 # ============================================================================
 
 def build_current_index(
     articles: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
+
     cutoff = (
         datetime.now(
             timezone.utc
@@ -2305,6 +2175,7 @@ def build_current_index(
     unique = {}
 
     for article in articles:
+
         try:
             published = datetime.fromisoformat(
                 article[
@@ -2350,6 +2221,7 @@ def build_current_index(
 def write_current_index(
     articles: list[dict[str, Any]],
 ) -> None:
+
     NEWS_DIR.mkdir(
         parents=True,
         exist_ok=True,
@@ -2382,6 +2254,7 @@ def write_current_index(
         "w",
         encoding="utf-8",
     ) as handle:
+
         json.dump(
             data,
             handle,
@@ -2399,6 +2272,7 @@ def write_current_index(
 # ============================================================================
 
 def main() -> None:
+
     print(
         "=" * 80
     )
@@ -2460,7 +2334,7 @@ def main() -> None:
     }
 
     # ------------------------------------------------------------------
-    # RSS
+    # RSS COLLECTION
     # ------------------------------------------------------------------
 
     rss_records = collect_rss()
@@ -2474,6 +2348,7 @@ def main() -> None:
     unique_records = {}
 
     for record in rss_records:
+
         url = record.get(
             "url",
             "",
@@ -2488,6 +2363,7 @@ def main() -> None:
         )
 
         if key in unique_records:
+
             stats[
                 "duplicates"
             ] += 1
@@ -2513,9 +2389,13 @@ def main() -> None:
 
             continue
 
-        record["id"] = key
+        record[
+            "id"
+        ] = key
 
-        record["feeds"] = [
+        record[
+            "feeds"
+        ] = [
             record.get(
                 "feed",
                 "unknown",
@@ -2570,9 +2450,14 @@ def main() -> None:
     )
 
     for record in unique_records.values():
+
         result = classify_relevance(
-            record["title"],
-            record["description"],
+            record[
+                "title"
+            ],
+            record[
+                "description"
+            ],
         )
 
         record[
@@ -2586,6 +2471,7 @@ def main() -> None:
         if result[
             "relevant"
         ]:
+
             category = result[
                 "category"
             ]
@@ -2627,6 +2513,7 @@ def main() -> None:
             )
 
         else:
+
             reason = result[
                 "reason"
             ]
@@ -2656,7 +2543,10 @@ def main() -> None:
                     "rejectedCrime"
                 ] += 1
 
-            elif reason == "political_without_market_or_economic_impact":
+            elif reason in {
+                "political_without_market_or_economic_impact",
+                "political_commentary_without_direct_market_signal",
+            }:
                 stats[
                     "rejectedPolitical"
                 ] += 1
@@ -2686,6 +2576,7 @@ def main() -> None:
     )
 
     for record in relevant_records:
+
         key = record[
             "id"
         ]
@@ -2709,8 +2600,11 @@ def main() -> None:
         ] += 1
 
         try:
+
             article_text = fetch_article_text(
-                record["url"]
+                record[
+                    "url"
+                ]
             )
 
             if not article_text:
@@ -2731,6 +2625,7 @@ def main() -> None:
             )
 
         except Exception as exc:
+
             stats[
                 "articleExtractionFailures"
             ] += 1
@@ -2796,6 +2691,7 @@ def main() -> None:
         if save_history_article(
             permanent_record
         ):
+
             stats[
                 "newHistoricalRecords"
             ] += 1
@@ -2876,6 +2772,7 @@ def main() -> None:
         "w",
         encoding="utf-8",
     ) as handle:
+
         json.dump(
             run_summary,
             handle,
@@ -2888,7 +2785,7 @@ def main() -> None:
         )
 
     # ------------------------------------------------------------------
-    # CONSOLE SUMMARY
+    # FINAL CONSOLE SUMMARY
     # ------------------------------------------------------------------
 
     print()
@@ -2906,91 +2803,91 @@ def main() -> None:
     )
 
     print(
-        f"Relevant:              "
+        f"Relevant:               "
         f"{stats['relevantArticles']}"
     )
 
     print(
-        f"  Market:              "
+        f"  Market:               "
         f"{stats['relevantMarket']}"
     )
 
     print(
-        f"  Economic:            "
+        f"  Economic:             "
         f"{stats['relevantEconomic']}"
     )
 
     print(
-        f"  Technology:          "
+        f"  Technology:           "
         f"{stats['relevantTechnology']}"
     )
 
     print(
-        f"  Geopolitical:        "
+        f"  Geopolitical:         "
         f"{stats['relevantGeopolitical']}"
     )
 
     print()
 
     print(
-        f"Rejected sports:       "
+        f"Rejected sports:        "
         f"{stats['rejectedSports']}"
     )
 
     print(
-        f"Rejected entertainment:"
-        f" {stats['rejectedEntertainment']}"
+        f"Rejected entertainment: "
+        f"{stats['rejectedEntertainment']}"
     )
 
     print(
-        f"Rejected lifestyle:    "
+        f"Rejected lifestyle:     "
         f"{stats['rejectedLifestyle']}"
     )
 
     print(
-        f"Rejected accidents:    "
+        f"Rejected accidents:     "
         f"{stats['rejectedAccident']}"
     )
 
     print(
-        f"Rejected crime:        "
+        f"Rejected crime:         "
         f"{stats['rejectedCrime']}"
     )
 
     print(
-        f"Rejected political:    "
+        f"Rejected political:     "
         f"{stats['rejectedPolitical']}"
     )
 
     print(
-        f"Rejected social policy:"
-        f" {stats['rejectedSocialPolicy']}"
+        f"Rejected social policy: "
+        f"{stats['rejectedSocialPolicy']}"
     )
 
     print(
-        f"Rejected general:      "
+        f"Rejected general:       "
         f"{stats['rejectedGeneral']}"
     )
 
     print()
 
     print(
-        f"New historical:        "
+        f"New historical:         "
         f"{stats['newHistoricalRecords']}"
     )
 
     print(
-        f"Historical total:      "
+        f"Historical total:       "
         f"{len(history_articles)}"
     )
 
     print(
-        f"Current 14-day total:  "
+        f"Current 14-day total:   "
         f"{len(current_articles)}"
     )
 
     print(
-        f"Current maximum:       "
+        f"Current maximum:        "
         f"{MAX_CURRENT_ARTICLES}"
     )
 
