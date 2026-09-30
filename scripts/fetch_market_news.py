@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 """
-VGrat FMS - CNA Market News Collector
+VGrat FMS - CNBC Market News Collector
 =====================================
 
-Collect relevant CNA news for VGrat FMS.
+Collect relevant CNBC news for VGrat FMS.
 
 FINAL CATEGORIES
 ================
@@ -87,7 +87,7 @@ from bs4 import BeautifulSoup
 # CONFIGURATION
 # ============================================================================
 
-SOURCE_NAME = "CNA"
+SOURCE_NAME = "CNBC"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -95,7 +95,6 @@ NEWS_DIR = BASE_DIR / "data" / "market_news"
 HISTORY_DIR = NEWS_DIR / "history"
 
 CURRENT_FILE = NEWS_DIR / "current.json"
-RUN_SUMMARY_FILE = NEWS_DIR / "run_summary.json"
 
 WINDOW_DAYS = 14
 MAX_CURRENT_ARTICLES = 100
@@ -113,29 +112,33 @@ USER_AGENT = (
 
 
 # ============================================================================
-# CNA RSS FEEDS
+# CNBC RSS FEEDS
 # ============================================================================
 
-CNA_FEEDS = {
+CNBC_FEEDS = {
     "latest": (
-        "https://www.channelnewsasia.com/"
-        "api/v1/rss-outbound-feed?_format=xml"
-    ),
-    "asia": (
-        "https://www.channelnewsasia.com/"
-        "api/v1/rss-outbound-feed?_format=xml&category=6511"
+        "https://www.cnbc.com/id/100003114/"
+        "device/rss/rss.html"
     ),
     "business": (
-        "https://www.channelnewsasia.com/"
-        "api/v1/rss-outbound-feed?_format=xml&category=6936"
+        "https://www.cnbc.com/id/10001147/"
+        "device/rss/rss.html"
     ),
-    "singapore": (
-        "https://www.channelnewsasia.com/"
-        "api/v1/rss-outbound-feed?_format=xml&category=10416"
+    "finance": (
+        "https://www.cnbc.com/id/10000664/"
+        "device/rss/rss.html"
+    ),
+    "economy": (
+        "https://www.cnbc.com/id/20910258/"
+        "device/rss/rss.html"
+    ),
+    "technology": (
+        "https://www.cnbc.com/id/19854910/"
+        "device/rss/rss.html"
     ),
     "world": (
-        "https://www.channelnewsasia.com/"
-        "api/v1/rss-outbound-feed?_format=xml&category=6311"
+        "https://www.cnbc.com/id/100727362/"
+        "device/rss/rss.html"
     ),
 }
 
@@ -1651,7 +1654,7 @@ def fetch_feed(
 ) -> list[dict[str, Any]]:
 
     print(
-        f"\nFetching CNA feed: {feed_name}"
+        f"\nFetching CNBC feed: {feed_name}"
     )
 
     try:
@@ -1759,7 +1762,7 @@ def collect_rss() -> list[dict[str, Any]]:
 
     records = []
 
-    for feed_name, feed_url in CNA_FEEDS.items():
+    for feed_name, feed_url in CNBC_FEEDS.items():
         records.extend(
             fetch_feed(
                 feed_name,
@@ -2427,7 +2430,7 @@ def main() -> None:
     )
 
     print(
-        "VGrat FMS - CNA Market News Collector"
+        "VGrat FMS - CNBC Market News Collector"
     )
 
     print(
@@ -2922,7 +2925,6 @@ def main() -> None:
         ),
     }
 
-    with RUN_SUMMARY_FILE.open(
         "w",
         encoding="utf-8",
     ) as handle:
