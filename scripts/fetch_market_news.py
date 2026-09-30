@@ -6,120 +6,76 @@ VGrat FMS - CNA Market News Collector
 PURPOSE
 =======
 
-Collect CNA news articles for the VGrat FMS market-intelligence system.
+Collect relevant CNA market/economic/geopolitical news.
 
-PIPELINE
-========
+Pipeline:
 
-CNA RSS
-    |
-    v
-Discover articles
-    |
-    v
-Deduplicate
-    |
-    v
-Open CNA article
-    |
-    v
-Temporarily extract article text
-    |
-    v
-Generate local extractive summary
-    |
-    v
-Discard full article text
-    |
-    v
-Persist metadata + summary + URL
-    |
-    v
-Historical archive
-    |
-    v
-14-day current index
-
+    CNA RSS
+        |
+        v
+    deduplicate
+        |
+        v
+    relevance filter
+        |
+        v
+    fetch article
+        |
+        v
+    extract article text
+        |
+        v
+    generate summary
+        |
+        v
+    permanent historical archive
+        |
+        v
+    rolling 14-day current.json
 
 IMPORTANT
 =========
 
-The full CNA article text is extracted only temporarily during the run.
+The RSS feed is broad and contains many non-market stories.
 
-The permanent VGrat data files contain:
+Therefore:
 
-    - article ID
+    RSS title + description
+            |
+            v
+      relevance filter
+            |
+       relevant only
+            |
+            v
+      article extraction
+
+This prevents unnecessary requests for irrelevant articles.
+
+Permanent storage contains:
+
     - title
     - source
-    - published time
+    - publication date
     - URL
-    - summary
-    - first-seen time
     - category
-    - extraction status
+    - relevance score
+    - summary
+    - extracted timestamp
 
-The original CNA URL is retained so the future VGrat HTML interface
-can link directly to the full article on CNA.
-
-HISTORICAL STORAGE
-==================
-
-Historical records are stored by publication date:
-
-    data/market_news/history/YYYY/MM/YYYY-MM-DD.json
-
-Historical records are append-only.
-
-CURRENT STORAGE
-===============
-
-current.json contains only articles from the latest 14 days.
-
-DUPLICATION
-===========
-
-Articles are deduplicated using a SHA-256 hash generated from:
-
-    source + canonical URL
-
-RSS feeds
-=========
-
-CNA currently provides feeds including:
-
-    Latest News
-    Asia
-    Business
-    Singapore
-    World
-
-The feed URLs are defined below.
-
-DEPENDENCIES
-============
-
-    requests
-    feedparser
-    beautifulsoup4
-    trafilatura
-
-Install with:
-
-    pip install requests feedparser beautifulsoup4 trafilatura
+It does NOT permanently store the full third-party article text.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
-import logging
 import re
-import sys
-from collections import Counter
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlsplit, urlunsplit
 
 import feedparser
 import requests
@@ -131,158 +87,366 @@ from bs4 import BeautifulSoup
 # CONFIGURATION
 # ============================================================
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+SOURCE_NAME = "CNA"
 
-DATA_DIR = ROOT_DIR / "data" / "market_news"
-HISTORY_DIR = DATA_DIR / "history"
-CURRENT_FILE = DATA_DIR / "current.json"
+BASE_DIR = Path(__file__).resolve().parent.parent
+NEWS_DIR = BASE_DIR / "data" / "market_news"
+HISTORY_DIR = NEWS_DIR / "history"
+CURRENT_FILE = NEWS_DIR / "current.json"
 
-CURRENT_DAYS = 14
+WINDOW_DAYS = 14
 
-REQUEST_TIMEOUT = 30
+REQUEST_TIMEOUT = 25
 
 USER_AGENT = (
-    "Mozilla/5.0 "
-    "(Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 "
-    "(KHTML, like Gecko) "
-    "Chrome/154.0.0.0 Safari/537.36 "
-    "VGrat-FMS-NewsCollector/1.0"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/154.0.0.0 Safari/537.36"
 )
 
-
 CNA_FEEDS = {
-    "latest": (
-        "https://www.channelnewsasia.com/"
-        "api/v1/rss-outbound-feed?_format=xml"
-    ),
-    "asia": (
-        "https://www.channelnewsasia.com/"
-        "api/v1/rss-outbound-feed?_format=xml&category=6511"
-    ),
-    "business": (
-        "https://www.channelnewsasia.com/"
-        "api/v1/rss-outbound-feed?_format=xml&category=6936"
-    ),
-    "singapore": (
-        "https://www.channelnewsasia.com/"
-        "api/v1/rss-outbound-feed?_format=xml&category=10416"
-    ),
-    "world": (
-        "https://www.channelnewsasia.com/"
-        "api/v1/rss-outbound-feed?_format=xml&category=6311"
-    ),
+    "latest": "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml",
+    "asia": "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6511",
+    "business": "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6936",
+    "singapore": "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=10416",
+    "world": "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6311",
 }
 
 
 # ============================================================
-# LOGGING
+# RELEVANCE KEYWORDS
 # ============================================================
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s",
-)
+# Strong market / financial signals.
+MARKET_KEYWORDS = {
+    "stocks": 5,
+    "stock": 5,
+    "shares": 5,
+    "share price": 5,
+    "equities": 5,
+    "equity": 5,
+    "markets": 5,
+    "market": 4,
+    "investors": 4,
+    "investor": 4,
+    "investment": 4,
+    "fund": 3,
+    "funds": 3,
+    "asset management": 5,
+    "portfolio": 4,
+    "ipo": 5,
+    "listing": 4,
+    "listed company": 5,
+    "earnings": 5,
+    "profit": 4,
+    "profits": 4,
+    "revenue": 4,
+    "dividend": 4,
+    "dividends": 4,
+    "merger": 5,
+    "acquisition": 5,
+    "takeover": 5,
+    "bank": 4,
+    "banks": 4,
+    "banking": 5,
+    "financial institution": 5,
+    "financial institutions": 5,
+    "insurer": 4,
+    "insurance": 4,
+    "credit": 4,
+    "loan": 3,
+    "loans": 3,
+    "bond": 5,
+    "bonds": 5,
+    "yield": 5,
+    "yields": 5,
+    "treasury": 4,
+    "interest rate": 6,
+    "interest rates": 6,
+    "central bank": 6,
+    "central banks": 6,
+    "monetary policy": 6,
+    "rate cut": 6,
+    "rate cuts": 6,
+    "rate hike": 6,
+    "rate hikes": 6,
+    "inflation": 6,
+    "cpi": 6,
+    "ppi": 6,
+    "gdp": 6,
+    "economic growth": 6,
+    "recession": 6,
+    "employment": 4,
+    "unemployment": 5,
+    "jobs data": 5,
+    "nonfarm payroll": 6,
+    "payrolls": 5,
+    "consumer spending": 5,
+    "consumer prices": 5,
+    "producer prices": 5,
+    "retail sales": 5,
+    "industrial production": 5,
+    "factory output": 5,
+    "manufacturing": 4,
+    "manufacturing output": 5,
+    "pmi": 6,
+    "trade": 4,
+    "exports": 5,
+    "imports": 5,
+    "tariff": 6,
+    "tariffs": 6,
+    "trade war": 7,
+    "supply chain": 5,
+    "currency": 5,
+    "currencies": 5,
+    "forex": 6,
+    "fx": 5,
+    "dollar": 4,
+    "yuan": 4,
+    "renminbi": 4,
+    "yen": 4,
+    "euro": 4,
+    "sterling": 4,
+    "commodity": 5,
+    "commodities": 5,
+    "oil": 5,
+    "crude": 5,
+    "gold": 5,
+    "copper": 4,
+    "natural gas": 5,
+    "energy prices": 6,
+    "property market": 5,
+    "property prices": 5,
+    "housing market": 5,
+    "real estate": 5,
+    "reit": 6,
+    "reits": 6,
+    "data centre": 4,
+    "data center": 4,
+    "technology": 3,
+    "technology company": 4,
+    "semiconductor": 5,
+    "semiconductors": 5,
+    "chip": 4,
+    "chips": 4,
+    "artificial intelligence": 5,
+    "ai": 3,
+    "deepseek": 5,
+    "nvidia": 5,
+    "apple": 4,
+    "amazon": 4,
+    "microsoft": 4,
+    "google": 4,
+    "meta": 4,
+    "tesla": 4,
+}
 
-LOGGER = logging.getLogger("vgrat-market-news")
+# Macro / policy terms.
+ECONOMIC_KEYWORDS = {
+    "economy": 5,
+    "economic": 5,
+    "economics": 5,
+    "fiscal policy": 6,
+    "government spending": 5,
+    "budget": 5,
+    "tax": 4,
+    "taxes": 4,
+    "tax policy": 5,
+    "subsidy": 4,
+    "subsidies": 4,
+    "stimulus": 6,
+    "economic policy": 6,
+    "business confidence": 5,
+    "consumer confidence": 5,
+    "cost of living": 4,
+    "electricity tariffs": 5,
+    "gas tariffs": 5,
+    "utility tariffs": 5,
+    "household tariffs": 4,
+    "interest": 3,
+}
+
+# Geopolitical terms that can have substantial market/economic impact.
+GEOPOLITICAL_KEYWORDS = {
+    "war": 4,
+    "conflict": 4,
+    "ceasefire": 5,
+    "sanctions": 6,
+    "sanction": 6,
+    "geopolitical": 6,
+    "military escalation": 6,
+    "trade restrictions": 6,
+    "export controls": 6,
+    "import restrictions": 5,
+    "strategic minerals": 5,
+    "rare earth": 5,
+    "rare earths": 5,
+    "shipping disruption": 6,
+    "shipping disruptions": 6,
+    "strait": 3,
+    "taiwan strait": 6,
+    "south china sea": 5,
+    "ukraine": 4,
+    "russia": 4,
+    "china": 3,
+    "united states": 3,
+    "us economy": 6,
+    "european union": 4,
+    "europe": 3,
+}
+
+# Strong negative signals.
+# These are deliberately strong because these categories are
+# generally outside a market-news dashboard.
+EXCLUSION_KEYWORDS = {
+    # Sports
+    "football": -10,
+    "soccer": -10,
+    "rugby": -10,
+    "cricket": -10,
+    "tennis": -10,
+    "golf": -10,
+    "basketball": -10,
+    "baseball": -10,
+    "formula 1": -10,
+    "f1": -10,
+    "premier league": -10,
+    "champions league": -10,
+    "world cup": -10,
+    "olympics": -10,
+    "olympic": -10,
+    "athlete": -8,
+    "athletes": -8,
+    "coach": -8,
+    "match": -8,
+    "matches": -8,
+    "tournament": -8,
+    "player": -8,
+    "players": -8,
+    "team": -7,
+    "teams": -7,
+
+    # Entertainment
+    "movie": -8,
+    "movies": -8,
+    "film": -8,
+    "films": -8,
+    "actor": -8,
+    "actress": -8,
+    "singer": -8,
+    "concert": -8,
+    "celebrity": -9,
+    "celebrity": -9,
+    "music": -7,
+    "album": -7,
+    "television": -7,
+    "tv show": -7,
+    "reality show": -8,
+
+    # Food / lifestyle
+    "restaurant": -8,
+    "restaurants": -8,
+    "bakery": -8,
+    "cafe": -8,
+    "food": -5,
+    "recipe": -8,
+    "recipes": -8,
+    "travel": -6,
+    "tourism": -5,
+    "holiday": -5,
+    "fashion": -7,
+    "lifestyle": -7,
+    "beauty": -7,
+    "wellness": -7,
+
+    # Crime / accidents / general incidents
+    "murder": -10,
+    "murdered": -10,
+    "homicide": -10,
+    "robbery": -10,
+    "burglary": -10,
+    "assault": -9,
+    "arrested": -8,
+    "arrest": -8,
+    "charged": -7,
+    "jail": -8,
+    "prison": -8,
+    "court": -5,
+    "crime": -9,
+    "criminal": -8,
+    "police": -6,
+    "accident": -9,
+    "crash": -8,
+    "collision": -8,
+    "fire": -7,
+    "died": -8,
+    "dies": -8,
+    "death": -8,
+    "killed": -9,
+    "injured": -8,
+    "injury": -8,
+    "missing person": -9,
+    "rescue": -7,
+
+    # General human-interest
+    "viral": -8,
+    "social media star": -8,
+    "influencer": -7,
+    "viral video": -8,
+    "pets": -8,
+    "pet": -8,
+    "birthday": -8,
+}
 
 
 # ============================================================
-# HTTP SESSION
-# ============================================================
-
-SESSION = requests.Session()
-
-SESSION.headers.update(
-    {
-        "User-Agent": USER_AGENT,
-        "Accept": (
-            "text/html,application/xhtml+xml,"
-            "application/xml;q=0.9,*/*;q=0.8"
-        ),
-        "Accept-Language": "en-SG,en;q=0.9",
-    }
-)
-
-
-# ============================================================
-# GENERAL HELPERS
+# HELPERS
 # ============================================================
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def iso_utc(value: datetime) -> str:
-    return value.astimezone(timezone.utc).replace(
-        microsecond=0
-    ).isoformat().replace("+00:00", "Z")
+def iso_utc(dt: datetime | None = None) -> str:
+    if dt is None:
+        dt = utc_now()
 
-
-def ensure_directories() -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    HISTORY_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def load_json(path: Path, default: Any) -> Any:
-    if not path.exists():
-        return default
-
-    try:
-        with path.open("r", encoding="utf-8") as handle:
-            return json.load(handle)
-    except Exception as exc:
-        LOGGER.warning(
-            "Unable to read JSON file %s: %s",
-            path,
-            exc,
-        )
-        return default
-
-
-def save_json(path: Path, data: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    temporary = path.with_suffix(
-        path.suffix + ".tmp"
+    return (
+        dt.astimezone(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
     )
 
-    with temporary.open(
-        "w",
-        encoding="utf-8",
-    ) as handle:
-        json.dump(
-            data,
-            handle,
-            ensure_ascii=False,
-            indent=2,
-        )
-        handle.write("\n")
 
-    temporary.replace(path)
+def clean_text(value: Any) -> str:
+    if value is None:
+        return ""
+
+    text = str(value)
+
+    text = BeautifulSoup(text, "html.parser").get_text(" ", strip=True)
+
+    text = re.sub(r"\s+", " ", text)
+
+    return text.strip()
 
 
-# ============================================================
-# URL NORMALISATION
-# ============================================================
-
-def canonicalise_url(url: str) -> str:
+def canonicalize_url(url: str) -> str:
     """
-    Remove tracking parameters and fragments while preserving
-    the original article URL structure.
-    """
+    Normalize URLs for deduplication.
 
+    Tracking query parameters are removed.
+    """
     if not url:
         return ""
 
-    url = url.strip()
+    try:
+        parts = urlsplit(url.strip())
 
-    parsed = urlparse(url)
+        query_parts = []
 
-    clean_query = []
-
-    if parsed.query:
-        for item in parsed.query.split("&"):
+        for item in parts.query.split("&"):
             if not item:
                 continue
 
@@ -299,144 +463,179 @@ def canonicalise_url(url: str) -> str:
             }:
                 continue
 
-            clean_query.append(item)
+            query_parts.append(item)
 
-    query = "&".join(clean_query)
+        normalized_query = "&".join(query_parts)
 
-    cleaned = urlunparse(
-        (
-            parsed.scheme,
-            parsed.netloc,
-            parsed.path,
-            parsed.params,
-            query,
-            "",
+        return urlunsplit(
+            (
+                parts.scheme.lower(),
+                parts.netloc.lower(),
+                parts.path.rstrip("/"),
+                normalized_query,
+                "",
+            )
         )
-    )
 
-    return cleaned.rstrip("/")
+    except Exception:
+        return url.strip()
 
 
 def article_id(source: str, url: str) -> str:
-    value = f"{source}|{canonicalise_url(url)}"
+    raw = f"{source}|{canonicalize_url(url)}".encode("utf-8")
 
-    return hashlib.sha256(
-        value.encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(raw).hexdigest()
 
 
-# ============================================================
-# DATE PARSING
-# ============================================================
-
-def parse_feed_datetime(entry: Any) -> datetime:
+def parse_entry_datetime(entry: Any) -> datetime:
     """
-    Prefer parsed RSS timestamps.
+    Parse RSS publication date.
 
-    Falls back to current UTC time if the feed does not provide
-    a usable publication timestamp.
+    feedparser exposes published_parsed / updated_parsed.
     """
+    parsed = getattr(entry, "published_parsed", None)
 
-    for attribute in (
-        "published_parsed",
-        "updated_parsed",
-        "created_parsed",
-    ):
-        parsed = getattr(entry, attribute, None)
+    if parsed is None:
+        parsed = getattr(entry, "updated_parsed", None)
 
-        if parsed:
-            try:
-                from calendar import timegm
+    if parsed is not None:
+        try:
+            from calendar import timegm
 
-                timestamp = timegm(parsed)
+            timestamp = timegm(parsed)
 
-                return datetime.fromtimestamp(
-                    timestamp,
-                    tz=timezone.utc,
-                )
-            except Exception:
-                pass
-
-    for attribute in (
-        "published",
-        "updated",
-        "created",
-    ):
-        value = getattr(entry, attribute, None)
-
-        if value:
-            try:
-                parsed = datetime.fromisoformat(
-                    value.replace("Z", "+00:00")
-                )
-
-                if parsed.tzinfo is None:
-                    parsed = parsed.replace(
-                        tzinfo=timezone.utc
-                    )
-
-                return parsed.astimezone(timezone.utc)
-
-            except Exception:
-                pass
+            return datetime.fromtimestamp(
+                timestamp,
+                tz=timezone.utc,
+            )
+        except Exception:
+            pass
 
     return utc_now()
 
 
+def shorten(text: str, max_chars: int = 320) -> str:
+    text = clean_text(text)
+
+    if len(text) <= max_chars:
+        return text
+
+    truncated = text[:max_chars].rsplit(" ", 1)[0]
+
+    return truncated.rstrip(" .,;:") + "..."
+
+
 # ============================================================
-# RSS EXTRACTION
+# RELEVANCE CLASSIFIER
 # ============================================================
 
-def clean_html(value: str) -> str:
-    if not value:
-        return ""
+def score_keywords(
+    text: str,
+    keywords: dict[str, int],
+) -> tuple[int, list[str]]:
+    """
+    Score keyword occurrences.
 
-    soup = BeautifulSoup(
-        value,
-        "html.parser",
+    Each keyword is counted at most once.
+    """
+    lower = text.lower()
+
+    score = 0
+    matches: list[str] = []
+
+    for keyword, weight in keywords.items():
+        if keyword.lower() in lower:
+            score += weight
+            matches.append(keyword)
+
+    return score, matches
+
+
+def classify_relevance(
+    title: str,
+    description: str,
+) -> dict[str, Any]:
+    """
+    Stage-1 relevance filter.
+
+    Only title + RSS description are used.
+
+    No article request is made before this function passes
+    the article.
+    """
+
+    text = f"{title}. {description}"
+
+    market_score, market_matches = score_keywords(
+        text,
+        MARKET_KEYWORDS,
     )
 
-    return " ".join(
-        soup.get_text(" ", strip=True).split()
+    economic_score, economic_matches = score_keywords(
+        text,
+        ECONOMIC_KEYWORDS,
     )
 
-
-def extract_rss_entry(
-    entry: Any,
-    category: str,
-) -> dict[str, Any] | None:
-
-    title = clean_html(
-        getattr(entry, "title", "")
+    geopolitical_score, geopolitical_matches = score_keywords(
+        text,
+        GEOPOLITICAL_KEYWORDS,
     )
 
-    url = (
-        getattr(entry, "link", "")
-        or ""
-    ).strip()
-
-    if not title or not url:
-        return None
-
-    url = canonicalise_url(url)
-
-    summary = clean_html(
-        getattr(entry, "summary", "")
+    exclusion_score, exclusion_matches = score_keywords(
+        text,
+        EXCLUSION_KEYWORDS,
     )
 
-    published = parse_feed_datetime(entry)
+    total_score = (
+        market_score
+        + economic_score
+        + geopolitical_score
+        + exclusion_score
+    )
+
+    positive_score = (
+        market_score
+        + economic_score
+        + geopolitical_score
+    )
+
+    # Strong exclusions normally reject an article even if
+    # a broad word such as "market" appears in the description.
+    strong_exclusion = exclusion_score <= -8
+
+    if strong_exclusion and positive_score < 10:
+        relevant = False
+
+    else:
+        relevant = total_score >= 5
+
+    if market_score >= 5:
+        category = "MARKET"
+
+    elif economic_score >= 5:
+        category = "ECONOMIC"
+
+    elif geopolitical_score >= 5:
+        category = "GEOPOLITICAL"
+
+    else:
+        category = "GENERAL"
 
     return {
-        "id": article_id(
-            "CNA",
-            url,
-        ),
-        "source": "CNA",
+        "relevant": relevant,
         "category": category,
-        "title": title,
-        "url": url,
-        "publishedAt": iso_utc(published),
-        "rssSummary": summary,
+        "score": total_score,
+        "positiveScore": positive_score,
+        "marketScore": market_score,
+        "economicScore": economic_score,
+        "geopoliticalScore": geopolitical_score,
+        "exclusionScore": exclusion_score,
+        "matchedKeywords": (
+            market_matches
+            + economic_matches
+            + geopolitical_matches
+        ),
+        "excludedKeywords": exclusion_matches,
     }
 
 
@@ -445,64 +644,84 @@ def extract_rss_entry(
 # ============================================================
 
 def fetch_feed(
-    category: str,
+    feed_name: str,
     feed_url: str,
 ) -> list[dict[str, Any]]:
-
-    LOGGER.info(
-        "Fetching CNA %s RSS feed",
-        category,
-    )
+    print(f"\nFetching CNA feed: {feed_name}")
 
     try:
-        response = SESSION.get(
+        response = requests.get(
             feed_url,
+            headers={
+                "User-Agent": USER_AGENT,
+                "Accept": "application/rss+xml, application/xml, text/xml",
+            },
             timeout=REQUEST_TIMEOUT,
         )
 
         response.raise_for_status()
 
-        parsed = feedparser.parse(
-            response.content
-        )
+        parsed = feedparser.parse(response.content)
 
-        if getattr(
-            parsed,
-            "bozo",
-            False,
-        ):
-            LOGGER.warning(
-                "CNA %s RSS parser reported a malformed feed",
-                category,
-            )
-
-        results: list[dict[str, Any]] = []
+        records: list[dict[str, Any]] = []
 
         for entry in parsed.entries:
-            article = extract_rss_entry(
-                entry,
-                category,
+            title = clean_text(
+                getattr(entry, "title", "")
             )
 
-            if article:
-                results.append(article)
+            description = clean_text(
+                getattr(
+                    entry,
+                    "summary",
+                    getattr(entry, "description", ""),
+                )
+            )
 
-        LOGGER.info(
-            "CNA %s: %d RSS articles discovered",
-            category,
-            len(results),
-        )
+            url = clean_text(
+                getattr(entry, "link", "")
+            )
 
-        return results
+            if not title or not url:
+                continue
+
+            published_dt = parse_entry_datetime(entry)
+
+            records.append(
+                {
+                    "feed": feed_name,
+                    "title": title,
+                    "description": description,
+                    "url": canonicalize_url(url),
+                    "publishedAtUtc": iso_utc(published_dt),
+                }
+            )
+
+        print(f"  Entries: {len(records)}")
+
+        return records
 
     except Exception as exc:
-        LOGGER.error(
-            "CNA %s RSS failed: %s",
-            category,
-            exc,
+        print(
+            f"  ERROR fetching {feed_name}: "
+            f"{type(exc).__name__}: {exc}"
         )
 
         return []
+
+
+def collect_rss() -> list[dict[str, Any]]:
+    all_records: list[dict[str, Any]] = []
+
+    for feed_name, feed_url in CNA_FEEDS.items():
+        records = fetch_feed(
+            feed_name,
+            feed_url,
+        )
+
+        all_records.extend(records)
+
+    return all_records
 
 
 # ============================================================
@@ -511,435 +730,356 @@ def fetch_feed(
 
 def fetch_article_text(url: str) -> str:
     """
-    Temporarily download and extract the article text.
+    Temporarily retrieve article text.
 
-    The returned text is used only during processing.
-
-    It is NOT written to the permanent historical JSON.
+    The extracted full article is NOT stored permanently.
     """
 
-    try:
-        response = SESSION.get(
-            url,
-            timeout=REQUEST_TIMEOUT,
+    response = requests.get(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "text/html,application/xhtml+xml",
+        },
+        timeout=REQUEST_TIMEOUT,
+    )
+
+    response.raise_for_status()
+
+    html = response.text
+
+    extracted = trafilatura.extract(
+        html,
+        include_comments=False,
+        include_tables=False,
+        favor_precision=True,
+    )
+
+    if extracted:
+        return clean_text(extracted)
+
+    # Fallback extraction.
+    soup = BeautifulSoup(
+        html,
+        "html.parser",
+    )
+
+    for tag in soup(
+        [
+            "script",
+            "style",
+            "noscript",
+            "nav",
+            "footer",
+            "header",
+        ]
+    ):
+        tag.decompose()
+
+    paragraphs = []
+
+    for paragraph in soup.find_all("p"):
+        text = clean_text(
+            paragraph.get_text(" ", strip=True)
         )
 
-        response.raise_for_status()
+        if len(text) >= 40:
+            paragraphs.append(text)
 
-        html = response.text
-
-        extracted = trafilatura.extract(
-            html,
-            include_comments=False,
-            include_tables=False,
-            include_links=False,
-            favor_precision=True,
-        )
-
-        if extracted:
-            return clean_text(extracted)
-
-        # Fallback parser
-        soup = BeautifulSoup(
-            html,
-            "html.parser",
-        )
-
-        for tag in soup(
-            [
-                "script",
-                "style",
-                "noscript",
-                "nav",
-                "footer",
-                "header",
-                "aside",
-            ]
-        ):
-            tag.decompose()
-
-        text = soup.get_text(
-            "\n",
-            strip=True,
-        )
-
-        return clean_text(text)
-
-    except Exception as exc:
-        LOGGER.warning(
-            "Article extraction failed for %s: %s",
-            url,
-            exc,
-        )
-
-        return ""
-
-
-def clean_text(text: str) -> str:
-    if not text:
-        return ""
-
-    lines = []
-
-    for line in text.splitlines():
-        line = " ".join(
-            line.split()
-        )
-
-        if line:
-            lines.append(line)
-
-    return "\n".join(lines)
+    return clean_text(" ".join(paragraphs))
 
 
 # ============================================================
-# EXTRACTIVE SUMMARY
+# SUMMARY
 # ============================================================
-
-STOPWORDS = {
-    "about",
-    "after",
-    "again",
-    "against",
-    "being",
-    "between",
-    "could",
-    "their",
-    "there",
-    "these",
-    "those",
-    "through",
-    "where",
-    "which",
-    "while",
-    "would",
-    "from",
-    "have",
-    "with",
-    "this",
-    "that",
-    "were",
-    "they",
-    "will",
-    "into",
-    "than",
-    "then",
-    "them",
-    "been",
-    "also",
-    "said",
-    "more",
-    "such",
-    "some",
-    "what",
-    "when",
-    "over",
-    "under",
-    "because",
-    "could",
-    "should",
-    "might",
-    "other",
-    "only",
-    "many",
-    "most",
-    "very",
-    "your",
-    "ours",
-    "ourselves",
-    "the",
-    "and",
-    "for",
-    "are",
-    "but",
-    "not",
-    "you",
-    "was",
-    "were",
-    "had",
-    "has",
-    "its",
-    "his",
-    "her",
-    "our",
-    "out",
-    "who",
-    "how",
-    "why",
-    "all",
-    "any",
-    "can",
-    "may",
-    "per",
-    "via",
-    "too",
-    "just",
-}
-
 
 def split_sentences(text: str) -> list[str]:
+    text = clean_text(text)
+
     if not text:
         return []
 
-    normalised = re.sub(
-        r"\s+",
-        " ",
-        text,
-    ).strip()
-
     sentences = re.split(
         r"(?<=[.!?])\s+",
-        normalised,
+        text,
     )
 
     return [
         sentence.strip()
         for sentence in sentences
-        if len(sentence.strip()) >= 40
+        if len(sentence.strip()) >= 45
     ]
 
 
-def word_tokens(text: str) -> list[str]:
-    return re.findall(
-        r"[A-Za-z0-9']+",
-        text.lower(),
-    )
-
-
-def extractive_summary(
-    text: str,
-    max_sentences: int = 4,
+def generate_summary(
+    title: str,
+    description: str,
+    article_text: str,
 ) -> str:
+    """
+    Temporary extractive summarizer.
 
-    sentences = split_sentences(text)
+    This is intentionally local and deterministic.
 
-    if not sentences:
-        return ""
+    A local LLM can replace this later without changing
+    the permanent archive structure.
+    """
 
-    if len(sentences) <= max_sentences:
-        return " ".join(sentences)
+    candidates = split_sentences(article_text)
 
-    frequencies = Counter()
+    if not candidates:
+        description = clean_text(description)
 
-    for sentence in sentences:
-        for word in word_tokens(sentence):
-            if (
-                len(word) >= 3
-                and word not in STOPWORDS
-            ):
-                frequencies[word] += 1
+        if description:
+            return shorten(
+                description,
+                500,
+            )
 
-    if not frequencies:
-        return " ".join(
-            sentences[:max_sentences]
+        return shorten(
+            title,
+            500,
         )
 
-    scored: list[tuple[float, int, str]] = []
+    # Prefer sentences that contain useful market terms.
+    priority_terms = [
+        "market",
+        "stock",
+        "shares",
+        "investor",
+        "economy",
+        "economic",
+        "growth",
+        "inflation",
+        "interest rate",
+        "central bank",
+        "bank",
+        "bond",
+        "yield",
+        "currency",
+        "trade",
+        "tariff",
+        "oil",
+        "energy",
+        "technology",
+        "semiconductor",
+        "chip",
+        "ai",
+        "gdp",
+        "manufacturing",
+        "exports",
+        "imports",
+    ]
 
-    for index, sentence in enumerate(sentences):
-        words = word_tokens(sentence)
+    scored: list[tuple[int, int, str]] = []
 
-        if not words:
-            continue
+    for index, sentence in enumerate(candidates):
+        lower = sentence.lower()
 
-        score = sum(
-            frequencies[word]
-            for word in words
-            if word not in STOPWORDS
+        relevance = sum(
+            1
+            for term in priority_terms
+            if term in lower
         )
-
-        # Slightly favour early sentences.
-        position_bonus = max(
-            0,
-            1.0 - (index * 0.04),
-        )
-
-        score *= position_bonus
 
         scored.append(
             (
-                score / max(len(words), 1),
-                index,
+                relevance,
+                -index,
                 sentence,
             )
         )
 
-    selected = sorted(
-        scored,
-        key=lambda item: item[0],
+    scored.sort(
         reverse=True,
-    )[:max_sentences]
-
-    selected.sort(
-        key=lambda item: item[1]
+        key=lambda item: (
+            item[0],
+            item[1],
+        ),
     )
 
-    return " ".join(
-        item[2]
-        for item in selected
+    selected = []
+
+    # Keep up to three useful sentences.
+    for _, _, sentence in scored[:3]:
+        selected.append(sentence)
+
+    # Preserve article order.
+    selected_set = set(selected)
+
+    ordered = [
+        sentence
+        for sentence in candidates
+        if sentence in selected_set
+    ][:3]
+
+    summary = " ".join(ordered)
+
+    return shorten(
+        summary,
+        700,
     )
-
-
-# ============================================================
-# ARTICLE PROCESSING
-# ============================================================
-
-def process_article(
-    article: dict[str, Any],
-    first_seen_at: str,
-) -> dict[str, Any]:
-
-    LOGGER.info(
-        "Processing: %s",
-        article["title"],
-    )
-
-    article_text = fetch_article_text(
-        article["url"]
-    )
-
-    summary = ""
-
-    extraction_status = "failed"
-
-    if article_text:
-        summary = extractive_summary(
-            article_text
-        )
-
-        if summary:
-            extraction_status = "success"
-
-    if not summary:
-        summary = article.get(
-            "rssSummary",
-            "",
-        )
-
-    result = {
-        "id": article["id"],
-        "source": article["source"],
-        "category": article["category"],
-        "title": article["title"],
-        "publishedAt": article["publishedAt"],
-        "url": article["url"],
-        "summary": summary,
-        "firstSeenAt": first_seen_at,
-        "extractionStatus": extraction_status,
-    }
-
-    return result
 
 
 # ============================================================
 # HISTORY LOADING
 # ============================================================
 
-def history_file_for(
-    published_at: str,
-) -> Path:
+def load_json(path: Path, default: Any) -> Any:
+    if not path.exists():
+        return default
 
-    parsed = datetime.fromisoformat(
-        published_at.replace("Z", "+00:00")
-    )
+    try:
+        with path.open(
+            "r",
+            encoding="utf-8",
+        ) as handle:
+            return json.load(handle)
 
-    return (
-        HISTORY_DIR
-        / f"{parsed.year:04d}"
-        / f"{parsed.month:02d}"
-        / f"{parsed.date().isoformat()}.json"
-    )
+    except Exception as exc:
+        print(
+            f"WARNING: Could not read {path}: "
+            f"{type(exc).__name__}: {exc}"
+        )
+
+        return default
 
 
-def load_all_history_records() -> dict[str, dict[str, Any]]:
-    """
-    Load historical records so duplicate articles can be detected
-    across all previous runs.
-
-    The number of articles is expected to remain manageable because
-    only metadata + summaries are stored.
-    """
-
-    records: dict[str, dict[str, Any]] = {}
+def load_existing_history_ids() -> set[str]:
+    ids: set[str] = set()
 
     if not HISTORY_DIR.exists():
-        return records
+        return ids
 
     for path in HISTORY_DIR.rglob("*.json"):
-        try:
-            data = load_json(
-                path,
-                [],
-            )
+        data = load_json(
+            path,
+            {},
+        )
 
-            if not isinstance(
-                data,
-                list,
-            ):
-                continue
+        articles = data.get(
+            "articles",
+            [],
+        )
 
-            for record in data:
-                record_id = record.get("id")
+        for article in articles:
+            value = article.get("id")
 
-                if record_id:
-                    records[record_id] = record
+            if value:
+                ids.add(value)
 
-        except Exception as exc:
-            LOGGER.warning(
-                "Unable to process history file %s: %s",
-                path,
-                exc,
-            )
+    return ids
 
-    return records
+
+def load_all_history_articles() -> list[dict[str, Any]]:
+    articles: list[dict[str, Any]] = []
+
+    if not HISTORY_DIR.exists():
+        return articles
+
+    for path in HISTORY_DIR.rglob("*.json"):
+        data = load_json(
+            path,
+            {},
+        )
+
+        for article in data.get(
+            "articles",
+            [],
+        ):
+            if isinstance(article, dict):
+                articles.append(article)
+
+    return articles
 
 
 # ============================================================
-# HISTORY MERGING
+# HISTORY WRITING
 # ============================================================
 
-def save_historical_record(
-    record: dict[str, Any],
-) -> bool:
+def history_file_for_date(
+    published_at_utc: str,
+) -> Path:
+    try:
+        dt = datetime.fromisoformat(
+            published_at_utc.replace(
+                "Z",
+                "+00:00",
+            )
+        )
+    except Exception:
+        dt = utc_now()
 
-    path = history_file_for(
-        record["publishedAt"]
+    directory = (
+        HISTORY_DIR
+        / f"{dt.year:04d}"
+        / f"{dt.month:02d}"
     )
 
-    existing = load_json(
+    directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    return directory / f"{dt.date().isoformat()}.json"
+
+
+def save_history_article(
+    article: dict[str, Any],
+) -> bool:
+    path = history_file_for_date(
+        article["publishedAtUtc"]
+    )
+
+    data = load_json(
         path,
+        {
+            "date": article["publishedAtUtc"][:10],
+            "source": SOURCE_NAME,
+            "articles": [],
+        },
+    )
+
+    articles = data.setdefault(
+        "articles",
         [],
     )
 
-    if not isinstance(
-        existing,
-        list,
-    ):
-        existing = []
-
     existing_ids = {
         item.get("id")
-        for item in existing
+        for item in articles
         if isinstance(item, dict)
     }
 
-    if record["id"] in existing_ids:
+    if article["id"] in existing_ids:
         return False
 
-    existing.append(record)
+    articles.append(article)
 
-    existing.sort(
+    articles.sort(
         key=lambda item: item.get(
-            "publishedAt",
+            "publishedAtUtc",
             "",
         ),
         reverse=True,
     )
 
-    save_json(
-        path,
-        existing,
-    )
+    data["articleCount"] = len(articles)
+
+    data["updatedAtUtc"] = iso_utc()
+
+    with path.open(
+        "w",
+        encoding="utf-8",
+    ) as handle:
+        json.dump(
+            data,
+            handle,
+            indent=2,
+            ensure_ascii=False,
+        )
+
+        handle.write("\n")
 
     return True
 
@@ -949,22 +1089,19 @@ def save_historical_record(
 # ============================================================
 
 def build_current_index(
-    all_records: dict[str, dict[str, Any]],
+    all_history_articles: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-
     cutoff = utc_now() - timedelta(
-        days=CURRENT_DAYS
+        days=WINDOW_DAYS
     )
 
     current: list[dict[str, Any]] = []
 
-    for record in all_records.values():
-        published = record.get(
-            "publishedAt"
+    for article in all_history_articles:
+        published = article.get(
+            "publishedAtUtc",
+            "",
         )
-
-        if not published:
-            continue
 
         try:
             published_dt = datetime.fromisoformat(
@@ -973,16 +1110,28 @@ def build_current_index(
                     "+00:00",
                 )
             )
-
         except Exception:
             continue
 
         if published_dt >= cutoff:
-            current.append(record)
+            current.append(article)
+
+    # Deduplicate one final time.
+    unique: dict[str, dict[str, Any]] = {}
+
+    for article in current:
+        article_id_value = article.get("id")
+
+        if not article_id_value:
+            continue
+
+        unique[article_id_value] = article
+
+    current = list(unique.values())
 
     current.sort(
         key=lambda item: item.get(
-            "publishedAt",
+            "publishedAtUtc",
             "",
         ),
         reverse=True,
@@ -991,209 +1140,397 @@ def build_current_index(
     return current
 
 
+def write_current_index(
+    articles: list[dict[str, Any]],
+) -> None:
+    NEWS_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    data = {
+        "generatedAtUtc": iso_utc(),
+        "windowDays": WINDOW_DAYS,
+        "source": SOURCE_NAME,
+        "articleCount": len(articles),
+        "articles": articles,
+    }
+
+    with CURRENT_FILE.open(
+        "w",
+        encoding="utf-8",
+    ) as handle:
+        json.dump(
+            data,
+            handle,
+            indent=2,
+            ensure_ascii=False,
+        )
+
+        handle.write("\n")
+
+
 # ============================================================
 # MAIN
 # ============================================================
 
-def main() -> int:
+def main() -> None:
+    print("=" * 72)
+    print("VGrat FMS - CNA Market News Collector")
+    print("=" * 72)
 
-    LOGGER.info(
-        "=================================================="
+    NEWS_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
     )
 
-    LOGGER.info(
-        "VGrat FMS - CNA Market News Collector"
+    HISTORY_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
     )
-
-    LOGGER.info(
-        "=================================================="
-    )
-
-    ensure_directories()
 
     run_started = utc_now()
 
-    first_seen_at = iso_utc(
-        run_started
-    )
-
-    # --------------------------------------------------------
-    # Load existing permanent history
-    # --------------------------------------------------------
-
-    historical_records = (
-        load_all_history_records()
-    )
-
-    LOGGER.info(
-        "Existing historical records: %d",
-        len(historical_records),
-    )
-
-    # --------------------------------------------------------
-    # Fetch RSS feeds
-    # --------------------------------------------------------
-
-    discovered: dict[
-        str,
-        dict[str, Any],
-    ] = {}
-
-    for category, feed_url in CNA_FEEDS.items():
-
-        articles = fetch_feed(
-            category,
-            feed_url,
-        )
-
-        for article in articles:
-
-            existing = discovered.get(
-                article["id"]
-            )
-
-            if existing is None:
-                discovered[
-                    article["id"]
-                ] = article
-                continue
-
-            # Prefer the more specific category if the same
-            # article appeared in multiple CNA feeds.
-            existing_category = existing.get(
-                "category",
-                "",
-            )
-
-            if (
-                existing_category == "latest"
-                and category != "latest"
-            ):
-                article["category"] = category
-
-            discovered[
-                article["id"]
-            ] = article
-
-    LOGGER.info(
-        "Unique RSS articles discovered: %d",
-        len(discovered),
-    )
-
-    # --------------------------------------------------------
-    # Process only genuinely new articles
-    # --------------------------------------------------------
-
-    new_count = 0
-    duplicate_count = 0
-    failed_count = 0
-
-    for article in discovered.values():
-
-        if article["id"] in historical_records:
-            duplicate_count += 1
-            continue
-
-        record = process_article(
-            article,
-            first_seen_at,
-        )
-
-        if record.get(
-            "extractionStatus"
-        ) == "failed":
-            failed_count += 1
-
-        # Permanent history
-        inserted = save_historical_record(
-            record
-        )
-
-        if inserted:
-            historical_records[
-                record["id"]
-            ] = record
-
-            new_count += 1
-
-    # --------------------------------------------------------
-    # Build current 14-day index
-    # --------------------------------------------------------
-
-    current_records = build_current_index(
-        historical_records
-    )
-
-    current_payload = {
-        "generatedAtUtc": iso_utc(
-            utc_now()
-        ),
-        "windowDays": CURRENT_DAYS,
-        "source": "CNA",
-        "articleCount": len(
-            current_records
-        ),
-        "articles": current_records,
+    stats = {
+        "rssEntries": 0,
+        "duplicates": 0,
+        "rejectedIrrelevant": 0,
+        "relevantArticles": 0,
+        "articleExtractionAttempts": 0,
+        "articleExtractionSuccess": 0,
+        "articleExtractionFailures": 0,
+        "newHistoricalRecords": 0,
     }
 
-    save_json(
-        CURRENT_FILE,
-        current_payload,
+    # --------------------------------------------------------
+    # 1. Collect RSS
+    # --------------------------------------------------------
+
+    rss_records = collect_rss()
+
+    stats["rssEntries"] = len(rss_records)
+
+    print(
+        f"\nRSS entries collected: "
+        f"{stats['rssEntries']}"
     )
 
     # --------------------------------------------------------
-    # Run summary
+    # 2. Deduplicate RSS records
     # --------------------------------------------------------
 
-    LOGGER.info(
-        "=================================================="
+    unique_records: dict[str, dict[str, Any]] = {}
+
+    for record in rss_records:
+        url = record.get(
+            "url",
+            "",
+        )
+
+        if not url:
+            continue
+
+        record_id = article_id(
+            SOURCE_NAME,
+            url,
+        )
+
+        if record_id in unique_records:
+            stats["duplicates"] += 1
+
+            # Preserve all feed names.
+            existing = unique_records[record_id]
+
+            existing_feed = existing.get(
+                "feed"
+            )
+
+            feeds = existing.setdefault(
+                "feeds",
+                [],
+            )
+
+            if existing_feed and existing_feed not in feeds:
+                feeds.append(existing_feed)
+
+            current_feed = record.get(
+                "feed"
+            )
+
+            if current_feed and current_feed not in feeds:
+                feeds.append(current_feed)
+
+            continue
+
+        record["id"] = record_id
+
+        record["feeds"] = [
+            record.get(
+                "feed",
+                "unknown",
+            )
+        ]
+
+        unique_records[record_id] = record
+
+    print(
+        f"Unique RSS entries: "
+        f"{len(unique_records)}"
     )
 
-    LOGGER.info(
-        "CNA NEWS COLLECTION COMPLETE"
+    print(
+        f"RSS duplicates: "
+        f"{stats['duplicates']}"
     )
 
-    LOGGER.info(
-        "RSS articles discovered : %d",
-        len(discovered),
+    # --------------------------------------------------------
+    # 3. Relevance filtering
+    # --------------------------------------------------------
+
+    relevant_records: list[dict[str, Any]] = []
+
+    print("\nRelevance filtering:")
+
+    for record in unique_records.values():
+        relevance = classify_relevance(
+            record["title"],
+            record["description"],
+        )
+
+        record["relevance"] = relevance
+
+        if not relevance["relevant"]:
+            stats["rejectedIrrelevant"] += 1
+
+            print(
+                "  REJECT:",
+                record["title"],
+            )
+
+            continue
+
+        stats["relevantArticles"] += 1
+
+        relevant_records.append(record)
+
+        print(
+            "  KEEP:",
+            record["title"],
+            f"[{relevance['category']}]",
+            f"score={relevance['score']}",
+        )
+
+    print(
+        f"\nRelevant articles: "
+        f"{stats['relevantArticles']}"
     )
 
-    LOGGER.info(
-        "New articles            : %d",
-        new_count,
+    print(
+        f"Rejected as irrelevant: "
+        f"{stats['rejectedIrrelevant']}"
     )
 
-    LOGGER.info(
-        "Duplicates skipped      : %d",
-        duplicate_count,
+    # --------------------------------------------------------
+    # 4. Load existing history IDs
+    # --------------------------------------------------------
+
+    existing_ids = load_existing_history_ids()
+
+    # --------------------------------------------------------
+    # 5. Process relevant articles
+    # --------------------------------------------------------
+
+    for record in relevant_records:
+        record_id = record["id"]
+
+        # Existing article:
+        # no need to fetch/extract it again.
+        if record_id in existing_ids:
+            continue
+
+        stats["articleExtractionAttempts"] += 1
+
+        print(
+            "\nProcessing:",
+            record["title"],
+        )
+
+        try:
+            article_text = fetch_article_text(
+                record["url"]
+            )
+
+            if not article_text:
+                raise RuntimeError(
+                    "Article extraction returned no text"
+                )
+
+            stats["articleExtractionSuccess"] += 1
+
+            summary = generate_summary(
+                record["title"],
+                record["description"],
+                article_text,
+            )
+
+        except Exception as exc:
+            stats["articleExtractionFailures"] += 1
+
+            print(
+                "  Extraction failed:",
+                type(exc).__name__,
+                str(exc),
+            )
+
+            # We can still preserve the RSS description
+            # as a fallback summary.
+            summary = shorten(
+                record["description"],
+                700,
+            )
+
+            if not summary:
+                summary = record["title"]
+
+        permanent_record = {
+            "id": record["id"],
+            "source": SOURCE_NAME,
+            "title": record["title"],
+            "publishedAtUtc": record["publishedAtUtc"],
+            "url": record["url"],
+            "category": record["relevance"]["category"],
+            "relevanceScore": record["relevance"]["score"],
+            "summary": summary,
+            "feeds": record.get(
+                "feeds",
+                [],
+            ),
+            "collectedAtUtc": iso_utc(),
+        }
+
+        created = save_history_article(
+            permanent_record
+        )
+
+        if created:
+            stats["newHistoricalRecords"] += 1
+
+            existing_ids.add(
+                record_id
+            )
+
+            print(
+                "  Saved historical record."
+            )
+
+    # --------------------------------------------------------
+    # 6. Rebuild current 14-day index
+    # --------------------------------------------------------
+
+    all_history = load_all_history_articles()
+
+    current_articles = build_current_index(
+        all_history
     )
 
-    LOGGER.info(
-        "Extraction failures     : %d",
-        failed_count,
+    write_current_index(
+        current_articles
     )
 
-    LOGGER.info(
-        "Historical records      : %d",
-        len(historical_records),
+    # --------------------------------------------------------
+    # 7. Run summary
+    # --------------------------------------------------------
+
+    run_completed = utc_now()
+
+    run_summary = {
+        "status": "success",
+        "source": SOURCE_NAME,
+        "startedAtUtc": iso_utc(run_started),
+        "completedAtUtc": iso_utc(run_completed),
+        "windowDays": WINDOW_DAYS,
+        "stats": stats,
+        "currentArticleCount": len(
+            current_articles
+        ),
+        "historicalArticleCount": len(
+            all_history
+        ),
+    }
+
+    summary_path = (
+        NEWS_DIR / "run_summary.json"
     )
 
-    LOGGER.info(
-        "Current 14-day articles : %d",
-        len(current_records),
+    with summary_path.open(
+        "w",
+        encoding="utf-8",
+    ) as handle:
+        json.dump(
+            run_summary,
+            handle,
+            indent=2,
+            ensure_ascii=False,
+        )
+
+        handle.write("\n")
+
+    print("\n" + "=" * 72)
+    print("NEWS COLLECTION COMPLETE")
+    print("=" * 72)
+
+    print(
+        f"RSS entries:              "
+        f"{stats['rssEntries']}"
     )
 
-    LOGGER.info(
-        "Current index            : %s",
-        CURRENT_FILE,
+    print(
+        f"Duplicates:               "
+        f"{stats['duplicates']}"
     )
 
-    LOGGER.info(
-        "=================================================="
+    print(
+        f"Rejected irrelevant:      "
+        f"{stats['rejectedIrrelevant']}"
     )
 
-    return 0
+    print(
+        f"Relevant articles:        "
+        f"{stats['relevantArticles']}"
+    )
+
+    print(
+        f"Extraction attempts:      "
+        f"{stats['articleExtractionAttempts']}"
+    )
+
+    print(
+        f"Extraction successful:    "
+        f"{stats['articleExtractionSuccess']}"
+    )
+
+    print(
+        f"Extraction failures:     "
+        f"{stats['articleExtractionFailures']}"
+    )
+
+    print(
+        f"New historical records:   "
+        f"{stats['newHistoricalRecords']}"
+    )
+
+    print(
+        f"Historical records total: "
+        f"{len(all_history)}"
+    )
+
+    print(
+        f"Current 14-day records:   "
+        f"{len(current_articles)}"
+    )
+
+    print("=" * 72)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
