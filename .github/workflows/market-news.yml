@@ -125,3 +125,39 @@ jobs:
       # --------------------------------------------------------
       - name: Commit market news data
         shell: bash
+        run: |
+          set -e
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/market_news/
+
+          if git diff --cached --quiet; then
+            echo "No market news changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update CNA market news"
+
+      # --------------------------------------------------------
+      # 9. Rebase onto latest main
+      # --------------------------------------------------------
+      - name: Rebase onto latest main
+        shell: bash
+        run: |
+          set -e
+
+          git fetch origin main
+
+          git rebase origin/main
+
+      # --------------------------------------------------------
+      # 10. Push
+      # --------------------------------------------------------
+      - name: Push market news update
+        shell: bash
+        run: |
+          set -e
+
+          git push origin HEAD:main
