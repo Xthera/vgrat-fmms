@@ -1,0 +1,66 @@
+{
+  "date": "2026-09-30",
+  "source": "CNA",
+  "articles": [
+    {
+      "id": "de8331eb6225365156a8deb986f4fc304666aff51ed4fed137b33f56585bc7b2",
+      "source": "CNA",
+      "title": "Lower electricity and gas household tariffs from October to December",
+      "publishedAtUtc": "2026-09-30T04:11:00Z",
+      "url": "https://www.channelnewsasia.com/singapore/electricity-gas-tariffs-prices-q4-october-december-6414551",
+      "category": "ECONOMIC",
+      "relevanceScore": 20,
+      "summary": "SINGAPORE: Singapore households will pay lower electricity and gas tariffs in the fourth quarter of 2026 due to lower energy costs. Singapore's regulated electricity and town gas tariffs are determined every quarter, based on the gas prices in the first 2.5 months of the previous quarter, according to the Energy Market Authority (EMA). Should this persist, town gas tariffs are expected to increase for the next quarter, City Energy said.",
+      "feeds": [
+        "latest",
+        "singapore"
+      ],
+      "collectedAtUtc": "2026-09-30T06:15:28Z"
+    },
+    {
+      "id": "5bd795ad161e98556c8c94c053abfc977e820cfb3dd6e15e3f27bdacb444c336",
+      "source": "CNA",
+      "title": "Fed's Williams sees no urgency for next rate hike",
+      "publishedAtUtc": "2026-09-30T01:46:00Z",
+      "url": "https://www.channelnewsasia.com/world/federal-reserve-new-york-fed-president-no-urgency-next-rate-hike-6420096",
+      "category": "MARKET",
+      "relevanceScore": 18,
+      "summary": "BUFFALO: Federal Reserve policymakers probably only need to deliver one more rate hike this year to get inflation back on track to the US central bank's 2 per cent goal, New York Fed President John Williams said on Tuesday (Sep 29), in what amounted to a pushback against mounting expectations for earlier policy tightening. In his first four months as Fed chair, Warsh has given little sense of where he thinks interest rates ought to go, saying that he wants financial markets to stop paying so much attention to central banker pronouncements and more attention to what the economic data suggests the Fed may need to do to keep inflation in check. \"A central bank that does not explain how or why...",
+      "feeds": [
+        "business",
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T06:15:29Z"
+    },
+    {
+      "id": "e774b0adf0ee99e54d0853c3897759141ff8876f7864195dfe92168f57a33754",
+      "source": "CNA",
+      "title": "Oil gains after Trump denies he is willing to ease sanctions on Iran",
+      "publishedAtUtc": "2026-09-30T01:39:32Z",
+      "url": "https://www.channelnewsasia.com/business/oil-gains-after-trump-denies-he-willing-ease-sanctions-iran-6420121",
+      "category": "MARKET",
+      "relevanceScore": 13,
+      "summary": "The spread between the two benchmarks this month also expanded to its widest in four months as traders watched potential plans by the US to restrict diesel exports, which could create an oversupply in the domestic market and lead US refiners to process less crude. Crude oil exports from Middle East producers have rebounded in September to 16.328 million barrels per day, the highest since the US-Israeli war with Iran started in late February. In the US, crude oil and gasoline inventories rose, while distillate stocks fell last week, market sources said on Tuesday, citing data from the American Petroleum Institute.",
+      "feeds": [
+        "business"
+      ],
+      "collectedAtUtc": "2026-09-30T06:15:30Z"
+    },
+    {
+      "id": "34badece84784d85cfb555f9ff2a227debe7190d7e23abb44bc5a241e854a425",
+      "source": "CNA",
+      "title": "Ukraine sets its sights on boosting high-tech exports, hails digital resilience",
+      "publishedAtUtc": "2026-09-30T01:25:51Z",
+      "url": "https://www.channelnewsasia.com/business/ukraine-sets-its-sights-boosting-high-tech-exports-hails-digital-resilience-6420101",
+      "category": "ECONOMIC",
+      "relevanceScore": 7,
+      "summary": "WASHINGTON, Sept 29 : Ukraine aims to leverage its expertise in military technologies and digital innovation to sharply increase high-tech exports in coming years, including through the use of AI, the country's minister for digital transformation told Reuters on Tuesday. \"Ukraine during the war showed this tremendous speed of digitizing the state services and providing the services to the population in a digital way,\" said Ferchuk, who traveled to Washington this week to meet with US economic, cybersecurity and telecommunications officials, as well as senior leaders at the World Bank. \"The technology is developing so fast that I would like to repeat this in civil use and show that by...",
+      "feeds": [
+        "business"
+      ],
+      "collectedAtUtc": "2026-09-30T06:15:31Z"
+    }
+  ],
+  "articleCount": 4,
+  "updatedAtUtc": "2026-09-30T06:15:31Z"
+}
