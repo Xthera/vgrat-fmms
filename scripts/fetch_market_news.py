@@ -24,15 +24,13 @@ CLASSIFICATION PRINCIPLES
    This prevents false substring matches such as:
 
        factory -> actor
-       markets -> market
-       forecast -> ?
 
 3. Hard exclusions are applied to clearly non-financial stories.
 
 4. Strong economic indicators in the headline are sufficient by
    themselves.
 
-5. Financial-market legal stories are retained.
+5. Financial-market legal and corporate stories are retained.
 
 6. Technology stories require a concrete business, infrastructure,
    semiconductor, AI policy, AI investment, payments, cybersecurity,
@@ -103,6 +101,9 @@ WINDOW_DAYS = 14
 MAX_CURRENT_ARTICLES = 100
 
 REQUEST_TIMEOUT = 25
+
+# Maximum summary length.
+SUMMARY_MAX_CHARS = 500
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -198,6 +199,8 @@ SPORTS_STRONG = {
     "international football",
     "international rugby",
     "international cricket",
+    "ancelotti",
+    "vinicius",
 }
 
 
@@ -570,12 +573,11 @@ TECHNOLOGY_STRONG = {
     "ai hack",
     "cybersecurity",
     "cyber attack",
-    "cyber attack",
 }
 
 
 # ============================================================================
-# FINANCIAL LEGAL SIGNALS
+# FINANCIAL / LEGAL / CORPORATE SIGNALS
 # ============================================================================
 
 FINANCIAL_LEGAL_STRONG = {
@@ -607,6 +609,24 @@ FINANCIAL_LEGAL_STRONG = {
     "banking regulators",
     "market regulator",
     "market regulators",
+    "receivership",
+    "receiver",
+    "receivers",
+    "holding company",
+    "holding companies",
+    "corporate restructuring",
+    "corporate restructuring",
+    "insolvency",
+    "insolvent",
+    "liquidation",
+    "liquidator",
+    "liquidators",
+    "winding up",
+    "wound up",
+    "administrators appointed",
+    "administrator appointed",
+    "restructuring",
+    "restructuring plan",
 }
 
 
@@ -811,6 +831,74 @@ def has_any_phrase(
 
 
 # ============================================================================
+# SUMMARY SHORTENING
+# ============================================================================
+
+def shorten(
+    text: str,
+    max_chars: int = SUMMARY_MAX_CHARS,
+) -> str:
+    """
+    Safely shorten text for permanent news summaries.
+
+    This helper is intentionally conservative:
+    - normalize HTML/whitespace
+    - preserve complete sentences where possible
+    - never return an oversized summary
+    """
+
+    text = normalize_text(
+        text
+    )
+
+    if not text:
+        return ""
+
+    if len(text) <= max_chars:
+        return text
+
+    # Prefer cutting at a sentence boundary.
+    candidate = text[:max_chars]
+
+    sentence_breaks = [
+        candidate.rfind(". "),
+        candidate.rfind("! "),
+        candidate.rfind("? "),
+    ]
+
+    best_break = max(
+        sentence_breaks
+    )
+
+    if best_break >= int(
+        max_chars * 0.55
+    ):
+        return candidate[
+            : best_break + 1
+        ].strip()
+
+    # Otherwise cut at the last complete word.
+    last_space = candidate.rfind(
+        " "
+    )
+
+    if last_space >= int(
+        max_chars * 0.70
+    ):
+        return (
+            candidate[
+                :last_space
+            ].rstrip()
+            + "..."
+        )
+
+    return (
+        candidate.rstrip()
+        + "..."
+    )
+
+
+# ============================================================================
 # SPECIALIZED CONTEXT RULES
 # ============================================================================
 
@@ -826,7 +914,6 @@ def technology_business_context(
         title
     ).lower()
 
-    # These are inherently relevant technology/business stories.
     direct_technology_topics = {
         "technology stocktake",
         "ai hack",
@@ -859,6 +946,8 @@ def technology_business_context(
         "ai investments",
         "ai spending",
         "ai capex",
+        "cybersecurity",
+        "cyber attack",
     }
 
     if has_any_phrase(
@@ -977,6 +1066,13 @@ def market_business_context(
         title
     ).lower()
 
+    # Corporate financial/legal events.
+    if has_any_phrase(
+        lower,
+        FINANCIAL_LEGAL_STRONG,
+    ):
+        return True
+
     # Funding / capital raising with a financial quantity or valuation.
     if has_any_phrase(
         lower,
@@ -1032,18 +1128,54 @@ def market_business_context(
 def is_commentary_title(
     title: str,
 ) -> bool:
-    return bool(
-        phrase_matches(
-            title,
-            {
-                "commentary",
-                "comment:",
-                "analysis:",
-                "opinion:",
-                "explainer:",
-            },
-        )
-    )
+    """
+    Identify commentary / analysis / opinion / explainer headlines.
+
+    These are rejected unless they were already captured by a direct
+    market/economic/technology/geopolitical title signal.
+    """
+
+    title_lower = normalize_text(
+        title
+    ).lower()
+
+    if re.match(
+        r"^\s*commentary\s*:",
+        title_lower,
+    ):
+        return True
+
+    if re.match(
+        r"^\s*analysis\s*:",
+        title_lower,
+    ):
+        return True
+
+    if re.match(
+        r"^\s*opinion\s*:",
+        title_lower,
+    ):
+        return True
+
+    if re.match(
+        r"^\s*explainer\s*:",
+        title_lower,
+    ):
+        return True
+
+    if re.match(
+        r"^\s*what\s+is\b",
+        title_lower,
+    ):
+        return True
+
+    if re.match(
+        r"^\s*what\s+does\b",
+        title_lower,
+    ):
+        return True
+
+    return False
 
 
 # ============================================================================
@@ -1135,11 +1267,33 @@ def classify_relevance(
         POLITICAL_TERMS,
     )
 
+    technology_context = technology_business_context(
+        title_lower
+    )
+
+    market_context = market_business_context(
+        title_lower
+    )
+
+    commentary_title = is_commentary_title(
+        title_lower
+    )
+
     # ------------------------------------------------------------------
-    # 1. FINANCIAL-MARKET LEGAL STORIES
+    # 1. FINANCIAL-MARKET / CORPORATE LEGAL STORIES
     # ------------------------------------------------------------------
     #
-    # These must survive the normal crime/legal exclusion.
+    # These must survive normal crime/lifestyle exclusions.
+    #
+    # Examples:
+    #
+    #   false trading
+    #   market manipulation
+    #   receivership
+    #   holding companies
+    #   insolvency
+    #   restructuring
+    #
     # ------------------------------------------------------------------
 
     if financial_legal:
@@ -1149,6 +1303,15 @@ def classify_relevance(
             "score": 100,
             "reason": "financial_market_legal_story",
             "matchedKeywords": financial_legal,
+        }
+
+    if market_context:
+        return {
+            "relevant": True,
+            "category": "MARKET",
+            "score": 95,
+            "reason": "business_market_event",
+            "matchedKeywords": [],
         }
 
     # ------------------------------------------------------------------
@@ -1183,16 +1346,10 @@ def classify_relevance(
         }
 
     if entertainment:
-        # Allow only if the same title clearly contains a market or
-        # technology event.
         if not (
             market
-            or technology_business_context(
-                title_lower
-            )
-            or market_business_context(
-                title_lower
-            )
+            or technology_context
+            or market_context
         ):
             return {
                 "relevant": False,
@@ -1205,12 +1362,8 @@ def classify_relevance(
     if lifestyle:
         if not (
             market
-            or technology_business_context(
-                title_lower
-            )
-            or market_business_context(
-                title_lower
-            )
+            or technology_context
+            or market_context
         ):
             return {
                 "relevant": False,
@@ -1233,14 +1386,28 @@ def classify_relevance(
                 "matchedKeywords": weather,
             }
 
+    # Social-policy stories such as:
+    #
+    #   PSLE
+    #   DSA
+    #   HDB U-Save / S&CC
+    #
+    # are rejected unless a direct market/economic/legal signal already
+    # captured them above.
     if policy:
-        return {
-            "relevant": False,
-            "category": "REJECT",
-            "score": 0,
-            "reason": "non_economic_social_policy",
-            "matchedKeywords": policy,
-        }
+        if not (
+            economic
+            or market
+            or financial_legal
+            or market_context
+        ):
+            return {
+                "relevant": False,
+                "category": "REJECT",
+                "score": 0,
+                "reason": "non_economic_social_policy",
+                "matchedKeywords": policy,
+            }
 
     # ------------------------------------------------------------------
     # 3. STRONG ECONOMIC HEADLINE
@@ -1268,25 +1435,12 @@ def classify_relevance(
             "matchedKeywords": market,
         }
 
-    if market_business_context(
-        title_lower
-    ):
-        return {
-            "relevant": True,
-            "category": "MARKET",
-            "score": 85,
-            "reason": "business_market_event",
-            "matchedKeywords": [],
-        }
-
     # ------------------------------------------------------------------
     # 5. TECHNOLOGY HEADLINE
     # ------------------------------------------------------------------
 
     if technology:
-        if technology_business_context(
-            title_lower
-        ):
+        if technology_context:
             return {
                 "relevant": True,
                 "category": "TECHNOLOGY",
@@ -1295,11 +1449,9 @@ def classify_relevance(
                 "matchedKeywords": technology,
             }
 
-    # Even if the exact technology signal list didn't catch every
-    # phrase, the specialized context detector can.
-    if technology_business_context(
-        title_lower
-    ):
+    # Specialized detector can catch technology-government stories
+    # where the exact signal list is not sufficient.
+    if technology_context:
         return {
             "relevant": True,
             "category": "TECHNOLOGY",
@@ -1327,34 +1479,31 @@ def classify_relevance(
     #
     # IMPORTANT:
     #
-    # Do this BEFORE description rescue.
+    # This occurs BEFORE description rescue.
     #
-    # This prevents:
+    # A title such as:
     #
-    # Commentary: Who in Iran can make a deal with the US?
+    #   Commentary: Who in Iran can make a deal with the US?
     #
-    # from becoming GEOPOLITICAL simply because the article description
-    # discusses oil, sanctions, Hormuz, etc.
+    # cannot become GEOPOLITICAL merely because the article description
+    # contains oil, sanctions or Hormuz references.
+    #
+    # However, a direct title signal such as:
+    #
+    #   Commentary: Oil prices rise as Hormuz tensions deepen
+    #
+    # has already been captured by the market/geopolitical logic above.
     # ------------------------------------------------------------------
 
-    if is_commentary_title(
-        title_lower
-    ):
+    if commentary_title:
         return {
             "relevant": False,
             "category": "REJECT",
             "score": 0,
             "reason": "political_commentary_without_direct_market_signal",
-            "matchedKeywords": phrase_matches(
-                title_lower,
-                {
-                    "commentary",
-                    "comment:",
-                    "analysis:",
-                    "opinion:",
-                    "explainer:",
-                },
-            ),
+            "matchedKeywords": [
+                "commentary"
+            ],
         }
 
     if political:
@@ -2636,6 +2785,9 @@ def main() -> None:
                 str(exc),
             )
 
+            # IMPORTANT:
+            # shorten() is defined above and is also safe when the
+            # RSS description is empty.
             summary = shorten(
                 record[
                     "description"
@@ -2643,7 +2795,9 @@ def main() -> None:
             )
 
             if not summary:
-                summary = title
+                summary = shorten(
+                    title
+                )
 
         classification = record[
             "classification"
