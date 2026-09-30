@@ -1,0 +1,128 @@
+name: Test Market News - CNA
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-market-news:
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 30
+
+    steps:
+
+      # ------------------------------------------------------------
+      # 1. Checkout repository
+      # ------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ------------------------------------------------------------
+      # 2. Set up Python
+      # ------------------------------------------------------------
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # ------------------------------------------------------------
+      # 3. Install Python dependencies
+      # ------------------------------------------------------------
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements.txt
+
+      # ------------------------------------------------------------
+      # 4. Verify news collector exists
+      # ------------------------------------------------------------
+      - name: Verify market news collector
+        run: |
+          test -f scripts/fetch_market_news.py
+          echo "fetch_market_news.py found"
+
+      # ------------------------------------------------------------
+      # 5. Run CNA market news collector
+      # ------------------------------------------------------------
+      - name: Fetch CNA market news
+        run: |
+          python -u scripts/fetch_market_news.py
+
+      # ------------------------------------------------------------
+      # 6. Show generated files
+      # ------------------------------------------------------------
+      - name: Show generated market news files
+        run: |
+          echo "=========================================="
+          echo "Market news files"
+          echo "=========================================="
+
+          find data/market_news -type f -print | sort
+
+          echo ""
+          echo "=========================================="
+          echo "Current news summary"
+          echo "=========================================="
+
+          if [ -f data/market_news/current.json ]; then
+            python - <<'PY'
+          import json
+
+          path = "data/market_news/current.json"
+
+          with open(path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          print("Generated:", data.get("generatedAtUtc"))
+          print("Window:", data.get("windowDays"), "days")
+          print("Articles:", data.get("articleCount"))
+
+          for article in data.get("articles", [])[:10]:
+              print()
+              print(article.get("publishedAt"))
+              print(article.get("source"))
+              print(article.get("title"))
+              print(article.get("url"))
+          PY
+          else
+            echo "current.json was not created"
+            exit 1
+          fi
+
+      # ------------------------------------------------------------
+      # 7. Commit generated news data
+      # ------------------------------------------------------------
+      - name: Commit market news data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/market_news/
+
+          if git diff --cached --quiet; then
+            echo "No new market news data to commit."
+            exit 0
+          fi
+
+          git commit -m "Update CNA market news"
+
+      # ------------------------------------------------------------
+      # 8. Rebase latest main before push
+      # ------------------------------------------------------------
+      - name: Rebase latest main
+        run: |
+          git fetch origin main
+          git rebase origin/main
+
+      # ------------------------------------------------------------
+      # 9. Push market news data
+      # ------------------------------------------------------------
+      - name: Push market news data
+        run: |
+          git push origin HEAD:main
