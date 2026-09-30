@@ -2880,67 +2880,6 @@ def main() -> None:
     )
 
     # ------------------------------------------------------------------
-    # RUN SUMMARY
-    # ------------------------------------------------------------------
-
-    completed = datetime.now(
-        timezone.utc
-    )
-
-    run_summary = {
-        "status": "success",
-        "source": SOURCE_NAME,
-        "startedAtUtc": (
-            started
-            .replace(
-                microsecond=0
-            )
-            .isoformat()
-            .replace(
-                "+00:00",
-                "Z",
-            )
-        ),
-        "completedAtUtc": (
-            completed
-            .replace(
-                microsecond=0
-            )
-            .isoformat()
-            .replace(
-                "+00:00",
-                "Z",
-            )
-        ),
-        "windowDays": WINDOW_DAYS,
-        "maxCurrentArticles": (
-            MAX_CURRENT_ARTICLES
-        ),
-        "stats": stats,
-        "currentArticleCount": len(
-            current_articles
-        ),
-        "historicalArticleCount": len(
-            history_articles
-        ),
-    }
-
-        "w",
-        encoding="utf-8",
-    ) as handle:
-
-        json.dump(
-            run_summary,
-            handle,
-            indent=2,
-            ensure_ascii=False,
-        )
-
-        handle.write(
-            "\n"
-        )
-
-    # ------------------------------------------------------------------
     # FINAL CONSOLE SUMMARY
     # ------------------------------------------------------------------
 
