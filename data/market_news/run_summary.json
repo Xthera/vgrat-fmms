@@ -1,0 +1,19 @@
+{
+  "status": "success",
+  "source": "CNA",
+  "startedAtUtc": "2026-09-30T06:07:49Z",
+  "completedAtUtc": "2026-09-30T06:08:21Z",
+  "windowDays": 14,
+  "stats": {
+    "rssEntries": 100,
+    "duplicates": 20,
+    "rejectedIrrelevant": 50,
+    "relevantArticles": 30,
+    "articleExtractionAttempts": 30,
+    "articleExtractionSuccess": 30,
+    "articleExtractionFailures": 0,
+    "newHistoricalRecords": 30
+  },
+  "currentArticleCount": 30,
+  "historicalArticleCount": 30
+}
