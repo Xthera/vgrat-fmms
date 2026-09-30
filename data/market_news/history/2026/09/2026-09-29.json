@@ -1,0 +1,268 @@
+{
+  "date": "2026-09-29",
+  "source": "CNBC",
+  "articles": [
+    {
+      "id": "670945134a392c89187401fb2a07341a411934cb8cc6a06108b26e846f8897bf",
+      "source": "CNBC",
+      "title": "Clients said to be sticking with Morgan Stanley even after leaked deal pipeline",
+      "publishedAtUtc": "2026-09-29T23:00:01Z",
+      "url": "https://www.cnbc.com/2026/09/29/morgan-stanleys-deal-leak-mandates-.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "The disclosure may have carried competitive implications, but that does not necessarily mean Morgan Stanley will lose mandates as a result, according to people familiar with the matter, raising questions over how much lasting damage it could do to the bank's dealmaking business. For instance, one buy-side source currently working with Morgan Stanley on deals said their firm isn't reconsidering its mandates with the bank.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:33Z"
+    },
+    {
+      "id": "207a8a8eb5debe4a8984692ee9255f7a25624eee18721d2b9c3daa511625bd86",
+      "source": "CNBC",
+      "title": "Muse is crushing these consumer stocks. Cramer says some may be worth a look",
+      "publishedAtUtc": "2026-09-29T22:24:38Z",
+      "url": "https://www.cnbc.com/2026/09/29/jim-cramer-meta-muse-consumer-inertia.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "CNBC's Jim Cramer said Tuesday that Wall Street might be overreacting to the threat Meta's Muse AI agent poses to a wide range of consumer stocks. The latest AI disruption trade, dubbed \"consumer inertia,\" is based on the idea that agents like Muse could hurt businesses that benefit when consumers don't bother canceling subscriptions, comparing prices or shopping around for better deals.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:48Z"
+    },
+    {
+      "id": "606647df82e0ae0550f1bec5fd9830a1ae987c9e61f03e0ed3a2ca269a55ccec",
+      "source": "CNBC",
+      "title": "Cramer warns the narrative around AI is turning — and stocks could pay the price",
+      "publishedAtUtc": "2026-09-29T22:20:49Z",
+      "url": "https://www.cnbc.com/2026/09/29/jim-cramer-ai-public-perception.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Given the already narrow market, Cramer worries changing attitudes toward AI could pressure the biggest growth driver on Wall Street and an important source of growth for the U.S. Concerns about jobs, electricity costs and safety are increasingly competing with the industry's promises of economic growth and productivity gains.",
+      "feeds": [
+        "latest",
+        "technology"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:32Z"
+    },
+    {
+      "id": "8ba10e9b524730524e29a86676ede10193597c0eb1123c6e8758bfbcff0c2600",
+      "source": "CNBC",
+      "title": "Trump says he and tech leaders signed AI agreement that is 'morally binding'",
+      "publishedAtUtc": "2026-09-29T21:18:27Z",
+      "url": "https://www.cnbc.com/2026/09/29/tech-white-house-ai-lunch-trump.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "President Donald Trump on Tuesday said he signed a \"morally binding\" artificial intelligence document with tech leaders following a luncheon at the White House, as calls for a development slowdown have reached a fever pitch. Surrounded by tech's top executives, Trump told reporters that he's \"seeing tremendous self-policing\" and that the administration is considering building a 10-person committee to oversee the AI industry.",
+      "feeds": [
+        "technology",
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:48Z"
+    },
+    {
+      "id": "196b8f81e66889a214bc8ae05c9eab3111c957b04f9b5debf31ed9e929f2a03c",
+      "source": "CNBC",
+      "title": "IPO postponements are accelerating in third quarter, even beyond Oura",
+      "publishedAtUtc": "2026-09-29T21:05:26Z",
+      "url": "https://www.cnbc.com/2026/09/29/ipo-postponements-are-accelerating-in-third-quarter-even-beyond-oura.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Biometric ring maker Oura raised eyebrows on Wall Street Tuesday, postponing its initial public offering due to \"uncertainty\" in market conditions while also claiming there was \"strong demand\" for stock. \"IPO activity came in below expectations in the third quarter of 2026, as more concerns about AI spending, a 19-year high in bond yields and resumed rate hikes weighed on the fall pickup,\" Renaissance analysts wrote in a report to clients last week.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:32Z"
+    },
+    {
+      "id": "ec5b14fa7fc342f87f9dc2e6e2a72d1ef2279d69391c2f81f5a78a724c14473a",
+      "source": "CNBC",
+      "title": "The Fed's main inflation measure will be released Wednesday. Here's what to expect",
+      "publishedAtUtc": "2026-09-29T20:51:43Z",
+      "url": "https://www.cnbc.com/2026/09/29/the-feds-main-inflation-measure-will-be-released-wednesday-heres-what-to-expect.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "The personal consumption expenditures price index, the primary inflation gauge for central bank policymakers, is expected to show increases of 0.3% at both the all-items and core levels, the latter of which excludes food and energy costs, according to the Dow Jones consensus. Fed Chairman Kevin Warsh said at his news conference earlier this month that hiring data along with business investment and private sector earnings show the economy in good shape.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:32Z"
+    },
+    {
+      "id": "7c3e72f154e54344198c2ed76ffcce9971102fb01a7c5ed9268a8fe7c8abeaa7",
+      "source": "CNBC",
+      "title": "Education Department extends deadline for student loan interest rate discount",
+      "publishedAtUtc": "2026-09-29T18:28:03Z",
+      "url": "https://www.cnbc.com/2026/09/29/trump-officials-extend-student-loan-interest-rate-discount-deadline.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "The Trump administration announced on Tuesday that it will extend the deadline for federal student loan borrowers to get a reduction of 1 percentage point on their interest rate. Department of Education said borrowers had until the end of the day on Wednesday to sign up for the automatic payments and benefit from the reduced rate.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:33Z"
+    },
+    {
+      "id": "74cdc859ac4aec7814b82ea243d94ce9f586b5d9b17354d50532603e3d9357e8",
+      "source": "CNBC",
+      "title": "America's Canadian import restrictions come into force. Here are the products barred from entry",
+      "publishedAtUtc": "2026-09-29T15:57:43Z",
+      "url": "https://www.cnbc.com/2026/09/29/canada-import-ban-trade-war.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "The White House banned imports of some Canadian vehicles, dairy and alcohol products on Tuesday, as officials sent mixed signals on the prospect of a trade deal. The products are estimated to total around $19.9 billion of Canadian imports by the American Action Forum. The Bank of Canada warned this month that new tariffs had made the country's growth prospects more uncertain and increased upside risks to inflation.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:56Z"
+    },
+    {
+      "id": "3788c24e7737fb1933013b141e004e5c25ac948bd30c77145bd084266386265d",
+      "source": "CNBC",
+      "title": "Microsoft shares might be rangebound. Here's how you can still make money",
+      "publishedAtUtc": "2026-09-29T15:56:13Z",
+      "url": "https://www.cnbc.com/2026/09/29/microsoft-shares-might-be-rangebound-heres-how-you-can-still-make-money.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "The beauty of trading options is you can make money if a stock goes up, down or nothing at all. Shares of Microsoft are presenting such an opportunity right now. In other words, you're playing for a flat stock price With breakeven stock prices of $538 to the upside and $482 to the downside, the real danger of the trade is a move beyond either long strike before expiration.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:57Z"
+    },
+    {
+      "id": "d642a92c7ac03bb0083d0ae16069e65671d30d4f75932a22b18e5e7a16a94b57",
+      "source": "CNBC",
+      "title": "Shell backs $23 billion LNG Canada expansion in boost to Carney's ‘energy superpower’ push",
+      "publishedAtUtc": "2026-09-29T14:41:03Z",
+      "url": "https://www.cnbc.com/2026/09/29/shell-canada-lng-carney-oil-gas-energy.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "A consortium led by British oil giant Shell is moving forward with expansion plans on its flagship liquefied natural gas project (LNG) in Canada, in a major boost to Prime Minister Mark Carney's ambition to make the country an \"energy superpower.\" Shell said in a statement on Tuesday that it had reached a final investment decision to double production capacity at the LNG Canada project in Kitimat, British Columbia, to roughly 28 million metric tons per annum (mtpa), up from 14 mtpa.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:57Z"
+    },
+    {
+      "id": "877621d125745e125534f79d8a61be05cff432d9d5a53fde196b47748d95476d",
+      "source": "CNBC",
+      "title": "Trump’s municipal bond portfolio reaches as much as $1 billion as policy overlaps mount",
+      "publishedAtUtc": "2026-09-29T14:37:07Z",
+      "url": "https://www.cnbc.com/2026/09/29/trump-municipal-bond-portfolio.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "Investors seeking municipal bond exposure routinely use exchange-traded funds and other indexed products to avoid picking individual debt. \"President Trump's energy secretary wouldn't be allowed to hold this type of bond, in my opinion, but because presidents are exempt from typical conflict-of-interest laws, [Trump] has,\" Painter told CNBC.",
+      "feeds": [
+        "finance"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:34Z"
+    },
+    {
+      "id": "f8dc5391a187625d07283607d528ca93531744a2b02380892ec9d872f19b5a81",
+      "source": "CNBC",
+      "title": "Smart ring maker Oura postpones IPO due to market 'uncertainty'",
+      "publishedAtUtc": "2026-09-29T13:50:01Z",
+      "url": "https://www.cnbc.com/2026/09/29/smart-ring-maker-oura-postpones-ipo-due-to-market-uncertainty.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Oura has said that it is delaying plans for its public listing on the Nasdaq due to uncertainty in the IPO market. \"We aim to deliver an extraordinary IPO for our employees and investors and we have the luxury of choosing our moment,\" he added. Holtec said that uncertainty over data development compounded \"pre-existing headwinds, including rising energy costs, elevated global trade tensions, ongoing military conflicts, and mounting inflation fears that have driven the central banks of major...",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:49Z"
+    },
+    {
+      "id": "b7235d6218cd504ba7df0cd0d13a49b4d93cc3c759a3cd9fa82cb035923c41c5",
+      "source": "CNBC",
+      "title": "Trump meets with AI execs, Treasury yields pressure stocks, Alaska's luxury push and more in Morning Squawk",
+      "publishedAtUtc": "2026-09-29T12:31:16Z",
+      "url": "https://www.cnbc.com/2026/09/29/5-things-to-know-before-the-stock-market-opens.html",
+      "category": "MARKET",
+      "relevanceScore": 93,
+      "relevanceReason": "strong_market_title",
+      "summary": "Here are five key things investors need to know to start the trading day: President Donald Trump is set to meet with technology leaders including Anthropic's Dario Amodei, Meta's Mark Zuckerberg and Alphabet's Sundar Pichai at a luncheon today. - Reuters reported last night that in its IPO prospectus, Anthropic warns that AI models could pose a \"catastrophic or existential risk to humanity.\" - AMD is acquiring World Labs in a deal worth $8.2 billion.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:49Z"
+    },
+    {
+      "id": "bc1d59595f4d8c78d35150d756e228ccb8d3383ac19a78c87d3858fbee35c2ee",
+      "source": "CNBC",
+      "title": "Mistral CEO says U.S. AI safety debate masks competitors’ 'negligence'",
+      "publishedAtUtc": "2026-09-29T11:52:46Z",
+      "url": "https://www.cnbc.com/2026/09/29/mistral-ai-safety-openai-anthropic.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "Mistral Chief Executive Arthur Mensch has accused leading global artificial intelligence companies of using the debate over the safety of the technology as a cover-up for their \"negligence.\" \"The debate that we've seen in the U.S. Discussions over AI safety intensified after an AI researcher quit his job at Anthropic earlier this month, saying that the company and its rival OpenAI were \"gambling with our lives\" and building technology that has more than a 10% chance of killing all humans.",
+      "feeds": [
+        "technology",
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:51Z"
+    },
+    {
+      "id": "752e50d1c6c7c3dbc27b1bdcf811b30ebb92ae4967999929c80f21c4bd0eca9f",
+      "source": "CNBC",
+      "title": "Zuckerberg, Amodei among tech executives set to meet Trump Tuesday",
+      "publishedAtUtc": "2026-09-29T10:21:33Z",
+      "url": "https://www.cnbc.com/2026/09/28/trump-ai-tech-lunch.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 52,
+      "relevanceReason": "supporting_technology_description",
+      "summary": "That event will have panel discussions on artificial intelligence, energy, space and other topics. Tuesday's meeting could serve as another opportunity for tech leaders, particularly Amodei, to ease tensions with the White House as the debate over AI safety has spread and leaders have taken sides on potential regulation.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:54Z"
+    },
+    {
+      "id": "577d3fb43224bdab316917f083dd71319281ef849c15b2ecfba2b8e325276caa",
+      "source": "CNBC",
+      "title": "India readies $25 billion for Deep Tech investment as U.S. and China race ahead",
+      "publishedAtUtc": "2026-09-29T05:12:10Z",
+      "url": "https://www.cnbc.com/2026/09/29/india-investment-billions-tech-ai-us-china.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "and China in the global tech race to cut its reliance on frontier foreign technology. Deep Tech is a broad term used for start-ups in artificial intelligence, semiconductors, advanced manufacturing, drones and space tech. currently lead the global AI race, and while Chinese tech is seen with suspicion in India, Washington's curbs on tech exports make it unreliable.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:55Z"
+    },
+    {
+      "id": "5f955b7066fb9521e473b9229ecb827cc4af829447d458e1edec103c1686b167",
+      "source": "CNBC",
+      "title": "Samsung to inject $1 billion into Nvidia- and KKR-backed AI infrastructure firm",
+      "publishedAtUtc": "2026-09-29T01:48:52Z",
+      "url": "https://www.cnbc.com/2026/09/29/samsung-investment-nvidia-kkr-ai-helix-digital.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 82,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "Samsung Electronics and its affiliates will invest a combined $1 billion in Helix Digital Infrastructure, an artificial intelligence infrastructure company launched by global investment firm KKR and backed by AI darling Nvidia. The investment comes as Helix seeks to address growing competition in the AI infrastructure market by targeting both data center deployment and the underlying power infrastructure needed to support it.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:51Z"
+    }
+  ],
+  "articleCount": 17,
+  "updatedAtUtc": "2026-09-30T10:09:57Z"
+}

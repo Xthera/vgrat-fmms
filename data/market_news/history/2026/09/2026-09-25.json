@@ -1,0 +1,53 @@
+{
+  "date": "2026-09-25",
+  "source": "CNBC",
+  "articles": [
+    {
+      "id": "4ff36f7a8af21a91101a9114ddae9e22d65b4504a1c7554b159f7bd9e60a9ea8",
+      "source": "CNBC",
+      "title": "Coca-Cola hires Rob Gehring from Monster Energy to run its North American operations",
+      "publishedAtUtc": "2026-09-25T21:02:20Z",
+      "url": "https://www.cnbc.com/2026/09/25/monster-coca-cola-rob-gehring.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "Rob Gehring, the head of Monster Energy's Americas business, will leave to run Coca-Cola's North America unit, the companies said Friday. The move comes as Coke tries to maintain growth while U.S. Coke shares have climbed more than 25% this year, while Monster's stock has risen more than 12%.",
+      "feeds": [
+        "business"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:33Z"
+    },
+    {
+      "id": "9db156358285a6994d103097440b2531e75c9261c1f9fc47bbdf3c2982012c07",
+      "source": "CNBC",
+      "title": "Here's what happens to the economy when Treasury yields soar like they are now",
+      "publishedAtUtc": "2026-09-25T13:48:19Z",
+      "url": "https://www.cnbc.com/2026/09/23/what-happens-to-the-economy-when-treasury-yields-soar.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "Similarly, the 2-year note, which typically responds to Fed rate expectations and signals rates for home equity, auto loans and other debt, climbed more than 13 basis points past 4.9% as traders priced in a strong possibility that the central bank would follow its hike last week with another in October. economy where it hurts the most — consumers, who drive almost 70% of all economic activity and hold nearly $19 trillion in total debt.",
+      "feeds": [
+        "economy"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:40Z"
+    },
+    {
+      "id": "e94653b7802622bf689a4df355329ef74914b5e9e3633af24e112eab88371c20",
+      "source": "CNBC",
+      "title": "Surging Treasury yields pose a brand new problem for Kevin Warsh and the Fed",
+      "publishedAtUtc": "2026-09-25T11:08:05Z",
+      "url": "https://www.cnbc.com/2026/09/24/surging-treasury-yields-are-posing-a-brand-new-problem-for-kevin-warsh-and-the-fed.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "Treasury yields continued their upward march Thursday as investors sought to price in a variety of factors: inflation still hovering well above the Fed's 2% goal, another bump up in energy prices and the impact of a global hyperscaler financial arms race and accompanying debt issuance. \"The bias has to be towards restoring price stability, and they should take what's going on seriously.\" Markets expect the central bank will indeed take a firmer hand on inflation.",
+      "feeds": [
+        "economy"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:39Z"
+    }
+  ],
+  "articleCount": 3,
+  "updatedAtUtc": "2026-09-30T10:09:40Z"
+}

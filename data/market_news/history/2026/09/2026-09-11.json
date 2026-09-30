@@ -1,0 +1,38 @@
+{
+  "date": "2026-09-11",
+  "source": "CNBC",
+  "articles": [
+    {
+      "id": "3bc3f982d547581e6f3618d991921746600aaee77d8ced29a4dde06202fc2c56",
+      "source": "CNBC",
+      "title": "Consumer outlook plunges in September as inflation outlook worsens",
+      "publishedAtUtc": "2026-09-11T16:53:23Z",
+      "url": "https://www.cnbc.com/2026/09/11/consumer-outlook-plunges-in-september-as-inflation-outlook-worsens.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "Consumer sentiment plunged in September amid heightened inflation fears, hitting its second-lowest level on record in the University of Michigan's monthly survey released Friday. \"With a resurgence in fuel prices and trade tensions, consumers anticipate greater pressures on their pocketbooks to come.\" Indeed, the one-year inflation outlook surged to 4.6%, up 0.6 percentage point from the prior level and the highest since hitting the same level in June.",
+      "feeds": [
+        "economy"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:44Z"
+    },
+    {
+      "id": "9a083cb065beb89b09c48adbba6d699b16f78ca3434a8604f6fa7c64b9beb1ee",
+      "source": "CNBC",
+      "title": "Inflation persisted in August, potentially locking in a Fed interest rate hike",
+      "publishedAtUtc": "2026-09-11T13:46:36Z",
+      "url": "https://www.cnbc.com/2026/09/11/cpi-inflation-report-august-2026.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "\"There's no guarantee that the Fed will hike next week, but it's hard to see how the central bank can justify leaving rates on hold,\" said Chris Zaccarelli, chief investment officer for Northlight Asset Management. Stock market futures nonetheless surged as oil prices plunged in morning trade. Heading into the CPI release, markets already were pricing in a nearly 70% probability that the central bank would vote to increase its benchmark interest rate by a quarter percentage point.",
+      "feeds": [
+        "economy"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:44Z"
+    }
+  ],
+  "articleCount": 2,
+  "updatedAtUtc": "2026-09-30T10:09:44Z"
+}

@@ -1,0 +1,86 @@
+{
+  "date": "2026-09-30",
+  "source": "CNBC",
+  "articles": [
+    {
+      "id": "a162b8e01737901ade8e5b4adcaf416f70922b058f28122760be0633cdccfd66",
+      "source": "CNBC",
+      "title": "AI's coming roadblock in regulation: Antitrust hawks",
+      "publishedAtUtc": "2026-09-30T10:00:01Z",
+      "url": "https://www.cnbc.com/2026/09/30/ai-regulation-congress-antitrust.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 80,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "The push to regulate artificial intelligence faces a big speed bump in Washington: Antitrust hawks. AI companies have asked for narrow antitrust exemptions to collaborate on safety issues as they push Washington to regulate them amid growing fears that the technology could grow out of control.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:32Z"
+    },
+    {
+      "id": "0f1db2ec0b9930eaf95923500d6b57fb7380fcce3d0d7125f7c922cbe536ff89",
+      "source": "CNBC",
+      "title": "Trump denies offering Iran sanctions relief; Tehran receives U.S. proposal following Qatar talks",
+      "publishedAtUtc": "2026-09-30T09:45:54Z",
+      "url": "https://www.cnbc.com/2026/09/30/us-iran-war-trump-hormuz.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "President Donald Trump has denied reports that he offered sanctions relief to Iran in exchange for concessions from Tehran on its nuclear program, as efforts to resolve the seven-month conflict in the Middle East continue. On Wednesday, Iran's foreign minister Abbas Araqchi presented the Iranian cabinet with a U.S. proposal following meetings with Qatari mediators in Doha earlier in the week, a government spokesperson said.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:32Z"
+    },
+    {
+      "id": "b36e11d0d3a2bbcf38843a62d4732cd524bd16bd37aab19803715c0c4b926f06",
+      "source": "CNBC",
+      "title": "Russia targets data centers in Kyiv as NATO condemns Moscow’s ‘irresponsible nuclear rhetoric’",
+      "publishedAtUtc": "2026-09-30T08:33:09Z",
+      "url": "https://www.cnbc.com/2026/09/30/ukraine-war-russia-nato-nuclear-kyiv.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "Russia has continued a bombardment on Ukraine's data centers and communications infrastructure as part of a fresh wave of attacks on the country's capital. Ukraine's air force said Russian forces intensified strikes on Kyiv and other cities overnight by launching a mix of anti-ship and ballistic missiles, as well as dozens of jet-powered drones, which Ukrainian air defenses have struggled to intercept.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:32Z"
+    },
+    {
+      "id": "841bf24ce028961592ce93977898becc887f08b314e8cf492ab6fb47fecf154b",
+      "source": "CNBC",
+      "title": "China has three new criteria for humanoid robot IPOs. Few, if any, meet them",
+      "publishedAtUtc": "2026-09-30T02:50:35Z",
+      "url": "https://www.cnbc.com/2026/09/29/china-criteria-humanoid-robot-ipos.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "It's a sign of how one of the hottest sectors of the market is cooling, as investors globally assess whether artificial intelligence stocks are in a bubble. The tech, often called \"physical AI\" in China, has been seen as a way for early-stage investors to benefit from the surge of interest in artificial intelligence models. The ratio of valuation to revenue — especially for Chinese AI startups Moonshot and DeepSeek — was far higher than their U.S.",
+      "feeds": [
+        "finance",
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:34Z"
+    },
+    {
+      "id": "816f0de0c2bc1bf26a9432df8126a129547f339c78243cd1960c6fa6fb237549",
+      "source": "CNBC",
+      "title": "CNBC Daily Open: Markets are wide awake as September ends",
+      "publishedAtUtc": "2026-09-30T02:00:35Z",
+      "url": "https://www.cnbc.com/2026/09/30/cnbc-daily-open-markets-are-wide-awake-as-september-ends.html",
+      "category": "MARKET",
+      "relevanceScore": 58,
+      "relevanceReason": "supporting_market_description",
+      "summary": "Rock band Green Day once asked to be woken up when September ends, but with the developments in the AI world and markets keeping a close eye on Treasury yields, investors probably won't need much help keeping awake this year. Earlier in the day, Trump maintained that the government would not halt AI development and promoted self-regulation, although the president also said that \"we automatically have regulation with the Department of Justice, the FBI, all of that.\" In another rebranding...",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:56Z"
+    }
+  ],
+  "articleCount": 5,
+  "updatedAtUtc": "2026-09-30T10:09:56Z"
+}

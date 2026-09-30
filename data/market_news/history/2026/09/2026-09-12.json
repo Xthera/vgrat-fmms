@@ -1,0 +1,23 @@
+{
+  "date": "2026-09-12",
+  "source": "CNBC",
+  "articles": [
+    {
+      "id": "e402e9a9cd755cc984dd8dfa4e4c133b8601d886baede696f752ea05861952ee",
+      "source": "CNBC",
+      "title": "Inflation is outpacing wage growth again, squeezing Americans’ paychecks",
+      "publishedAtUtc": "2026-09-12T12:49:15Z",
+      "url": "https://www.cnbc.com/2026/09/12/inflation-is-outpacing-wage-growth-again-squeezing-americans-paychecks.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 102,
+      "relevanceReason": "strong_economic_title",
+      "summary": "Americans face a renewed squeeze on their paychecks as inflation once again rises faster than wage growth, putting further pressure on consumer wallets. The gap between inflation and wage growth is a stark reminder that workers are losing purchasing power. \"The basics are that inflation is wiping out wage gains,\" said Long, adding that April marked a clear turning point after a lengthy stretch in which wage growth had generally exceeded inflation.",
+      "feeds": [
+        "economy"
+      ],
+      "collectedAtUtc": "2026-09-30T10:09:43Z"
+    }
+  ],
+  "articleCount": 1,
+  "updatedAtUtc": "2026-09-30T10:09:43Z"
+}
