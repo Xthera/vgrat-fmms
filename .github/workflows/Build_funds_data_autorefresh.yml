@@ -12,6 +12,11 @@ on:
 permissions:
   contents: write
 
+# Prevent two runs of this workflow from pushing to main at the same time.
+concurrency:
+  group: build-funds-data-main
+  cancel-in-progress: false
+
 jobs:
   build-funds-data:
 
@@ -59,9 +64,49 @@ jobs:
 
       - name: Verify required files
         run: |
-          test -f "Funds Links.xlsm"
-          test -f "scripts/build_funds_data.py"
+          echo "=========================================="
+          echo "REPOSITORY CHECK"
+          echo "=========================================="
 
+          echo ""
+          echo "Current directory:"
+          pwd
+
+          echo ""
+          echo "Repository root contents:"
+          ls -la
+
+          echo ""
+          echo "Excel files found:"
+          find . -maxdepth 4 -type f \
+            \( -iname "*.xlsm" -o -iname "*.xlsx" \) \
+            -print
+
+          echo ""
+          echo "Build script:"
+          if [ -f "scripts/build_funds_data.py" ]; then
+            echo "FOUND: scripts/build_funds_data.py"
+          else
+            echo "ERROR: scripts/build_funds_data.py not found."
+            exit 1
+          fi
+
+          echo ""
+          echo "Excel master:"
+          if [ -f "Funds Links.xlsm" ]; then
+            echo "FOUND: Funds Links.xlsm"
+          else
+            echo ""
+            echo "ERROR: Funds Links.xlsm was NOT found at:"
+            echo "$(pwd)/Funds Links.xlsm"
+            echo ""
+            echo "Files currently available in the repository:"
+            find . -maxdepth 4 -type f -print | sort
+            echo ""
+            exit 1
+          fi
+
+          echo ""
           echo "Required files verified."
 
       # ============================================================
@@ -163,10 +208,9 @@ jobs:
 
           if git diff --cached --quiet; then
             echo "No data changes detected."
-
+            echo ""
             echo "Refresh completed at:"
             echo "$REFRESH_TIME"
-
             exit 0
           fi
 
@@ -174,12 +218,21 @@ jobs:
             -m "Daily fund data refresh - $REFRESH_DATE $REFRESH_TIME"
 
       # ============================================================
-      # 10. PUSH
+      # 10. UPDATE LOCAL MAIN BEFORE PUSH
+      # ============================================================
+
+      - name: Sync with latest main
+        run: |
+          git fetch origin main
+          git rebase origin/main
+
+      # ============================================================
+      # 11. PUSH
       # ============================================================
 
       - name: Push refreshed data
         run: |
-          git push
+          git push origin HEAD:main
 
           echo "=========================================="
           echo "VGRAT FMS DATA REFRESH PUBLISHED"
