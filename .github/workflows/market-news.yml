@@ -1,4 +1,4 @@
-name: Test Market News - CNA
+name: Market News - CNA
 
 on:
   workflow_dispatch:
