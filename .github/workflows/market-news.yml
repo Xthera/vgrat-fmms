@@ -1,10 +1,14 @@
-name: Market News - CNA
+name: Market News - CNA Collector
 
 on:
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: market-news-collector
+  cancel-in-progress: false
 
 jobs:
   fetch-market-news:
@@ -15,114 +19,163 @@ jobs:
 
     steps:
 
-      # ------------------------------------------------------------
+      # --------------------------------------------------------
       # 1. Checkout repository
-      # ------------------------------------------------------------
+      # --------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # ------------------------------------------------------------
+      # --------------------------------------------------------
       # 2. Set up Python
-      # ------------------------------------------------------------
+      # --------------------------------------------------------
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      # ------------------------------------------------------------
-      # 3. Install Python dependencies
-      # ------------------------------------------------------------
+      # --------------------------------------------------------
+      # 3. Install dependencies
+      # --------------------------------------------------------
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r scripts/requirements.txt
 
-      # ------------------------------------------------------------
-      # 4. Verify news collector exists
-      # ------------------------------------------------------------
+      # --------------------------------------------------------
+      # 4. Verify required files
+      # --------------------------------------------------------
       - name: Verify market news collector
+        shell: bash
         run: |
+          set -e
+
           test -f scripts/fetch_market_news.py
-          echo "fetch_market_news.py found"
 
-      # ------------------------------------------------------------
+          echo "Market news collector found:"
+          ls -lh scripts/fetch_market_news.py
+
+      # --------------------------------------------------------
       # 5. Run CNA market news collector
-      # ------------------------------------------------------------
-      - name: Fetch CNA market news
+      # --------------------------------------------------------
+      - name: Fetch and process CNA market news
         run: |
-          python -u scripts/fetch_market_news.py
+          python scripts/fetch_market_news.py
 
-      # ------------------------------------------------------------
-      # 6. Show generated files
-      # ------------------------------------------------------------
-      - name: Show generated market news files
+      # --------------------------------------------------------
+      # 6. Display run summary
+      # --------------------------------------------------------
+      - name: Display market news run summary
+        shell: bash
         run: |
-          echo "=========================================="
-          echo "Market news files"
-          echo "=========================================="
+          set -e
 
-          find data/market_news -type f -print | sort
-
-          echo ""
           echo "=========================================="
-          echo "Current news summary"
+          echo "Market News Run Summary"
           echo "=========================================="
 
-          if [ -f data/market_news/current.json ]; then
-            python - <<'PY'
-          import json
-
-          path = "data/market_news/current.json"
-
-          with open(path, "r", encoding="utf-8") as f:
-              data = json.load(f)
-
-          print("Generated:", data.get("generatedAtUtc"))
-          print("Window:", data.get("windowDays"), "days")
-          print("Articles:", data.get("articleCount"))
-
-          for article in data.get("articles", [])[:10]:
-              print()
-              print(article.get("publishedAt"))
-              print(article.get("source"))
-              print(article.get("title"))
-              print(article.get("url"))
-          PY
+          if [ -f data/market_news/run_summary.json ]; then
+            cat data/market_news/run_summary.json
           else
-            echo "current.json was not created"
+            echo "ERROR: run_summary.json not found"
             exit 1
           fi
 
-      # ------------------------------------------------------------
-      # 7. Commit generated news data
-      # ------------------------------------------------------------
-      - name: Commit market news data
+      # --------------------------------------------------------
+      # 7. Display current article count
+      # --------------------------------------------------------
+      - name: Display current news summary
+        shell: bash
         run: |
+          set -e
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/market_news/current.json")
+
+          if not path.exists():
+              raise SystemExit(
+                  "ERROR: current.json was not created"
+              )
+
+          data = json.loads(
+              path.read_text(
+                  encoding="utf-8"
+              )
+          )
+
+          print()
+          print("==========================================")
+          print("CURRENT 14-DAY NEWS")
+          print("==========================================")
+          print(
+              "Generated:",
+              data.get("generatedAtUtc")
+          )
+          print(
+              "Window:",
+              data.get("windowDays"),
+              "days"
+          )
+          print(
+              "Articles:",
+              data.get("articleCount")
+          )
+          print()
+
+          for article in data.get("articles", [])[:20]:
+              print(
+                  f"[{article.get('category')}] "
+                  f"{article.get('title')}"
+              )
+          PY
+
+      # --------------------------------------------------------
+      # 8. Show Git changes
+      # --------------------------------------------------------
+      - name: Show changed files
+        run: |
+          git status --short
+
+      # --------------------------------------------------------
+      # 9. Commit market news data
+      # --------------------------------------------------------
+      - name: Commit market news data
+        shell: bash
+        run: |
+          set -e
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add data/market_news/
 
           if git diff --cached --quiet; then
-            echo "No new market news data to commit."
+            echo "No market news changes to commit."
             exit 0
           fi
 
           git commit -m "Update CNA market news"
 
-      # ------------------------------------------------------------
-      # 8. Rebase latest main before push
-      # ------------------------------------------------------------
-      - name: Rebase latest main
+      # --------------------------------------------------------
+      # 10. Rebase latest main
+      # --------------------------------------------------------
+      - name: Rebase onto latest main
+        shell: bash
         run: |
+          set -e
+
           git fetch origin main
+
           git rebase origin/main
 
-      # ------------------------------------------------------------
-      # 9. Push market news data
-      # ------------------------------------------------------------
-      - name: Push market news data
+      # --------------------------------------------------------
+      # 11. Push
+      # --------------------------------------------------------
+      - name: Push market news update
+        shell: bash
         run: |
+          set -e
+
           git push origin HEAD:main
