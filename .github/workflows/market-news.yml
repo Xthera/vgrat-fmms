@@ -59,29 +59,11 @@ jobs:
       # --------------------------------------------------------
       - name: Fetch and process CNA market news
         run: |
+          set -e
           python scripts/fetch_market_news.py
 
       # --------------------------------------------------------
-      # 6. Display run summary
-      # --------------------------------------------------------
-      - name: Display market news run summary
-        shell: bash
-        run: |
-          set -e
-
-          echo "=========================================="
-          echo "Market News Run Summary"
-          echo "=========================================="
-
-          if [ -f data/market_news/run_summary.json ]; then
-            cat data/market_news/run_summary.json
-          else
-            echo "ERROR: run_summary.json not found"
-            exit 1
-          fi
-
-      # --------------------------------------------------------
-      # 7. Display current article count
+      # 6. Display current article count
       # --------------------------------------------------------
       - name: Display current news summary
         shell: bash
@@ -132,50 +114,14 @@ jobs:
           PY
 
       # --------------------------------------------------------
-      # 8. Show Git changes
+      # 7. Show Git changes
       # --------------------------------------------------------
       - name: Show changed files
         run: |
           git status --short
 
       # --------------------------------------------------------
-      # 9. Commit market news data
+      # 8. Commit market news data
       # --------------------------------------------------------
       - name: Commit market news data
         shell: bash
-        run: |
-          set -e
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add data/market_news/
-
-          if git diff --cached --quiet; then
-            echo "No market news changes to commit."
-            exit 0
-          fi
-
-          git commit -m "Update CNA market news"
-
-      # --------------------------------------------------------
-      # 10. Rebase latest main
-      # --------------------------------------------------------
-      - name: Rebase onto latest main
-        shell: bash
-        run: |
-          set -e
-
-          git fetch origin main
-
-          git rebase origin/main
-
-      # --------------------------------------------------------
-      # 11. Push
-      # --------------------------------------------------------
-      - name: Push market news update
-        shell: bash
-        run: |
-          set -e
-
-          git push origin HEAD:main
