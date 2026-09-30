@@ -1,4 +1,4 @@
-name: Market News - CNA Collector
+name: Market News - CNBC Collector
 
 on:
   workflow_dispatch:
