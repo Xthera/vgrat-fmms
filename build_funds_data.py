@@ -238,7 +238,6 @@ COUNTRY_REGIONS = {
 "Canada": "North America",
 "Mexico": "North America",
 
-```
 # Latin America
 "Brazil": "Latin America",
 "Argentina": "Latin America",
