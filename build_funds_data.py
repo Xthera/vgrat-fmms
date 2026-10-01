@@ -5,7 +5,7 @@ VGrat FMS - BUILD FUNDS DATA
 
 Merges the outputs of the extraction pipelines into two data files:
 
-```
+ 
 data/funds.json
     fund information
     online geographic research
@@ -14,7 +14,7 @@ data/funds.json
 
 data/bid_history.json
     historical BID observations
-```
+ 
 
 # MASTER UNIVERSE
 
@@ -47,7 +47,7 @@ It does NOT determine whether the core fund record is successful.
 
 Research source hierarchy:
 
-```
+ 
 1. Prudential online fund page
    - identify underlying fund
    - identify underlying investment manager
@@ -57,18 +57,18 @@ Research source hierarchy:
    - sector allocation
 
 3. Authoritative secondary online HTML source where available
-```
+ 
 
 # PDF RESTRICTIONS
 
 This research layer does NOT:
 
-```
+ 
 - download Prudential PDFs
 - parse Prudential PDFs
 - use pdfplumber
 - crawl PDF allocation tables
-```
+ 
 
 PDF URLs are explicitly rejected by the online research crawler.
 
@@ -98,21 +98,21 @@ Sector weights must come from an online allocation source.
 
 No sector is inferred from:
 
-```
+ 
 - fund name
 - company name
 - Top Holdings
 - investment objective
-```
+ 
 
 # DIVIDEND NORMALIZATION
 
 Final funds.json rule:
 
-```
+ 
 dividendRate non-empty -> hasDividend = true
 dividendRate empty/missing -> hasDividend = false
-```
+ 
 
 The existing dividendRate and dividendUnits values are never modified.
 
@@ -126,9 +126,9 @@ Previous research data is NOT used as newly retrieved research data.
 If online research fails, the current fund can still be successfully
 published with:
 
-```
+ 
 research.status = "unresolved"
-```
+ 
 
 and empty research arrays.
 
@@ -138,21 +138,21 @@ data/funds.json
 
 Each fund may contain:
 
-```
+ 
 geographicExposure
 topSectors
 research
-```
+ 
 
 Existing:
 
-```
+ 
 fund
 topHoldings
 dividendRate
 dividendUnits
 hasDividend
-```
+ 
 
 remain intact.
 """
@@ -303,7 +303,6 @@ COUNTRY_REGIONS = {
 # Other Europe / Eurasia
 "Russia": "Europe",
 "Turkey": "Europe",
-```
 
 }
 
@@ -317,13 +316,13 @@ def clean_text(value) -> str:
 if value is None:
 return ""
 
-```
+
 return re.sub(
     r"\s+",
     " ",
     str(value).replace("\xa0", " "),
 ).strip()
-```
+
 
 def utc_now_iso() -> str:
 return (
@@ -355,7 +354,7 @@ data,
 compact: bool = False,
 ) -> None:
 
-```
+
 path.parent.mkdir(
     parents=True,
     exist_ok=True,
@@ -384,7 +383,7 @@ tmp.write_text(
 )
 
 tmp.replace(path)
-```
+
 
 # =============================================================================
 
@@ -394,7 +393,7 @@ tmp.replace(path)
 
 def load_previous_file(path: Path) -> dict:
 
-```
+
 if not path.exists():
 
     print(
@@ -429,13 +428,13 @@ if not isinstance(data.get("funds"), list):
     )
 
 return data
-```
+ 
 
 def index_previous_records(
 data: dict,
 ) -> dict[int, dict]:
 
-```
+ 
 result = {}
 
 for item in data.get("funds", []):
@@ -456,7 +455,7 @@ for item in data.get("funds", []):
     result[row] = item
 
 return result
-```
+ 
 
 # =============================================================================
 
@@ -468,7 +467,7 @@ def normalize_dividend_fields(
 fund_info: dict,
 ) -> dict:
 
-```
+ 
 dividend_rate = clean_text(
     fund_info.get("dividendRate")
 )
@@ -478,7 +477,7 @@ fund_info["hasDividend"] = bool(
 )
 
 return fund_info
-```
+ 
 
 # =============================================================================
 
@@ -488,7 +487,7 @@ return fund_info
 
 def read_excel_funds() -> dict[int, dict]:
 
-```
+ 
 if not EXCEL_FILE.exists():
 
     raise FileNotFoundError(
@@ -547,7 +546,7 @@ if not funds:
     )
 
 return funds
-```
+ 
 
 # =============================================================================
 
@@ -560,7 +559,7 @@ url: str,
 timeout: int = RESEARCH_TIMEOUT_SECONDS,
 ) -> tuple[str, str]:
 
-```
+ 
 parsed = urlparse(url)
 
 if parsed.scheme not in {"http", "https"}:
@@ -616,11 +615,11 @@ text = raw.decode(
 )
 
 return text, final_url
-```
+ 
 
 def html_to_text(source: str) -> str:
 
-```
+ 
 source = re.sub(
     r"(?is)<script.*?>.*?</script>",
     " ",
@@ -648,11 +647,11 @@ source = re.sub(
 source = html.unescape(source)
 
 return clean_text(source)
-```
+ 
 
 def extract_title(source: str) -> str:
 
-```
+ 
 match = re.search(
     r"(?is)<title[^>]*>(.*?)</title>",
     source,
@@ -664,13 +663,13 @@ if not match:
 return clean_text(
     html.unescape(match.group(1))
 )
-```
+ 
 
 def extract_prudential_research_metadata(
 source: str,
 ) -> dict:
 
-```
+ 
 text = html_to_text(source)
 
 result = {
@@ -724,14 +723,14 @@ for field, field_patterns in patterns:
                 break
 
 return result
-```
+ 
 
 def extract_links(
 source: str,
 base_url: str,
 ) -> list[str]:
 
-```
+ 
 links = []
 
 for match in re.finditer(
@@ -771,14 +770,14 @@ for match in re.finditer(
 return list(
     dict.fromkeys(links)
 )
-```
+ 
 
 def domain_matches_manager(
 url: str,
 manager: str,
 ) -> bool:
 
-```
+ 
 hostname = (
     urlparse(url)
     .hostname
@@ -819,7 +818,7 @@ return any(
     word in hostname
     for word in important
 )
-```
+ 
 
 # =============================================================================
 
@@ -831,7 +830,7 @@ def extract_bing_result_urls(
 source: str,
 ) -> list[str]:
 
-```
+ 
 urls = []
 
 patterns = [
@@ -868,13 +867,13 @@ for pattern in patterns:
 return list(
     dict.fromkeys(urls)
 )
-```
+ 
 
 def search_web(
 query: str,
 ) -> list[str]:
 
-```
+ 
 encoded = quote_plus(query)
 
 url = (
@@ -901,7 +900,7 @@ except Exception as error:
     )
 
     return []
-```
+ 
 
 # =============================================================================
 
@@ -913,7 +912,7 @@ def parse_percentage(
 value: str,
 ) -> float | None:
 
-```
+ 
 if value is None:
     return None
 
@@ -938,13 +937,13 @@ if not 0 <= number <= 100:
     return None
 
 return number
-```
+ 
 
 def normalize_country(
 value: str,
 ) -> str:
 
-```
+ 
 value = clean_text(value)
 
 aliases = {
@@ -961,13 +960,13 @@ return aliases.get(
     value,
     value,
 )
-```
+ 
 
 def region_for_country(
 country: str,
 ) -> str | None:
 
-```
+ 
 normalized = normalize_country(
     country
 )
@@ -975,13 +974,13 @@ normalized = normalize_country(
 return COUNTRY_REGIONS.get(
     normalized
 )
-```
+ 
 
 def parse_html_tables(
 source: str,
 ) -> list[list[list[str]]]:
 
-```
+ 
 tables = []
 
 for table_match in re.finditer(
@@ -1020,13 +1019,13 @@ for table_match in re.finditer(
         tables.append(rows)
 
 return tables
-```
+ 
 
 def table_kind(
 rows: list[list[str]],
 ) -> str | None:
 
-```
+ 
 sample = " ".join(
     " ".join(row)
     for row in rows[:5]
@@ -1057,13 +1056,13 @@ if any(
     return "country"
 
 return None
-```
+ 
 
 def parse_allocation_tables(
 source: str,
 ) -> tuple[list[dict], list[dict]]:
 
-```
+ 
 country_rows = []
 sector_rows = []
 
@@ -1126,13 +1125,13 @@ return (
     country_rows,
     sector_rows,
 )
-```
+ 
 
 def parse_allocation_from_text(
 source: str,
 ) -> tuple[list[dict], list[dict]]:
 
-```
+ 
 text = html_to_text(source)
 
 country_rows = []
@@ -1229,7 +1228,7 @@ return (
     country_rows,
     sector_rows,
 )
-```
+ 
 
 # =============================================================================
 
@@ -1241,7 +1240,7 @@ def build_geographic_exposure(
 country_rows: list[dict],
 ) -> list[dict]:
 
-```
+ 
 region_countries: dict[str, dict[str, float]] = (
     defaultdict(dict)
 )
@@ -1349,13 +1348,13 @@ for total, region, countries in (
     )
 
 return output
-```
+ 
 
 def build_top_sectors(
 sector_rows: list[dict],
 ) -> list[dict]:
 
-```
+ 
 sectors = {}
 
 for item in sector_rows:
@@ -1410,7 +1409,7 @@ return [
         :MAX_RESEARCH_SECTORS
     ]
 ]
-```
+ 
 
 # =============================================================================
 
@@ -1423,7 +1422,7 @@ prudential_url: str,
 prudential: dict,
 ) -> dict:
 
-```
+ 
 result = {
     "status": "unresolved",
     "sourceType": "none",
@@ -1722,7 +1721,7 @@ result["error"] = (
 )
 
 return result
-```
+ 
 
 # =============================================================================
 
@@ -1735,7 +1734,7 @@ holdings,
 label: str,
 ) -> list[dict]:
 
-```
+ 
 if (
     not isinstance(holdings, list)
     or not holdings
@@ -1816,7 +1815,7 @@ for position, item in enumerate(
     )
 
 return cleaned
-```
+ 
 
 def holdings_block(
 result: dict,
@@ -1824,7 +1823,7 @@ stage: str,
 label: str,
 ):
 
-```
+ 
 status = result.get("status")
 
 common = {
@@ -1867,13 +1866,13 @@ if status == "no_holdings_section":
     }
 
 return None
-```
+ 
 
 def resolve_holdings(
 excel_funds: dict[int, dict],
 ) -> dict[int, dict]:
 
-```
+ 
 resolved: dict[int, dict] = {}
 
 def accept(
@@ -1987,7 +1986,7 @@ for stage, stage_dir in RECOVERY_STAGES:
         )
 
 return resolved
-```
+ 
 
 # =============================================================================
 
@@ -2000,7 +1999,7 @@ history: dict,
 label: str,
 ) -> list[dict]:
 
-```
+ 
 observations = history.get(
     "observations"
 )
@@ -2094,11 +2093,11 @@ return [
     }
     for item in observations
 ]
-```
+ 
 
 def load_pruaccess() -> dict[int, dict]:
 
-```
+ 
 result = {}
 
 if not PRUACCESS_FUNDS_DIR.exists():
@@ -2156,7 +2155,7 @@ for directory in sorted(
     }
 
 return result
-```
+ 
 
 # =============================================================================
 
@@ -2169,7 +2168,7 @@ previous_funds: dict[int, dict],
 row: int,
 ) -> dict | None:
 
-```
+ 
 record = previous_funds.get(
     row
 )
@@ -2181,14 +2180,14 @@ if not isinstance(
     return None
 
 return record
-```
+ 
 
 def previous_bid_record(
 previous_bids: dict[int, dict],
 row: int,
 ) -> dict | None:
 
-```
+ 
 record = previous_bids.get(
     row
 )
@@ -2200,13 +2199,13 @@ if not isinstance(
     return None
 
 return record
-```
+ 
 
 def make_retained_fund_record(
 previous: dict,
 ) -> dict:
 
-```
+ 
 retained = json.loads(
     json.dumps(
         previous,
@@ -2219,13 +2218,13 @@ retained["dataStatus"] = (
 )
 
 return retained
-```
+ 
 
 def make_retained_bid_record(
 previous: dict,
 ) -> dict:
 
-```
+ 
 retained = json.loads(
     json.dumps(
         previous,
@@ -2238,7 +2237,7 @@ retained["dataStatus"] = (
 )
 
 return retained
-```
+ 
 
 # =============================================================================
 
@@ -2248,7 +2247,7 @@ return retained
 
 def main() -> int:
 
-```
+ 
 print("=" * 72)
 print("VGRAT FMS - BUILD FUNDS DATA")
 print("=" * 72)
@@ -3189,11 +3188,11 @@ print(
 )
 
 return 0
-```
+ 
 
 if **name** == "**main**":
 
-```
+ 
 try:
 
     raise SystemExit(
