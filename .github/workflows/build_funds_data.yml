@@ -128,7 +128,38 @@ jobs:
           echo "=========================================="
 
       # ============================================================
-      # 6. HOLDINGS - STEP 1: BASELINE
+      # 6. SYNC WITH LATEST MAIN BEFORE RUNNING THE PIPELINE
+      #
+      # IMPORTANT:
+      #
+      # Generated JSON must be built from the latest main.
+      #
+      # We intentionally DO NOT rebase a generated-data commit later.
+      # ============================================================
+      - name: Sync with latest main before build
+        run: |
+          set -e
+
+          echo "Fetching latest main..."
+          git fetch origin main
+
+          echo
+          echo "Current HEAD:"
+          git rev-parse HEAD
+
+          echo
+          echo "Latest origin/main:"
+          git rev-parse origin/main
+
+          echo
+          echo "Resetting working tree to latest origin/main..."
+          git reset --hard origin/main
+
+          echo
+          echo "Repository synchronized with origin/main."
+
+      # ============================================================
+      # 7. HOLDINGS - STEP 1: BASELINE
       # ============================================================
       - name: "Holdings 1/4 - Baseline"
         run: |
@@ -141,21 +172,21 @@ jobs:
           echo "Baseline output verified."
 
       # ============================================================
-      # 7. HOLDINGS - STEP 2: RECOVERY 1
+      # 8. HOLDINGS - STEP 2: RECOVERY 1
       # ============================================================
       - name: "Holdings 2/4 - Recovery 1"
         run: |
           python -u scripts/update_prudential_holdings.py
 
       # ============================================================
-      # 8. HOLDINGS - STEP 3: RECOVERY 2
+      # 9. HOLDINGS - STEP 3: RECOVERY 2
       # ============================================================
       - name: "Holdings 3/4 - Recovery 2"
         run: |
           python -u scripts/test_prudential_holdings_recovery2.py
 
       # ============================================================
-      # 9. HOLDINGS - STEP 4: RECOVERY 3
+      # 10. HOLDINGS - STEP 4: RECOVERY 3
       # ============================================================
       - name: "Holdings 4/4 - Recovery 3"
         continue-on-error: true
@@ -167,7 +198,7 @@ jobs:
       # funds are allowed to be published.
 
       # ============================================================
-      # 10. PRUACCESS - BID HISTORY
+      # 11. PRUACCESS - BID HISTORY
       # ============================================================
       - name: "PruAccess - BID history"
         continue-on-error: true
@@ -178,7 +209,7 @@ jobs:
       # The build step handles the final unresolved-fund decision.
 
       # ============================================================
-      # 11. DISPLAY ALL INTERMEDIATE SUMMARIES
+      # 12. DISPLAY ALL INTERMEDIATE SUMMARIES
       # ============================================================
       - name: Display pipeline summaries
         if: always()
@@ -203,7 +234,7 @@ jobs:
           done
 
       # ============================================================
-      # 12. BUILD FINAL DATA
+      # 13. BUILD FINAL DATA
       #
       # Reads:
       #
@@ -231,7 +262,7 @@ jobs:
           python -u build_funds_data.py
 
       # ============================================================
-      # 13. SHOW BUILD OUTPUT
+      # 14. SHOW BUILD OUTPUT
       # ============================================================
       - name: Show build output
         if: always()
@@ -270,7 +301,7 @@ jobs:
           PY
 
       # ============================================================
-      # 14. RECORD REFRESH COMPLETION TIME
+      # 15. RECORD REFRESH COMPLETION TIME
       # ============================================================
       - name: Record refresh completion time
         if: success()
@@ -290,7 +321,7 @@ jobs:
           echo "=========================================="
 
       # ============================================================
-      # 15. VALIDATE GENERATED DATA
+      # 16. VALIDATE GENERATED DATA
       # ============================================================
       - name: Validate generated data
         run: |
@@ -339,10 +370,7 @@ jobs:
           PY
 
       # ============================================================
-      # 16. UPLOAD DIAGNOSTICS
-      #
-      # Always upload the intermediate outputs so failed funds can
-      # be investigated without rerunning the entire pipeline.
+      # 17. UPLOAD DIAGNOSTICS
       # ============================================================
       - name: Upload pipeline diagnostics
         if: always()
@@ -360,59 +388,172 @@ jobs:
           retention-days: 30
 
       # ============================================================
-      # 17. COMMIT GENERATED DATA
+      # 18. COMMIT AND PUSH GENERATED DATA
+      #
+      # IMPORTANT:
+      #
+      # We NEVER rebase the generated-data commit.
+      #
+      # If main moved after the build, we:
+      #
+      #   1. fetch latest main
+      #   2. reset to latest main
+      #   3. rebuild data
+      #   4. commit again
+      #   5. retry the push
+      #
+      # This prevents generated JSON merge conflicts.
       # ============================================================
-      - name: Commit updated funds data
+      - name: Commit and push updated funds data
+        env:
+          ALLOW_UNRESOLVED: ${{ github.event.inputs.allow_unresolved || 'false' }}
         run: |
           set -e
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add data/funds.json
-          git add data/bid_history.json
+          MAX_ATTEMPTS=3
+          ATTEMPT=1
 
-          if git diff --cached --quiet; then
+          while [ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]; do
+
             echo
-            echo "No changes to published data."
-            echo "Nothing to commit."
-            exit 0
-          fi
+            echo "============================================================"
+            echo "PUBLISH ATTEMPT $ATTEMPT / $MAX_ATTEMPTS"
+            echo "============================================================"
 
-          COMMIT_TIME=$(TZ=Asia/Singapore date '+%Y-%m-%d %H:%M:%S SGT')
+            # --------------------------------------------------------
+            # Always start this publish attempt from the latest main.
+            #
+            # Any previous generated-data commit is discarded here.
+            # The JSON is regenerated from the latest repository state.
+            # --------------------------------------------------------
+            git fetch origin main
+            git reset --hard origin/main
 
-          git commit \
-            -m "chore: update funds data ($COMMIT_TIME)"
+            # --------------------------------------------------------
+            # Rebuild generated data from the latest main.
+            #
+            # This is essential if origin/main changed since the
+            # previous build.
+            # --------------------------------------------------------
+            echo
+            echo "Rebuilding funds data from latest origin/main..."
+            echo "ALLOW_UNRESOLVED=$ALLOW_UNRESOLVED"
 
-      # ============================================================
-      # 18. SYNC WITH MAIN BEFORE PUSH
-      #
-      # Prevents:
-      #
-      #   ! [rejected] main -> main (fetch first)
-      #
-      # if another commit reached main after checkout.
-      # ============================================================
-      - name: Sync with latest main
-        run: |
-          set -e
+            python -u build_funds_data.py
 
-          git fetch origin main
-          git rebase origin/main
+            # --------------------------------------------------------
+            # Validate the regenerated files again.
+            # --------------------------------------------------------
+            test -f "data/funds.json"
+            test -f "data/bid_history.json"
 
-      # ============================================================
-      # 19. PUSH
-      # ============================================================
-      - name: Push refreshed data
-        run: |
-          set -e
+            python - <<'PY'
+          import json
+          from pathlib import Path
 
-          git push origin HEAD:main
+          files = [
+              Path("data/funds.json"),
+              Path("data/bid_history.json"),
+          ]
+
+          for path in files:
+              with path.open("r", encoding="utf-8") as f:
+                  data = json.load(f)
+
+              if not isinstance(data, dict):
+                  raise SystemExit(
+                      f"{path} is not a valid JSON object."
+                  )
+
+              if "funds" not in data:
+                  raise SystemExit(
+                      f"{path} does not contain a funds array."
+                  )
+
+              if not isinstance(data["funds"], list):
+                  raise SystemExit(
+                      f"{path} funds field is not a list."
+                  )
+
+              print(
+                  f"{path}: valid "
+                  f"({len(data['funds'])} records)"
+              )
+          PY
+
+            # --------------------------------------------------------
+            # Stage only the two published generated files.
+            # --------------------------------------------------------
+            git add data/funds.json
+            git add data/bid_history.json
+
+            # --------------------------------------------------------
+            # Nothing changed relative to latest main.
+            # --------------------------------------------------------
+            if git diff --cached --quiet; then
+              echo
+              echo "No changes to published data."
+              echo "Nothing to commit."
+              exit 0
+            fi
+
+            # --------------------------------------------------------
+            # Create the generated-data commit.
+            # --------------------------------------------------------
+            COMMIT_TIME=$(TZ=Asia/Singapore date '+%Y-%m-%d %H:%M:%S SGT')
+
+            git commit \
+              -m "chore: update funds data ($COMMIT_TIME)"
+
+            # --------------------------------------------------------
+            # Push directly.
+            #
+            # We intentionally do NOT run:
+            #
+            #   git rebase origin/main
+            #
+            # because that can create conflicts inside the generated
+            # JSON files.
+            # --------------------------------------------------------
+            echo
+            echo "Pushing generated data..."
+
+            if git push origin HEAD:main; then
+
+              echo
+              echo "=========================================="
+              echo "VGRAT FMMS DATA REFRESH PUBLISHED"
+              echo "=========================================="
+              echo "Completed:"
+              TZ=Asia/Singapore date '+%Y-%m-%d %H:%M:%S SGT'
+              echo "=========================================="
+
+              exit 0
+            fi
+
+            # --------------------------------------------------------
+            # Push failed because main moved between fetch/build/push.
+            #
+            # Do NOT rebase the generated-data commit.
+            # Instead, discard it, fetch the new main, rebuild and retry.
+            # --------------------------------------------------------
+            echo
+            echo "Push was rejected because origin/main changed."
+            echo "The generated-data commit will NOT be rebased."
+            echo "Fetching latest main and rebuilding..."
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            ATTEMPT=$((ATTEMPT + 1))
+          done
 
           echo
-          echo "=========================================="
-          echo "VGRAT FMMS DATA REFRESH PUBLISHED"
-          echo "=========================================="
-          echo "Completed:"
-          TZ=Asia/Singapore date '+%Y-%m-%d %H:%M:%S SGT'
-          echo "=========================================="
+          echo "============================================================"
+          echo "ERROR: Could not publish generated funds data."
+          echo "============================================================"
+          echo "main changed during all $MAX_ATTEMPTS publish attempts."
+          exit 1
