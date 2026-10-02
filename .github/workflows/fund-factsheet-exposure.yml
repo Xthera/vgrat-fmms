@@ -1,0 +1,259 @@
+name: Fund Factsheet Exposure
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # 02:00 Singapore time
+    # Singapore = UTC+8
+    # Therefore 18:00 UTC on the previous day.
+    - cron: "0 18 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fund-factsheet-exposure
+  cancel-in-progress: false
+
+jobs:
+
+  extract-fund-factsheets:
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 45
+
+    steps:
+
+      # ==========================================================
+      # 1. CHECKOUT
+      # ==========================================================
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+
+      # ==========================================================
+      # 2. PYTHON
+      # ==========================================================
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+
+      # ==========================================================
+      # 3. DEPENDENCIES
+      # ==========================================================
+
+      - name: Install factsheet dependencies
+        run: |
+          python -m pip install --upgrade pip
+
+          pip install \
+            requests \
+            beautifulsoup4 \
+            openpyxl \
+            pdfplumber
+
+
+      # ==========================================================
+      # 4. VERIFY INPUTS
+      # ==========================================================
+
+      - name: Verify factsheet pipeline files
+        shell: bash
+        run: |
+
+          set -e
+
+          echo "Checking independent factsheet pipeline..."
+
+          test -f \
+            "scripts/fetch_fundfactsheet_exposure.py"
+
+          if [ -f "Funds Links.xlsm" ]; then
+
+            echo "Master universe:"
+            echo "Funds Links.xlsm"
+
+          elif [ -f "data/funds.json" ]; then
+
+            echo "Fallback universe:"
+            echo "data/funds.json"
+
+          else
+
+            echo "ERROR:"
+            echo "No fund universe found."
+
+            echo "Expected either:"
+            echo "  Funds Links.xlsm"
+            echo "or"
+            echo "  data/funds.json"
+
+            exit 1
+
+          fi
+
+
+      # ==========================================================
+      # 5. RUN EXTRACTION
+      # ==========================================================
+
+      - name: Extract geographic and sector allocations
+        run: |
+
+          python \
+            scripts/fetch_fundfactsheet_exposure.py \
+            --workbook "Funds Links.xlsm" \
+            --funds-json "data/funds.json" \
+            --output \
+              "data/fundfactsheet_exposure.json" \
+            --diagnostics \
+              "data/fundfactsheet_exposure_diagnostics.json"
+
+
+      # ==========================================================
+      # 6. VALIDATE OUTPUT
+      # ==========================================================
+
+      - name: Validate output
+        run: |
+
+          python - <<'PY'
+
+          import json
+          from pathlib import Path
+
+          output = Path(
+              "data/fundfactsheet_exposure.json"
+          )
+
+          diagnostics = Path(
+              "data/fundfactsheet_exposure_diagnostics.json"
+          )
+
+          if not output.exists():
+              raise SystemExit(
+                  "Missing fundfactsheet_exposure.json"
+              )
+
+          if not diagnostics.exists():
+              raise SystemExit(
+                  "Missing "
+                  "fundfactsheet_exposure_diagnostics.json"
+              )
+
+          payload = json.loads(
+              output.read_text(
+                  encoding="utf-8"
+              )
+          )
+
+          diagnostic_payload = json.loads(
+              diagnostics.read_text(
+                  encoding="utf-8"
+              )
+          )
+
+          assert (
+              payload["schemaVersion"]
+              == "1.0.0"
+          )
+
+          assert isinstance(
+              payload["funds"],
+              list,
+          )
+
+          assert isinstance(
+              diagnostic_payload["funds"],
+              list,
+          )
+
+          summary = payload["summary"]
+
+          print("")
+          print(
+              "========================================"
+          )
+          print(
+              "FUND FACTSHEET EXPOSURE SUMMARY"
+          )
+          print(
+              "========================================"
+          )
+
+          print(
+              f"Total funds:       "
+              f"{summary['totalFunds']}"
+          )
+
+          print(
+              f"Resolved:          "
+              f"{summary['resolved']}"
+          )
+
+          print(
+              f"Unresolved:        "
+              f"{summary['unresolved']}"
+          )
+
+          print(
+              f"Prudential:       "
+              f"{summary['prudentialFactsheets']}"
+          )
+
+          print(
+              f"Manager fallback:  "
+              f"{summary['fundManagerFactsheets']}"
+          )
+
+          print(
+              "========================================"
+          )
+
+          PY
+
+
+      # ==========================================================
+      # 7. COMMIT ONLY THIS PIPELINE'S FILES
+      # ==========================================================
+
+      - name: Commit only factsheet outputs
+        shell: bash
+        run: |
+
+          set -e
+
+          git config \
+            user.name \
+            "github-actions[bot]"
+
+          git config \
+            user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -- \
+            "data/fundfactsheet_exposure.json" \
+            "data/fundfactsheet_exposure_diagnostics.json"
+
+          if git diff --cached --quiet; then
+
+            echo "No factsheet output changes."
+
+            exit 0
+
+          fi
+
+          git commit \
+            -m \
+            "Update fund factsheet exposure data"
+
+          git push
