@@ -83,7 +83,7 @@ jobs:
       # 3. VERIFY REQUIRED FILES
       #
       # IMPORTANT:
-      # The current fund universe is Funds Links.xlsx
+      # The current fund universe is Funds Links.xlsm
       # ========================================================
       - name: Verify required files
         shell: bash
@@ -92,13 +92,13 @@ jobs:
 
           echo "Checking required files..."
 
-          test -f "Funds Links.xlsx"
+          test -f "Funds Links.xlsm"
           test -f "scripts/research_fund_exposure.py"
           test -f "scripts/exposure_categories.txt"
 
           echo
           echo "Required files found:"
-          ls -lh "Funds Links.xlsx"
+          ls -lh "Funds Links.xlsm"
           ls -lh "scripts/research_fund_exposure.py"
           ls -lh "scripts/exposure_categories.txt"
 
@@ -178,7 +178,7 @@ jobs:
           echo "============================================================"
           echo
           echo "Input:"
-          echo "  Funds Links.xlsx"
+          echo "  Funds Links.xlsm"
           echo
           echo "Model:"
           echo "  Qwen/Qwen3-1.7B"
