@@ -1,0 +1,271 @@
+{
+  "date": "2026-10-01",
+  "source": "CNBC",
+  "articles": [
+    {
+      "id": "0dc5990f3cf02faeed8af6c4dc3b6949a51c5ae6b5fa7022ed8c9e3b7095f35b",
+      "source": "CNBC",
+      "title": "AI is a boon for 3 internet traffic cop stocks. Cramer says only 1 is a buy right now",
+      "publishedAtUtc": "2026-10-01T23:04:13Z",
+      "url": "https://www.cnbc.com/2026/10/01/jim-cramer-akamai-ai-traffic.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "CNBC's Jim Cramer said Thursday that the explosion of web traffic from AI agents is creating a new growth opportunity for companies that help keep the internet running smoothly. That also means it's creating money-making opportunities for investors. Akamai trades at less than 16 times this year's expected earnings, and he argued investors are \"basically getting the latest Anthropic partnership for free.\" Fastly is also repositioning itself for the AI era, shifting from a traditional content...",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:42Z"
+    },
+    {
+      "id": "517467b18d8692906b75fcad30423f034da733e54ab0fc18dbdbc024b28aca72",
+      "source": "CNBC",
+      "title": "Software roared back last quarter. Cramer says these stocks can keep climbing",
+      "publishedAtUtc": "2026-10-01T22:18:01Z",
+      "url": "https://www.cnbc.com/2026/10/01/jim-cramer-software-stocks-q3.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "CNBC's Jim Cramer said Thursday that enterprise software's comeback was the defining stock market story of the third quarter. Software stocks roared back from their artificial intelligence-driven sell off, while chip names cooled after a massive first-half run. Salesforce rallied 46% during the quarter as investors grew more confident that AI could be a growth driver rather than a threat to its business.",
+      "feeds": [
+        "latest",
+        "technology"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:39Z"
+    },
+    {
+      "id": "1233c7746a69bcb61923ef432ea7441b643fa0bab0e4cd8f9f069ff144ffe807",
+      "source": "CNBC",
+      "title": "Accenture stock rallies after earnings beat expectations",
+      "publishedAtUtc": "2026-10-01T21:40:30Z",
+      "url": "https://www.cnbc.com/2026/10/01/accenture-rallies-more-than-20percent-after-earnings-beat-heads-for-best-day-ever.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "In an exclusive interview on CNBC's \"Squawk on the Street,\" Accenture CEO Julie Sweet said AI has served as a key growth driver for the business as it accumulates partners in key AI sectors such as data centers and capital infrastructure. \"We've just finished the year with $85 billion of new business going into next year, and that is driven by our growth strategy to focus on big transformational deals and making sure we're the winner in AI and data,\" Sweet told CNBC.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:40Z"
+    },
+    {
+      "id": "19e1186d960d0e3f973d11de844caadf850433744b648a9e192f08b7df7b75f7",
+      "source": "CNBC",
+      "title": "Nike shares drop as retailer posts disappointing sales, announces layoffs as part of restructuring",
+      "publishedAtUtc": "2026-10-01T21:34:44Z",
+      "url": "https://www.cnbc.com/2026/10/01/nike-nke-q1-2027-earnings.html",
+      "category": "MARKET",
+      "relevanceScore": 100,
+      "relevanceReason": "financial_market_legal_story",
+      "summary": "Shares of Nike fell roughly 3% in extended trading Thursday. \"Overall, there's a lack of energy in the lifestyle space right now, which is impacting traffic,\" he said on the call. \"Yes, the consumer is cautious, but as the leader in the industry, it's on us to bring more creativity to sportswear.\" The sneaker giant also announced a restructuring plan to \"position Nike for long-term growth.\" The strategy is expected to result in layoffs beginning in 2027, though the company did not provide any...",
+      "feeds": [
+        "latest",
+        "business",
+        "world"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:38Z"
+    },
+    {
+      "id": "a802718e48934b3dd2421870709dc5a2e102ef0020f36e4f9a4473db9f83b29d",
+      "source": "CNBC",
+      "title": "Mattel shares rise after reports of takeover interest from Authentic Brands Group",
+      "publishedAtUtc": "2026-10-01T21:32:19Z",
+      "url": "https://www.cnbc.com/2026/10/01/mattel-authentic-brands-takeover-interest.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "Shares of Mattel rose nearly 20% on Thursday after the Wall Street Journal reported that the toymaker had attracted takeover interest from Authentic Brands Group. The brand licensing company has privately discussed an offer that could value Mattel at more than $20 per share, or about $6 billion, the Journal reported, citing people familiar with the matter. Shares of Mattel closed down 4% on Wednesday.",
+      "feeds": [
+        "latest",
+        "business"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:39Z"
+    },
+    {
+      "id": "851a469449d67aa11830a0ed1d94f3a836945b7b0fbe1bb0339e7ff322189912",
+      "source": "CNBC",
+      "title": "Treasury yields fall from multiyear highs",
+      "publishedAtUtc": "2026-10-01T21:17:31Z",
+      "url": "https://www.cnbc.com/2026/10/01/us-treasury-bond-yield.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "The yield on the 30-year Treasury bond also hit its highest in 24 years before dropping more than 2 basis points to 5.613%. People don't typically trade gilts versus bunds as much, but just as a barometer of, say, market concern, I think that's one to watch.\" Bonds had been moving in lockstep with oil prices, which have been turbulent as the U.S.-Israel war with Iran obstructed crude exports from the Middle East.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:39Z"
+    },
+    {
+      "id": "5eaedaa8f38a57e82cdb1612eac8609054644f6d6502d4f7980cdd27c58ff3b9",
+      "source": "CNBC",
+      "title": "Europe’s winter energy crunch may already be underway. Two U.S. stocks that may benefit",
+      "publishedAtUtc": "2026-10-01T20:41:38Z",
+      "url": "https://www.cnbc.com/2026/10/01/europes-winter-energy-crunch-may-already-be-underway-two-us-stocks-that-may-benefit.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "What I'm hearing from energy insiders Oil flows through Hormuz are rising, more ships are safely getting through the Strait, and oil prices seem to be coming down — at least for now. TotalEnergies CEO Patrick Pouyanné — arguably the most important CEO in global oil and gas — spoke with us this week about Europe's energy challenges, prices, and more in a Power Insider interview.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:38Z"
+    },
+    {
+      "id": "6f0bfecde0cbdb8479a588065b92c7f0d018de10060fdbcd5b8af1162d714f5b",
+      "source": "CNBC",
+      "title": "Treasury sanctions operation targets Iran's auto, rail industries in latest economic attack",
+      "publishedAtUtc": "2026-10-01T18:37:16Z",
+      "url": "https://www.cnbc.com/2026/10/01/treasury-sanctions-iran-auto-rail.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "In a separate release, the department announced additional sanctions on the A7 Network, described as a \"shadow banking network with ties to Russia used by the Iranian regime to evade sanctions.\" The actions are the latest to come from \"Operation Economic Outcast,\" the beefed-up sanctions effort that President Donald Trump and Treasury Secretary Scott Bessent touted as Iran's \"economic D-Day\" when it was unveiled in late August.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:39Z"
+    },
+    {
+      "id": "1a8ce7928ae2d63535f65b885c73cfd150a07b7a551a61cfd71bcb115d600129",
+      "source": "CNBC",
+      "title": "Russia launches massive strikes on Ukraine’s energy grid, forcing power cuts ahead of winter",
+      "publishedAtUtc": "2026-10-01T16:09:18Z",
+      "url": "https://www.cnbc.com/2026/10/01/russia-ukraine-war-energy-power-winter.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "Russia has launched a widely anticipated attack on Ukraine's power grid, hitting key facilities in Kyiv and other major cities across the country, marking one of the biggest energy assaults in months. Ukrainian officials and national security experts have been warning about the prospect of a Russian air campaign on its energy infrastructure ahead of winter, fearing another extremely difficult cold snap at a time when the country faces an acute air defense shortage.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:47Z"
+    },
+    {
+      "id": "17d0cda9bd94cc6c1783a083eb417223310f11dca2b1f5bf65344b1a2ee2f639",
+      "source": "CNBC",
+      "title": "Health insurer points finger at AI as nearly $1 billion in questionable hospital charges appear",
+      "publishedAtUtc": "2026-10-01T15:07:07Z",
+      "url": "https://www.cnbc.com/2026/10/01/health-care-costs-insurance-claims-billing-ai.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "AI is moving deeper into an already expensive and administratively complex U.S. And for all the talk of AI as a productivity tool that will lead to efficiencies and serve as a deflationary force, some of the early evidence is raising questions about whether these tools will make an already costly system more expensive.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:42Z"
+    },
+    {
+      "id": "6ddf48fccfdf9f91a844f6d22681f01f1890d9d913c6834c75cae339e1c30d71",
+      "source": "CNBC",
+      "title": "Kalshi, Polymarket trading volumes on some products raise questions amid massive growth",
+      "publishedAtUtc": "2026-10-01T14:24:36Z",
+      "url": "https://www.cnbc.com/2026/09/30/kalshi-polymarket-trading-volume-scrutiny.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "It's seen on markets related to elections, sports and central bank decisions. Both developments create concerns among some observers that the companies are overseeing inflated volumes or, at worst, are experiencing wash trading, in which traders collude to buy and sell an asset to create a false sense of economic activity.",
+      "feeds": [
+        "finance"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:42Z"
+    },
+    {
+      "id": "311c972d5a9d19d7689547f8476616b69a06f6bdaf2820d2811cfda20d09362e",
+      "source": "CNBC",
+      "title": "Micron beats on earnings and issues strong guidance as data center revenue jumps 11-fold",
+      "publishedAtUtc": "2026-10-01T13:59:54Z",
+      "url": "https://www.cnbc.com/2026/09/30/micron-mu-q4-earnings-report-2026.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "Micron reported better-than-expected quarterly results on Wednesday as the memory maker continues to benefit from soaring demand for AI infrastructure. Micron's stock has soared more than 500% in the past year, benefiting from a worldwide supply crunch caused by historic levels of demand for memory chips needed for artificial intelligence models and workloads.",
+      "feeds": [
+        "latest",
+        "technology"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:40Z"
+    },
+    {
+      "id": "793f941cc982bdac7a7ee5b82f498f73de5671f86fe1f07dd39712b77ad60b7e",
+      "source": "CNBC",
+      "title": "The U.S. just made it much easier for retail investors to access private markets",
+      "publishedAtUtc": "2026-10-01T13:38:32Z",
+      "url": "https://www.cnbc.com/2026/10/01/private-credit-sec-retail-investors.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "The Securities and Exchange Commission has greenlit sweeping plans to widen access to private markets to individual investors — just as the industry's rush into retail faces sharper scrutiny. SEC chairman Paul Atkins said investor demand for private market investment opportunities is growing, adding that exposure to \"one of the great engines of American enterprise\" should \"not be reserved for the wealthiest or for those deemed to be the most sophisticated.\" The proposals, approved Wednesday by...",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:46Z"
+    },
+    {
+      "id": "7b56d6d91b7c08e6e04bea1286985c544ecfcc2d172b57284a24ce9412fb2a62",
+      "source": "CNBC",
+      "title": "The Dow's rough month, Micron's revenue surge, Google launches Gemini 4 and more in Morning Squawk",
+      "publishedAtUtc": "2026-10-01T12:45:07Z",
+      "url": "https://www.cnbc.com/2026/10/01/5-things-to-know-before-the-stock-market-opens.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "The stock is coming off a monster rally of more than 500% over the last 12 months as it reaps the benefits of the AI boom's memory supply crunch. The Fed official told Liesman that inflation is \"running at around a 3% rate,\" saying of Wednesday's report, \"I didn't think the inflation data today really changed that story for me very much.\" Speaking of the Fed: The central bank's inspector general said yesterday that while there were management failures in the Fed's renovation of its...",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:42Z"
+    },
+    {
+      "id": "81dfb0f7abd7410807d5bb85b2e9c93213e94eb717888f9c5bfe512ee1ae8f81",
+      "source": "CNBC",
+      "title": "Bargain Britain lures foreign buyers as hostile takeovers surge",
+      "publishedAtUtc": "2026-10-01T10:53:11Z",
+      "url": "https://www.cnbc.com/2026/10/01/hostile-takeovers-mergers-acquisitions-uk.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "U.K.-listed stocks are in the crosshairs of foreign buyers, as persistently depressed valuations drive a surge in public takeovers. — the G7's fastest-growing economy — topped £75 billion ($99 billion) in the period to the end of the third quarter. M&A at Deutsche Bank, said the valuation gap between U.K.-listed companies and their publicly-traded U.S.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:45Z"
+    },
+    {
+      "id": "46fdb2b8070169e7c55713f9da449d7662a290e12153a3845a3423532e7610c7",
+      "source": "CNBC",
+      "title": "Shares of Indian auto companies slide as sales soften in September, after hitting record highs in August",
+      "publishedAtUtc": "2026-10-01T06:33:14Z",
+      "url": "https://www.cnbc.com/2026/10/01/india-auto-shares-bajaj-maruti-mahindra.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Stocks of Indian auto companies fell on Thursday as September data revealed acute softening of sales, just a month after passenger vehicles, three-wheelers, and two-wheelers hit a record high in August. Shares of Bajaj Auto, one of India's leading two-wheeler companies, declined over 8% after the company reported a 12% year-on-year drop in domestic sales in September.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:48Z"
+    },
+    {
+      "id": "b01e5766df10a411e52bb954cb21ff43ca3d2daad5d703353658430c71d73dc0",
+      "source": "CNBC",
+      "title": "Inside India newsletter: Foreign insurers get the red-carpet treatment — and policy uncertainty",
+      "publishedAtUtc": "2026-10-01T00:23:44Z",
+      "url": "https://www.cnbc.com/2026/10/01/india-insurance-prudential-aviva-axa.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Welcome to the latest edition of \"Inside India\" — your one-stop destination for stories and developments from the world's fastest-growing large economy. A day after the new rules were proposed, India's largest online platform for insurance policies PB Fintech saw shares crash 36%, HDFC Life fell more than 6% and ICICI Life Insurance dropped 4%.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtUtc": "2026-10-02T03:33:40Z"
+    }
+  ],
+  "articleCount": 17,
+  "updatedAtUtc": "2026-10-02T03:33:48Z"
+}
