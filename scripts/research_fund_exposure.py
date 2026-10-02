@@ -3,40 +3,78 @@
 """
 VGrat FMS - AI FUND EXPOSURE RESEARCH
 
-Adaptive AI-only geography and sector research.
+Purpose
+-------
+Research geography and sector exposure for Prudential Singapore
+ILP funds using LOCAL Hugging Face AI.
 
-Supports:
-    1. Direct-investment funds
-    2. Fund-of-funds / multi-manager funds
+The pipeline supports:
 
-Architecture:
-    Prudential source
-        |
-        +--> Qwen structure analysis
-        |       |
-        |       +--> direct investment
-        |       |
-        |       +--> fund of funds
-        |
-        +--> collect available supporting documents
-                |
-                +--> Qwen exposure analysis
+    1. Direct funds
+       - The fund invests directly in securities.
+       - AI analyses its own holdings/allocation/strategy.
 
-Important:
-    - No DuckDuckGo
-    - No Google
-    - No search-engine research
-    - Qwen performs classification
-    - Python only retrieves and prepares evidence
-    - AI may only return canonical categories
-    - Maximum 3 geography
-    - Maximum 3 sector
-    - No percentages in final output
+    2. Fund-of-funds
+       - AI identifies underlying funds.
+       - The pipeline researches the available underlying-fund
+         documents/pages.
+       - AI classifies each underlying fund.
+       - Results are aggregated.
 
-Publishing:
+    3. Mixed structures
+       - Both direct portfolio evidence and underlying-fund
+         evidence may be used.
+
+Important
+---------
+AI is the classifier.
+
+The Python code only:
+    - retrieves documents/pages
+    - extracts text
+    - identifies candidate linked documents
+    - asks AI structured questions
+    - validates AI output
+    - aggregates already-classified AI results
+
+No search engine is used.
+No DuckDuckGo is used.
+No external search API is used.
+
+Publishing rule
+---------------
     - Complete successful run -> replace fund_exposure.json
-    - Any failure -> preserve existing fund_exposure.json
+    - Any failed fund -> preserve existing fund_exposure.json
+    - Any model/AI/source/validation failure -> preserve existing file
     - Partial results are NEVER published
+
+Input
+-----
+    Funds Links.xlsx
+    or
+    Funds Links.xlsm
+
+Column A:
+    Prudential URL
+
+Column B:
+    Exact Prudential Fund Name
+
+Categories
+----------
+    scripts/exposure_categories.txt
+
+Output
+------
+    data/fund_exposure.json
+
+Testing
+-------
+    python scripts/research_fund_exposure.py --limit 1
+
+Full run
+--------
+    python scripts/research_fund_exposure.py
 """
 
 from __future__ import annotations
@@ -50,7 +88,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, urldefrag
 
 import requests
 from bs4 import BeautifulSoup
@@ -89,39 +127,67 @@ OUTPUT_PATH = (
 )
 
 REQUEST_TIMEOUT = int(
-    os.getenv("REQUEST_TIMEOUT", "60")
+    os.getenv(
+        "REQUEST_TIMEOUT",
+        "60",
+    )
 )
 
 MAX_PDF_PAGES = int(
-    os.getenv("MAX_PDF_PAGES", "60")
+    os.getenv(
+        "MAX_PDF_PAGES",
+        "60",
+    )
 )
 
 MAX_SOURCE_CHARS = int(
-    os.getenv("MAX_SOURCE_CHARS", "90000")
+    os.getenv(
+        "MAX_SOURCE_CHARS",
+        "100000",
+    )
 )
 
 MAX_AI_SOURCE_CHARS = int(
-    os.getenv("MAX_AI_SOURCE_CHARS", "50000")
+    os.getenv(
+        "MAX_AI_SOURCE_CHARS",
+        "24000",
+    )
 )
 
-MAX_NEW_TOKENS = int(
-    os.getenv("MAX_NEW_TOKENS", "900")
-)
-
-MAX_LINKED_DOCUMENTS = int(
-    os.getenv("MAX_LINKED_DOCUMENTS", "20")
+MAX_DISCOVERY_DOCUMENTS = int(
+    os.getenv(
+        "MAX_DISCOVERY_DOCUMENTS",
+        "12",
+    )
 )
 
 MAX_UNDERLYING_FUNDS = int(
-    os.getenv("MAX_UNDERLYING_FUNDS", "12")
+    os.getenv(
+        "MAX_UNDERLYING_FUNDS",
+        "10",
+    )
 )
 
-MAX_CRAWL_DEPTH = int(
-    os.getenv("MAX_CRAWL_DEPTH", "1")
+MAX_CLASSIFICATION_DOCUMENTS = int(
+    os.getenv(
+        "MAX_CLASSIFICATION_DOCUMENTS",
+        "10",
+    )
 )
 
-MAX_DOCUMENTS_PER_UNDERLYING = int(
-    os.getenv("MAX_DOCUMENTS_PER_UNDERLYING", "5")
+MAX_NEW_TOKENS = int(
+    os.getenv(
+        "MAX_NEW_TOKENS",
+        "600",
+    )
+)
+
+# Number of characters shown in diagnostics.
+SOURCE_PREVIEW_CHARS = int(
+    os.getenv(
+        "SOURCE_PREVIEW_CHARS",
+        "5000",
+    )
 )
 
 USER_AGENT = (
@@ -156,7 +222,10 @@ MODEL = None
 # ============================================================
 
 def log(message: str = "") -> None:
-    print(message, flush=True)
+    print(
+        message,
+        flush=True,
+    )
 
 
 def utc_now() -> str:
@@ -169,7 +238,9 @@ def utc_now() -> str:
 # TEXT HELPERS
 # ============================================================
 
-def clean_text(text: str) -> str:
+def clean_text(
+    text: str,
+) -> str:
 
     if not text:
         return ""
@@ -189,12 +260,14 @@ def clean_text(text: str) -> str:
         "\n",
     )
 
+    # Remove excessive horizontal whitespace.
     text = re.sub(
         r"[ \t]+",
         " ",
         text,
     )
 
+    # Remove excessive blank lines.
     text = re.sub(
         r"\n{3,}",
         "\n\n",
@@ -218,66 +291,34 @@ def truncate_text(
     )
 
 
-def normalize_name(
-    value: str,
+def normalize_space(
+    text: str,
 ) -> str:
 
-    value = value.lower()
-
-    value = value.replace(
-        "&",
-        " and ",
-    )
-
-    value = re.sub(
-        r"[^a-z0-9]+",
-        " ",
-        value,
-    )
-
-    value = re.sub(
+    return re.sub(
         r"\s+",
         " ",
-        value,
+        str(text or ""),
+    ).strip()
+
+
+def normalize_name(
+    text: str,
+) -> str:
+
+    text = normalize_space(
+        text
     )
 
-    return value.strip()
+    text = text.lower()
 
+    text = re.sub(
+        r"[^a-z0-9]+",
+        " ",
+        text,
+    )
 
-def name_tokens(
-    value: str,
-) -> Set[str]:
-
-    stopwords = {
-        "fund",
-        "funds",
-        "class",
-        "share",
-        "shares",
-        "unit",
-        "units",
-        "acc",
-        "accumulation",
-        "dist",
-        "distribution",
-        "sgd",
-        "usd",
-        "eur",
-        "gbp",
-        "hedged",
-        "unhedged",
-        "institutional",
-        "retail",
-        "portfolio",
-        "prulink",
-    }
-
-    return {
-        token
-        for token in normalize_name(value).split()
-        if token not in stopwords
-        and len(token) > 2
-    }
+    return text.strip()
 
 
 # ============================================================
@@ -299,8 +340,8 @@ def find_funds_excel_file(
             return candidate
 
     raise FileNotFoundError(
-        "Could not find Funds Links.xlsx "
-        "or Funds Links.xlsm."
+        "Could not find Funds Links.xlsx or "
+        f"Funds Links.xlsm in {repository_root}"
     )
 
 
@@ -322,7 +363,9 @@ def load_funds(
 
         worksheet = workbook.active
 
-        funds: List[Dict[str, str]] = []
+        funds: List[
+            Dict[str, str]
+        ] = []
 
         for row_number, row in enumerate(
             worksheet.iter_rows(
@@ -371,8 +414,7 @@ def load_funds(
 
                 raise RuntimeError(
                     f"Row {row_number} "
-                    f"({fund_name}) has no "
-                    "Prudential URL."
+                    f"({fund_name}) has no Prudential URL."
                 )
 
             funds.append(
@@ -395,84 +437,8 @@ def load_funds(
         return funds
 
     finally:
+
         workbook.close()
-
-
-def build_workbook_name_index(
-    funds: List[Dict[str, str]],
-) -> Dict[str, Dict[str, str]]:
-
-    index: Dict[str, Dict[str, str]] = {}
-
-    for fund in funds:
-
-        name = fund["fundName"]
-
-        index[
-            normalize_name(name)
-        ] = fund
-
-    return index
-
-
-def find_workbook_fund_match(
-    underlying_name: str,
-    workbook_index: Dict[str, Dict[str, str]],
-) -> Optional[Dict[str, str]]:
-
-    normalized = normalize_name(
-        underlying_name
-    )
-
-    if normalized in workbook_index:
-        return workbook_index[normalized]
-
-    target_tokens = name_tokens(
-        underlying_name
-    )
-
-    if not target_tokens:
-        return None
-
-    best_match = None
-    best_score = 0.0
-
-    for indexed_name, fund in workbook_index.items():
-
-        candidate_tokens = name_tokens(
-            indexed_name
-        )
-
-        if not candidate_tokens:
-            continue
-
-        intersection = (
-            target_tokens
-            & candidate_tokens
-        )
-
-        union = (
-            target_tokens
-            | candidate_tokens
-        )
-
-        score = (
-            len(intersection)
-            / max(len(union), 1)
-        )
-
-        if (
-            len(intersection) >= 2
-            and score > best_score
-        ):
-
-            best_score = score
-            best_match = fund
-
-    if best_score >= 0.50:
-        return best_match
-
-    return None
 
 
 # ============================================================
@@ -481,7 +447,10 @@ def find_workbook_fund_match(
 
 def load_categories(
     categories_path: Path,
-) -> Tuple[List[str], List[str]]:
+) -> Tuple[
+    List[str],
+    List[str],
+]:
 
     if not categories_path.exists():
 
@@ -493,7 +462,9 @@ def load_categories(
     geography: List[str] = []
     sector: List[str] = []
 
-    current_section: Optional[str] = None
+    current_section: Optional[
+        str
+    ] = None
 
     with categories_path.open(
         "r",
@@ -514,28 +485,48 @@ def load_categories(
 
             if upper == "[GEOGRAPHY]":
 
-                current_section = "geography"
+                current_section = (
+                    "geography"
+                )
+
                 continue
 
             if upper == "[SECTOR]":
 
-                current_section = "sector"
+                current_section = (
+                    "sector"
+                )
+
                 continue
 
-            if current_section == "geography":
+            if (
+                current_section
+                == "geography"
+            ):
 
-                geography.append(line)
+                geography.append(
+                    line
+                )
 
-            elif current_section == "sector":
+            elif (
+                current_section
+                == "sector"
+            ):
 
-                sector.append(line)
+                sector.append(
+                    line
+                )
 
     geography = list(
-        dict.fromkeys(geography)
+        dict.fromkeys(
+            geography
+        )
     )
 
     sector = list(
-        dict.fromkeys(sector)
+        dict.fromkeys(
+            sector
+        )
     )
 
     if not geography:
@@ -560,16 +551,13 @@ def load_categories(
 # HTTP
 # ============================================================
 
-SESSION = requests.Session()
-SESSION.headers.update(HEADERS)
-
-
 def get_response(
     url: str,
 ) -> requests.Response:
 
-    response = SESSION.get(
+    response = requests.get(
         url,
+        headers=HEADERS,
         timeout=REQUEST_TIMEOUT,
         allow_redirects=True,
     )
@@ -577,6 +565,65 @@ def get_response(
     response.raise_for_status()
 
     return response
+
+
+# ============================================================
+# URL HELPERS
+# ============================================================
+
+def canonicalize_url(
+    base_url: str,
+    href: str,
+) -> str:
+
+    absolute = urljoin(
+        base_url,
+        href,
+    )
+
+    absolute = urldefrag(
+        absolute
+    )[0]
+
+    return absolute.strip()
+
+
+def is_http_url(
+    url: str,
+) -> bool:
+
+    parsed = urlparse(
+        url
+    )
+
+    return parsed.scheme.lower() in {
+        "http",
+        "https",
+    }
+
+
+def same_domain(
+    first_url: str,
+    second_url: str,
+) -> bool:
+
+    first_host = (
+        urlparse(first_url)
+        .netloc
+        .lower()
+        .split(":")[0]
+    )
+
+    second_host = (
+        urlparse(second_url)
+        .netloc
+        .lower()
+        .split(":")[0]
+    )
+
+    return (
+        first_host == second_host
+    )
 
 
 # ============================================================
@@ -633,7 +680,9 @@ def extract_pdf_text(
             )
 
     return clean_text(
-        "\n".join(chunks)
+        "\n".join(
+            chunks
+        )
     )
 
 
@@ -643,7 +692,6 @@ def extract_pdf_text(
 
 def extract_html(
     html: str,
-    base_url: str,
 ) -> Tuple[
     str,
     List[Dict[str, str]],
@@ -654,34 +702,38 @@ def extract_html(
         "html.parser",
     )
 
+    # Remove content that is almost never useful
+    # for portfolio exposure analysis.
     for tag in soup(
         [
             "script",
             "style",
             "noscript",
             "svg",
+            "iframe",
         ]
     ):
 
         tag.decompose()
 
-    links: List[Dict[str, str]] = []
+    links: List[
+        Dict[str, str]
+    ] = []
 
-    for anchor in soup.find_all("a"):
+    for anchor in soup.find_all(
+        "a"
+    ):
 
-        href = anchor.get("href")
+        href = anchor.get(
+            "href"
+        )
 
         if not href:
             continue
 
         href = href.strip()
 
-        absolute = urljoin(
-            base_url,
-            href,
-        )
-
-        link_text = clean_text(
+        text = normalize_space(
             anchor.get_text(
                 " ",
                 strip=True,
@@ -690,8 +742,8 @@ def extract_html(
 
         links.append(
             {
-                "url": absolute,
-                "text": link_text,
+                "href": href,
+                "text": text,
             }
         )
 
@@ -709,91 +761,140 @@ def extract_html(
 
 
 # ============================================================
-# DOCUMENT LINK SCORING
+# DOCUMENT TYPE DETECTION
 # ============================================================
 
-DOCUMENT_TERMS = [
-    "factsheet",
-    "fact sheet",
-    "fund factsheet",
-    "fund-fact",
-    "fund facts",
-    "fund report",
-    "fund report",
+DOCUMENT_KEYWORDS = [
+    "fund",
+    "funds",
     "portfolio",
     "holdings",
+    "holding",
+    "factsheet",
+    "fact sheet",
+    "fund fact",
     "investment",
-    "annual report",
-    "monthly report",
-    "quarterly report",
-    "semi annual",
-    "semi-annual",
-    "prospectus",
-    "statement",
     "allocation",
-]
-
-UNDERLYING_TERMS = [
-    "underlying fund",
-    "underlying funds",
-    "underlying investment",
-    "underlying portfolio",
-    "collective investment",
-    "investment scheme",
+    "asset",
+    "equity",
+    "bond",
+    "income",
     "manager",
-    "fund manager",
+    "morningstar",
+    "fund profile",
+    "fund information",
+    "investment objective",
+    "investment strategy",
 ]
 
 
-def score_document_link(
+def link_relevance_score(
+    link_text: str,
     url: str,
-    text: str,
 ) -> int:
 
     combined = (
-        f"{url} {text}"
+        normalize_space(
+            link_text
+        )
+        + " "
+        + normalize_space(
+            url
+        )
     ).lower()
 
     score = 0
 
+    for keyword in DOCUMENT_KEYWORDS:
+
+        if keyword in combined:
+
+            score += 2
+
+    # PDFs are particularly valuable.
     if ".pdf" in combined:
         score += 8
 
-    for term in DOCUMENT_TERMS:
+    # URLs with likely fund-document patterns.
+    for keyword in [
+        "factsheet",
+        "fact-sheet",
+        "fundfactsheet",
+        "fund-fact",
+        "fundprofile",
+        "fund-profile",
+        "funddocument",
+        "fund-document",
+        "funddetails",
+        "fund-details",
+        "portfolio",
+        "holdings",
+    ]:
 
-        if term in combined:
-            score += 3
+        if keyword in combined:
 
-    for term in UNDERLYING_TERMS:
-
-        if term in combined:
-            score += 4
+            score += 5
 
     return score
 
 
-def same_domain(
-    url_a: str,
-    url_b: str,
-) -> bool:
+# ============================================================
+# SOURCE DOCUMENT
+# ============================================================
 
-    return (
-        urlparse(url_a).netloc.lower()
-        == urlparse(url_b).netloc.lower()
-    )
+class SourceDocument:
+
+    def __init__(
+        self,
+        url: str,
+        title: str,
+        text: str,
+        source_type: str,
+    ) -> None:
+
+        self.url = url
+        self.title = title
+        self.text = text
+        self.source_type = source_type
+
+    def to_dict(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+            "url": self.url,
+            "title": self.title,
+            "sourceType": self.source_type,
+            "characters": len(
+                self.text
+            ),
+        }
 
 
 # ============================================================
-# GENERIC SOURCE FETCH
+# SOURCE COLLECTION
 # ============================================================
 
-def fetch_document(
+def fetch_single_document(
     url: str,
-) -> Tuple[str, List[Dict[str, str]], str]:
+) -> Optional[
+    SourceDocument
+]:
 
-    response = get_response(
-        url
-    )
+    try:
+
+        response = get_response(
+            url
+        )
+
+    except Exception as exc:
+
+        log(
+            f"        Document fetch failed: "
+            f"{url} -> {exc}"
+        )
+
+        return None
 
     final_url = response.url
 
@@ -805,8 +906,13 @@ def fetch_document(
         .lower()
     )
 
+    # --------------------------------------------------------
+    # PDF
+    # --------------------------------------------------------
+
     if (
-        "application/pdf" in content_type
+        "application/pdf"
+        in content_type
         or final_url.lower()
         .split("?")[0]
         .endswith(".pdf")
@@ -816,194 +922,273 @@ def fetch_document(
             response.content
         )
 
-        return (
-            truncate_text(
+        if not text:
+
+            return None
+
+        return SourceDocument(
+            url=final_url,
+            title=Path(
+                urlparse(
+                    final_url
+                ).path
+            ).name,
+            text=truncate_text(
                 text,
                 MAX_SOURCE_CHARS,
             ),
-            [],
-            final_url,
+            source_type="pdf",
         )
 
-    html_text, links = extract_html(
-        response.text,
-        final_url,
-    )
+    # --------------------------------------------------------
+    # HTML
+    # --------------------------------------------------------
 
-    return (
-        truncate_text(
+    try:
+
+        html_text, _ = extract_html(
+            response.text
+        )
+
+    except Exception:
+
+        return None
+
+    if not html_text:
+
+        return None
+
+    return SourceDocument(
+        url=final_url,
+        title=(
+            urlparse(
+                final_url
+            ).path
+            or final_url
+        ),
+        text=truncate_text(
             html_text,
             MAX_SOURCE_CHARS,
         ),
-        links,
-        final_url,
+        source_type="html",
     )
 
 
-# ============================================================
-# SOURCE COLLECTION
-# ============================================================
-
-def fetch_source_bundle(
-    url: str,
-    label: str,
-    max_documents: int = MAX_LINKED_DOCUMENTS,
-) -> Dict[str, Any]:
+def collect_prudential_sources(
+    root_url: str,
+) -> Tuple[
+    List[SourceDocument],
+    List[Dict[str, str]],
+]:
 
     log(
-        f"        Fetching {label}: {url}"
+        f"        Fetching source: "
+        f"{root_url}"
     )
 
-    source_urls: List[str] = []
-    documents: List[str] = []
-    candidate_links: List[Dict[str, Any]] = []
-
-    text, links, final_url = fetch_document(
-        url
-    )
-
-    source_urls.append(
-        final_url
-    )
-
-    if text:
-
-        documents.append(
-            "--- PRIMARY SOURCE ---\n"
-            + text
+    root_document = (
+        fetch_single_document(
+            root_url
         )
+    )
+
+    if root_document is None:
+
+        raise RuntimeError(
+            "Unable to extract usable "
+            "Prudential source."
+        )
+
+    documents: List[
+        SourceDocument
+    ] = [
+        root_document
+    ]
+
+    discovered_links: List[
+        Dict[str, str]
+    ] = []
 
     # --------------------------------------------------------
-    # Rank linked documents.
+    # If root is HTML, inspect its links.
     # --------------------------------------------------------
 
-    ranked_links = []
-
-    for link in links:
-
-        linked_url = link["url"]
-        linked_text = link["text"]
-
-        if not linked_url:
-            continue
-
-        score = score_document_link(
-            linked_url,
-            linked_text,
-        )
-
-        if score <= 0:
-            continue
-
-        ranked_links.append(
-            {
-                "url": linked_url,
-                "text": linked_text,
-                "score": score,
-            }
-        )
-
-    ranked_links.sort(
-        key=lambda item: (
-            -item["score"],
-            item["url"],
-        )
-    )
-
-    seen_urls = {
-        final_url
-    }
-
-    for candidate in ranked_links:
-
-        linked_url = candidate["url"]
-
-        if linked_url in seen_urls:
-            continue
-
-        seen_urls.add(
-            linked_url
-        )
-
-        if len(documents) >= (
-            max_documents + 1
-        ):
-            break
+    if (
+        root_document.source_type
+        == "html"
+    ):
 
         try:
 
-            log(
-                "        Supporting document: "
-                f"{linked_url}"
+            response = get_response(
+                root_url
             )
 
-            linked_text, _, linked_final_url = (
-                fetch_document(
-                    linked_url
+            html_text, links = (
+                extract_html(
+                    response.text
                 )
             )
 
-            if not linked_text:
+            del html_text
+
+        except Exception:
+
+            links = []
+
+        scored_links: List[
+            Tuple[
+                int,
+                Dict[str, str],
+            ]
+        ] = []
+
+        seen_urls: Set[str] = set()
+
+        for link in links:
+
+            absolute = canonicalize_url(
+                root_document.url,
+                link.get(
+                    "href",
+                    "",
+                ),
+            )
+
+            if not absolute:
                 continue
 
-            source_urls.append(
-                linked_final_url
+            if not is_http_url(
+                absolute
+            ):
+                continue
+
+            if absolute in seen_urls:
+                continue
+
+            seen_urls.add(
+                absolute
             )
 
-            documents.append(
-                "--- SUPPORTING DOCUMENT ---\n"
-                + linked_text
+            text = link.get(
+                "text",
+                "",
             )
 
-        except Exception as exc:
-
-            log(
-                "        Supporting document failed: "
-                f"{exc}"
+            score = link_relevance_score(
+                text,
+                absolute,
             )
 
-    combined = clean_text(
-        "\n\n".join(documents)
-    )
+            # Same-domain links are preferred.
+            if same_domain(
+                root_document.url,
+                absolute,
+            ):
 
-    if not combined:
+                score += 5
 
-        raise RuntimeError(
-            f"No usable source text for {label}."
+            # Any explicit PDF receives a strong preference.
+            if ".pdf" in absolute.lower():
+
+                score += 10
+
+            scored_links.append(
+                (
+                    score,
+                    {
+                        "url": absolute,
+                        "text": text,
+                    },
+                )
+            )
+
+        scored_links.sort(
+            key=lambda item: item[0],
+            reverse=True,
         )
 
-    return {
-        "label": label,
-        "primaryUrl": final_url,
-        "sourceUrls": list(
-            dict.fromkeys(
-                source_urls
+        discovered_links = [
+            item[1]
+            for item in scored_links
+        ]
+
+        log(
+            f"        Candidate linked "
+            f"documents: "
+            f"{len(discovered_links)}"
+        )
+
+        # ----------------------------------------------------
+        # Fetch the most relevant documents.
+        # ----------------------------------------------------
+
+        for (
+            score,
+            link,
+        ) in scored_links[
+            :MAX_DISCOVERY_DOCUMENTS
+        ]:
+
+            url = link["url"]
+
+            log(
+                f"        Candidate "
+                f"document "
+                f"(score {score}): "
+                f"{url}"
             )
-        ),
-        "text": truncate_text(
-            combined,
-            MAX_SOURCE_CHARS,
-        ),
-        "candidateLinks": ranked_links,
-    }
 
+            document = (
+                fetch_single_document(
+                    url
+                )
+            )
 
-# ============================================================
-# PRUDENTIAL PRIMARY SOURCE
-# ============================================================
+            if document is None:
+                continue
 
-def fetch_prudential_document(
-    url: str,
-) -> Tuple[str, List[str]]:
+            if any(
+                existing.url
+                == document.url
+                for existing in documents
+            ):
 
-    bundle = fetch_source_bundle(
-        url=url,
-        label="Prudential primary fund",
-    )
+                continue
+
+            documents.append(
+                document
+            )
+
+    # Deduplicate.
+    unique_documents: List[
+        SourceDocument
+    ] = []
+
+    seen_document_urls: Set[
+        str
+    ] = set()
+
+    for document in documents:
+
+        if (
+            document.url
+            in seen_document_urls
+        ):
+
+            continue
+
+        seen_document_urls.add(
+            document.url
+        )
+
+        unique_documents.append(
+            document
+        )
 
     return (
-        bundle["text"],
-        bundle["sourceUrls"],
+        unique_documents,
+        discovered_links,
     )
 
 
@@ -1014,6 +1199,7 @@ def fetch_prudential_document(
 EXPOSURE_SECTION_PATTERNS = [
     r"asset allocation",
     r"asset mix",
+    r"asset allocation by",
     r"geographical allocation",
     r"geographic allocation",
     r"geographical exposure",
@@ -1035,15 +1221,15 @@ EXPOSURE_SECTION_PATTERNS = [
     r"equities",
     r"fixed income",
     r"bond allocation",
+    r"bond holdings",
     r"underlying fund",
     r"underlying funds",
-    r"collective investment",
+    r"underlying investment",
     r"investment objective",
     r"investment strategy",
     r"investment approach",
-    r"country",
-    r"region",
-    r"sector",
+    r"investment policy",
+    r"portfolio",
 ]
 
 
@@ -1057,13 +1243,19 @@ def extract_relevant_sections(
     if not lines:
         return ""
 
-    matched_indexes: List[int] = []
+    matched_indexes: List[
+        int
+    ] = []
 
-    for index, line in enumerate(lines):
+    for index, line in enumerate(
+        lines
+    ):
 
         lower = line.lower()
 
-        for pattern in EXPOSURE_SECTION_PATTERNS:
+        for pattern in (
+            EXPOSURE_SECTION_PATTERNS
+        ):
 
             if re.search(
                 pattern,
@@ -1072,12 +1264,12 @@ def extract_relevant_sections(
 
                 start = max(
                     0,
-                    index - 15,
+                    index - 10,
                 )
 
                 end = min(
                     len(lines),
-                    index + 55,
+                    index + 40,
                 )
 
                 matched_indexes.extend(
@@ -1093,20 +1285,27 @@ def extract_relevant_sections(
         return ""
 
     unique_indexes = sorted(
-        set(matched_indexes)
+        set(
+            matched_indexes
+        )
     )
 
     chunks: List[str] = []
 
-    current_chunk: List[str] = []
+    current_chunk: List[
+        str
+    ] = []
 
-    previous_index: Optional[int] = None
+    previous_index: Optional[
+        int
+    ] = None
 
     for index in unique_indexes:
 
         if (
             previous_index is not None
-            and index > previous_index + 1
+            and index
+            > previous_index + 1
         ):
 
             if current_chunk:
@@ -1134,9 +1333,10 @@ def extract_relevant_sections(
         )
 
     relevant = clean_text(
-        "\n\n"
-        "--- RELEVANT DOCUMENT SECTION ---\n\n"
-        .join(chunks)
+        "\n\n--- RELEVANT SECTION ---\n\n"
+        .join(
+            chunks
+        )
     )
 
     return truncate_text(
@@ -1145,9 +1345,89 @@ def extract_relevant_sections(
     )
 
 
+def remove_irrelevant_footer(
+    source_text: str,
+) -> str:
+
+    """
+    Remove common legal/footer content.
+
+    This is preprocessing only.
+    It does NOT classify anything.
+    """
+
+    lines = source_text.splitlines()
+
+    useful_lines: List[
+        str
+    ] = []
+
+    footer_patterns = [
+        r"past performance",
+        r"not necessarily indicative",
+        r"not financial advice",
+        r"not be relied upon",
+        r"offer or solicitation",
+        r"possible loss of",
+        r"monetary authority",
+        r"copyright \d{4}",
+        r"all rights reserved",
+        r"back to top",
+        r"visit your local prudential",
+        r"follow us singapore",
+        r"privacy",
+        r"terms and conditions",
+        r"important notice",
+        r"disclaimer",
+    ]
+
+    footer_started = False
+
+    for line in lines:
+
+        lower = line.lower()
+
+        if any(
+            re.search(
+                pattern,
+                lower,
+            )
+            for pattern in footer_patterns
+        ):
+
+            # Do not automatically discard the entire document
+            # at the first occurrence because some documents
+            # contain disclaimers in the middle.
+            continue
+
+        if (
+            "back to top"
+            in lower
+        ):
+
+            footer_started = True
+
+        if footer_started:
+            continue
+
+        useful_lines.append(
+            line
+        )
+
+    return clean_text(
+        "\n".join(
+            useful_lines
+        )
+    )
+
+
 def prepare_ai_source(
     source_text: str,
 ) -> str:
+
+    source_text = remove_irrelevant_footer(
+        source_text
+    )
 
     relevant = extract_relevant_sections(
         source_text
@@ -1155,22 +1435,158 @@ def prepare_ai_source(
 
     if relevant:
 
-        log(
-            "        Using relevant financial "
-            f"sections: {len(relevant)} chars"
-        )
-
         return relevant
-
-    log(
-        "        No specific exposure sections "
-        "detected; using full source."
-    )
 
     return truncate_text(
         source_text,
         MAX_AI_SOURCE_CHARS,
     )
+
+
+# ============================================================
+# LINK / DOCUMENT MATCHING
+# ============================================================
+
+def candidate_text_for_document(
+    document: SourceDocument,
+) -> str:
+
+    return (
+        document.title
+        + " "
+        + document.url
+        + " "
+        + document.text[:5000]
+    )
+
+
+def document_matches_underlying_name(
+    document: SourceDocument,
+    underlying_name: str,
+) -> bool:
+
+    name = normalize_name(
+        underlying_name
+    )
+
+    if not name:
+        return False
+
+    candidate = normalize_name(
+        candidate_text_for_document(
+            document
+        )
+    )
+
+    name_tokens = [
+        token
+        for token in name.split()
+        if len(token) >= 3
+    ]
+
+    if not name_tokens:
+        return False
+
+    # Exact normalized phrase.
+    if name in candidate:
+        return True
+
+    # Strong token overlap.
+    matches = sum(
+        1
+        for token in name_tokens
+        if token in candidate
+    )
+
+    required = max(
+        2,
+        min(
+            len(name_tokens),
+            4,
+        ),
+    )
+
+    return (
+        matches >= required
+    )
+
+
+def rank_documents_for_underlying_fund(
+    documents: List[SourceDocument],
+    underlying_name: str,
+) -> List[SourceDocument]:
+
+    ranked: List[
+        Tuple[
+            int,
+            SourceDocument,
+        ]
+    ] = []
+
+    target = normalize_name(
+        underlying_name
+    )
+
+    target_tokens = [
+        token
+        for token in target.split()
+        if len(token) >= 3
+    ]
+
+    for document in documents:
+
+        candidate = normalize_name(
+            candidate_text_for_document(
+                document
+            )
+        )
+
+        score = 0
+
+        if target and target in candidate:
+
+            score += 100
+
+        for token in target_tokens:
+
+            if token in candidate:
+                score += 8
+
+        if (
+            document.source_type
+            == "pdf"
+        ):
+
+            score += 10
+
+        relevant = (
+            extract_relevant_sections(
+                document.text,
+                maximum=12000,
+            )
+        )
+
+        if relevant:
+
+            score += 15
+
+        ranked.append(
+            (
+                score,
+                document,
+            )
+        )
+
+    ranked.sort(
+        key=lambda item: item[0],
+        reverse=True,
+    )
+
+    return [
+        item[1]
+        for item in ranked
+        if item[0] > 0
+    ]
 
 
 # ============================================================
@@ -1183,22 +1599,34 @@ def load_ai_model() -> None:
     global MODEL
 
     log("")
-    log("=" * 70)
-    log("LOADING LOCAL AI MODEL")
-    log("=" * 70)
+    log(
+        "=" * 70
+    )
+    log(
+        "LOADING LOCAL AI MODEL"
+    )
+    log(
+        "=" * 70
+    )
 
     log(
         f"Model: {MODEL_NAME}"
     )
 
-    token_kwargs: Dict[str, Any] = {}
+    token_kwargs: Dict[
+        str,
+        Any,
+    ] = {}
 
     if HF_TOKEN:
 
-        token_kwargs["token"] = HF_TOKEN
+        token_kwargs["token"] = (
+            HF_TOKEN
+        )
 
         log(
-            "Hugging Face authentication: enabled"
+            "Hugging Face authentication: "
+            "enabled"
         )
 
     else:
@@ -1233,22 +1661,42 @@ def load_ai_model() -> None:
 
 
 # ============================================================
-# AI GENERATION
+# AI JSON GENERATION
 # ============================================================
 
 def generate_ai_response(
-    messages: List[Dict[str, str]],
+    prompt: str,
+    max_new_tokens: Optional[
+        int
+    ] = None,
 ) -> str:
 
     if TOKENIZER is None:
+
         raise RuntimeError(
             "Tokenizer is not loaded."
         )
 
     if MODEL is None:
+
         raise RuntimeError(
             "Model is not loaded."
         )
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a precise financial "
+                "research analyst. "
+                "Return only valid JSON."
+            ),
+        },
+        {
+            "role": "user",
+            "content": prompt,
+        },
+    ]
 
     try:
 
@@ -1295,11 +1743,19 @@ def generate_ai_response(
         f"{input_tokens}"
     )
 
+    generation_tokens = (
+        max_new_tokens
+        if max_new_tokens is not None
+        else MAX_NEW_TOKENS
+    )
+
     with torch.inference_mode():
 
         generated = MODEL.generate(
             **inputs,
-            max_new_tokens=MAX_NEW_TOKENS,
+            max_new_tokens=(
+                generation_tokens
+            ),
             do_sample=False,
             pad_token_id=(
                 TOKENIZER.eos_token_id
@@ -1327,7 +1783,9 @@ def generate_ai_response(
 
 def extract_json_object(
     response: str,
-) -> Optional[Dict[str, Any]]:
+) -> Optional[
+    Dict[str, Any]
+]:
 
     if not response:
         return None
@@ -1363,6 +1821,7 @@ def extract_json_object(
     except json.JSONDecodeError:
         pass
 
+    # Find the first complete-looking JSON object.
     match = re.search(
         r"\{.*\}",
         cleaned,
@@ -1392,7 +1851,8 @@ def extract_json_object(
 
 
 # ============================================================
-# STAGE 1 - FUND STRUCTURE ANALYSIS
+# AI STAGE 1
+# STRUCTURE DETECTION
 # ============================================================
 
 def build_structure_prompt(
@@ -1401,127 +1861,77 @@ def build_structure_prompt(
 ) -> str:
 
     return f"""
-You are a financial fund research analyst.
+Analyze this investment-fund document.
 
-Determine the structure of this fund using ONLY the supplied
-documentation.
-
-Fund:
+Fund name:
 {fund_name}
 
-Possible structures:
+Your task is ONLY to determine the fund structure.
 
-1. "direct_investment"
-   The fund directly invests in securities such as equities,
-   bonds, cash or other securities.
+Determine:
 
-2. "fund_of_funds"
-   The fund primarily invests through one or more underlying
-   investment funds, collective investment schemes, unit trusts,
-   mutual funds, ETFs or similar pooled vehicles.
+1. Is this a fund-of-funds or multi-fund structure?
+2. If yes, identify the underlying fund names explicitly
+   mentioned in the supplied document.
+3. If no, return an empty underlyingFunds list.
+4. Determine whether the supplied document contains direct
+   portfolio/holdings/allocation evidence for the fund itself.
 
-3. "mixed"
-   The fund contains both direct investments and meaningful
-   underlying investment funds.
+IMPORTANT:
 
-4. "unknown"
-   The documentation does not provide enough evidence.
+- Use ONLY the supplied document.
+- Do NOT use outside knowledge.
+- Do NOT infer underlying funds from the fund name.
+- Do NOT invent fund names.
+- Only include an underlying fund if the document explicitly
+  identifies it.
+- Preserve the underlying fund name as written.
+- Maximum {MAX_UNDERLYING_FUNDS} underlying funds.
+- Return ONLY JSON.
+- No markdown.
+- No explanation.
 
-For fund_of_funds or mixed:
-
-Extract the names of the underlying funds ONLY when they are
-explicitly supported by the document.
-
-Do not invent names.
-
-Return ONLY JSON.
-
-Required format:
+Required JSON:
 
 {{
-  "structure": "direct_investment",
-  "underlyingFunds": []
+  "structure": "direct",
+  "underlyingFunds": [],
+  "hasDirectPortfolioEvidence": false
 }}
 
 Allowed structure values:
 
-- direct_investment
-- fund_of_funds
-- mixed
-- unknown
+- "direct"
+- "fund_of_funds"
+- "mixed"
 
-Maximum underlying funds:
-{MAX_UNDERLYING_FUNDS}
-
-DOCUMENTATION:
+DOCUMENT:
 
 {source_text}
 """.strip()
 
 
-def analyze_fund_structure(
-    fund_name: str,
-    source_text: str,
+def validate_structure_result(
+    parsed: Dict[str, Any],
 ) -> Tuple[
     bool,
     str,
-    List[str],
     str,
+    List[str],
+    bool,
 ]:
 
-    prompt = build_structure_prompt(
-        fund_name,
-        source_text,
-    )
-
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are a precise financial "
-                "document analyst. "
-                "Return only valid JSON."
-            ),
-        },
-        {
-            "role": "user",
-            "content": prompt,
-        },
-    ]
-
-    try:
-
-        response = generate_ai_response(
-            messages
-        )
-
-    except Exception as exc:
+    if not isinstance(
+        parsed,
+        dict,
+    ):
 
         return (
             False,
-            "ai_error",
+            "Structure result is not an object.",
+            "",
             [],
-            str(exc),
-        )
-
-    log("")
-    log(
-        "      Structure AI response:"
-    )
-    log(response)
-
-    parsed = extract_json_object(
-        response
-    )
-
-    if parsed is None:
-
-        return (
             False,
-            "ai_error",
-            [],
-            "Structure response "
-            "could not be parsed as JSON.",
         )
 
     structure = parsed.get(
@@ -1532,21 +1942,22 @@ def analyze_fund_structure(
         "underlyingFunds"
     )
 
-    allowed = {
-        "direct_investment",
+    direct_evidence = parsed.get(
+        "hasDirectPortfolioEvidence"
+    )
+
+    if structure not in {
+        "direct",
         "fund_of_funds",
         "mixed",
-        "unknown",
-    }
-
-    if structure not in allowed:
+    }:
 
         return (
             False,
-            "ai_error",
+            "Invalid structure value.",
+            "",
             [],
-            f"Invalid fund structure: "
-            f"{structure}",
+            False,
         )
 
     if not isinstance(
@@ -1556,12 +1967,27 @@ def analyze_fund_structure(
 
         return (
             False,
-            "ai_error",
-            [],
             "underlyingFunds is not a list.",
+            "",
+            [],
+            False,
         )
 
-    clean_underlying: List[str] = []
+    if len(underlying) > (
+        MAX_UNDERLYING_FUNDS
+    ):
+
+        return (
+            False,
+            "Too many underlying funds.",
+            "",
+            [],
+            False,
+        )
+
+    clean_underlying: List[
+        str
+    ] = []
 
     for item in underlying:
 
@@ -1569,9 +1995,16 @@ def analyze_fund_structure(
             item,
             str,
         ):
-            continue
 
-        item = clean_text(
+            return (
+                False,
+                "Underlying fund is not a string.",
+                "",
+                [],
+                False,
+            )
+
+        item = normalize_space(
             item
         )
 
@@ -1584,290 +2017,62 @@ def analyze_fund_structure(
                 item
             )
 
-    clean_underlying = (
-        clean_underlying[
-            :MAX_UNDERLYING_FUNDS
-        ]
-    )
-
-    if structure in {
-        "fund_of_funds",
-        "mixed",
-    } and not clean_underlying:
+    if not isinstance(
+        direct_evidence,
+        bool,
+    ):
 
         return (
             False,
-            "insufficient_evidence",
+            "hasDirectPortfolioEvidence "
+            "must be boolean.",
+            "",
             [],
-            "Fund structure indicates "
-            "underlying funds but no "
-            "underlying fund names were "
-            "identified.",
+            False,
+        )
+
+    # If the AI says fund_of_funds but gives no names,
+    # treat it as a structure-analysis failure rather than
+    # allowing a false classification.
+    if (
+        structure
+        in {
+            "fund_of_funds",
+            "mixed",
+        }
+        and not clean_underlying
+        and not direct_evidence
+    ):
+
+        return (
+            False,
+            "Fund structure requires underlying "
+            "funds or direct portfolio evidence.",
+            "",
+            [],
+            False,
         )
 
     return (
         True,
+        "",
         structure,
         clean_underlying,
-        "",
+        direct_evidence,
     )
 
 
 # ============================================================
-# UNDERLYING FUND SOURCE DISCOVERY
-# ============================================================
-
-def discover_underlying_source(
-    underlying_name: str,
-    parent_source_bundle: Dict[str, Any],
-    workbook_index: Dict[str, Dict[str, str]],
-) -> List[Dict[str, Any]]:
-
-    sources: List[Dict[str, Any]] = []
-
-    # --------------------------------------------------------
-    # 1. Match against Funds Links.xlsx.
-    # --------------------------------------------------------
-
-    workbook_match = find_workbook_fund_match(
-        underlying_name,
-        workbook_index,
-    )
-
-    if workbook_match:
-
-        log(
-            "        Workbook match for underlying "
-            f"fund: {underlying_name}"
-        )
-
-        try:
-
-            bundle = fetch_source_bundle(
-                url=workbook_match[
-                    "prudentialUrl"
-                ],
-                label=(
-                    "underlying fund: "
-                    + underlying_name
-                ),
-                max_documents=(
-                    MAX_DOCUMENTS_PER_UNDERLYING
-                ),
-            )
-
-            sources.append(
-                bundle
-            )
-
-        except Exception as exc:
-
-            log(
-                "        Workbook-linked source "
-                f"failed: {exc}"
-            )
-
-    # --------------------------------------------------------
-    # 2. Search already discovered parent links.
-    # --------------------------------------------------------
-
-    target_tokens = name_tokens(
-        underlying_name
-    )
-
-    candidate_links = (
-        parent_source_bundle.get(
-            "candidateLinks",
-            [],
-        )
-    )
-
-    scored_candidates = []
-
-    for candidate in candidate_links:
-
-        candidate_text = (
-            f"{candidate.get('url', '')} "
-            f"{candidate.get('text', '')}"
-        )
-
-        candidate_tokens = name_tokens(
-            candidate_text
-        )
-
-        intersection = (
-            target_tokens
-            & candidate_tokens
-        )
-
-        if len(intersection) >= 2:
-
-            score = (
-                len(intersection)
-                / max(
-                    len(target_tokens),
-                    1,
-                )
-            )
-
-            scored_candidates.append(
-                (
-                    score,
-                    candidate,
-                )
-            )
-
-    scored_candidates.sort(
-        key=lambda item: -item[0]
-    )
-
-    seen_urls = {
-        item.get("primaryUrl")
-        for item in sources
-    }
-
-    for _, candidate in scored_candidates[
-        :MAX_DOCUMENTS_PER_UNDERLYING
-    ]:
-
-        candidate_url = candidate[
-            "url"
-        ]
-
-        if candidate_url in seen_urls:
-            continue
-
-        try:
-
-            log(
-                "        Matching document for "
-                f"{underlying_name}: "
-                f"{candidate_url}"
-            )
-
-            bundle = fetch_source_bundle(
-                url=candidate_url,
-                label=(
-                    "underlying fund: "
-                    + underlying_name
-                ),
-                max_documents=2,
-            )
-
-            sources.append(
-                bundle
-            )
-
-            seen_urls.add(
-                candidate_url
-            )
-
-        except Exception as exc:
-
-            log(
-                "        Underlying candidate "
-                f"failed: {exc}"
-            )
-
-    return sources
-
-
-# ============================================================
-# COMBINE EXPOSURE EVIDENCE
-# ============================================================
-
-def build_evidence_package(
-    parent_source: str,
-    underlying_sources: List[
-        Dict[str, Any]
-    ],
-) -> str:
-
-    sections: List[str] = []
-
-    parent_relevant = (
-        prepare_ai_source(
-            parent_source
-        )
-    )
-
-    sections.append(
-        "=== PARENT FUND EVIDENCE ===\n"
-        + parent_relevant
-    )
-
-    for index, bundle in enumerate(
-        underlying_sources,
-        start=1,
-    ):
-
-        underlying_text = bundle.get(
-            "text",
-            "",
-        )
-
-        if not underlying_text:
-            continue
-
-        relevant = (
-            extract_relevant_sections(
-                underlying_text,
-                maximum=(
-                    MAX_AI_SOURCE_CHARS
-                    // max(
-                        len(
-                            underlying_sources
-                        ),
-                        1,
-                    )
-                ),
-            )
-        )
-
-        if not relevant:
-            relevant = truncate_text(
-                underlying_text,
-                max(
-                    6000,
-                    MAX_AI_SOURCE_CHARS
-                    // max(
-                        len(
-                            underlying_sources
-                        ),
-                        1,
-                    ),
-                ),
-            )
-
-        sections.append(
-            f"=== UNDERLYING SOURCE "
-            f"{index} ===\n"
-            + relevant
-        )
-
-    combined = clean_text(
-        "\n\n".join(
-            sections
-        )
-    )
-
-    return truncate_text(
-        combined,
-        MAX_AI_SOURCE_CHARS,
-    )
-
-
-# ============================================================
-# STAGE 2 - EXPOSURE ANALYSIS
+# AI STAGE 2
+# EXPOSURE CLASSIFICATION
 # ============================================================
 
 def build_exposure_prompt(
-    fund_name: str,
-    structure: str,
-    underlying_names: List[str],
-    evidence: str,
+    subject_name: str,
+    source_text: str,
     geography_categories: List[str],
     sector_categories: List[str],
+    context_label: str,
 ) -> str:
 
     geography_text = "\n".join(
@@ -1880,88 +2085,68 @@ def build_exposure_prompt(
         for item in sector_categories
     )
 
-    underlying_text = (
-        "\n".join(
-            f"- {item}"
-            for item in underlying_names
-        )
-        if underlying_names
-        else "- None identified"
-    )
-
     return f"""
-You are a professional financial fund research analyst.
+You are analyzing actual investment exposure for a fund.
 
-Analyze the supplied evidence for:
+Subject:
+{subject_name}
 
-Fund:
-{fund_name}
+Research context:
+{context_label}
 
-Fund structure:
-{structure}
-
-Identified underlying funds:
-{underlying_text}
-
-Your task is to determine the fund's supported:
+Determine the supported:
 
 1. Geographic exposure
 2. Sector exposure
 
-IMPORTANT:
+EVIDENCE RULES:
 
-The fund may be either a direct-investment fund or a fund-of-funds.
-
-For a direct-investment fund:
-    Analyze the fund's own documented portfolio evidence.
-
-For a fund-of-funds:
-    Analyze the documented evidence for the underlying funds
-    and the parent fund.
-    Look through to the underlying portfolio information when
-    that information is supplied.
-
-For a mixed fund:
-    Analyze both direct and underlying-fund evidence.
-
-STRICT EVIDENCE RULES:
-
-- Use ONLY the supplied evidence.
-- Do not use outside knowledge.
-- Do not browse the internet.
-- Do not use the fund name as evidence.
-- Do not guess.
-- Do not invent holdings.
-- Do not invent countries.
-- Do not invent sectors.
-- Do not assume a company's geography or sector unless the
-  supplied evidence supports it.
-- Do not convert a fund name into an exposure without supporting
-  portfolio evidence.
-- Do not assume an underlying fund's portfolio merely from its
-  name.
-- Use country allocation, geographical allocation, regional
-  allocation, sector allocation, industry allocation, holdings,
-  asset allocation, investment strategy and other explicit
-  portfolio evidence where available.
-- If allocation weights are supplied, use them to understand
-  which exposures are meaningful.
-- Do NOT output percentages.
-- Do NOT put percentages into category names.
-- Maximum 3 geography categories.
-- Maximum 3 sector categories.
-- Fewer than 3 is allowed.
-- Use ONLY canonical category names.
-- Never create a new category.
+- Use ONLY the supplied document.
+- Do NOT use outside knowledge.
+- Do NOT use the fund name as evidence.
+- Do NOT assume that the fund's domicile is its investment geography.
+- Do NOT infer a sector from the fund name.
+- Do NOT invent holdings.
+- Do NOT invent countries or sectors.
+- Use explicit portfolio evidence where available.
+- Accept evidence from:
+  * geographical allocation
+  * country allocation
+  * regional allocation
+  * sector allocation
+  * industry allocation
+  * top holdings
+  * portfolio holdings
+  * asset allocation
+  * investment objective
+  * investment strategy
+  * underlying-fund description
+  * portfolio manager description
+- If an underlying fund is explicitly described as investing in
+  a particular region or sector, that documented description
+  may be used.
+- Select AT MOST 3 geography categories.
+- Select AT MOST 3 sector categories.
+- Return fewer than 3 when evidence supports fewer.
+- Percentages must NOT be returned.
+- Category names must match the canonical vocabulary EXACTLY.
+- Do not create category names.
+- "Global" may only be used when the supplied document itself
+  supports broad global exposure.
+- "Other" should only be used when the source clearly supports
+  an exposure that cannot reasonably map to another supplied
+  canonical category.
+- If there is no supported geography, return [].
+- If there is no supported sector, return [].
 - Return ONLY JSON.
-- No explanation.
 - No markdown.
+- No explanation.
 
-CANONICAL GEOGRAPHY CATEGORIES:
+CANONICAL GEOGRAPHY:
 
 {geography_text}
 
-CANONICAL SECTOR CATEGORIES:
+CANONICAL SECTOR:
 
 {sector_text}
 
@@ -1972,119 +2157,13 @@ OUTPUT:
   "sector": []
 }}
 
-SUPPLIED EVIDENCE:
+DOCUMENT:
 
-{evidence}
+{source_text}
 """.strip()
 
 
-def analyze_exposure(
-    fund_name: str,
-    structure: str,
-    underlying_names: List[str],
-    evidence: str,
-    geography_categories: List[str],
-    sector_categories: List[str],
-) -> Tuple[
-    bool,
-    List[str],
-    List[str],
-    str,
-]:
-
-    prompt = build_exposure_prompt(
-        fund_name=fund_name,
-        structure=structure,
-        underlying_names=underlying_names,
-        evidence=evidence,
-        geography_categories=(
-            geography_categories
-        ),
-        sector_categories=(
-            sector_categories
-        ),
-    )
-
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are a precise financial "
-                "research analyst. "
-                "Return only valid JSON."
-            ),
-        },
-        {
-            "role": "user",
-            "content": prompt,
-        },
-    ]
-
-    try:
-
-        response = generate_ai_response(
-            messages
-        )
-
-    except Exception as exc:
-
-        return (
-            False,
-            [],
-            [],
-            str(exc),
-        )
-
-    log("")
-    log(
-        "      Exposure AI response:"
-    )
-    log(response)
-
-    parsed = extract_json_object(
-        response
-    )
-
-    if parsed is None:
-
-        return (
-            False,
-            [],
-            [],
-            "Exposure response could "
-            "not be parsed as JSON.",
-        )
-
-    valid, error, geography, sector = (
-        validate_ai_result(
-            parsed,
-            geography_categories,
-            sector_categories,
-        )
-    )
-
-    if not valid:
-
-        return (
-            False,
-            geography,
-            sector,
-            error,
-        )
-
-    return (
-        True,
-        geography,
-        sector,
-        "",
-    )
-
-
-# ============================================================
-# AI RESULT VALIDATION
-# ============================================================
-
-def validate_ai_result(
+def validate_exposure_result(
     parsed: Dict[str, Any],
     geography_categories: List[str],
     sector_categories: List[str],
@@ -2102,7 +2181,7 @@ def validate_ai_result(
 
         return (
             False,
-            "AI result is not an object.",
+            "Exposure result is not an object.",
             [],
             [],
         )
@@ -2165,8 +2244,13 @@ def validate_ai_result(
         sector_categories
     )
 
-    clean_geography: List[str] = []
-    clean_sector: List[str] = []
+    clean_geography: List[
+        str
+    ] = []
+
+    clean_sector: List[
+        str
+    ] = []
 
     for category in geography:
 
@@ -2177,23 +2261,17 @@ def validate_ai_result(
 
             return (
                 False,
-                "Geography contains "
-                "non-string value.",
+                "Geography contains non-string value.",
                 [],
                 [],
             )
 
-        category = category.strip()
+        category = normalize_space(
+            category
+        )
 
         if not category:
-
-            return (
-                False,
-                "Geography contains "
-                "empty category.",
-                [],
-                [],
-            )
+            continue
 
         if "%" in category:
 
@@ -2229,23 +2307,17 @@ def validate_ai_result(
 
             return (
                 False,
-                "Sector contains "
-                "non-string value.",
+                "Sector contains non-string value.",
                 [],
                 [],
             )
 
-        category = category.strip()
+        category = normalize_space(
+            category
+        )
 
         if not category:
-
-            return (
-                False,
-                "Sector contains "
-                "empty category.",
-                [],
-                [],
-            )
+            continue
 
         if "%" in category:
 
@@ -2272,6 +2344,11 @@ def validate_ai_result(
                 category
             )
 
+    # An individual source is allowed to have one dimension
+    # but not the other.
+    #
+    # Both empty means that this particular source did not
+    # provide usable evidence.
     if (
         not clean_geography
         and not clean_sector
@@ -2279,8 +2356,7 @@ def validate_ai_result(
 
         return (
             False,
-            "AI found no valid geography "
-            "or sector exposure.",
+            "AI found no valid geography or sector exposure.",
             [],
             [],
         )
@@ -2294,12 +2370,324 @@ def validate_ai_result(
 
 
 # ============================================================
+# AI CLASSIFICATION HELPERS
+# ============================================================
+
+def classify_source(
+    subject_name: str,
+    source_text: str,
+    geography_categories: List[str],
+    sector_categories: List[str],
+    context_label: str,
+) -> Dict[str, Any]:
+
+    ai_source = prepare_ai_source(
+        source_text
+    )
+
+    prompt = build_exposure_prompt(
+        subject_name=subject_name,
+        source_text=ai_source,
+        geography_categories=(
+            geography_categories
+        ),
+        sector_categories=(
+            sector_categories
+        ),
+        context_label=context_label,
+    )
+
+    try:
+
+        response = generate_ai_response(
+            prompt
+        )
+
+    except Exception as exc:
+
+        return {
+            "status": "ai_error",
+            "error": str(exc),
+            "geography": [],
+            "sector": [],
+        }
+
+    log("")
+    log(
+        "        Exposure AI response:"
+    )
+
+    log(
+        response
+    )
+
+    parsed = extract_json_object(
+        response
+    )
+
+    if parsed is None:
+
+        return {
+            "status": "ai_error",
+            "error": (
+                "AI response could not "
+                "be parsed as JSON."
+            ),
+            "geography": [],
+            "sector": [],
+        }
+
+    (
+        valid,
+        error,
+        geography,
+        sector,
+    ) = validate_exposure_result(
+        parsed,
+        geography_categories,
+        sector_categories,
+    )
+
+    if not valid:
+
+        return {
+            "status": "ai_error",
+            "error": error,
+            "geography": geography,
+            "sector": sector,
+        }
+
+    return {
+        "status": "success",
+        "error": "",
+        "geography": geography,
+        "sector": sector,
+    }
+
+
+# ============================================================
+# STRUCTURE ANALYSIS
+# ============================================================
+
+def analyze_structure(
+    fund_name: str,
+    source_text: str,
+) -> Dict[str, Any]:
+
+    ai_source = prepare_ai_source(
+        source_text
+    )
+
+    prompt = build_structure_prompt(
+        fund_name=fund_name,
+        source_text=ai_source,
+    )
+
+    try:
+
+        response = generate_ai_response(
+            prompt,
+            max_new_tokens=500,
+        )
+
+    except Exception as exc:
+
+        return {
+            "status": "ai_error",
+            "error": str(exc),
+            "structure": "",
+            "underlyingFunds": [],
+            "hasDirectPortfolioEvidence": False,
+        }
+
+    log("")
+    log(
+        "      Structure AI response:"
+    )
+
+    log(
+        response
+    )
+
+    parsed = extract_json_object(
+        response
+    )
+
+    if parsed is None:
+
+        return {
+            "status": "ai_error",
+            "error": (
+                "Structure AI response "
+                "was not valid JSON."
+            ),
+            "structure": "",
+            "underlyingFunds": [],
+            "hasDirectPortfolioEvidence": False,
+        }
+
+    (
+        valid,
+        error,
+        structure,
+        underlying,
+        direct_evidence,
+    ) = validate_structure_result(
+        parsed
+    )
+
+    if not valid:
+
+        return {
+            "status": "ai_error",
+            "error": error,
+            "structure": structure,
+            "underlyingFunds": underlying,
+            "hasDirectPortfolioEvidence": (
+                direct_evidence
+            ),
+        }
+
+    return {
+        "status": "success",
+        "error": "",
+        "structure": structure,
+        "underlyingFunds": underlying,
+        "hasDirectPortfolioEvidence": (
+            direct_evidence
+        ),
+    }
+
+
+# ============================================================
+# AGGREGATION
+# ============================================================
+
+def aggregate_exposures(
+    classifications: List[
+        Dict[str, Any]
+    ],
+    geography_categories: List[str],
+    sector_categories: List[str],
+) -> Tuple[
+    List[str],
+    List[str],
+]:
+
+    geography_order = {
+        category: index
+        for index, category
+        in enumerate(
+            geography_categories
+        )
+    }
+
+    sector_order = {
+        category: index
+        for index, category
+        in enumerate(
+            sector_categories
+        )
+    }
+
+    geography_score: Dict[
+        str,
+        float,
+    ] = {}
+
+    sector_score: Dict[
+        str,
+        float,
+    ] = {}
+
+    for classification in (
+        classifications
+    ):
+
+        if (
+            classification.get(
+                "status"
+            )
+            != "success"
+        ):
+            continue
+
+        # Direct classification and underlying classification
+        # each provide one evidence unit.
+        #
+        # A category mentioned by multiple independent sources
+        # receives a higher score.
+        #
+        # We intentionally do NOT use percentages because the
+        # requested output is categorical.
+        for category in classification.get(
+            "geography",
+            [],
+        ):
+
+            geography_score[
+                category
+            ] = (
+                geography_score.get(
+                    category,
+                    0.0,
+                )
+                + 1.0
+            )
+
+        for category in classification.get(
+            "sector",
+            [],
+        ):
+
+            sector_score[
+                category
+            ] = (
+                sector_score.get(
+                    category,
+                    0.0,
+                )
+                + 1.0
+            )
+
+    ranked_geography = sorted(
+        geography_score.keys(),
+        key=lambda category: (
+            -geography_score[
+                category
+            ],
+            geography_order.get(
+                category,
+                9999,
+            ),
+        ),
+    )
+
+    ranked_sector = sorted(
+        sector_score.keys(),
+        key=lambda category: (
+            -sector_score[
+                category
+            ],
+            sector_order.get(
+                category,
+                9999,
+            ),
+        ),
+    )
+
+    return (
+        ranked_geography[:3],
+        ranked_sector[:3],
+    )
+
+
+# ============================================================
 # FUND PROCESSING
 # ============================================================
 
 def process_fund(
     fund: Dict[str, str],
-    workbook_index: Dict[str, Dict[str, str]],
     geography_categories: List[str],
     sector_categories: List[str],
     index: int,
@@ -2315,71 +2703,168 @@ def process_fund(
     ]
 
     log("")
-    log("-" * 70)
+    log(
+        "=" * 70
+    )
+
     log(
         f"[{index}/{total}] "
         f"{fund_name}"
     )
-    log("-" * 70)
+
+    log(
+        "=" * 70
+    )
 
     # --------------------------------------------------------
-    # Parent source
+    # SOURCE COLLECTION
     # --------------------------------------------------------
 
     try:
 
-        parent_bundle = fetch_source_bundle(
-            url=prudential_url,
-            label="parent fund",
+        (
+            documents,
+            discovered_links,
+        ) = collect_prudential_sources(
+            prudential_url
         )
 
     except Exception as exc:
 
         log(
-            f"        Source failed: {exc}"
+            f"        Source failed: "
+            f"{exc}"
         )
 
         return {
             "fundName": fund_name,
             "prudentialUrl": prudential_url,
+            "researchMode": "unresolved",
+            "underlyingFunds": [],
             "geography": [],
             "sector": [],
             "status": "source_error",
             "error": str(exc),
-            "structure": "unknown",
-            "underlyingFunds": [],
             "sources": [
                 prudential_url
             ],
         }
 
-    parent_source = parent_bundle[
-        "text"
-    ]
+    if not documents:
 
-    log(
-        f"        Parent source characters: "
-        f"{len(parent_source)}"
-    )
-
-    # --------------------------------------------------------
-    # Diagnostic preview
-    # --------------------------------------------------------
-
-    parent_preview = prepare_ai_source(
-        parent_source
-    )
+        return {
+            "fundName": fund_name,
+            "prudentialUrl": prudential_url,
+            "researchMode": "unresolved",
+            "underlyingFunds": [],
+            "geography": [],
+            "sector": [],
+            "status": "source_error",
+            "error": (
+                "No usable source documents."
+            ),
+            "sources": [
+                prudential_url
+            ],
+        }
 
     log("")
     log(
-        "        PARENT SOURCE PREVIEW:"
+        f"        Documents collected: "
+        f"{len(documents)}"
     )
+
+    for document in documents:
+
+        log(
+            f"          - "
+            f"{document.source_type}: "
+            f"{document.url}"
+        )
+
+    # --------------------------------------------------------
+    # BUILD COMBINED STRUCTURE SOURCE
+    # --------------------------------------------------------
+
+    combined_source_parts: List[
+        str
+    ] = []
+
+    for document in documents:
+
+        prepared = prepare_ai_source(
+            document.text
+        )
+
+        if not prepared:
+            continue
+
+        combined_source_parts.append(
+            "\n".join(
+                [
+                    (
+                        "--- DOCUMENT ---"
+                    ),
+                    (
+                        f"URL: "
+                        f"{document.url}"
+                    ),
+                    (
+                        f"TITLE: "
+                        f"{document.title}"
+                    ),
+                    prepared,
+                ]
+            )
+        )
+
+    combined_source = truncate_text(
+        clean_text(
+            "\n\n".join(
+                combined_source_parts
+            )
+        ),
+        MAX_AI_SOURCE_CHARS,
+    )
+
+    if not combined_source:
+
+        return {
+            "fundName": fund_name,
+            "prudentialUrl": prudential_url,
+            "researchMode": "unresolved",
+            "underlyingFunds": [],
+            "geography": [],
+            "sector": [],
+            "status": "source_error",
+            "error": (
+                "No usable text after preprocessing."
+            ),
+            "sources": [
+                document.url
+                for document in documents
+            ],
+        }
+
+    # --------------------------------------------------------
+    # DIAGNOSTIC PREVIEW
+    # --------------------------------------------------------
+
+    log("")
+    log(
+        "        SOURCE PREVIEW:"
+    )
+
     log(
         "        "
         + "-" * 60
     )
 
-    for line in parent_preview[:4000].splitlines():
+    preview = combined_source[
+        :SOURCE_PREVIEW_CHARS
+    ]
+
+    for line in preview.splitlines():
 
         log(
             f"        {line}"
@@ -2391,323 +2876,498 @@ def process_fund(
     )
 
     # --------------------------------------------------------
-    # Stage 1: structure
+    # STAGE 1 - STRUCTURE
     # --------------------------------------------------------
 
     log("")
     log(
-        "      Stage 1 - detecting fund structure..."
+        "      Stage 1 - "
+        "detecting fund structure..."
     )
 
-    structure_ok, structure, underlying_names, (
-        structure_error
-    ) = analyze_fund_structure(
+    structure_result = analyze_structure(
         fund_name=fund_name,
-        source_text=parent_preview,
+        source_text=combined_source,
     )
 
-    if not structure_ok:
+    if (
+        structure_result.get(
+            "status"
+        )
+        != "success"
+    ):
+
+        error = structure_result.get(
+            "error",
+            "Unknown structure AI error.",
+        )
 
         log(
             f"        Structure analysis failed: "
-            f"{structure_error}"
+            f"{error}"
         )
 
         return {
             "fundName": fund_name,
             "prudentialUrl": prudential_url,
+            "researchMode": "unresolved",
+            "underlyingFunds": [],
             "geography": [],
             "sector": [],
-            "status": structure,
-            "error": structure_error,
-            "structure": structure,
-            "underlyingFunds": underlying_names,
-            "sources": parent_bundle[
-                "sourceUrls"
+            "status": "ai_error",
+            "error": error,
+            "sources": [
+                document.url
+                for document in documents
             ],
         }
 
+    structure = structure_result[
+        "structure"
+    ]
+
+    underlying_funds = (
+        structure_result[
+            "underlyingFunds"
+        ]
+    )
+
+    has_direct_evidence = (
+        structure_result[
+            "hasDirectPortfolioEvidence"
+        ]
+    )
+
+    log("")
     log(
         f"        Detected structure: "
         f"{structure}"
     )
 
-    if underlying_names:
+    log(
+        f"        Underlying funds: "
+        f"{underlying_funds}"
+    )
 
-        log(
-            "        Underlying funds:"
-        )
-
-        for name in underlying_names:
-
-            log(
-                f"          - {name}"
-            )
+    log(
+        f"        Direct portfolio evidence: "
+        f"{has_direct_evidence}"
+    )
 
     # --------------------------------------------------------
-    # Stage 2: underlying evidence
+    # STAGE 2 - DIRECT FUND CLASSIFICATION
     # --------------------------------------------------------
 
-    underlying_bundles: List[
+    classifications: List[
         Dict[str, Any]
     ] = []
 
-    unresolved_underlying: List[str] = []
+    source_records: List[
+        Dict[str, Any]
+    ] = []
 
-    if structure in {
-        "fund_of_funds",
-        "mixed",
-    }:
+    if (
+        structure
+        in {
+            "direct",
+            "mixed",
+        }
+        or (
+            not underlying_funds
+            and has_direct_evidence
+        )
+    ):
 
-        for underlying_name in underlying_names:
+        log("")
+        log(
+            "      Stage 2 - "
+            "researching direct portfolio exposure..."
+        )
 
-            log("")
-            log(
-                "      Researching underlying fund: "
-                f"{underlying_name}"
+        # Prefer the strongest documents first.
+        direct_documents = sorted(
+            documents,
+            key=lambda document: (
+                0
+                if document.source_type
+                == "pdf"
+                else 1
+            )
+        )
+
+        direct_documents = (
+            direct_documents[
+                :MAX_CLASSIFICATION_DOCUMENTS
+            ]
+        )
+
+        direct_successes = 0
+
+        for document in (
+            direct_documents
+        ):
+
+            prepared = (
+                prepare_ai_source(
+                    document.text
+                )
             )
 
-            found = (
-                discover_underlying_source(
-                    underlying_name=(
-                        underlying_name
+            if not prepared:
+                continue
+
+            classification = (
+                classify_source(
+                    subject_name=fund_name,
+                    source_text=prepared,
+                    geography_categories=(
+                        geography_categories
                     ),
-                    parent_source_bundle=(
-                        parent_bundle
+                    sector_categories=(
+                        sector_categories
                     ),
-                    workbook_index=(
-                        workbook_index
+                    context_label=(
+                        "Direct fund portfolio "
+                        "research"
                     ),
                 )
             )
 
-            if found:
+            source_records.append(
+                {
+                    "subject": fund_name,
+                    "sourceUrl": document.url,
+                    "sourceType": document.source_type,
+                    "classification": classification,
+                }
+            )
 
-                underlying_bundles.extend(
-                    found
+            if (
+                classification.get(
+                    "status"
+                )
+                == "success"
+            ):
+
+                classifications.append(
+                    classification
+                )
+
+                direct_successes += 1
+
+        log(
+            f"        Direct successful "
+            f"classifications: "
+            f"{direct_successes}"
+        )
+
+    # --------------------------------------------------------
+    # STAGE 3 - UNDERLYING FUND RESEARCH
+    # --------------------------------------------------------
+
+    underlying_records: List[
+        Dict[str, Any]
+    ] = []
+
+    if underlying_funds:
+
+        log("")
+        log(
+            "      Stage 3 - "
+            "researching underlying funds..."
+        )
+
+        for underlying_name in (
+            underlying_funds[
+                :MAX_UNDERLYING_FUNDS
+            ]
+        ):
+
+            log("")
+            log(
+                f"        Underlying fund: "
+                f"{underlying_name}"
+            )
+
+            ranked_documents = (
+                rank_documents_for_underlying_fund(
+                    documents,
+                    underlying_name,
+                )
+            )
+
+            # If we cannot match a specific document,
+            # still allow the AI to inspect the combined
+            # Prudential source because the underlying fund
+            # may be described inside the root page.
+            selected_documents = (
+                ranked_documents[
+                    :3
+                ]
+            )
+
+            if selected_documents:
+
+                log(
+                    f"        Matched documents: "
+                    f"{len(selected_documents)}"
                 )
 
             else:
 
-                unresolved_underlying.append(
-                    underlying_name
+                log(
+                    "        No dedicated "
+                    "underlying document matched; "
+                    "using Prudential source."
                 )
 
-        if unresolved_underlying:
+                selected_documents = []
 
-            log("")
-            log(
-                "        Unresolved underlying "
-                "fund evidence:"
+            underlying_text_parts: List[
+                str
+            ] = []
+
+            if selected_documents:
+
+                for document in (
+                    selected_documents
+                ):
+
+                    prepared = (
+                        prepare_ai_source(
+                            document.text
+                        )
+                    )
+
+                    if prepared:
+
+                        underlying_text_parts.append(
+                            "\n".join(
+                                [
+                                    (
+                                        "--- UNDERLYING "
+                                        "FUND DOCUMENT ---"
+                                    ),
+                                    (
+                                        f"URL: "
+                                        f"{document.url}"
+                                    ),
+                                    prepared,
+                                ]
+                            )
+                        )
+
+            else:
+
+                underlying_text_parts.append(
+                    "\n".join(
+                        [
+                            (
+                                "--- PRUDENTIAL "
+                                "SOURCE ---"
+                            ),
+                            combined_source,
+                        ]
+                    )
+                )
+
+            underlying_source = truncate_text(
+                clean_text(
+                    "\n\n".join(
+                        underlying_text_parts
+                    )
+                ),
+                MAX_AI_SOURCE_CHARS,
             )
 
-            for name in unresolved_underlying:
+            if not underlying_source:
 
                 log(
-                    f"          - {name}"
+                    "        No usable source "
+                    "for underlying fund."
+                )
+
+                continue
+
+            classification = (
+                classify_source(
+                    subject_name=(
+                        underlying_name
+                    ),
+                    source_text=(
+                        underlying_source
+                    ),
+                    geography_categories=(
+                        geography_categories
+                    ),
+                    sector_categories=(
+                        sector_categories
+                    ),
+                    context_label=(
+                        "Underlying fund research "
+                        "for a Prudential "
+                        "fund-of-funds structure"
+                    ),
+                )
+            )
+
+            underlying_record = {
+                "fundName": underlying_name,
+                "matchedSources": [
+                    document.url
+                    for document
+                    in selected_documents
+                ],
+                "classification": (
+                    classification
+                ),
+            }
+
+            underlying_records.append(
+                underlying_record
+            )
+
+            if (
+                classification.get(
+                    "status"
+                )
+                == "success"
+            ):
+
+                classifications.append(
+                    classification
+                )
+
+                log(
+                    f"        Underlying "
+                    f"geography: "
+                    f"{classification.get('geography')}"
+                )
+
+                log(
+                    f"        Underlying "
+                    f"sector: "
+                    f"{classification.get('sector')}"
+                )
+
+            else:
+
+                log(
+                    "        Underlying "
+                    "classification produced "
+                    "no usable exposure."
                 )
 
     # --------------------------------------------------------
-    # Evidence package
+    # AGGREGATE
     # --------------------------------------------------------
 
-    evidence = build_evidence_package(
-        parent_source=parent_source,
-        underlying_sources=(
-            underlying_bundles
-        ),
+    geography, sector = (
+        aggregate_exposures(
+            classifications=(
+                classifications
+            ),
+            geography_categories=(
+                geography_categories
+            ),
+            sector_categories=(
+                sector_categories
+            ),
+        )
     )
 
     log("")
     log(
-        f"        Final AI evidence characters: "
-        f"{len(evidence)}"
+        "      Aggregated exposure:"
     )
 
-    log("")
     log(
-        "        FINAL AI EVIDENCE PREVIEW:"
-    )
-    log(
-        "        "
-        + "-" * 60
+        f"        Geography: "
+        f"{geography}"
     )
 
-    for line in evidence[:5000].splitlines():
+    log(
+        f"        Sector: "
+        f"{sector}"
+    )
+
+    # --------------------------------------------------------
+    # FINAL FUND-LEVEL SUCCESS
+    # --------------------------------------------------------
+
+    if (
+        not geography
+        and not sector
+    ):
 
         log(
-            f"        {line}"
-        )
-
-    log(
-        "        "
-        + "-" * 60
-    )
-
-    # --------------------------------------------------------
-    # Important evidence rule.
-    #
-    # For fund-of-funds:
-    # If the parent source identifies underlying funds but
-    # provides no useful portfolio evidence and none of the
-    # underlying funds can be sourced, do not let Qwen guess.
-    # --------------------------------------------------------
-
-    if structure in {
-        "fund_of_funds",
-        "mixed",
-    }:
-
-        parent_relevant = (
-            extract_relevant_sections(
-                parent_source,
-                maximum=20000,
-            )
-        )
-
-        has_underlying_evidence = (
-            len(underlying_bundles) > 0
-        )
-
-        if (
-            not parent_relevant
-            and not has_underlying_evidence
-        ):
-
-            return {
-                "fundName": fund_name,
-                "prudentialUrl": prudential_url,
-                "geography": [],
-                "sector": [],
-                "status": "insufficient_evidence",
-                "error": (
-                    "Fund-of-funds identified, "
-                    "but no usable underlying "
-                    "portfolio evidence was "
-                    "available."
-                ),
-                "structure": structure,
-                "underlyingFunds": underlying_names,
-                "unresolvedUnderlyingFunds": (
-                    unresolved_underlying
-                ),
-                "sources": parent_bundle[
-                    "sourceUrls"
-                ],
-            }
-
-    # --------------------------------------------------------
-    # Stage 2: exposure analysis
-    # --------------------------------------------------------
-
-    log("")
-    log(
-        "      Stage 2 - researching geography "
-        "and sector..."
-    )
-
-    (
-        exposure_ok,
-        geography,
-        sector,
-        exposure_error,
-    ) = analyze_exposure(
-        fund_name=fund_name,
-        structure=structure,
-        underlying_names=underlying_names,
-        evidence=evidence,
-        geography_categories=(
-            geography_categories
-        ),
-        sector_categories=(
-            sector_categories
-        ),
-    )
-
-    if not exposure_ok:
-
-        log(
-            f"        Exposure analysis failed: "
-            f"{exposure_error}"
+            "        Exposure analysis failed: "
+            "no supported geography or sector."
         )
 
         return {
             "fundName": fund_name,
             "prudentialUrl": prudential_url,
-            "geography": geography,
-            "sector": sector,
-            "status": "ai_error",
-            "error": exposure_error,
-            "structure": structure,
-            "underlyingFunds": underlying_names,
-            "unresolvedUnderlyingFunds": (
-                unresolved_underlying
+            "researchMode": structure,
+            "underlyingFunds": (
+                underlying_funds
             ),
-            "sources": list(
-                dict.fromkeys(
-                    parent_bundle[
-                        "sourceUrls"
-                    ]
-                    + [
-                        url
-                        for bundle in (
-                            underlying_bundles
-                        )
-                        for url in bundle.get(
-                            "sourceUrls",
-                            [],
-                        )
-                    ]
-                )
+            "geography": [],
+            "sector": [],
+            "status": "ai_error",
+            "error": (
+                "No geography or sector exposure "
+                "could be supported from the "
+                "available source documents."
+            ),
+            "sources": [
+                document.url
+                for document in documents
+            ],
+            "underlyingResearch": (
+                underlying_records
             ),
         }
 
     # --------------------------------------------------------
-    # Success
+    # SUCCESS
     # --------------------------------------------------------
-
-    log("")
-    log(
-        f"        Geography: {geography}"
-    )
-
-    log(
-        f"        Sector: {sector}"
-    )
-
-    log(
-        "        Status: success"
-    )
-
-    all_sources = (
-        parent_bundle[
-            "sourceUrls"
-        ]
-        + [
-            url
-            for bundle in underlying_bundles
-            for url in bundle.get(
-                "sourceUrls",
-                [],
-            )
-        ]
-    )
 
     return {
         "fundName": fund_name,
         "prudentialUrl": prudential_url,
+        "researchMode": structure,
+        "underlyingFunds": (
+            underlying_funds
+        ),
         "geography": geography,
         "sector": sector,
         "status": "success",
-        "structure": structure,
-        "underlyingFunds": underlying_names,
-        "unresolvedUnderlyingFunds": (
-            unresolved_underlying
+        "error": "",
+        "sources": [
+            document.url
+            for document in documents
+        ],
+        "discoveredLinks": [
+            {
+                "url": item.get(
+                    "url",
+                    "",
+                ),
+                "text": item.get(
+                    "text",
+                    "",
+                ),
+            }
+            for item in discovered_links[
+                :MAX_DISCOVERY_DOCUMENTS
+            ]
+        ],
+        "underlyingResearch": (
+            underlying_records
         ),
-        "sources": list(
-            dict.fromkeys(
-                all_sources
-            )
+        "sourceClassifications": (
+            source_records
         ),
     }
 
@@ -2716,40 +3376,37 @@ def process_fund(
 # AI HEALTH CHECK
 # ============================================================
 
-def ai_health_check() -> bool:
+def ai_health_check(
+    geography_categories: List[str],
+    sector_categories: List[str],
+) -> bool:
 
     log("")
-    log("=" * 70)
-    log("AI HEALTH CHECK")
-    log("=" * 70)
+    log(
+        "=" * 70
+    )
+    log(
+        "AI HEALTH CHECK"
+    )
+    log(
+        "=" * 70
+    )
 
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are a precise financial "
-                "research analyst. "
-                "Return only valid JSON."
-            ),
-        },
-        {
-            "role": "user",
-            "content": (
-                "Return exactly this JSON schema "
-                "with empty arrays. "
-                "Do not add explanation:\n"
-                "{"
-                "\"geography\": [], "
-                "\"sector\": []"
-                "}"
-            ),
-        },
-    ]
+    test_prompt = f"""
+Return ONLY this JSON object:
+
+{{
+  "status": "ok"
+}}
+
+Do not add any other text.
+""".strip()
 
     try:
 
         response = generate_ai_response(
-            messages
+            test_prompt,
+            max_new_tokens=100,
         )
 
         log(
@@ -2770,17 +3427,14 @@ def ai_health_check() -> bool:
 
             return False
 
-        if not isinstance(
-            parsed.get("geography"),
-            list,
-        ):
+        if parsed.get(
+            "status"
+        ) != "ok":
 
-            return False
-
-        if not isinstance(
-            parsed.get("sector"),
-            list,
-        ):
+            log(
+                "ERROR: Health check "
+                "returned unexpected JSON."
+            )
 
             return False
 
@@ -2847,6 +3501,10 @@ def validate_complete_result(
         sector_categories
     )
 
+    seen_fund_names: Set[
+        str
+    ] = set()
+
     for index, fund in enumerate(
         funds,
         start=1,
@@ -2866,6 +3524,16 @@ def validate_complete_result(
         name = fund.get(
             "fundName",
             f"Fund #{index}",
+        )
+
+        if name in seen_fund_names:
+
+            errors.append(
+                f"{name}: duplicate fund."
+            )
+
+        seen_fund_names.add(
+            name
         )
 
         status = fund.get(
@@ -2913,6 +3581,18 @@ def validate_complete_result(
 
             continue
 
+        # Successful fund cannot have both empty.
+        if (
+            status == "success"
+            and not geography
+            and not sector
+        ):
+
+            errors.append(
+                f"{name}: no geography "
+                "or sector exposure."
+            )
+
         if len(geography) > 3:
 
             errors.append(
@@ -2925,16 +3605,6 @@ def validate_complete_result(
             errors.append(
                 f"{name}: more than "
                 "3 sector categories."
-            )
-
-        if (
-            not geography
-            and not sector
-        ):
-
-            errors.append(
-                f"{name}: no geography "
-                "or sector exposure."
             )
 
         for category in geography:
@@ -3013,8 +3683,11 @@ def publish_output_atomically(
         exist_ok=True,
     )
 
-    temporary_path = output_path.with_suffix(
-        output_path.suffix + ".tmp"
+    temporary_path = (
+        output_path.with_suffix(
+            output_path.suffix
+            + ".tmp"
+        )
     )
 
     try:
@@ -3031,7 +3704,9 @@ def publish_output_atomically(
                 ensure_ascii=False,
             )
 
-            file.write("\n")
+            file.write(
+                "\n"
+            )
 
             file.flush()
 
@@ -3039,6 +3714,7 @@ def publish_output_atomically(
                 file.fileno()
             )
 
+        # Verify JSON after writing.
         with temporary_path.open(
             "r",
             encoding="utf-8",
@@ -3059,15 +3735,18 @@ def publish_output_atomically(
             )
 
         if not isinstance(
-            verified.get("funds"),
+            verified.get(
+                "funds"
+            ),
             list,
         ):
 
             raise RuntimeError(
-                "Temporary output "
-                "funds is not a list."
+                "Temporary output funds "
+                "is not a list."
             )
 
+        # Atomic replacement.
         os.replace(
             temporary_path,
             output_path,
@@ -3078,6 +3757,7 @@ def publish_output_atomically(
         try:
 
             if temporary_path.exists():
+
                 temporary_path.unlink()
 
         except Exception:
@@ -3092,7 +3772,12 @@ def publish_output_atomically(
 
 def parse_args() -> argparse.Namespace:
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description=(
+            "VGrat FMS AI fund geography "
+            "and sector research."
+        )
+    )
 
     parser.add_argument(
         "--limit",
@@ -3115,11 +3800,17 @@ def main() -> int:
     args = parse_args()
 
     log("")
-    log("=" * 70)
+    log(
+        "=" * 70
+    )
+
     log(
         "VGRAT FMS - AI FUND EXPOSURE RESEARCH"
     )
-    log("=" * 70)
+
+    log(
+        "=" * 70
+    )
 
     log(
         f"Model: {MODEL_NAME}"
@@ -3134,14 +3825,16 @@ def main() -> int:
     )
 
     log(
-        "Adaptive structure: ENABLED"
+        "Structure: DIRECT + FUND-OF-FUNDS"
     )
 
     log(
         f"Output: {OUTPUT_PATH}"
     )
 
-    log("=" * 70)
+    log(
+        "=" * 70
+    )
 
     # --------------------------------------------------------
     # Categories
@@ -3149,10 +3842,11 @@ def main() -> int:
 
     try:
 
-        geography_categories, sector_categories = (
-            load_categories(
-                CATEGORIES_FILE
-            )
+        (
+            geography_categories,
+            sector_categories,
+        ) = load_categories(
+            CATEGORIES_FILE
         )
 
     except Exception as exc:
@@ -3180,7 +3874,7 @@ def main() -> int:
     )
 
     # --------------------------------------------------------
-    # Funds
+    # Workbook
     # --------------------------------------------------------
 
     try:
@@ -3209,12 +3903,6 @@ def main() -> int:
 
         return 1
 
-    workbook_index = (
-        build_workbook_name_index(
-            funds
-        )
-    )
-
     # --------------------------------------------------------
     # Limit
     # --------------------------------------------------------
@@ -3238,7 +3926,9 @@ def main() -> int:
             f"{len(funds)} funds"
         )
 
-    total = len(funds)
+    total = len(
+        funds
+    )
 
     if total == 0:
 
@@ -3274,7 +3964,10 @@ def main() -> int:
     # Health check
     # --------------------------------------------------------
 
-    if not ai_health_check():
+    if not ai_health_check(
+        geography_categories,
+        sector_categories,
+    ):
 
         log(
             "AI health check FAILED."
@@ -3305,9 +3998,6 @@ def main() -> int:
 
         result = process_fund(
             fund=fund,
-            workbook_index=(
-                workbook_index
-            ),
             geography_categories=(
                 geography_categories
             ),
@@ -3322,9 +4012,12 @@ def main() -> int:
             result
         )
 
-        if result.get(
-            "status"
-        ) == "success":
+        if (
+            result.get(
+                "status"
+            )
+            == "success"
+        ):
 
             successful += 1
 
@@ -3339,6 +4032,12 @@ def main() -> int:
     output: Dict[str, Any] = {
         "generatedAt": utc_now(),
         "model": MODEL_NAME,
+        "analysis": (
+            "Local AI classification using "
+            "Prudential source documents and "
+            "underlying-fund documents where "
+            "available."
+        ),
         "fundCount": total,
         "funds": results,
         "summary": {
@@ -3349,13 +4048,21 @@ def main() -> int:
     }
 
     # --------------------------------------------------------
-    # Final validation
+    # FINAL VALIDATION
     # --------------------------------------------------------
 
     log("")
-    log("=" * 70)
-    log("FINAL VALIDATION")
-    log("=" * 70)
+    log(
+        "=" * 70
+    )
+
+    log(
+        "FINAL VALIDATION"
+    )
+
+    log(
+        "=" * 70
+    )
 
     log(
         f"Total funds: {total}"
@@ -3422,7 +4129,7 @@ def main() -> int:
 
         log("")
         log(
-            "ERROR: Output publishing failed: "
+            f"ERROR: Output publishing failed: "
             f"{exc}"
         )
 
@@ -3434,13 +4141,21 @@ def main() -> int:
         return 1
 
     # --------------------------------------------------------
-    # Success
+    # SUCCESS
     # --------------------------------------------------------
 
     log("")
-    log("=" * 70)
-    log("RESEARCH SUCCESS")
-    log("=" * 70)
+    log(
+        "=" * 70
+    )
+
+    log(
+        "RESEARCH SUCCESS"
+    )
+
+    log(
+        "=" * 70
+    )
 
     log(
         f"Successfully researched: "
@@ -3456,12 +4171,15 @@ def main() -> int:
         "because the complete run succeeded."
     )
 
-    log("=" * 70)
+    log(
+        "=" * 70
+    )
 
     return 0
 
 
 if __name__ == "__main__":
+
     sys.exit(
         main()
     )
