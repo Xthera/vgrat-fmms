@@ -1,12 +1,59 @@
 {
-  "generatedAtSgt": "2026-10-02T15:13:55+08:00",
+  "generatedAtSgt": "2026-10-02T18:12:22+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
   "maxArticles": 100,
   "source": "CNBC",
-  "articleCount": 54,
+  "articleCount": 57,
   "articles": [
+    {
+      "id": "d6e3d4197c2892f8248dbcd5d22f420ec83e452b77cdcf47200360c852b71c0e",
+      "source": "CNBC",
+      "title": "Nike shares plummet 10% after weak revenue outlook and layoff plans underway",
+      "publishedAtSgt": "2026-10-02T18:11:09+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/nike-nke-stock-q1-earnings-layoffs.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "Nike's shares plummeted in premarket trading Friday, falling for a second straight day after it reported falling revenue and plans to lay off staff in 2027. The sportswear giant said Thursday that its fiscal first-quarter revenues were down 4% to $11.2 billion, citing declines in Greater China, which was partially offset by growth in its North America segment. Its shares were last down 10.36% in premarket trading on Friday and have declined nearly 45% since the beginning of the year.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-02T18:12:22+08:00"
+    },
+    {
+      "id": "091f1cdf4fb5919a981069856e0ff533aeac66332eb103a16e9189fa3e87d691",
+      "source": "CNBC",
+      "title": "Eurozone inflation hits its highest level in three years at 3.8% as energy costs soar",
+      "publishedAtSgt": "2026-10-02T17:39:51+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/eurozone-inflation-ecb.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "Last month's print is up from the 3.2% recorded in August, above the 3.6% forecast by markets and well ahead of the European Central Bank's 2% target. Energy inflation reached its highest level since January 2023, at 18.8%, as the ongoing Middle East conflict continues to drive prices higher. \"A central bank mindful of the experience of 2022 will not want to wait for second-round effects to become entrenched before acting.\"",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-02T18:12:22+08:00"
+    },
+    {
+      "id": "fd035a9110053768a93823894b92df39c5d006f73dc864e7d6966240595df86e",
+      "source": "CNBC",
+      "title": "Oil prices fall over 3% on report of potential diesel, crude stock release; Brent back below $100",
+      "publishedAtSgt": "2026-10-02T17:34:33+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/oil-wti-brent-diesel-stock-release-europe.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Oil prices were sharply lower on Friday morning, extending losses from earlier in the session, following reports of a potential move to release diesel and crude stocks to ease a global supply shortage. The report, which cited a single unnamed source familiar with details of the discussion, said France had proposed that EU nations release 50 million barrels of diesel and International Energy Agency members release 50 million barrels of crude oil.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-02T18:12:22+08:00"
+    },
     {
       "id": "de220180bd1ce76af205bf905bc2fd0e4923154909891b0c6d4540e0df817f90",
       "source": "CNBC",
