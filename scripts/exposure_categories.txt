@@ -78,6 +78,7 @@ Utilities
 Telecommunications
 Information Technology
 Artificial Intelligence
+Oil & Gas
 Cash
 Fixed Income
 Other
