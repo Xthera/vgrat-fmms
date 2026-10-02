@@ -51,15 +51,10 @@ jobs:
       # 3. DEPENDENCIES
       # ==========================================================
 
-      - name: Install factsheet dependencies
-        run: |
-          python -m pip install --upgrade pip
-
-          pip install \
-            requests \
-            beautifulsoup4 \
-            openpyxl \
-            pdfplumber
+     - name: Install dependencies
+  run: |
+    python -m pip install --upgrade pip
+    pip install -r scripts/requirements.txt
 
 
       # ==========================================================
