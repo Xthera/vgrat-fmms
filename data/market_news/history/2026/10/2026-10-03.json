@@ -5,6 +5,21 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "3c6dcc5729b7e16ee6eee0007e469d618b4e01647994270d7c204bbeb7a8118f",
+      "source": "CNBC",
+      "title": "Cerebras stock hits post-IPO low, tumbling 20% for the week on Nvidia pressure and lockup expiration",
+      "publishedAtSgt": "2026-10-03T05:45:06+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/cerebras-stock-hits-post-ipo-low-on-nvidia-pressure-lockup-expiration.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Cerebras stock plummeted nearly 20% this week to its lowest price since the company's monster IPO in May, after a report that chip giant Nvidia will power a crucial piece of OpenAI's latest model. The stock, which closed on Friday at $166.43, was also under pressure this week due to the expiration of post-IPO restrictions on some insider shares. Investors were excited by the prospect of an alternative to Nvidia to power AI.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-03T06:11:29+08:00"
+    },
+    {
       "id": "fb7646c902efeb1030184186aea652b650a017706f3b679042ac0a347e822e61",
       "source": "CNBC",
       "title": "10-year Treasury yield ticks higher despite weaker-than-expected jobs report",
@@ -51,6 +66,6 @@
       "collectedAtSgt": "2026-10-03T03:12:51+08:00"
     }
   ],
-  "articleCount": 3,
-  "updatedAtSgt": "2026-10-03T03:12:51+08:00"
+  "articleCount": 4,
+  "updatedAtSgt": "2026-10-03T06:11:29+08:00"
 }
