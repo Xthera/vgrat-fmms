@@ -70,7 +70,7 @@ jobs:
 
           echo "Checking required files..."
 
-          test -f "Funds Links.xlsx"
+          test -f "Funds Links.xlsm"
           test -f "scripts/research_fund_exposure.py"
           test -f "scripts/exposure_categories.txt"
 
