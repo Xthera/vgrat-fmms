@@ -79,4 +79,5 @@ Telecommunications
 Information Technology
 Artificial Intelligence
 Cash
+Fixed Income
 Other
