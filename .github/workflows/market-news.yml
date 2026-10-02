@@ -3,6 +3,13 @@ name: Market News - CNBC Collector
 on:
   workflow_dispatch:
 
+  # ============================================================
+  # EVERY 3 HOURS - 00:00 Singapore time start
+  # Singapore = UTC+8
+  # ============================================================
+  schedule:
+    - cron: "0 16,19,22,1,4,7,10,13 * * *"
+
 permissions:
   contents: write
 
