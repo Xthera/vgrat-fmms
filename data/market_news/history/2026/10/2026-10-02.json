@@ -5,6 +5,36 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "de220180bd1ce76af205bf905bc2fd0e4923154909891b0c6d4540e0df817f90",
+      "source": "CNBC",
+      "title": "CNBC Daily Open: Bond yield whiplash grips global economy",
+      "publishedAtSgt": "2026-10-02T14:36:08+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/bond-yields-global-economy.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "As CNBC's Steve Sedgwick reminded us in the newsroom, the European Central Bank has a tool to stop disorderly bond sell-offs and spread widening. Oil prices have stabilized in early trade on Friday after spiking during Thursday's session. — Leonie Kidd Danish jewelry giant Pandora has opened its $150 million manufacturing facility in Vietnam, betting on further growth in Asia as the company diversifies production beyond its longtime base in Thailand.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-02T15:13:53+08:00"
+    },
+    {
+      "id": "9f3e19cb195f3b357565eebc6d8c9c7d2f751180b943ed14693dd1f4f52d2cba",
+      "source": "CNBC",
+      "title": "War, $100 oil and a bond sell-off reshaped markets in the third quarter",
+      "publishedAtSgt": "2026-10-02T13:29:21+08:00",
+      "url": "https://www.cnbc.com/2026/10/01/q3-markets-stocks-oil-iran-war.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "The Strait of Hormuz remained blocked, fueling fears for energy markets and of inflation, but equities broadly notched returns in the third quarter. In September, AI and tech stocks struggled amid calls from prominent AI figures — including Anthropic chief Dario Amodei and OpenAI CEO Sam Altman — to slow down how fast the technology is developed amid safety concerns.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-02T15:13:55+08:00"
+    },
+    {
       "id": "c76418e21ce9c16998f9605652a403ea657083b37e5eaa77417485352d6d7e18",
       "source": "CNBC",
       "title": "U.S. trade representative Greer says deal with India not 'imminent' after Modi-Trump call",
@@ -195,6 +225,6 @@
       "collectedAtSgt": "2026-10-02T12:10:03+08:00"
     }
   ],
-  "articleCount": 12,
-  "updatedAtSgt": "2026-10-02T12:10:03+08:00"
+  "articleCount": 14,
+  "updatedAtSgt": "2026-10-02T15:13:55+08:00"
 }
