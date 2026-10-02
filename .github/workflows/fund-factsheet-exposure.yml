@@ -1,256 +1,131 @@
-name: Fund Geographic and Sector Exposure - Google Discovery
+name: Fund Factsheet Exposure
 
 on:
   workflow_dispatch:
 
-  # Monthly refresh
-  #
-  # 02:00 Singapore time on the 1st of every month
-  # = 18:00 UTC on the last day of the previous month
-  #
-  # This uses UTC because GitHub Actions cron is UTC.
   schedule:
-    - cron: "0 18 28-31 * *"
+    # 02:00 Singapore time
+    # Singapore = UTC+8
+    # 02:00 SGT = 18:00 UTC previous day
+    - cron: "0 18 * * *"
 
 permissions:
   contents: write
 
 concurrency:
-  group: fund-google-exposure
+  group: fund-factsheet-exposure
   cancel-in-progress: false
 
 jobs:
-
   extract-fund-exposure:
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
 
-      # ========================================================
+      # ======================================================
       # 1. CHECKOUT
-      # ========================================================
+      # ======================================================
 
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-      # ========================================================
+      # ======================================================
       # 2. PYTHON
-      # ========================================================
+      # ======================================================
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: "requirements.txt"
 
-      # ========================================================
+      # ======================================================
       # 3. INSTALL DEPENDENCIES
-      # ========================================================
+      # ======================================================
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r scripts/requirements.txt
+          pip install -r requirements.txt
 
-      # ========================================================
-      # 4. CHECK GOOGLE CREDENTIALS
-      # ========================================================
+      # ======================================================
+      # 4. INSTALL PLAYWRIGHT BROWSER
+      # ======================================================
 
-      - name: Check Google Search configuration
-        env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          GOOGLE_CSE_ID: ${{ secrets.GOOGLE_CSE_ID }}
+      - name: Install Playwright Chromium
         run: |
-          if [ -z "$GOOGLE_API_KEY" ]; then
-            echo "ERROR: GOOGLE_API_KEY GitHub Secret is missing."
-            exit 1
-          fi
+          python -m playwright install --with-deps chromium
 
-          if [ -z "$GOOGLE_CSE_ID" ]; then
-            echo "ERROR: GOOGLE_CSE_ID GitHub Secret is missing."
-            exit 1
-          fi
+      # ======================================================
+      # 5. VERIFY REQUIRED FILES
+      # ======================================================
 
-          echo "Google Search credentials are configured."
-
-      # ========================================================
-      # 5. CHECK FILES
-      # ========================================================
-
-      - name: Check required files
+      - name: Verify repository files
         run: |
           test -f "Funds Links.xlsm"
           test -f "scripts/fetch_fundfactsheet_exposure.py"
-          test -f "scripts/requirements.txt"
 
-      # ========================================================
+          echo "Required files found."
+
+      # ======================================================
       # 6. RUN EXTRACTION
-      # ========================================================
+      # ======================================================
 
-      - name: Search and extract geographic and sector exposure
-        env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          GOOGLE_CSE_ID: ${{ secrets.GOOGLE_CSE_ID }}
+      - name: Extract fund geographic and sector exposure
         run: |
           python scripts/fetch_fundfactsheet_exposure.py
 
-      # ========================================================
-      # 7. VALIDATE OUTPUT
-      # ========================================================
+      # ======================================================
+      # 7. SHOW SUMMARY
+      # ======================================================
 
-      - name: Validate JSON output
+      - name: Show extraction summary
         run: |
-          test -f "data/fundfactsheet_exposure.json"
-          test -f "data/fundfactsheet_exposure_diagnostics.json"
-
           python - <<'PY'
           import json
-          import sys
+          from pathlib import Path
 
-          output_path = "data/fundfactsheet_exposure.json"
-          diagnostics_path = "data/fundfactsheet_exposure_diagnostics.json"
+          path = Path("data/fundfactsheet_exposure.json")
 
-          with open(output_path, "r", encoding="utf-8") as f:
-              data = json.load(f)
+          if not path.exists():
+              raise SystemExit(
+                  "fundfactsheet_exposure.json was not created"
+              )
 
-          with open(diagnostics_path, "r", encoding="utf-8") as f:
-              diagnostics = json.load(f)
-
-          funds = data.get("funds")
-
-          if not isinstance(funds, list):
-              print("ERROR: funds is not a list")
-              sys.exit(1)
-
-          if not funds:
-              print("ERROR: no funds returned")
-              sys.exit(1)
-
-          required_fields = [
-              "fundName",
-              "geographicAllocation",
-              "sectorAllocation",
-              "status",
-              "retrievedAt",
-          ]
-
-          for index, fund in enumerate(funds, start=1):
-
-              if not isinstance(fund, dict):
-                  print(
-                      f"ERROR: fund {index} is not an object"
-                  )
-                  sys.exit(1)
-
-              for field in required_fields:
-
-                  if field not in fund:
-                      print(
-                          f"ERROR: fund {index} "
-                          f"missing {field}"
-                      )
-                      sys.exit(1)
-
-          print("JSON validation passed.")
-          print("Fund count:", len(funds))
-          print(
-              "Diagnostics records:",
-              len(diagnostics.get("funds", []))
+          data = json.loads(
+              path.read_text(encoding="utf-8")
           )
-          PY
-
-      # ========================================================
-      # 8. DISPLAY SUMMARY
-      # ========================================================
-
-      - name: Display extraction summary
-        run: |
-          python - <<'PY'
-          import json
-
-          path = "data/fundfactsheet_exposure.json"
-
-          with open(path, "r", encoding="utf-8") as f:
-              data = json.load(f)
 
           summary = data.get("summary", {})
 
           print("")
-          print("==============================================")
-          print("VGrat FMS GOOGLE EXPOSURE EXTRACTION")
-          print("==============================================")
-          print(
-              "Total funds:",
-              summary.get("fundCount", 0)
-          )
-          print(
-              "Fully resolved:",
-              summary.get("resolvedCount", 0)
-          )
-          print(
-              "Partially resolved:",
-              summary.get("partiallyResolvedCount", 0)
-          )
-          print(
-              "Unresolved:",
-              summary.get("unresolvedCount", 0)
-          )
-          print("----------------------------------------------")
-          print(
-              "Geographic data:",
-              summary.get("geographicCount", 0)
-          )
-          print(
-              "Sector data:",
-              summary.get("sectorCount", 0)
-          )
-          print("==============================================")
-          PY
-
-      # ========================================================
-      # 9. SHOW UNRESOLVED FUNDS
-      # ========================================================
-
-      - name: Show unresolved funds
-        run: |
-          python - <<'PY'
-          import json
-
-          path = "data/fundfactsheet_exposure.json"
-
-          with open(path, "r", encoding="utf-8") as f:
-              data = json.load(f)
-
-          unresolved = [
-              fund
-              for fund in data.get("funds", [])
-              if fund.get("status") == "unresolved"
-          ]
-
+          print("========================================")
+          print("FUND FACTSHEET EXPOSURE SUMMARY")
+          print("========================================")
+          print(f"Funds      : {summary.get('fundCount', 0)}")
+          print(f"Resolved   : {summary.get('resolved', 0)}")
+          print(f"Unresolved : {summary.get('unresolved', 0)}")
+          print("========================================")
           print("")
-          print("==============================================")
-          print("UNRESOLVED FUNDS")
-          print("==============================================")
-
-          if not unresolved:
-              print("None")
-          else:
-              for fund in unresolved:
-                  print(
-                      "-",
-                      fund.get("fundName"),
-                      "|",
-                      fund.get("reason")
-                  )
-
-          print("==============================================")
           PY
 
-      # ========================================================
-      # 10. COMMIT ONLY NEW OUTPUT
-      # ========================================================
+      # ======================================================
+      # 8. GIT STATUS
+      # ======================================================
+
+      - name: Check generated files
+        run: |
+          git status --short
+
+      # ======================================================
+      # 9. COMMIT ONLY THIS PIPELINE'S OUTPUT
+      # ======================================================
 
       - name: Commit exposure data
         run: |
@@ -261,10 +136,10 @@ jobs:
           git add data/fundfactsheet_exposure_diagnostics.json
 
           if git diff --cached --quiet; then
-            echo "No geographic/sector exposure changes."
-          else
-            git commit \
-              -m "Update fund geographic and sector exposure"
-
-            git push
+            echo "No exposure data changes."
+            exit 0
           fi
+
+          git commit -m "Update fund factsheet exposure data"
+
+          git push
