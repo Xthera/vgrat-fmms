@@ -6,6 +6,26 @@ VGrat FMS - CNBC Market News Collector
 
 Collect relevant CNBC news for VGrat FMS.
 
+ALL DATE/TIME HANDLING
+======================
+
+Singapore Time (SGT) is the authoritative timezone.
+
+Timezone:
+    Asia/Singapore
+    UTC+08:00
+    No daylight-saving-time adjustment
+
+All saved timestamps use SGT:
+
+    publishedAtSgt
+    collectedAtSgt
+    updatedAtSgt
+    generatedAtSgt
+
+Historical archive folders and filenames are also based on the
+Singapore calendar date.
+
 FINAL CATEGORIES
 ================
 
@@ -76,6 +96,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
+from zoneinfo import ZoneInfo
 
 import feedparser
 import requests
@@ -103,6 +124,20 @@ REQUEST_TIMEOUT = 25
 
 # Maximum summary length.
 SUMMARY_MAX_CHARS = 500
+
+# ---------------------------------------------------------------------------
+# SINGAPORE TIME
+# ---------------------------------------------------------------------------
+#
+# SGT is the authoritative timezone for this collector.
+#
+# Python's zoneinfo module is part of the Python standard library.
+# No additional package is required.
+#
+# Singapore remains UTC+08:00 throughout the year and does not observe DST.
+# ---------------------------------------------------------------------------
+
+SGT = ZoneInfo("Asia/Singapore")
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -860,7 +895,6 @@ def shorten(
     if len(text) <= max_chars:
         return text
 
-    # Prefer cutting at a sentence boundary.
     candidate = text[:max_chars]
 
     sentence_breaks = [
@@ -880,7 +914,6 @@ def shorten(
             : best_break + 1
         ].strip()
 
-    # Otherwise cut at the last complete word.
     last_space = candidate.rfind(
         " "
     )
@@ -898,6 +931,83 @@ def shorten(
     return (
         candidate.rstrip()
         + "..."
+    )
+
+
+# ============================================================================
+# SGT DATETIME HELPERS
+# ============================================================================
+
+def now_sgt() -> datetime:
+    """
+    Return the current date/time in Singapore Time.
+    """
+
+    return datetime.now(
+        SGT
+    )
+
+
+def format_sgt(
+    value: datetime,
+) -> str:
+    """
+    Convert an aware datetime to SGT and return an ISO-8601 string.
+
+    Example:
+
+        2026-10-03T02:00:00+08:00
+    """
+
+    if value.tzinfo is None:
+        value = value.replace(
+            tzinfo=SGT
+        )
+
+    return (
+        value
+        .astimezone(
+            SGT
+        )
+        .replace(
+            microsecond=0
+        )
+        .isoformat()
+    )
+
+
+def parse_sgt_datetime(
+    value: str,
+) -> datetime:
+    """
+    Parse an ISO timestamp and convert it to SGT.
+
+    Supports both the new SGT format:
+
+        2026-10-03T02:00:00+08:00
+
+    and legacy UTC format:
+
+        2026-10-02T18:00:00Z
+
+    This allows the collector to safely read existing historical
+    records created before the SGT migration.
+    """
+
+    parsed = datetime.fromisoformat(
+        value.replace(
+            "Z",
+            "+00:00",
+        )
+    )
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(
+            tzinfo=SGT
+        )
+
+    return parsed.astimezone(
+        SGT
     )
 
 
@@ -959,7 +1069,6 @@ def technology_business_context(
     ):
         return True
 
-    # AI + concrete business/policy/infrastructure term.
     if has_any_phrase(
         lower,
         {
@@ -995,7 +1104,6 @@ def technology_business_context(
         ):
             return True
 
-    # Chip/semiconductor + concrete industrial context.
     if has_any_phrase(
         lower,
         {
@@ -1030,7 +1138,6 @@ def technology_business_context(
         ):
             return True
 
-    # Cybersecurity + government/technology infrastructure.
     if has_any_phrase(
         lower,
         {
@@ -1069,14 +1176,12 @@ def market_business_context(
         title
     ).lower()
 
-    # Corporate financial/legal events.
     if has_any_phrase(
         lower,
         FINANCIAL_LEGAL_STRONG,
     ):
         return True
 
-    # Funding / capital raising with a financial quantity or valuation.
     if has_any_phrase(
         lower,
         {
@@ -1103,7 +1208,6 @@ def market_business_context(
         ):
             return True
 
-    # Payments / fintech + banking/business.
     if has_any_phrase(
         lower,
         {
@@ -1201,10 +1305,6 @@ def classify_relevance(
     title_lower = title.lower()
     description_lower = description.lower()
 
-    # ------------------------------------------------------------------
-    # PRE-CALCULATE TITLE SIGNALS
-    # ------------------------------------------------------------------
-
     sports = phrase_matches(
         title_lower,
         SPORTS_STRONG,
@@ -1282,23 +1382,6 @@ def classify_relevance(
         title_lower
     )
 
-    # ------------------------------------------------------------------
-    # 1. FINANCIAL-MARKET / CORPORATE LEGAL STORIES
-    # ------------------------------------------------------------------
-    #
-    # These must survive normal crime/lifestyle exclusions.
-    #
-    # Examples:
-    #
-    #   false trading
-    #   market manipulation
-    #   receivership
-    #   holding companies
-    #   insolvency
-    #   restructuring
-    #
-    # ------------------------------------------------------------------
-
     if financial_legal:
         return {
             "relevant": True,
@@ -1316,10 +1399,6 @@ def classify_relevance(
             "reason": "business_market_event",
             "matchedKeywords": [],
         }
-
-    # ------------------------------------------------------------------
-    # 2. HARD NON-MARKET EXCLUSIONS
-    # ------------------------------------------------------------------
 
     if sports:
         return {
@@ -1389,14 +1468,6 @@ def classify_relevance(
                 "matchedKeywords": weather,
             }
 
-    # Social-policy stories such as:
-    #
-    #   PSLE
-    #   DSA
-    #   HDB U-Save / S&CC
-    #
-    # are rejected unless a direct market/economic/legal signal already
-    # captured them above.
     if policy:
         if not (
             economic
@@ -1412,10 +1483,6 @@ def classify_relevance(
                 "matchedKeywords": policy,
             }
 
-    # ------------------------------------------------------------------
-    # 3. STRONG ECONOMIC HEADLINE
-    # ------------------------------------------------------------------
-
     if economic:
         return {
             "relevant": True,
@@ -1425,10 +1492,6 @@ def classify_relevance(
             "matchedKeywords": economic,
         }
 
-    # ------------------------------------------------------------------
-    # 4. STRONG MARKET HEADLINE
-    # ------------------------------------------------------------------
-
     if market:
         return {
             "relevant": True,
@@ -1437,10 +1500,6 @@ def classify_relevance(
             "reason": "strong_market_title",
             "matchedKeywords": market,
         }
-
-    # ------------------------------------------------------------------
-    # 5. TECHNOLOGY HEADLINE
-    # ------------------------------------------------------------------
 
     if technology:
         if technology_context:
@@ -1452,8 +1511,6 @@ def classify_relevance(
                 "matchedKeywords": technology,
             }
 
-    # Specialized detector can catch technology-government stories
-    # where the exact signal list is not sufficient.
     if technology_context:
         return {
             "relevant": True,
@@ -1463,10 +1520,6 @@ def classify_relevance(
             "matchedKeywords": technology,
         }
 
-    # ------------------------------------------------------------------
-    # 6. GEOPOLITICAL + ECONOMIC IMPACT
-    # ------------------------------------------------------------------
-
     if geopolitical:
         return {
             "relevant": True,
@@ -1475,28 +1528,6 @@ def classify_relevance(
             "reason": "geopolitical_with_direct_economic_impact",
             "matchedKeywords": geopolitical,
         }
-
-    # ------------------------------------------------------------------
-    # 7. COMMENTARY / POLITICAL HEADLINES
-    # ------------------------------------------------------------------
-    #
-    # IMPORTANT:
-    #
-    # This occurs BEFORE description rescue.
-    #
-    # A title such as:
-    #
-    #   Commentary: Who in Iran can make a deal with the US?
-    #
-    # cannot become GEOPOLITICAL merely because the article description
-    # contains oil, sanctions or Hormuz references.
-    #
-    # However, a direct title signal such as:
-    #
-    #   Commentary: Oil prices rise as Hormuz tensions deepen
-    #
-    # has already been captured by the market/geopolitical logic above.
-    # ------------------------------------------------------------------
 
     if commentary_title:
         return {
@@ -1517,16 +1548,6 @@ def classify_relevance(
             "reason": "political_without_market_or_economic_impact",
             "matchedKeywords": political,
         }
-
-    # ------------------------------------------------------------------
-    # 8. DESCRIPTION SUPPORT
-    # ------------------------------------------------------------------
-    #
-    # Only neutral headlines reach this stage.
-    #
-    # Hard exclusions and political/commentary headlines cannot be
-    # rescued here.
-    # ------------------------------------------------------------------
 
     description_economic = phrase_matches(
         description_lower,
@@ -1596,10 +1617,6 @@ def classify_relevance(
             "matchedKeywords": description_geopolitical,
         }
 
-    # ------------------------------------------------------------------
-    # 9. DEFAULT REJECTION
-    # ------------------------------------------------------------------
-
     return {
         "relevant": False,
         "category": "REJECT",
@@ -1616,6 +1633,15 @@ def classify_relevance(
 def parse_entry_datetime(
     entry: Any,
 ) -> datetime:
+    """
+    Parse CNBC RSS time.
+
+    RSS timestamps represent an absolute point in time. We first parse
+    them as UTC and immediately convert them to SGT.
+
+    If the feed does not provide a usable timestamp, the current SGT
+    time is used.
+    """
 
     parsed = getattr(
         entry,
@@ -1632,16 +1658,19 @@ def parse_entry_datetime(
 
     if parsed:
         try:
-            return datetime.fromtimestamp(
+            utc_datetime = datetime.fromtimestamp(
                 timegm(parsed),
                 tz=timezone.utc,
             )
+
+            return utc_datetime.astimezone(
+                SGT
+            )
+
         except Exception:
             pass
 
-    return datetime.now(
-        timezone.utc
-    )
+    return now_sgt()
 
 
 # ============================================================================
@@ -1724,19 +1753,8 @@ def fetch_feed(
                     "url": canonicalize_url(
                         url
                     ),
-                    "publishedAtUtc": (
+                    "publishedAtSgt": format_sgt(
                         published
-                        .astimezone(
-                            timezone.utc
-                        )
-                        .replace(
-                            microsecond=0
-                        )
-                        .isoformat()
-                        .replace(
-                            "+00:00",
-                            "Z",
-                        )
                     ),
                 }
             )
@@ -2181,19 +2199,31 @@ def load_all_history_articles() -> list[dict[str, Any]]:
 def history_file_for_date(
     published_at: str,
 ) -> Path:
+    """
+    Determine the history file using the Singapore calendar date.
+
+    This is important around midnight.
+
+    Example:
+
+        UTC:
+            2026-10-02 18:00
+
+        SGT:
+            2026-10-03 02:00
+
+    The article is therefore stored under:
+
+        history/2026/10/2026-10-03.json
+    """
 
     try:
-        dt = datetime.fromisoformat(
-            published_at.replace(
-                "Z",
-                "+00:00",
-            )
+        dt = parse_sgt_datetime(
+            published_at
         )
 
     except Exception:
-        dt = datetime.now(
-            timezone.utc
-        )
+        dt = now_sgt()
 
     directory = (
         HISTORY_DIR
@@ -2218,16 +2248,22 @@ def save_history_article(
 
     path = history_file_for_date(
         article[
-            "publishedAtUtc"
+            "publishedAtSgt"
         ]
     )
+
+    article_date_sgt = parse_sgt_datetime(
+        article[
+            "publishedAtSgt"
+        ]
+    ).date().isoformat()
 
     data = load_json(
         path,
         {
-            "date": article[
-                "publishedAtUtc"
-            ][:10],
+            "date": article_date_sgt,
+            "timezone": "Asia/Singapore",
+            "timezoneLabel": "SGT",
             "source": SOURCE_NAME,
             "articles": [],
         },
@@ -2260,7 +2296,7 @@ def save_history_article(
 
     articles.sort(
         key=lambda item: item.get(
-            "publishedAtUtc",
+            "publishedAtSgt",
             "",
         ),
         reverse=True,
@@ -2273,19 +2309,9 @@ def save_history_article(
     )
 
     data[
-        "updatedAtUtc"
-    ] = (
-        datetime.now(
-            timezone.utc
-        )
-        .replace(
-            microsecond=0
-        )
-        .isoformat()
-        .replace(
-            "+00:00",
-            "Z",
-        )
+        "updatedAtSgt"
+    ] = format_sgt(
+        now_sgt()
     )
 
     with path.open(
@@ -2314,11 +2340,15 @@ def save_history_article(
 def build_current_index(
     articles: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
+    """
+    Build the current 14-day index using SGT.
+
+    Both the current time and article timestamps are normalized to SGT
+    before comparison.
+    """
 
     cutoff = (
-        datetime.now(
-            timezone.utc
-        )
+        now_sgt()
         - timedelta(
             days=WINDOW_DAYS
         )
@@ -2328,14 +2358,21 @@ def build_current_index(
 
     for article in articles:
 
+        timestamp = (
+            article.get(
+                "publishedAtSgt"
+            )
+            or article.get(
+                "publishedAtUtc"
+            )
+        )
+
+        if not timestamp:
+            continue
+
         try:
-            published = datetime.fromisoformat(
-                article[
-                    "publishedAtUtc"
-                ].replace(
-                    "Z",
-                    "+00:00",
-                )
+            published = parse_sgt_datetime(
+                timestamp
             )
 
         except Exception:
@@ -2358,9 +2395,14 @@ def build_current_index(
     )
 
     current.sort(
-        key=lambda item: item.get(
-            "publishedAtUtc",
-            "",
+        key=lambda item: (
+            item.get(
+                "publishedAtSgt",
+                item.get(
+                    "publishedAtUtc",
+                    "",
+                ),
+            )
         ),
         reverse=True,
     )
@@ -2380,19 +2422,11 @@ def write_current_index(
     )
 
     data = {
-        "generatedAtUtc": (
-            datetime.now(
-                timezone.utc
-            )
-            .replace(
-                microsecond=0
-            )
-            .isoformat()
-            .replace(
-                "+00:00",
-                "Z",
-            )
+        "generatedAtSgt": format_sgt(
+            now_sgt()
         ),
+        "timezone": "Asia/Singapore",
+        "timezoneLabel": "SGT",
         "windowDays": WINDOW_DAYS,
         "maxArticles": MAX_CURRENT_ARTICLES,
         "source": SOURCE_NAME,
@@ -2438,6 +2472,15 @@ def main() -> None:
     )
 
     print(
+        "Timezone: Singapore Time (SGT / UTC+08:00)"
+    )
+
+    print(
+        f"Current SGT time: "
+        f"{format_sgt(now_sgt())}"
+    )
+
+    print(
         f"Rolling window: {WINDOW_DAYS} days"
     )
 
@@ -2458,9 +2501,7 @@ def main() -> None:
         exist_ok=True,
     )
 
-    started = datetime.now(
-        timezone.utc
-    )
+    started = now_sgt()
 
     stats = {
         "rssEntries": 0,
@@ -2788,9 +2829,6 @@ def main() -> None:
                 str(exc),
             )
 
-            # IMPORTANT:
-            # shorten() is defined above and is also safe when the
-            # RSS description is empty.
             summary = shorten(
                 record[
                     "description"
@@ -2810,8 +2848,8 @@ def main() -> None:
             "id": key,
             "source": SOURCE_NAME,
             "title": title,
-            "publishedAtUtc": record[
-                "publishedAtUtc"
+            "publishedAtSgt": record[
+                "publishedAtSgt"
             ],
             "url": record[
                 "url"
@@ -2830,18 +2868,8 @@ def main() -> None:
                 "feeds",
                 [],
             ),
-            "collectedAtUtc": (
-                datetime.now(
-                    timezone.utc
-                )
-                .replace(
-                    microsecond=0
-                )
-                .isoformat()
-                .replace(
-                    "+00:00",
-                    "Z",
-                )
+            "collectedAtSgt": format_sgt(
+                now_sgt()
             ),
         }
 
@@ -2883,6 +2911,12 @@ def main() -> None:
     # FINAL CONSOLE SUMMARY
     # ------------------------------------------------------------------
 
+    finished = now_sgt()
+
+    elapsed_seconds = (
+        finished - started
+    ).total_seconds()
+
     print()
 
     print(
@@ -2896,6 +2930,23 @@ def main() -> None:
     print(
         "=" * 80
     )
+
+    print(
+        f"Started SGT:            "
+        f"{format_sgt(started)}"
+    )
+
+    print(
+        f"Finished SGT:           "
+        f"{format_sgt(finished)}"
+    )
+
+    print(
+        f"Elapsed seconds:        "
+        f"{elapsed_seconds:.2f}"
+    )
+
+    print()
 
     print(
         f"Relevant:               "
@@ -2984,6 +3035,16 @@ def main() -> None:
     print(
         f"Current maximum:        "
         f"{MAX_CURRENT_ARTICLES}"
+    )
+
+    print()
+
+    print(
+        "Timezone used for all saved date/time data:"
+    )
+
+    print(
+        "Asia/Singapore (SGT / UTC+08:00)"
     )
 
     print(
