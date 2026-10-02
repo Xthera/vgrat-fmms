@@ -5,6 +5,21 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "74cdc859ac4aec7814b82ea243d94ce9f586b5d9b17354d50532603e3d9357e8",
+      "source": "CNBC",
+      "title": "America's Canadian import restrictions come into force. Here are the products barred from entry",
+      "publishedAtSgt": "2026-09-29T23:57:43+08:00",
+      "url": "https://www.cnbc.com/2026/09/29/canada-import-ban-trade-war.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "The White House banned imports of some Canadian vehicles, dairy and alcohol products on Tuesday, as officials sent mixed signals on the prospect of a trade deal. The products are estimated to total around $19.9 billion of Canadian imports by the American Action Forum. The Bank of Canada warned this month that new tariffs had made the country's growth prospects more uncertain and increased upside risks to inflation.",
+      "feeds": [
+        "economy"
+      ],
+      "collectedAtSgt": "2026-10-02T23:53:12+08:00"
+    },
+    {
       "id": "877621d125745e125534f79d8a61be05cff432d9d5a53fde196b47748d95476d",
       "source": "CNBC",
       "title": "Trump’s municipal bond portfolio reaches as much as $1 billion as policy overlaps mount",
@@ -50,6 +65,6 @@
       "collectedAtSgt": "2026-10-02T12:09:47+08:00"
     }
   ],
-  "articleCount": 3,
-  "updatedAtSgt": "2026-10-02T12:09:48+08:00"
+  "articleCount": 4,
+  "updatedAtSgt": "2026-10-02T23:53:12+08:00"
 }

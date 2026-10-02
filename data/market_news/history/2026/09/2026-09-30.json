@@ -5,6 +5,21 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "ad8b69469d3a5c6f00ca3a111ce6ebe2411dd75b7fe1ccb48705ce50f4c37fcb",
+      "source": "CNBC",
+      "title": "Fed’s preferred gauge showed core inflation at 3.0% in August, much lighter than expected",
+      "publishedAtSgt": "2026-09-30T23:14:57+08:00",
+      "url": "https://www.cnbc.com/2026/09/30/feds-preferred-gauge-showed-core-inflation-at-3point0percent-in-august-much-lighter-than-expected.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "\"This is good news for investors worried about the recent surge in bond yields, and it bolsters the case for not hiking in October,\" said David Russell, global head of market strategy at TradeStation. Both PCE levels are still considerably higher than the central bank's 2% target, raising the possibility that the Fed will follow up its September interest rate hike with another increase at either of its remaining meetings this year — in October or, more likely, December.",
+      "feeds": [
+        "economy"
+      ],
+      "collectedAtSgt": "2026-10-02T23:53:12+08:00"
+    },
+    {
       "id": "b47415b24012c7266d330c692e2ddbe177516d4294bceb3dc9307662a14efdee",
       "source": "CNBC",
       "title": "An inside man at the Fed, OpenAI debuts Dots, an IPO trend and more in Morning Squawk",
@@ -78,8 +93,23 @@
         "finance"
       ],
       "collectedAtSgt": "2026-10-02T12:09:48+08:00"
+    },
+    {
+      "id": "ec5b14fa7fc342f87f9dc2e6e2a72d1ef2279d69391c2f81f5a78a724c14473a",
+      "source": "CNBC",
+      "title": "The Fed's main inflation measure will be released Wednesday. Here's what to expect",
+      "publishedAtSgt": "2026-09-30T04:51:43+08:00",
+      "url": "https://www.cnbc.com/2026/09/29/the-feds-main-inflation-measure-will-be-released-wednesday-heres-what-to-expect.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "The personal consumption expenditures price index, the primary inflation gauge for central bank policymakers, is expected to show increases of 0.3% at both the all-items and core levels, the latter of which excludes food and energy costs, according to the Dow Jones consensus. Fed Chairman Kevin Warsh said at his news conference earlier this month that hiring data along with business investment and private sector earnings show the economy in good shape.",
+      "feeds": [
+        "economy"
+      ],
+      "collectedAtSgt": "2026-10-02T23:53:12+08:00"
     }
   ],
-  "articleCount": 5,
-  "updatedAtSgt": "2026-10-02T12:10:02+08:00"
+  "articleCount": 7,
+  "updatedAtSgt": "2026-10-02T23:53:12+08:00"
 }
