@@ -265,7 +265,7 @@ def find_funds_excel_file(
         Funds Links.xlsm
 
     Fallback:
-        Funds Links.xlsx
+        Funds Links.xlsm
 
     This allows the repository to transition between the two
     workbook formats without breaking the research script.
@@ -273,7 +273,7 @@ def find_funds_excel_file(
 
     candidates = [
         repository_root / "Funds Links.xlsm",
-        repository_root / "Funds Links.xlsx",
+        repository_root / "Funds Links.xlsm",
     ]
 
     for path in candidates:
