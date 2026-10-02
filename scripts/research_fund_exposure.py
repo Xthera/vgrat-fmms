@@ -64,6 +64,10 @@ The model runs locally on GitHub Actions.
 
 No commercial AI API is required.
 
+Hugging Face authentication is optional but recommended:
+
+    HF_TOKEN
+
 ============================================================
 IMPORTANT OUTPUT RULES
 ============================================================
@@ -89,6 +93,30 @@ No inference based solely on fund name.
 
 Only canonical category names from
 exposure_categories.txt may be returned.
+
+============================================================
+AI MODE
+============================================================
+
+Qwen3 thinking mode is explicitly disabled.
+
+This task is structured document extraction, so the model
+should return the requested JSON without a separate
+reasoning/thinking block.
+
+============================================================
+DIAGNOSTICS
+============================================================
+
+The script performs an AI health check before processing
+the fund universe.
+
+If the model cannot load or generate a response, the script
+fails immediately instead of producing dozens of misleading
+"ai_error" fund records.
+
+Individual fund inference errors are retained as ai_error
+records with diagnostic information.
 """
 
 from __future__ import annotations
@@ -100,6 +128,7 @@ import os
 import re
 import sys
 import time
+import traceback
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote_plus, urlparse
@@ -119,13 +148,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 
 REPOSITORY_ROOT = SCRIPT_DIR.parent
 
-CATEGORIES_FILE = (
-    SCRIPT_DIR / "exposure_categories.txt"
-)
-
-EXCEL_PATH = (
-    REPOSITORY_ROOT / "Funds Links.xlsm"
-)
+CATEGORIES_FILE = SCRIPT_DIR / "exposure_categories.txt"
 
 OUTPUT_PATH = (
     REPOSITORY_ROOT
@@ -142,6 +165,11 @@ MODEL_NAME = os.getenv(
     "HF_MODEL",
     "Qwen/Qwen3-1.7B",
 )
+
+HF_TOKEN = os.getenv(
+    "HF_TOKEN",
+    "",
+).strip()
 
 REQUEST_TIMEOUT = int(
     os.getenv(
@@ -164,9 +192,40 @@ MAX_DOCUMENTS_PER_FUND = int(
     )
 )
 
-MAX_PAGE_CHARS = 18000
+MAX_PAGE_CHARS = int(
+    os.getenv(
+        "MAX_PAGE_CHARS",
+        "18000",
+    )
+)
 
-MAX_PDF_CHARS = 24000
+MAX_PDF_CHARS = int(
+    os.getenv(
+        "MAX_PDF_CHARS",
+        "24000",
+    )
+)
+
+MAX_NEW_TOKENS = int(
+    os.getenv(
+        "MAX_NEW_TOKENS",
+        "220",
+    )
+)
+
+AI_HEALTH_MAX_NEW_TOKENS = int(
+    os.getenv(
+        "AI_HEALTH_MAX_NEW_TOKENS",
+        "80",
+    )
+)
+
+SEARCH_DELAY_SECONDS = float(
+    os.getenv(
+        "SEARCH_DELAY_SECONDS",
+        "0.5",
+    )
+)
 
 USER_AGENT = (
     "Mozilla/5.0 "
@@ -178,6 +237,10 @@ USER_AGENT = (
 )
 
 
+# ============================================================
+# HTTP SESSION
+# ============================================================
+
 SESSION = requests.Session()
 
 SESSION.headers.update(
@@ -186,6 +249,49 @@ SESSION.headers.update(
         "Accept-Language": "en-SG,en;q=0.9",
     }
 )
+
+
+# ============================================================
+# EXCEL FILE RESOLUTION
+# ============================================================
+
+def find_funds_excel_file(
+    repository_root: Path,
+) -> Path:
+    """
+    Locate the controlling fund workbook.
+
+    Primary file:
+        Funds Links.xlsm
+
+    Fallback:
+        Funds Links.xlsx
+
+    This allows the repository to transition between the two
+    workbook formats without breaking the research script.
+    """
+
+    candidates = [
+        repository_root / "Funds Links.xlsm",
+        repository_root / "Funds Links.xlsx",
+    ]
+
+    for path in candidates:
+        if path.is_file():
+            return path
+
+    message = (
+        "Funds Links workbook not found.\n\n"
+        "Expected one of:\n"
+        + "\n".join(
+            f"  - {path}"
+            for path in candidates
+        )
+    )
+
+    raise FileNotFoundError(
+        message
+    )
 
 
 # ============================================================
@@ -252,10 +358,12 @@ def load_categories(
                 continue
 
             if current_section == "geography":
+
                 if line not in geography:
                     geography.append(line)
 
             elif current_section == "sector":
+
                 if line not in sector:
                     sector.append(line)
 
@@ -287,9 +395,18 @@ def load_funds_from_excel(
 
     if not path.exists():
         raise FileNotFoundError(
-            "Funds Links.xlsm not found:\n"
+            "Funds Links workbook not found:\n"
             f"{path}"
         )
+
+    print()
+    print(
+        "Loading fund universe:"
+    )
+
+    print(
+        f"    {path}"
+    )
 
     workbook = load_workbook(
         filename=path,
@@ -297,45 +414,51 @@ def load_funds_from_excel(
         data_only=True,
     )
 
-    sheet = workbook.active
+    try:
 
-    funds: list[dict[str, str]] = []
+        sheet = workbook.active
 
-    for row_number, row in enumerate(
-        sheet.iter_rows(
-            min_row=2,
-            values_only=True,
-        ),
-        start=2,
-    ):
+        funds: list[
+            dict[str, str]
+        ] = []
 
-        url = clean_text(
-            row[0]
-            if len(row) > 0
-            else ""
-        )
+        for row_number, row in enumerate(
+            sheet.iter_rows(
+                min_row=2,
+                values_only=True,
+            ),
+            start=2,
+        ):
 
-        fund_name = clean_text(
-            row[1]
-            if len(row) > 1
-            else ""
-        )
+            url = clean_text(
+                row[0]
+                if len(row) > 0
+                else ""
+            )
 
-        if not url and not fund_name:
-            continue
+            fund_name = clean_text(
+                row[1]
+                if len(row) > 1
+                else ""
+            )
 
-        if not fund_name:
-            fund_name = url
+            if not url and not fund_name:
+                continue
 
-        funds.append(
-            {
-                "row": str(row_number),
-                "fundName": fund_name,
-                "prudentialUrl": url,
-            }
-        )
+            if not fund_name:
+                fund_name = url
 
-    workbook.close()
+            funds.append(
+                {
+                    "row": str(row_number),
+                    "fundName": fund_name,
+                    "prudentialUrl": url,
+                }
+            )
+
+    finally:
+
+        workbook.close()
 
     return funds
 
@@ -357,6 +480,11 @@ def fetch_url(
         )
 
         if response.status_code >= 400:
+            print(
+                f"        HTTP {response.status_code}: "
+                f"{url}"
+            )
+
             return None
 
         content_type = (
@@ -401,14 +529,26 @@ def extract_pdf_text(
 
         total_length = 0
 
-        for page in reader.pages:
+        for page_number, page in enumerate(
+            reader.pages,
+            start=1,
+        ):
 
             try:
+
                 text = (
                     page.extract_text()
                     or ""
                 )
-            except Exception:
+
+            except Exception as exc:
+
+                print(
+                    f"          PDF page "
+                    f"{page_number} extraction failed: "
+                    f"{exc}"
+                )
+
                 text = ""
 
             if text:
@@ -424,7 +564,12 @@ def extract_pdf_text(
             pages
         )[:MAX_PDF_CHARS]
 
-    except Exception:
+    except Exception as exc:
+
+        print(
+            f"        PDF extraction failed: "
+            f"{exc}"
+        )
 
         return ""
 
@@ -455,6 +600,7 @@ def extract_html_text(
                 "header",
             ]
         ):
+
             tag.decompose()
 
         text = soup.get_text(
@@ -464,7 +610,12 @@ def extract_html_text(
 
         return text[:MAX_PAGE_CHARS]
 
-    except Exception:
+    except Exception as exc:
+
+        print(
+            f"        HTML extraction failed: "
+            f"{exc}"
+        )
 
         return ""
 
@@ -533,6 +684,12 @@ def ddg_search(
         )
 
         if response.status_code >= 400:
+
+            print(
+                f"        DuckDuckGo HTTP "
+                f"{response.status_code}"
+            )
+
             return []
 
         soup = BeautifulSoup(
@@ -749,7 +906,7 @@ def research_fund(
                 "url": prudential_url,
                 "title": (
                     "Prudential source "
-                    "from Funds Links.xlsm"
+                    "from Funds Links workbook"
                 ),
                 "snippet": "",
                 "priority": 1,
@@ -759,6 +916,7 @@ def research_fund(
     seen_urls = set()
 
     if prudential_url:
+
         seen_urls.add(
             prudential_url
         )
@@ -820,9 +978,11 @@ def research_fund(
         ):
             break
 
-        time.sleep(
-            0.5
-        )
+        if SEARCH_DELAY_SECONDS > 0:
+
+            time.sleep(
+                SEARCH_DELAY_SECONDS
+            )
 
     # --------------------------------------------------------
     # Prioritise sources
@@ -860,6 +1020,12 @@ def research_fund(
         )
 
         if not text:
+
+            print(
+                "          No extractable "
+                "text."
+            )
+
             continue
 
         documents.append(
@@ -942,7 +1108,7 @@ CONTENT:
     )
 
     return f"""
-You are a financial-document research assistant.
+You are a financial-document extraction system.
 
 You are researching this fund:
 
@@ -1139,8 +1305,12 @@ def extract_json_object(
     text: str,
 ) -> dict[str, Any] | None:
 
+    if not text:
+        return None
+
     text = text.strip()
 
+    # Remove markdown fences.
     text = re.sub(
         r"^```(?:json)?",
         "",
@@ -1156,6 +1326,7 @@ def extract_json_object(
 
     text = text.strip()
 
+    # First attempt: complete response is JSON.
     try:
 
         parsed = json.loads(
@@ -1166,34 +1337,62 @@ def extract_json_object(
             parsed,
             dict,
         ):
+
             return parsed
 
     except Exception:
         pass
 
+    # Second attempt: locate the first JSON object.
+    decoder = json.JSONDecoder()
+
+    for index, character in enumerate(
+        text
+    ):
+
+        if character != "{":
+            continue
+
+        try:
+
+            parsed, _ = decoder.raw_decode(
+                text[index:]
+            )
+
+            if isinstance(
+                parsed,
+                dict,
+            ):
+
+                return parsed
+
+        except Exception:
+            continue
+
+    # Final fallback using a greedy object search.
     match = re.search(
         r"\{.*\}",
         text,
         flags=re.DOTALL,
     )
 
-    if not match:
-        return None
+    if match:
 
-    try:
+        try:
 
-        parsed = json.loads(
-            match.group(0)
-        )
+            parsed = json.loads(
+                match.group(0)
+            )
 
-        if isinstance(
-            parsed,
-            dict,
-        ):
-            return parsed
+            if isinstance(
+                parsed,
+                dict,
+            ):
 
-    except Exception:
-        return None
+                return parsed
+
+        except Exception:
+            pass
 
     return None
 
@@ -1211,6 +1410,7 @@ def validate_category_list(
         values,
         list,
     ):
+
         return []
 
     allowed_lookup = {
@@ -1226,6 +1426,7 @@ def validate_category_list(
             value,
             str,
         ):
+
             continue
 
         value = clean_text(
@@ -1255,6 +1456,7 @@ def validate_category_list(
             continue
 
         if canonical not in output:
+
             output.append(
                 canonical
             )
@@ -1274,6 +1476,7 @@ def validate_ai_result(
 ) -> dict[str, list[str]]:
 
     if not result:
+
         return {
             "geography": [],
             "sector": [],
@@ -1317,33 +1520,350 @@ def load_ai_model():
 
     print()
     print(
-        "Loading local Hugging Face model:"
+        "============================================================"
     )
 
     print(
-        f"    {MODEL_NAME}"
+        "Loading local Hugging Face model"
+    )
+
+    print(
+        "============================================================"
+    )
+
+    print(
+        f"Model: {MODEL_NAME}"
+    )
+
+    if HF_TOKEN:
+
+        print(
+            "Hugging Face authentication: ENABLED"
+        )
+
+    else:
+
+        print(
+            "Hugging Face authentication: "
+            "NOT SET"
+        )
+
+        print(
+            "Warning: HF_TOKEN is not configured."
+        )
+
+        print(
+            "The model can still be downloaded "
+            "if public access is available."
+        )
+
+    print()
+
+    common_kwargs: dict[str, Any] = {
+        "trust_remote_code": True,
+    }
+
+    if HF_TOKEN:
+
+        common_kwargs["token"] = HF_TOKEN
+
+    # --------------------------------------------------------
+    # Tokenizer
+    # --------------------------------------------------------
+
+    print(
+        "Loading tokenizer..."
     )
 
     tokenizer = (
         AutoTokenizer.from_pretrained(
             MODEL_NAME,
-            trust_remote_code=True,
+            **common_kwargs,
         )
     )
+
+    print(
+        "Tokenizer loaded."
+    )
+
+    # --------------------------------------------------------
+    # Model
+    # --------------------------------------------------------
+
+    print(
+        "Loading model weights..."
+    )
+
+    model_kwargs: dict[str, Any] = {
+        **common_kwargs,
+        "torch_dtype": "auto",
+        "device_map": "auto",
+    }
 
     model = (
         AutoModelForCausalLM.from_pretrained(
             MODEL_NAME,
-            torch_dtype="auto",
-            device_map="auto",
-            trust_remote_code=True,
+            **model_kwargs,
         )
+    )
+
+    model.eval()
+
+    print(
+        "Model loaded successfully."
+    )
+
+    print(
+        f"Model device: {model.device}"
     )
 
     return (
         tokenizer,
         model,
     )
+
+
+# ============================================================
+# AI INPUT PREPARATION
+# ============================================================
+
+def prepare_chat_inputs(
+    tokenizer,
+    model,
+    messages: list[dict[str, str]],
+):
+
+    """
+    Prepare Qwen3 chat inputs.
+
+    Thinking mode is explicitly disabled.
+
+    Qwen3 supports enable_thinking=False through the
+    chat template. This is important for our structured
+    JSON extraction task.
+    """
+
+    try:
+
+        inputs = (
+            tokenizer.apply_chat_template(
+                messages,
+                tokenize=True,
+                add_generation_prompt=True,
+                enable_thinking=False,
+                return_dict=True,
+                return_tensors="pt",
+            )
+        )
+
+    except TypeError:
+
+        # Compatibility fallback for tokenizer versions
+        # that do not accept enable_thinking as a direct
+        # argument.
+
+        try:
+
+            inputs = (
+                tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=True,
+                    add_generation_prompt=True,
+                    return_dict=True,
+                    return_tensors="pt",
+                    chat_template_kwargs={
+                        "enable_thinking": False,
+                    },
+                )
+            )
+
+        except TypeError:
+
+            # Final compatibility fallback.
+            #
+            # This should normally not be reached with a
+            # current Qwen3-compatible Transformers release.
+
+            text = (
+                tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=True,
+                )
+            )
+
+            inputs = tokenizer(
+                text,
+                return_tensors="pt",
+            )
+
+    return inputs.to(
+        model.device
+    )
+
+
+# ============================================================
+# AI HEALTH CHECK
+# ============================================================
+
+def ai_health_check(
+    tokenizer,
+    model,
+) -> None:
+
+    """
+    Perform a small inference before processing funds.
+
+    If this fails, stop the entire run.
+
+    This prevents a model-wide problem from producing
+    dozens of misleading ai_error fund records.
+    """
+
+    print()
+    print(
+        "============================================================"
+    )
+
+    print(
+        "AI MODEL HEALTH CHECK"
+    )
+
+    print(
+        "============================================================"
+    )
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a strict JSON extraction system."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                'Return ONLY this JSON: '
+                '{"geography":[],"sector":[]}'
+            ),
+        },
+    ]
+
+    try:
+
+        inputs = prepare_chat_inputs(
+            tokenizer,
+            model,
+            messages,
+        )
+
+        input_token_count = int(
+            inputs["input_ids"].shape[-1]
+        )
+
+        print(
+            f"Input tokens: {input_token_count}"
+        )
+
+        print(
+            "Generating health-check response..."
+        )
+
+        generated = model.generate(
+            **inputs,
+            max_new_tokens=AI_HEALTH_MAX_NEW_TOKENS,
+            do_sample=False,
+            pad_token_id=(
+                tokenizer.eos_token_id
+            ),
+        )
+
+        generated_tokens = (
+            generated[
+                0
+            ][
+                input_token_count:
+            ]
+        )
+
+        response = tokenizer.decode(
+            generated_tokens,
+            skip_special_tokens=True,
+        ).strip()
+
+        print(
+            "Health-check response:"
+        )
+
+        print(
+            response[:1000]
+        )
+
+        if not response:
+
+            raise RuntimeError(
+                "Qwen generated an empty response."
+            )
+
+        parsed = extract_json_object(
+            response
+        )
+
+        if parsed is None:
+
+            raise RuntimeError(
+                "Qwen generated a response, "
+                "but it could not be parsed as JSON."
+            )
+
+        print()
+        print(
+            "AI HEALTH CHECK PASSED."
+        )
+
+    except Exception as exc:
+
+        print()
+        print(
+            "============================================================"
+        )
+
+        print(
+            "AI HEALTH CHECK FAILED"
+        )
+
+        print(
+            "============================================================"
+        )
+
+        print(
+            f"Exception type: {type(exc).__name__}"
+        )
+
+        print(
+            f"Exception: {exc}"
+        )
+
+        print()
+        print(
+            "Full traceback:"
+        )
+
+        traceback.print_exc()
+
+        print()
+        print(
+            "The fund research loop will NOT start."
+        )
+
+        print(
+            "Fix the model/inference problem before "
+            "processing the fund universe."
+        )
+
+        raise RuntimeError(
+            "AI model health check failed."
+        ) from exc
 
 
 # ============================================================
@@ -1413,51 +1933,94 @@ def process_fund(
 
     try:
 
-        inputs = (
-            tokenizer.apply_chat_template(
-                messages,
-                tokenize=True,
-                add_generation_prompt=True,
-                return_tensors="pt",
-            )
+        inputs = prepare_chat_inputs(
+            tokenizer,
+            model,
+            messages,
         )
 
-        inputs = inputs.to(
-            model.device
+        input_token_count = int(
+            inputs["input_ids"].shape[-1]
+        )
+
+        print(
+            f"      Input tokens: "
+            f"{input_token_count}"
         )
 
         generated = model.generate(
-            inputs,
-            max_new_tokens=180,
+            **inputs,
+            max_new_tokens=MAX_NEW_TOKENS,
             do_sample=False,
+            pad_token_id=(
+                tokenizer.eos_token_id
+            ),
         )
 
         generated_tokens = (
             generated[
                 0
             ][
-                inputs.shape[-1]:
+                input_token_count:
             ]
         )
 
         response = tokenizer.decode(
             generated_tokens,
             skip_special_tokens=True,
-        )
+        ).strip()
 
         print(
             "      AI response:"
         )
 
         print(
-            response[:1000]
+            response[:1500]
         )
+
+        if not response:
+
+            raise RuntimeError(
+                "AI generated an empty response."
+            )
 
         parsed = (
             extract_json_object(
                 response
             )
         )
+
+        if parsed is None:
+
+            print(
+                "      WARNING: AI response "
+                "was not valid JSON."
+            )
+
+            return {
+                "fundName": fund_name,
+                "prudentialUrl": fund[
+                    "prudentialUrl"
+                ],
+                "geography": [],
+                "sector": [],
+                "status": "no_exposure_found",
+                "error": (
+                    "AI response could not "
+                    "be parsed as JSON."
+                ),
+                "sources": [
+                    {
+                        "title": document[
+                            "title"
+                        ],
+                        "url": document[
+                            "url"
+                        ],
+                    }
+                    for document in documents
+                ],
+            }
 
         exposures = (
             validate_ai_result(
@@ -1506,9 +2069,27 @@ def process_fund(
 
     except Exception as exc:
 
+        print()
         print(
-            f"      AI error: {exc}"
+            f"      AI ERROR for: "
+            f"{fund_name}"
         )
+
+        print(
+            f"      Exception type: "
+            f"{type(exc).__name__}"
+        )
+
+        print(
+            f"      Exception: "
+            f"{exc}"
+        )
+
+        print(
+            "      Full traceback:"
+        )
+
+        traceback.print_exc()
 
         return {
             "fundName": fund_name,
@@ -1518,7 +2099,10 @@ def process_fund(
             "geography": [],
             "sector": [],
             "status": "ai_error",
-            "error": str(exc),
+            "error": (
+                f"{type(exc).__name__}: "
+                f"{exc}"
+            ),
             "sources": [
                 {
                     "title": document[
@@ -1558,6 +2142,20 @@ def main() -> int:
 
     args = parser.parse_args()
 
+    # --------------------------------------------------------
+    # Resolve workbook
+    # --------------------------------------------------------
+
+    excel_path = (
+        find_funds_excel_file(
+            REPOSITORY_ROOT
+        )
+    )
+
+    # --------------------------------------------------------
+    # Header
+    # --------------------------------------------------------
+
     print(
         "=" * 72
     )
@@ -1575,7 +2173,7 @@ def main() -> int:
     )
 
     print(
-        f"Funds file: {EXCEL_PATH}"
+        f"Funds file: {excel_path}"
     )
 
     print(
@@ -1588,6 +2186,15 @@ def main() -> int:
 
     print(
         f"Model: {MODEL_NAME}"
+    )
+
+    print(
+        "HF authentication: "
+        + (
+            "enabled"
+            if HF_TOKEN
+            else "not configured"
+        )
     )
 
     # --------------------------------------------------------
@@ -1606,6 +2213,7 @@ def main() -> int:
     for item in categories[
         "geography"
     ]:
+
         print(
             f"    - {item}"
         )
@@ -1618,6 +2226,7 @@ def main() -> int:
     for item in categories[
         "sector"
     ]:
+
         print(
             f"    - {item}"
         )
@@ -1627,7 +2236,7 @@ def main() -> int:
     # --------------------------------------------------------
 
     funds = load_funds_from_excel(
-        EXCEL_PATH
+        excel_path
     )
 
     if args.limit > 0:
@@ -1653,9 +2262,59 @@ def main() -> int:
     # Load model
     # --------------------------------------------------------
 
-    tokenizer, model = (
-        load_ai_model()
-    )
+    try:
+
+        tokenizer, model = (
+            load_ai_model()
+        )
+
+    except Exception as exc:
+
+        print()
+        print(
+            "============================================================"
+        )
+
+        print(
+            "FATAL: MODEL LOAD FAILED"
+        )
+
+        print(
+            "============================================================"
+        )
+
+        print(
+            f"Exception type: "
+            f"{type(exc).__name__}"
+        )
+
+        print(
+            f"Exception: {exc}"
+        )
+
+        print()
+        print(
+            "Full traceback:"
+        )
+
+        traceback.print_exc()
+
+        return 1
+
+    # --------------------------------------------------------
+    # AI health check
+    # --------------------------------------------------------
+
+    try:
+
+        ai_health_check(
+            tokenizer,
+            model,
+        )
+
+    except Exception:
+
+        return 1
 
     # --------------------------------------------------------
     # Process
@@ -1769,9 +2428,17 @@ def main() -> int:
             time.gmtime(),
         ),
         "model": MODEL_NAME,
+        "hfAuthenticated": bool(
+            HF_TOKEN
+        ),
         "categoryFile": str(
             CATEGORIES_FILE
             .relative_to(
+                REPOSITORY_ROOT
+            )
+        ),
+        "fundsFile": str(
+            excel_path.relative_to(
                 REPOSITORY_ROOT
             )
         ),
@@ -1843,6 +2510,7 @@ def main() -> int:
         )
 
         if len(geography) > 3:
+
             raise ValueError(
                 "Geography contains more "
                 "than 3 categories for "
@@ -1850,6 +2518,7 @@ def main() -> int:
             )
 
         if len(sector) > 3:
+
             raise ValueError(
                 "Sector contains more "
                 "than 3 categories for "
@@ -1879,7 +2548,7 @@ def main() -> int:
                 )
 
     # --------------------------------------------------------
-    # Summary
+    # Final summary
     # --------------------------------------------------------
 
     print()
@@ -1925,10 +2594,33 @@ def main() -> int:
         f"{OUTPUT_PATH}"
     )
 
+    print()
+
+    # --------------------------------------------------------
+    # Important final status
+    # --------------------------------------------------------
+
+    if ai_errors:
+
+        print(
+            "WARNING:"
+        )
+
+        print(
+            f"{ai_errors} fund(s) returned ai_error."
+        )
+
+        print(
+            "See the individual 'error' fields in "
+            "fund_exposure.json and the GitHub Actions "
+            "log for the full traceback."
+        )
+
     return 0
 
 
 if __name__ == "__main__":
+
     sys.exit(
         main()
     )
