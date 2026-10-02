@@ -4,8 +4,18 @@ on:
   workflow_dispatch:
 
   # ============================================================
-  # EVERY 3 HOURS - 00:00 Singapore time start
+  # EVERY 3 HOURS - 00:00 SINGAPORE TIME START
+  #
   # Singapore = UTC+8
+  #
+  # 00:00 SGT = 16:00 UTC
+  # 03:00 SGT = 19:00 UTC
+  # 06:00 SGT = 22:00 UTC
+  # 09:00 SGT = 01:00 UTC
+  # 12:00 SGT = 04:00 UTC
+  # 15:00 SGT = 07:00 UTC
+  # 18:00 SGT = 10:00 UTC
+  # 21:00 SGT = 13:00 UTC
   # ============================================================
   schedule:
     - cron: "0 16,19,22,1,4,7,10,13 * * *"
@@ -13,11 +23,25 @@ on:
 permissions:
   contents: write
 
+# ==============================================================
+# IMPORTANT:
+#
+# This concurrency group ONLY controls duplicate Market News
+# workflows.
+#
+# It does NOT block:
+#
+#   - Build Funds Data
+#   - Research Fund Exposure
+#
+# Therefore all 3 workflows can run at the same time.
+# ==============================================================
 concurrency:
   group: market-news-collector
   cancel-in-progress: false
 
 jobs:
+
   fetch-market-news:
 
     runs-on: ubuntu-latest
@@ -26,31 +50,35 @@ jobs:
 
     steps:
 
-      # --------------------------------------------------------
-      # 1. Checkout repository
-      # --------------------------------------------------------
+      # ========================================================
+      # 1. CHECKOUT REPOSITORY
+      # ========================================================
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
-      # --------------------------------------------------------
-      # 2. Set up Python
-      # --------------------------------------------------------
+      # ========================================================
+      # 2. SET UP PYTHON
+      # ========================================================
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
-      # --------------------------------------------------------
-      # 3. Install dependencies
-      # --------------------------------------------------------
+      # ========================================================
+      # 3. INSTALL DEPENDENCIES
+      # ========================================================
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r scripts/requirements.txt
 
-      # --------------------------------------------------------
-      # 4. Verify required files
-      # --------------------------------------------------------
+      # ========================================================
+      # 4. VERIFY REQUIRED FILES
+      # ========================================================
       - name: Verify market news collector
         shell: bash
         run: |
@@ -61,17 +89,72 @@ jobs:
           echo "Market news collector found:"
           ls -lh scripts/fetch_market_news.py
 
-      # --------------------------------------------------------
-      # 5. Run CNA market news collector
-      # --------------------------------------------------------
+      # ========================================================
+      # 5. SHOW RUN TIME
+      # ========================================================
+      - name: Show run time
+        shell: bash
+        run: |
+          echo "=========================================="
+          echo "VGRAT FMS MARKET NEWS COLLECTOR"
+          echo "=========================================="
+          echo
+          echo "UTC time:"
+          date -u '+%Y-%m-%d %H:%M:%S UTC'
+          echo
+          echo "Singapore time:"
+          TZ=Asia/Singapore date '+%Y-%m-%d %H:%M:%S SGT'
+          echo
+          echo "Singapore date:"
+          TZ=Asia/Singapore date '+%Y-%m-%d'
+          echo
+          echo "Trigger:"
+          echo "${{ github.event_name }}"
+          echo
+          echo "=========================================="
+
+      # ========================================================
+      # 6. SYNC WITH LATEST MAIN BEFORE COLLECTION
+      #
+      # The collector starts from the newest repository state.
+      # ========================================================
+      - name: Sync with latest main before collection
+        shell: bash
+        run: |
+          set -e
+
+          echo "Fetching latest main..."
+
+          git fetch origin main
+
+          echo
+          echo "Current HEAD:"
+          git rev-parse HEAD
+
+          echo
+          echo "Latest origin/main:"
+          git rev-parse origin/main
+
+          echo
+          echo "Resetting working tree to latest origin/main..."
+
+          git reset --hard origin/main
+
+          echo
+          echo "Repository synchronized with origin/main."
+
+      # ========================================================
+      # 7. RUN CNA MARKET NEWS COLLECTOR
+      # ========================================================
       - name: Fetch and process CNA market news
         run: |
           set -e
-          python scripts/fetch_market_news.py
 
-      # --------------------------------------------------------
-      # 6. Display current article count
-      # --------------------------------------------------------
+          python -u scripts/fetch_market_news.py
+
+      # ========================================================
+      # 8. DISPLAY CURRENT ARTICLE COUNT
+      # ========================================================
       - name: Display current news summary
         shell: bash
         run: |
@@ -98,19 +181,23 @@ jobs:
           print("==========================================")
           print("CURRENT 14-DAY NEWS")
           print("==========================================")
+
           print(
               "Generated:",
               data.get("generatedAtUtc")
           )
+
           print(
               "Window:",
               data.get("windowDays"),
               "days"
           )
+
           print(
               "Articles:",
               data.get("articleCount")
           )
+
           print()
 
           for article in data.get("articles", [])[:20]:
@@ -118,53 +205,262 @@ jobs:
                   f"[{article.get('category')}] "
                   f"{article.get('title')}"
               )
+
+          print()
+          print("==========================================")
           PY
 
-      # --------------------------------------------------------
-      # 7. Show Git changes
-      # --------------------------------------------------------
-      - name: Show changed files
-        run: |
-          git status --short
-
-      # --------------------------------------------------------
-      # 8. Commit market news data
-      # --------------------------------------------------------
-      - name: Commit market news data
+      # ========================================================
+      # 9. VALIDATE MARKET NEWS OUTPUT
+      # ========================================================
+      - name: Validate market news output
         shell: bash
         run: |
           set -e
 
+          test -f "data/market_news/current.json"
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/market_news/current.json")
+
+          with path.open("r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          if not isinstance(data, dict):
+              raise SystemExit(
+                  "ERROR: current.json root is not an object."
+              )
+
+          if "articles" not in data:
+              raise SystemExit(
+                  "ERROR: current.json has no articles field."
+              )
+
+          if not isinstance(data["articles"], list):
+              raise SystemExit(
+                  "ERROR: articles is not a list."
+              )
+
+          print(
+              f"Market news validation passed: "
+              f"{len(data['articles'])} articles."
+          )
+          PY
+
+      # ========================================================
+      # 10. SHOW GIT CHANGES
+      # ========================================================
+      - name: Show changed files
+        run: |
+          echo "=========================================="
+          echo "GIT CHANGES"
+          echo "=========================================="
+
+          git status --short
+
+      # ========================================================
+      # 11. CONFIGURE GIT
+      # ========================================================
+      - name: Configure Git
+        shell: bash
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add data/market_news/
-
-          if git diff --cached --quiet; then
-            echo "No market news changes to commit."
-            exit 0
-          fi
-
-          git commit -m "Update CNA market news"
-
-      # --------------------------------------------------------
-      # 9. Rebase onto latest main
-      # --------------------------------------------------------
-      - name: Rebase onto latest main
+      # ========================================================
+      # 12. COMMIT AND PUSH MARKET NEWS SAFELY
+      #
+      # The market-news workflow owns:
+      #
+      #   data/market_news/
+      #
+      # It does NOT touch:
+      #
+      #   data/funds.json
+      #   data/bid_history.json
+      #   data/fund_exposure.json
+      #
+      # If another workflow pushes while this workflow is running,
+      # this workflow discards its local generated commit,
+      # fetches the newest main, reruns the collector, and tries
+      # again.
+      #
+      # This avoids rebasing generated JSON files.
+      # ========================================================
+      - name: Commit and push market news update
         shell: bash
         run: |
           set -e
 
-          git fetch origin main
+          MAX_ATTEMPTS=5
+          ATTEMPT=1
 
-          git rebase origin/main
+          while [ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]; do
 
-      # --------------------------------------------------------
-      # 10. Push
-      # --------------------------------------------------------
-      - name: Push market news update
-        shell: bash
-        run: |
-          set -e
+            echo
+            echo "============================================================"
+            echo "MARKET NEWS PUBLISH ATTEMPT $ATTEMPT / $MAX_ATTEMPTS"
+            echo "============================================================"
 
-          git push origin HEAD:main
+            # ----------------------------------------------------
+            # Fetch the newest main.
+            # ----------------------------------------------------
+            git fetch origin main
+
+            # ----------------------------------------------------
+            # Reset to newest main.
+            #
+            # This discards only this workflow's local commit and
+            # ensures we are building from the latest repository.
+            # ----------------------------------------------------
+            git reset --hard origin/main
+
+            echo
+            echo "Repository HEAD:"
+            git rev-parse HEAD
+
+            echo
+            echo "origin/main:"
+            git rev-parse origin/main
+
+            # ----------------------------------------------------
+            # Re-run the market news collector from the latest main.
+            #
+            # This is important because another workflow may have
+            # published while the first collection was running.
+            # ----------------------------------------------------
+            echo
+            echo "Running market news collector..."
+
+            python -u scripts/fetch_market_news.py
+
+            # ----------------------------------------------------
+            # Validate generated output.
+            # ----------------------------------------------------
+            test -f "data/market_news/current.json"
+
+            python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/market_news/current.json")
+
+          with path.open("r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          if not isinstance(data, dict):
+              raise SystemExit(
+                  "ERROR: current.json root is not an object."
+              )
+
+          if "articles" not in data:
+              raise SystemExit(
+                  "ERROR: current.json has no articles field."
+              )
+
+          if not isinstance(data["articles"], list):
+              raise SystemExit(
+                  "ERROR: articles is not a list."
+              )
+
+          print(
+              f"Validated current.json: "
+              f"{len(data['articles'])} articles."
+          )
+          PY
+
+            # ----------------------------------------------------
+            # Stage ONLY market news files.
+            #
+            # Nothing else is staged.
+            # ----------------------------------------------------
+            git add data/market_news/
+
+            # ----------------------------------------------------
+            # No changes.
+            # ----------------------------------------------------
+            if git diff --cached --quiet; then
+              echo
+              echo "No market news changes to commit."
+              echo "Nothing to publish."
+              exit 0
+            fi
+
+            # ----------------------------------------------------
+            # Commit.
+            # ----------------------------------------------------
+            COMMIT_TIME=$(TZ=Asia/Singapore date '+%Y-%m-%d %H:%M:%S SGT')
+
+            git commit \
+              -m "Update CNA market news ($COMMIT_TIME)"
+
+            # ----------------------------------------------------
+            # Push directly.
+            # ----------------------------------------------------
+            echo
+            echo "Pushing market news update..."
+
+            if git push origin HEAD:main; then
+
+              echo
+              echo "=========================================="
+              echo "MARKET NEWS UPDATE PUBLISHED"
+              echo "=========================================="
+              echo
+              echo "Completed:"
+              TZ=Asia/Singapore date '+%Y-%m-%d %H:%M:%S SGT'
+              echo
+              echo "Published:"
+              echo "  data/market_news/"
+              echo
+              echo "=========================================="
+
+              exit 0
+            fi
+
+            # ----------------------------------------------------
+            # Push failed because main moved.
+            #
+            # Do NOT rebase the generated market-news commit.
+            #
+            # Instead:
+            #
+            #   fetch newest main
+            #   reset
+            #   rerun collector
+            #   retry
+            # ----------------------------------------------------
+            echo
+            echo "Push rejected because origin/main changed."
+            echo "Another workflow likely published while this"
+            echo "collector was running."
+            echo
+            echo "Discarding this generated market-news commit."
+            echo "The next attempt will rerun from latest main."
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            ATTEMPT=$((ATTEMPT + 1))
+
+            if [ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]; then
+              echo
+              echo "Waiting 5 seconds before retry..."
+              sleep 5
+            fi
+
+          done
+
+          echo
+          echo "============================================================"
+          echo "ERROR: Could not publish market news."
+          echo "============================================================"
+          echo
+          echo "main changed during all $MAX_ATTEMPTS publish attempts."
+          echo "No force-push or generated-file rebase was performed."
+          echo
+
+          exit 1
