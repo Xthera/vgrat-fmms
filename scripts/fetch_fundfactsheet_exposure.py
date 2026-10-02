@@ -1,48 +1,72 @@
 #!/usr/bin/env python3
 
 """
-VGrat FMS - INDEPENDENT FUND FACTSHEET EXPOSURE EXTRACTOR
+VGrat FMS - GOOGLE DISCOVERY FUND GEOGRAPHIC / SECTOR EXPOSURE
 
 PURPOSE
 =======
 
-Extract published:
+Search every PRULink fund in Funds Links.xlsm through Google
+Programmable Search / Custom Search JSON API.
 
-    - Geographic allocation
-    - Sector allocation
+The search engine is used for DISCOVERY.
 
-from fund factsheets.
+The actual geographic / sector values are accepted only when
+they can be extracted explicitly from the discovered source.
 
 SOURCE PRIORITY
 ===============
 
-1. Official Prudential Singapore factsheet
-2. Official underlying fund-manager factsheet
-3. Unresolved
+1. Official Prudential Singapore
+2. Official underlying fund manager
+3. Reputable secondary source
 
 IMPORTANT
 =========
 
-This pipeline is independent from:
+Google search is NOT treated as the source of the allocation values.
 
-    - funds.json
-    - BID history
-    - holdings extraction
-    - Holdings Recovery 1
-    - Holdings Recovery 2
-    - Holdings Recovery 3
+The pipeline:
 
-It does NOT modify those pipelines.
+    Fund name
+        |
+        v
+    Google Search
+        |
+        v
+    Candidate sources
+        |
+        v
+    Download source
+        |
+        v
+    Verify exact fund / underlying fund
+        |
+        v
+    Extract explicit allocation data
+        |
+        v
+    JSON
 
-OUTPUT
-======
+NO INFERENCE
+============
 
-data/fundfactsheet_exposure.json
+This script does NOT:
 
-data/fundfactsheet_exposure_diagnostics.json
+- infer country from holdings
+- infer sector from holdings
+- calculate country exposure from Top 10 holdings
+- calculate sector exposure from Top 10 holdings
+- normalize percentages to 100%
+- manufacture missing values
+- copy allocation data from a different fund merely because
+  the names look similar
 
-MASTER UNIVERSE
-===============
+If explicit allocation data cannot be verified, the field remains
+empty and the fund is marked partially_resolved or unresolved.
+
+INPUT
+=====
 
 Preferred:
 
@@ -52,294 +76,412 @@ Column A:
     Prudential fund URL
 
 Column B:
-    Exact PruAccess Fund Name
+    Exact PruAccess / fund name reference
 
-Fallback:
+OUTPUT
+======
 
-    data/funds.json
+data/fundfactsheet_exposure.json
 
-NO INFERENCE
+data/fundfactsheet_exposure_diagnostics.json
+
+ENVIRONMENT
 ===========
 
-The extractor only records allocation percentages that are explicitly
-published in a factsheet.
+Required environment variables:
 
-It does not:
+    GOOGLE_API_KEY
+    GOOGLE_CSE_ID
 
-    - calculate geographic exposure from holdings
-    - calculate sector exposure from holdings
-    - guess missing percentages
-    - fill missing percentages
-    - fabricate categories
-    - force totals to 100%
+These should be configured as GitHub Actions secrets.
+
 """
 
 from __future__ import annotations
 
-import argparse
-import hashlib
 import io
 import json
 import logging
+import os
 import re
 import sys
 import time
-
-from dataclasses import dataclass, asdict
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
-from urllib.parse import urljoin, urlparse
+from typing import Any, Dict, Iterable, List, Optional, Tuple
+from urllib.parse import urlparse
 
-import requests
-from bs4 import BeautifulSoup
 import openpyxl
 import pdfplumber
+import requests
+from bs4 import BeautifulSoup
 
 
 # ============================================================
 # CONFIGURATION
 # ============================================================
 
-USER_AGENT = (
-    "Mozilla/5.0 "
-    "(compatible; VGrat-FMS-FundFactsheet/1.0)"
-)
+ROOT = Path(__file__).resolve().parents[1]
+
+MASTER_XLSM = ROOT / "Funds Links.xlsm"
+
+OUTPUT_DIR = ROOT / "data"
+
+OUTPUT_JSON = OUTPUT_DIR / "fundfactsheet_exposure.json"
+DIAGNOSTICS_JSON = OUTPUT_DIR / "fundfactsheet_exposure_diagnostics.json"
+
+GOOGLE_ENDPOINT = "https://www.googleapis.com/customsearch/v1"
 
 REQUEST_TIMEOUT = 30
 
-MAX_PDF_BYTES = 25 * 1024 * 1024
+MAX_GOOGLE_RESULTS = 10
 
-DEFAULT_DELAY = 0.25
+MAX_CANDIDATES_TO_FETCH = 8
 
+MAX_HTML_BYTES = 8 * 1024 * 1024
 
-# ============================================================
-# OFFICIAL PRUDENTIAL HOSTS
-# ============================================================
+MAX_PDF_BYTES = 20 * 1024 * 1024
 
-PRUDENTIAL_HOSTS = {
-    "prudential.com.sg",
-    "www.prudential.com.sg",
-    "pruaccess.prudential.com.sg",
+GOOGLE_DELAY_SECONDS = 0.25
+
+SOURCE_FETCH_DELAY_SECONDS = 0.15
+
+USER_AGENT = (
+    "Mozilla/5.0 "
+    "(X11; Linux x86_64) "
+    "AppleWebKit/537.36 "
+    "(KHTML, like Gecko) "
+    "Chrome/140.0 Safari/537.36 "
+    "VGrat-FMS/1.0"
+)
+
+HEADERS = {
+    "User-Agent": USER_AGENT,
+    "Accept-Language": "en-SG,en;q=0.9",
+}
+
+# Domains considered official / high priority.
+OFFICIAL_DOMAIN_HINTS = {
+    "prudential.com.sg": 100,
+    "eastspring.com": 95,
+    "fidelity.com": 95,
+    "fidelityinternational.com": 95,
+    "schroders.com": 95,
+    "jpmorgan.com": 95,
+    "jpmorganassetmanagement.com": 95,
+    "blackrock.com": 95,
+    "ishares.com": 95,
+    "amundi.com": 95,
+    "ubs.com": 95,
+    "vanguard.com": 95,
+    "franklintempleton.com": 95,
+    "aberdeen.com": 95,
+    "abrdn.com": 95,
+    "manulifeim.com": 95,
+    "pimco.com": 95,
+    "columbiathreadneedle.com": 95,
+    "invesco.com": 95,
+    "wellington.com": 95,
+    "bnpparibas-am.com": 95,
+    "dws.com": 95,
+    "allianzgi.com": 95,
+    "axa-im.com": 95,
+    "morganstanley.com": 95,
+    "lgim.com": 95,
+    "schroders.com": 95,
+    "uobam.com.sg": 95,
+    "uobam.com": 95,
+    "dbsvickers.com": 50,
+}
+
+SECONDARY_DOMAIN_HINTS = {
+    "morningstar.com": 70,
+    "investing.com": 55,
+    "markets.ft.com": 55,
+    "lipperweb.com": 60,
+    "fundsquare.net": 50,
+    "bloomberg.com": 60,
+    "marketscreener.com": 45,
+}
+
+GEOGRAPHIC_HEADINGS = [
+    "country allocation",
+    "country allocations",
+    "geographical allocation",
+    "geographic allocation",
+    "geographical allocations",
+    "geographic allocations",
+    "regional allocation",
+    "regional allocations",
+    "country exposure",
+    "geographic exposure",
+    "geographical exposure",
+    "regional exposure",
+]
+
+SECTOR_HEADINGS = [
+    "sector allocation",
+    "sector allocations",
+    "industry allocation",
+    "industry allocations",
+    "sector exposure",
+    "industry exposure",
+    "industry breakdown",
+    "sector breakdown",
+]
+
+STOP_HEADINGS = [
+    "top 10 holdings",
+    "top 10 holding",
+    "top ten holdings",
+    "top holdings",
+    "performance",
+    "important information",
+    "investment objective",
+    "fund details",
+    "fund statistics",
+    "risk classification",
+    "benchmark",
+    "calendar year performance",
+    "past performance",
+    "disclaimer",
+]
+
+GEOGRAPHIC_NAMES = {
+    "united states",
+    "usa",
+    "us",
+    "canada",
+    "mexico",
+    "brazil",
+    "argentina",
+    "chile",
+    "peru",
+    "colombia",
+    "united kingdom",
+    "uk",
+    "great britain",
+    "germany",
+    "france",
+    "italy",
+    "spain",
+    "netherlands",
+    "switzerland",
+    "sweden",
+    "denmark",
+    "norway",
+    "finland",
+    "ireland",
+    "belgium",
+    "austria",
+    "portugal",
+    "poland",
+    "europe",
+    "europe ex uk",
+    "eurozone",
+    "asia",
+    "asia pacific",
+    "asia ex japan",
+    "japan",
+    "china",
+    "hong kong",
+    "taiwan",
+    "south korea",
+    "korea",
+    "india",
+    "singapore",
+    "australia",
+    "new zealand",
+    "malaysia",
+    "indonesia",
+    "thailand",
+    "philippines",
+    "vietnam",
+    "middle east",
+    "africa",
+    "south africa",
+    "emerging markets",
+    "developed markets",
+    "cash",
+    "cash and others",
+    "cash and cash equivalents",
+    "others",
+}
+
+SECTOR_NAMES = {
+    "information technology",
+    "technology",
+    "financials",
+    "financial services",
+    "health care",
+    "healthcare",
+    "industrials",
+    "materials",
+    "communication services",
+    "telecommunication",
+    "consumer discretionary",
+    "consumer staples",
+    "energy",
+    "utilities",
+    "real estate",
+    "property",
+    "semiconductors",
+    "software",
+    "internet",
+    "electronics",
+    "computers",
+    "media",
+    "banks",
+    "insurance",
+    "pharmaceuticals",
+    "biotechnology",
+    "diversified financials",
+    "capital goods",
+    "automobiles",
+    "automotive",
+    "transportation",
+    "consumer services",
+    "commercial services",
+    "food and beverages",
+    "retail",
+    "cash",
+    "cash and others",
+    "cash and cash equivalents",
+    "others",
 }
 
 
 # ============================================================
-# ALLOCATION SECTION HEADINGS
+# LOGGING
 # ============================================================
 
-GEOGRAPHIC_HEADINGS = (
-    "geographical allocation",
-    "geographic allocation",
-    "geographical exposure",
-    "geographic exposure",
-    "country allocation",
-    "country exposure",
-    "regional allocation",
-    "regional exposure",
-    "allocation by country",
-    "allocation by region",
-    "asset allocation by country",
-    "asset allocation by region",
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
 )
 
-SECTOR_HEADINGS = (
-    "sector allocation",
-    "sector exposure",
-    "industry allocation",
-    "industry exposure",
-    "sector breakdown",
-    "sector distribution",
-    "allocation by sector",
-    "allocation by industry",
-)
+logger = logging.getLogger("vgrat-factsheet-exposure")
 
 
 # ============================================================
-# REGEX
+# GENERAL HELPERS
 # ============================================================
 
-PERCENT_RE = re.compile(
-    r"(?<![\d.])"
-    r"(\d{1,3}(?:[.,]\d+)?)"
-    r"\s*%"
-)
-
-DATE_RE = re.compile(
-    r"""
-    \b
-    (?:
-        \d{1,2}
-        [\s/-]+
-        (?:
-            Jan(?:uary)?
-            |Feb(?:ruary)?
-            |Mar(?:ch)?
-            |Apr(?:il)?
-            |May
-            |Jun(?:e)?
-            |Jul(?:y)?
-            |Aug(?:ust)?
-            |Sep(?:t(?:ember)?)?
-            |Oct(?:ober)?
-            |Nov(?:ember)?
-            |Dec(?:ember)?
-        )
-        [\s/-]+
-        \d{2,4}
-
-        |
-
-        20\d{2}
-        [-/]
-        \d{1,2}
-        [-/]
-        \d{1,2}
-    )
-    \b
-    """,
-    re.IGNORECASE | re.VERBOSE,
-)
-
-
-# ============================================================
-# DATA CLASSES
-# ============================================================
-
-@dataclass
-class Fund:
-    row: int
-    name: str
-    prudential_url: str
-    source_universe: str
-
-
-@dataclass
-class Candidate:
-    url: str
-    source_type: str
-    discovered_from: str
-    title: str = ""
-    score: int = 0
-
-
-# ============================================================
-# HELPERS
-# ============================================================
-
-def now_utc() -> str:
+def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def clean(value: Any) -> str:
-    return re.sub(
-        r"\s+",
-        " ",
-        str(value or "")
-    ).strip()
+def normalize_space(value: str) -> str:
+    value = value.replace("\xa0", " ")
+    value = re.sub(r"\s+", " ", value)
+    return value.strip()
 
 
-def normalise(value: str) -> str:
-    value = clean(value).lower()
+def normalize_name(value: str) -> str:
+    value = value.lower()
+
+    value = value.replace("–", "-")
+    value = value.replace("—", "-")
+
+    value = re.sub(r"\([^)]*\)", " ", value)
+
+    replacements = {
+        "prulink": "",
+        "pru link": "",
+        "pruprime": "",
+        "accumulation": "",
+        "acc": "",
+        "distribution": "",
+        "dist": "",
+        "decu": "",
+        "sgd": "",
+        "usd": "",
+    }
+
+    for old, new in replacements.items():
+        value = value.replace(old, new)
+
     value = re.sub(r"[^a-z0-9]+", " ", value)
-    return re.sub(r"\s+", " ", value).strip()
+
+    return normalize_space(value)
 
 
-def is_prudential_url(url: str) -> bool:
-    host = (urlparse(url).hostname or "").lower()
+def name_tokens(value: str) -> List[str]:
+    normalized = normalize_name(value)
 
-    return (
-        host in PRUDENTIAL_HOSTS
-        or any(
-            host.endswith("." + domain)
-            for domain in PRUDENTIAL_HOSTS
-        )
-    )
+    stop = {
+        "fund",
+        "portfolio",
+        "the",
+        "and",
+        "of",
+        "class",
+    }
+
+    return [
+        token
+        for token in normalized.split()
+        if len(token) >= 3 and token not in stop
+    ]
 
 
-def is_pdf_url(url: str) -> bool:
-    path = urlparse(url).path.lower()
-    return path.endswith(".pdf")
+def filename_hash(url: str) -> str:
+    return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
 
 
-def extract_percentage(text: str) -> float | None:
-
-    match = PERCENT_RE.search(
-        text.replace(",", "")
-    )
-
-    if not match:
-        return None
-
+def domain_of(url: str) -> str:
     try:
-        return float(match.group(1))
-    except ValueError:
-        return None
+        host = urlparse(url).netloc.lower()
+        if host.startswith("www."):
+            host = host[4:]
+        return host
+    except Exception:
+        return ""
 
 
-def sha256_bytes(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
+def domain_score(url: str) -> Tuple[int, str]:
+    domain = domain_of(url)
+
+    for known, score in OFFICIAL_DOMAIN_HINTS.items():
+        if domain == known or domain.endswith("." + known):
+            return score, "official"
+
+    for known, score in SECONDARY_DOMAIN_HINTS.items():
+        if domain == known or domain.endswith("." + known):
+            return score, "secondary"
+
+    return 20, "other"
 
 
-# ============================================================
-# HTTP CLIENT
-# ============================================================
+def safe_json_write(path: Path, data: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
 
-class HttpClient:
+    temporary = path.with_suffix(path.suffix + ".tmp")
 
-    def __init__(self) -> None:
+    with temporary.open("w", encoding="utf-8") as handle:
+        json.dump(
+            data,
+            handle,
+            ensure_ascii=False,
+            indent=2,
+        )
 
-        self.session = requests.Session()
-
-        self.session.headers.update({
-            "User-Agent": USER_AGENT,
-            "Accept": (
-                "text/html,"
-                "application/xhtml+xml,"
-                "application/pdf,"
-                "*/*"
-            ),
-            "Accept-Language": "en-SG,en;q=0.8",
-        })
-
-    def get(
-        self,
-        url: str,
-    ) -> requests.Response | None:
-
-        try:
-
-            response = self.session.get(
-                url,
-                timeout=REQUEST_TIMEOUT,
-                allow_redirects=True,
-            )
-
-            response.raise_for_status()
-
-            return response
-
-        except requests.RequestException as exc:
-
-            logging.debug(
-                "GET failed: %s: %s",
-                url,
-                exc,
-            )
-
-            return None
+    temporary.replace(path)
 
 
 # ============================================================
-# FUND UNIVERSE - XLSM
+# MASTER UNIVERSE
 # ============================================================
 
-def load_workbook_universe(
-    path: Path,
-) -> list[Fund]:
+def load_master_universe() -> List[Dict[str, str]]:
+    if not MASTER_XLSM.exists():
+        raise FileNotFoundError(
+            f"Master universe not found: {MASTER_XLSM}"
+        )
 
     workbook = openpyxl.load_workbook(
-        path,
+        MASTER_XLSM,
         read_only=True,
         data_only=True,
         keep_vba=True,
@@ -347,331 +489,307 @@ def load_workbook_universe(
 
     worksheet = workbook.active
 
-    funds: list[Fund] = []
+    funds: List[Dict[str, str]] = []
 
-    for row_number, row in enumerate(
-        worksheet.iter_rows(min_row=2),
-        start=2,
+    for row in worksheet.iter_rows(
+        min_row=2,
+        values_only=True,
     ):
+        url = row[0] if len(row) >= 1 else None
+        fund_name = row[1] if len(row) >= 2 else None
 
-        url = clean(
-            row[0].value
-            if len(row) >= 1
-            else ""
-        )
-
-        name = clean(
-            row[1].value
-            if len(row) >= 2
-            else ""
-        )
-
-        if not url.lower().startswith(
-            ("http://", "https://")
-        ):
+        if not fund_name:
             continue
 
+        fund_name = normalize_space(str(fund_name))
+
+        if url:
+            url = normalize_space(str(url))
+        else:
+            url = ""
+
         funds.append(
-            Fund(
-                row=row_number,
-                name=name or f"Fund row {row_number}",
-                prudential_url=url,
-                source_universe=str(path),
-            )
+            {
+                "fundName": fund_name,
+                "prudentialUrl": url,
+            }
         )
 
     workbook.close()
 
-    return funds
+    deduped: List[Dict[str, str]] = []
+    seen = set()
 
+    for fund in funds:
+        key = normalize_name(fund["fundName"])
 
-# ============================================================
-# FUND UNIVERSE - JSON FALLBACK
-# ============================================================
-
-def load_json_universe(
-    path: Path,
-) -> list[Fund]:
-
-    payload = json.loads(
-        path.read_text(
-            encoding="utf-8"
-        )
-    )
-
-    if isinstance(payload, list):
-
-        items = payload
-
-    elif isinstance(payload, dict):
-
-        items = []
-
-        for key in (
-            "funds",
-            "data",
-            "items",
-        ):
-
-            if isinstance(
-                payload.get(key),
-                list,
-            ):
-
-                items = payload[key]
-                break
-
-    else:
-
-        items = []
-
-    funds: list[Fund] = []
-
-    for index, item in enumerate(
-        items,
-        start=1,
-    ):
-
-        if not isinstance(
-            item,
-            dict,
-        ):
+        if not key:
             continue
 
-        name = (
-            item.get("fundName")
-            or item.get("name")
-            or item.get("fund_name")
-            or item.get("pruAccessFundName")
-            or ""
-        )
+        if key in seen:
+            continue
 
-        url = (
-            item.get("prudentialUrl")
-            or item.get("prudential_url")
-            or item.get("fundUrl")
-            or item.get("fund_url")
-            or item.get("url")
-            or ""
-        )
+        seen.add(key)
+        deduped.append(fund)
 
-        if (
-            name
-            and str(url).startswith(
-                ("http://", "https://")
-            )
-        ):
-
-            funds.append(
-                Fund(
-                    row=index,
-                    name=clean(name),
-                    prudential_url=clean(url),
-                    source_universe=str(path),
-                )
-            )
-
-    return funds
+    return deduped
 
 
 # ============================================================
-# LOAD MASTER UNIVERSE
+# GOOGLE SEARCH
 # ============================================================
 
-def load_universe(
-    workbook: Path,
-    json_path: Path,
-) -> list[Fund]:
+def google_search(
+    api_key: str,
+    cse_id: str,
+    query: str,
+) -> Dict[str, Any]:
 
-    if workbook.exists():
+    params = {
+        "key": api_key,
+        "cx": cse_id,
+        "q": query,
+        "num": MAX_GOOGLE_RESULTS,
+        "safe": "active",
+        "hl": "en",
+        "gl": "sg",
+        "filter": "1",
+    }
 
-        funds = load_workbook_universe(
-            workbook
-        )
-
-        if funds:
-            logging.info(
-                "Using master universe: %s",
-                workbook,
-            )
-
-            return funds
-
-    if json_path.exists():
-
-        funds = load_json_universe(
-            json_path
-        )
-
-        if funds:
-
-            logging.info(
-                "Using fallback universe: %s",
-                json_path,
-            )
-
-            return funds
-
-    raise RuntimeError(
-        "No fund universe found. "
-        f"Expected '{workbook}' or '{json_path}'."
+    response = requests.get(
+        GOOGLE_ENDPOINT,
+        params=params,
+        headers=HEADERS,
+        timeout=REQUEST_TIMEOUT,
     )
 
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"Google API HTTP {response.status_code}: "
+            f"{response.text[:500]}"
+        )
+
+    return response.json()
+
+
+def build_queries(fund_name: str) -> List[str]:
+    quoted = f'"{fund_name}"'
+
+    return [
+        (
+            f"{quoted} "
+            f'("country allocation" OR "geographic allocation" OR '
+            f'"geographical allocation" OR "regional allocation") '
+            f'("sector allocation" OR "industry allocation" OR '
+            f'"sector exposure")'
+        ),
+        (
+            f"{quoted} "
+            f'("underlying fund" OR "investment manager" OR '
+            f'"fund manager") '
+            f'("country allocation" OR "sector allocation")'
+        ),
+    ]
+
+
+def search_fund(
+    fund_name: str,
+    api_key: str,
+    cse_id: str,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+
+    queries = build_queries(fund_name)
+
+    all_results: List[Dict[str, Any]] = []
+    search_log: List[Dict[str, Any]] = []
+
+    seen_urls = set()
+
+    for query in queries:
+
+        logger.info(
+            "Google search: %s",
+            query,
+        )
+
+        try:
+            result = google_search(
+                api_key=api_key,
+                cse_id=cse_id,
+                query=query,
+            )
+
+            items = result.get("items", [])
+
+            search_log.append(
+                {
+                    "query": query,
+                    "resultCount": len(items),
+                    "totalResults": (
+                        result.get("searchInformation", {})
+                        .get("totalResults")
+                    ),
+                    "status": "success",
+                }
+            )
+
+            for item in items:
+
+                url = item.get("link", "")
+
+                if not url:
+                    continue
+
+                if url in seen_urls:
+                    continue
+
+                seen_urls.add(url)
+
+                all_results.append(
+                    {
+                        "query": query,
+                        "title": item.get("title", ""),
+                        "link": url,
+                        "snippet": item.get("snippet", ""),
+                        "displayLink": item.get(
+                            "displayLink",
+                            "",
+                        ),
+                        "mime": item.get("mime", ""),
+                        "fileFormat": item.get(
+                            "fileFormat",
+                            "",
+                        ),
+                    }
+                )
+
+        except Exception as exc:
+
+            logger.warning(
+                "Google search failed for '%s': %s",
+                query,
+                exc,
+            )
+
+            search_log.append(
+                {
+                    "query": query,
+                    "resultCount": 0,
+                    "status": "error",
+                    "error": str(exc),
+                }
+            )
+
+        time.sleep(GOOGLE_DELAY_SECONDS)
+
+    return rank_search_results(
+        fund_name,
+        all_results,
+    ), search_log
+
 
 # ============================================================
-# PDF CANDIDATE DISCOVERY
+# GOOGLE RESULT RANKING
 # ============================================================
 
 def candidate_score(
-    url: str,
-    text: str,
+    fund_name: str,
+    result: Dict[str, Any],
 ) -> int:
 
-    haystack = (
-        f"{url} {text}"
+    title = result.get("title", "")
+    snippet = result.get("snippet", "")
+    url = result.get("link", "")
+
+    combined = (
+        f"{title} {snippet} {url}"
     ).lower()
 
-    score = 0
+    score, _ = domain_score(url)
 
-    if "factsheet" in haystack:
-        score += 40
+    normalized_fund = normalize_name(fund_name)
 
-    if "fund factsheet" in haystack:
-        score += 30
+    if normalized_fund and normalized_fund in normalize_name(combined):
+        score += 50
 
-    if "fund-factsheet" in haystack:
-        score += 30
+    tokens = name_tokens(fund_name)
 
-    if "fund" in haystack:
-        score += 5
+    matched = 0
 
-    if "monthly" in haystack:
-        score += 5
+    for token in tokens:
+        if token in combined:
+            matched += 1
+
+    score += min(30, matched * 5)
+
+    allocation_terms = [
+        "country allocation",
+        "geographic allocation",
+        "geographical allocation",
+        "regional allocation",
+        "sector allocation",
+        "industry allocation",
+        "sector exposure",
+    ]
+
+    for term in allocation_terms:
+        if term in combined:
+            score += 10
+
+    if "underlying fund" in combined:
+        score += 8
+
+    if "investment manager" in combined:
+        score += 8
+
+    if url.lower().endswith(".pdf"):
+        score += 8
+
+    if "prudential.com.sg" in domain_of(url):
+        score += 20
 
     return score
 
 
-def discover_pdf_candidates(
-    html: str,
-    base_url: str,
-    source_type: str,
-) -> list[Candidate]:
+def rank_search_results(
+    fund_name: str,
+    results: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
 
-    soup = BeautifulSoup(
-        html,
-        "html.parser",
-    )
+    ranked = []
 
-    found: dict[str, Candidate] = {}
+    for result in results:
 
-    # --------------------------------------------------------
-    # Standard hyperlinks
-    # --------------------------------------------------------
+        enriched = dict(result)
 
-    for anchor in soup.find_all(
-        "a",
-        href=True,
-    ):
-
-        url = urljoin(
-            base_url,
-            anchor["href"],
+        enriched["score"] = candidate_score(
+            fund_name,
+            result,
         )
 
-        if not is_pdf_url(url):
-            continue
+        ranked.append(enriched)
 
-        text = clean(
-            anchor.get_text(
-                " ",
-                strip=True,
-            )
-        )
-
-        title = clean(
-            anchor.get("title")
-        )
-
-        candidate = Candidate(
-            url=url,
-            source_type=source_type,
-            discovered_from=base_url,
-            title=text or title,
-            score=candidate_score(
-                url,
-                text or title,
-            ),
-        )
-
-        existing = found.get(url)
-
-        if (
-            existing is None
-            or candidate.score > existing.score
-        ):
-
-            found[url] = candidate
-
-    # --------------------------------------------------------
-    # PDFs embedded in raw HTML / JavaScript
-    # --------------------------------------------------------
-
-    raw_pdf_urls = re.findall(
-        r"""https?://[^"'\\\s<>]+?\.pdf(?:\?[^"'\\\s<>]*)?""",
-        html,
-        re.IGNORECASE,
-    )
-
-    for url in raw_pdf_urls:
-
-        url = url.replace(
-            "&amp;",
-            "&",
-        )
-
-        candidate = Candidate(
-            url=url,
-            source_type=source_type,
-            discovered_from=base_url,
-            score=candidate_score(
-                url,
-                "",
-            ),
-        )
-
-        existing = found.get(url)
-
-        if (
-            existing is None
-            or candidate.score > existing.score
-        ):
-
-            found[url] = candidate
-
-    return sorted(
-        found.values(),
-        key=lambda item: item.score,
+    ranked.sort(
+        key=lambda item: item["score"],
         reverse=True,
     )
 
+    return ranked
+
 
 # ============================================================
-# FETCH PDF
+# SOURCE FETCHING
 # ============================================================
 
-def fetch_pdf(
-    client: HttpClient,
-    candidate: Candidate,
-) -> tuple[bytes, str] | None:
-
-    response = client.get(
-        candidate.url
+def fetch_source(url: str) -> Tuple[str, bytes]:
+    response = requests.get(
+        url,
+        headers=HEADERS,
+        timeout=REQUEST_TIMEOUT,
+        allow_redirects=True,
     )
 
-    if response is None:
-        return None
-
-    data = response.content
+    response.raise_for_status()
 
     content_type = (
         response.headers.get(
@@ -680,984 +798,1010 @@ def fetch_pdf(
         ).lower()
     )
 
+    data = response.content
+
     if len(data) > MAX_PDF_BYTES:
-        logging.warning(
-            "Skipping oversized PDF: %s",
-            candidate.url,
+        raise RuntimeError(
+            f"Source too large: {len(data)} bytes"
         )
 
-        return None
-
     if (
-        not data.startswith(b"%PDF")
-        and "pdf" not in content_type
+        "pdf" in content_type
+        or url.lower().split("?")[0].endswith(".pdf")
     ):
-        return None
+        return "pdf", data
 
-    return data, response.url
+    return "html", data
 
 
 # ============================================================
-# PDF EXTRACTION
+# PDF TEXT
 # ============================================================
 
-def extract_pdf(
-    pdf_bytes: bytes,
-) -> tuple[str, list[dict[str, Any]]]:
+def extract_pdf_text(data: bytes) -> str:
 
-    pages: list[dict[str, Any]] = []
+    chunks: List[str] = []
 
-    chunks: list[str] = []
+    with pdfplumber.open(io.BytesIO(data)) as pdf:
 
-    with pdfplumber.open(
-        io.BytesIO(pdf_bytes)
-    ) as pdf:
-
-        for page_number, page in enumerate(
-            pdf.pages,
-            start=1,
-        ):
-
-            text = page.extract_text(
-                x_tolerance=2,
-                y_tolerance=3,
-            ) or ""
+        for page in pdf.pages:
 
             try:
+                text = page.extract_text() or ""
 
-                tables = (
-                    page.extract_tables()
-                    or []
+                if text:
+                    chunks.append(text)
+
+            except Exception as exc:
+                logger.debug(
+                    "PDF page extraction failed: %s",
+                    exc,
                 )
 
-            except Exception:
+    return "\n".join(chunks)
 
-                tables = []
 
-            pages.append({
-                "page": page_number,
-                "text": text,
-                "tables": tables,
-            })
+# ============================================================
+# HTML TEXT
+# ============================================================
 
-            if text:
+def extract_html_text(data: bytes) -> str:
 
-                chunks.append(
-                    f"[PAGE {page_number}]\n{text}"
-                )
+    if len(data) > MAX_HTML_BYTES:
+        raise RuntimeError(
+            f"HTML source too large: {len(data)} bytes"
+        )
 
-            for table in tables:
+    soup = BeautifulSoup(
+        data,
+        "html.parser",
+    )
 
-                for row in table:
+    for tag in soup(
+        [
+            "script",
+            "style",
+            "noscript",
+            "svg",
+        ]
+    ):
+        tag.decompose()
 
-                    cells = [
-                        clean(cell)
-                        for cell in row
-                        if cell is not None
-                    ]
-
-                    if cells:
-
-                        chunks.append(
-                            " | ".join(cells)
-                        )
-
-    return (
-        "\n".join(chunks),
-        pages,
+    return soup.get_text(
+        "\n",
+        strip=True,
     )
 
 
 # ============================================================
-# CATEGORY VALIDATION
+# FUND MATCHING
 # ============================================================
 
-def valid_category(
-    value: str,
+def fund_match_score(
+    fund_name: str,
+    text: str,
+) -> int:
+
+    normalized_text = normalize_name(
+        text[:50000]
+    )
+
+    tokens = name_tokens(fund_name)
+
+    if not tokens:
+        return 0
+
+    matches = sum(
+        1
+        for token in tokens
+        if token in normalized_text
+    )
+
+    return int(
+        (matches / len(tokens)) * 100
+    )
+
+
+# ============================================================
+# MANAGER EXTRACTION
+# ============================================================
+
+MANAGER_PATTERNS = [
+    re.compile(
+        r"(?:source|sourced)\s*:\s*"
+        r"([A-Za-z0-9&.,'()\- ]{3,120})",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"(?:investment manager|fund manager|manager of the fund)"
+        r"\s*[:\-]\s*"
+        r"([A-Za-z0-9&.,'()\- ]{3,150})",
+        re.IGNORECASE,
+    ),
+]
+
+
+def extract_manager(text: str) -> Optional[str]:
+
+    for pattern in MANAGER_PATTERNS:
+
+        matches = pattern.findall(text)
+
+        for match in matches:
+
+            value = normalize_space(match)
+
+            value = re.split(
+                r"\b(?:Important Information|The Fund|The underlying)\b",
+                value,
+                maxsplit=1,
+                flags=re.IGNORECASE,
+            )[0]
+
+            value = value.strip(" -:;,.") 
+
+            if len(value) >= 3:
+                return value
+
+    return None
+
+
+# ============================================================
+# SECTION DETECTION
+# ============================================================
+
+def heading_type(line: str) -> Optional[str]:
+
+    normalized = normalize_space(
+        line.lower()
+    )
+
+    for heading in GEOGRAPHIC_HEADINGS:
+
+        if heading in normalized:
+            return "geographic"
+
+    for heading in SECTOR_HEADINGS:
+
+        if heading in normalized:
+            return "sector"
+
+    return None
+
+
+def is_stop_heading(line: str) -> bool:
+
+    normalized = normalize_space(
+        line.lower()
+    )
+
+    for heading in STOP_HEADINGS:
+
+        if normalized.startswith(heading):
+            return True
+
+    return False
+
+
+def clean_lines(text: str) -> List[str]:
+
+    lines = []
+
+    for raw in text.splitlines():
+
+        line = normalize_space(raw)
+
+        if not line:
+            continue
+
+        lines.append(line)
+
+    return lines
+
+
+def extract_sections(
+    text: str,
+) -> Dict[str, List[str]]:
+
+    lines = clean_lines(text)
+
+    sections = {
+        "geographic": [],
+        "sector": [],
+    }
+
+    current: Optional[str] = None
+
+    for line in lines:
+
+        detected = heading_type(line)
+
+        if detected:
+            current = detected
+            continue
+
+        if current and is_stop_heading(line):
+            current = None
+            continue
+
+        if current:
+            sections[current].append(line)
+
+    return sections
+
+
+# ============================================================
+# ALLOCATION EXTRACTION
+# ============================================================
+
+PERCENT_RE = re.compile(
+    r"(?<![\d.])"
+    r"(-?\d+(?:[.,]\d+)?)"
+    r"\s*%"
+)
+
+
+def normalize_percent(value: str) -> Optional[float]:
+
+    try:
+        value = value.replace(",", ".")
+        number = float(value)
+
+        if number < 0 or number > 100:
+            return None
+
+        return round(number, 4)
+
+    except Exception:
+        return None
+
+
+def clean_category(value: str) -> str:
+
+    value = normalize_space(value)
+
+    value = re.sub(
+        r"\s*[-–—:|]+\s*$",
+        "",
+        value,
+    )
+
+    return value.strip()
+
+
+def category_is_valid(
+    category: str,
+    allocation_type: str,
 ) -> bool:
 
-    value = clean(value)
+    value = normalize_name(category)
 
     if not value:
         return False
 
-    if len(value) > 100:
+    if len(value) > 80:
         return False
 
-    if not re.search(
-        r"[A-Za-z]",
+    if re.search(
+        r"\b(?:performance|benchmark|return|price|yield|"
+        r"charge|fee|date|month|year|source)\b",
         value,
     ):
         return False
 
-    bad_prefixes = (
-        "total",
-        "source",
-        "benchmark",
-        "portfolio",
-        "as at",
-        "date",
-        "isin",
-        "sedol",
-        "factsheet",
-        "performance",
-        "dividend",
-        "fund size",
-        "investment objective",
-    )
+    if allocation_type == "geographic":
 
-    low = value.lower()
+        if value in GEOGRAPHIC_NAMES:
+            return True
 
-    return not low.startswith(
-        bad_prefixes
-    )
+        geographic_words = [
+            "america",
+            "europe",
+            "asia",
+            "africa",
+            "pacific",
+            "kingdom",
+            "states",
+            "korea",
+            "arab",
+        ]
 
-
-# ============================================================
-# PARSE LINE ALLOCATION
-# ============================================================
-
-def parse_allocation_line(
-    line: str,
-) -> tuple[str, float] | None:
-
-    line = clean(line)
-
-    match = re.search(
-        r"^(.*?)"
-        r"\s+"
-        r"(?:[|:.\u00b7]+\s*)?"
-        r"(\d{1,3}(?:[.,]\d+)?)"
-        r"\s*%\s*$",
-        line,
-    )
-
-    if match:
-
-        category = clean(
-            match.group(1)
+        return any(
+            word in value
+            for word in geographic_words
         )
 
-        try:
+    if allocation_type == "sector":
 
-            pct = float(
-                match.group(2).replace(
-                    ",",
-                    "",
-                )
-            )
+        if value in SECTOR_NAMES:
+            return True
 
-        except ValueError:
+        sector_words = [
+            "technology",
+            "financial",
+            "health",
+            "industrial",
+            "material",
+            "consumer",
+            "energy",
+            "utility",
+            "real estate",
+            "software",
+            "semiconductor",
+            "telecom",
+            "communication",
+            "bank",
+            "insurance",
+            "pharma",
+            "automotive",
+            "retail",
+            "capital goods",
+        ]
 
-            return None
+        return any(
+            word in value
+            for word in sector_words
+        )
 
-    else:
+    return False
+
+
+def parse_allocation_lines(
+    lines: List[str],
+    allocation_type: str,
+) -> List[Dict[str, Any]]:
+
+    results: List[Dict[str, Any]] = []
+
+    for line in lines:
 
         matches = list(
             PERCENT_RE.finditer(line)
         )
 
-        if len(matches) != 1:
-            return None
-
-        match = matches[0]
-
-        category = clean(
-            line[:match.start()]
-        )
-
-        pct = extract_percentage(
-            match.group(0)
-        )
-
-        if pct is None:
-            return None
-
-    category = re.sub(
-        r"^[•·▪◦\-\u2013\u2014]+",
-        "",
-        category,
-    ).strip()
-
-    if not 0 <= pct <= 100:
-        return None
-
-    if not valid_category(category):
-        return None
-
-    return (
-        category,
-        round(pct, 4),
-    )
-
-
-# ============================================================
-# FIND ALLOCATION HEADINGS
-# ============================================================
-
-def heading_positions(
-    lines: list[str],
-    headings: tuple[str, ...],
-) -> list[int]:
-
-    positions = []
-
-    for index, line in enumerate(lines):
-
-        low = line.lower()
-
-        if any(
-            heading in low
-            for heading in headings
-        ):
-
-            positions.append(index)
-
-    return positions
-
-
-# ============================================================
-# LINE-BASED EXTRACTION
-# ============================================================
-
-def extract_line_allocations(
-    lines: list[str],
-    headings: tuple[str, ...],
-) -> list[dict[str, Any]]:
-
-    results = []
-
-    for start in heading_positions(
-        lines,
-        headings,
-    ):
-
-        for index in range(
-            start + 1,
-            min(
-                start + 46,
-                len(lines),
-            ),
-        ):
-
-            line = clean(
-                lines[index]
-            )
-
-            if not line:
-                continue
-
-            low = line.lower()
-
-            if (
-                index > start + 3
-                and any(
-                    heading in low
-                    for heading in headings
-                )
-                and not PERCENT_RE.search(line)
-            ):
-                break
-
-            parsed = parse_allocation_line(
-                line
-            )
-
-            if parsed is None:
-                continue
-
-            category, pct = parsed
-
-            results.append({
-                "category": category,
-                "percentage": pct,
-                "rawLine": line,
-            })
-
-    return deduplicate(
-        results
-    )
-
-
-# ============================================================
-# TABLE-BASED EXTRACTION
-# ============================================================
-
-def extract_table_allocations(
-    pages: list[dict[str, Any]],
-    headings: tuple[str, ...],
-) -> list[dict[str, Any]]:
-
-    results = []
-
-    for page in pages:
-
-        page_text = clean(
-            page.get("text", "")
-        ).lower()
-
-        if not any(
-            heading in page_text
-            for heading in headings
-        ):
+        if not matches:
             continue
 
-        for table in page.get(
-            "tables",
-            [],
-        ):
+        # The normal case is one category + one percentage.
+        if len(matches) == 1:
 
-            for row in table:
+            match = matches[0]
 
-                cells = [
-                    clean(cell)
-                    for cell in row
-                    if cell is not None
-                ]
+            percentage = normalize_percent(
+                match.group(1)
+            )
 
-                if not cells:
-                    continue
+            if percentage is None:
+                continue
 
-                percentages = [
-                    extract_percentage(cell)
-                    for cell in cells
-                ]
+            category = clean_category(
+                line[:match.start()]
+            )
 
-                percentages = [
-                    pct
-                    for pct in percentages
-                    if pct is not None
-                ]
-
-                if len(percentages) != 1:
-                    continue
-
-                pct = percentages[0]
-
-                category_parts = [
-                    cell
-                    for cell in cells
-                    if not PERCENT_RE.search(
-                        cell
-                    )
-                ]
-
-                category = clean(
-                    " ".join(
-                        category_parts
-                    )
+            if category_is_valid(
+                category,
+                allocation_type,
+            ):
+                results.append(
+                    {
+                        "name": category,
+                        "weight": percentage,
+                    }
                 )
 
-                if (
-                    valid_category(category)
-                    and 0 <= pct <= 100
+                continue
+
+            # Some PDFs put the percentage before the label.
+            category = clean_category(
+                line[match.end():]
+            )
+
+            if category_is_valid(
+                category,
+                allocation_type,
+            ):
+                results.append(
+                    {
+                        "name": category,
+                        "weight": percentage,
+                    }
+                )
+
+            continue
+
+        # Multiple percentages on a line.
+        # Only accept when a clear table-like pattern exists.
+        parts = re.split(
+            r"\s{2,}|\t+|\|",
+            line,
+        )
+
+        if len(parts) >= 2:
+
+            for part in parts:
+
+                m = PERCENT_RE.search(part)
+
+                if not m:
+                    continue
+
+                percentage = normalize_percent(
+                    m.group(1)
+                )
+
+                if percentage is None:
+                    continue
+
+                category = clean_category(
+                    part[:m.start()]
+                )
+
+                if category_is_valid(
+                    category,
+                    allocation_type,
                 ):
+                    results.append(
+                        {
+                            "name": category,
+                            "weight": percentage,
+                        }
+                    )
 
-                    results.append({
-                        "category": category,
-                        "percentage": round(
-                            pct,
-                            4,
-                        ),
-                        "rawLine": " | ".join(
-                            cells
-                        ),
-                    })
-
-    return deduplicate(
-        results
-    )
+    return dedupe_allocations(results)
 
 
-# ============================================================
-# DEDUPLICATION
-# ============================================================
+def dedupe_allocations(
+    rows: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
 
-def deduplicate(
-    items: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
+    result: List[Dict[str, Any]] = []
 
     seen = set()
 
-    output = []
-
-    for item in items:
+    for row in rows:
 
         key = (
-            normalise(
-                item["category"]
+            normalize_name(
+                str(row.get("name", ""))
             ),
-            item["percentage"],
+            row.get("weight"),
         )
 
         if key in seen:
             continue
 
         seen.add(key)
+        result.append(row)
 
-        output.append(item)
-
-    return output
+    return result
 
 
 # ============================================================
-# DOCUMENT METADATA
+# TABLE EXTRACTION
 # ============================================================
 
-def extract_manager_name(
-    text: str,
-) -> str | None:
+def extract_pdf_tables(
+    data: bytes,
+) -> Tuple[
+    List[Dict[str, Any]],
+    List[Dict[str, Any]],
+]:
 
-    patterns = (
-        r"(?:fund|investment|asset)"
-        r"\s+manager\s*[:\-]\s*(.+)",
+    geographic: List[Dict[str, Any]] = []
+    sector: List[Dict[str, Any]] = []
 
-        r"(?:managed|sub[- ]managed)"
-        r"\s+by\s*[:\-]?\s*(.+)",
-    )
+    try:
 
-    for pattern in patterns:
+        with pdfplumber.open(
+            io.BytesIO(data)
+        ) as pdf:
 
-        match = re.search(
-            pattern,
-            text,
-            re.IGNORECASE,
+            for page_number, page in enumerate(
+                pdf.pages,
+                start=1,
+            ):
+
+                text = page.extract_text() or ""
+
+                current = None
+
+                for line in clean_lines(text):
+
+                    detected = heading_type(line)
+
+                    if detected:
+                        current = detected
+                        continue
+
+                    if current and is_stop_heading(line):
+                        current = None
+                        continue
+
+                    if not current:
+                        continue
+
+                    tables = page.extract_tables()
+
+                    for table in tables or []:
+
+                        for row in table or []:
+
+                            if not row:
+                                continue
+
+                            cells = [
+                                normalize_space(
+                                    str(cell or "")
+                                )
+                                for cell in row
+                            ]
+
+                            row_text = " ".join(
+                                cells
+                            )
+
+                            parsed = parse_allocation_lines(
+                                [row_text],
+                                current,
+                            )
+
+                            if current == "geographic":
+                                geographic.extend(parsed)
+                            else:
+                                sector.extend(parsed)
+
+    except Exception as exc:
+
+        logger.debug(
+            "PDF table extraction failed: %s",
+            exc,
         )
 
-        if match:
+    return (
+        dedupe_allocations(geographic),
+        dedupe_allocations(sector),
+    )
 
-            value = clean(
-                match.group(1)
+
+# ============================================================
+# ALLOCATION VALIDATION
+# ============================================================
+
+def allocation_quality(
+    rows: List[Dict[str, Any]],
+) -> int:
+
+    if not rows:
+        return 0
+
+    score = 0
+
+    score += min(
+        50,
+        len(rows) * 5,
+    )
+
+    total = sum(
+        float(row["weight"])
+        for row in rows
+        if isinstance(
+            row.get("weight"),
+            (int, float),
+        )
+    )
+
+    if 80 <= total <= 120:
+        score += 30
+
+    elif 50 <= total <= 150:
+        score += 10
+
+    if any(
+        row.get("name", "").lower()
+        in {
+            "others",
+            "cash",
+            "cash and others",
+            "cash and cash equivalents",
+        }
+        for row in rows
+    ):
+        score += 10
+
+    return score
+
+
+# ============================================================
+# SOURCE ANALYSIS
+# ============================================================
+
+def analyze_source(
+    fund_name: str,
+    source: Dict[str, Any],
+) -> Dict[str, Any]:
+
+    url = source["link"]
+
+    result = {
+        "url": url,
+        "title": source.get("title", ""),
+        "domain": domain_of(url),
+        "sourceScore": source.get("score", 0),
+        "sourceClass": domain_score(url)[1],
+        "contentType": None,
+        "fundMatchScore": 0,
+        "managerName": None,
+        "factsheetDate": None,
+        "geographicAllocation": [],
+        "sectorAllocation": [],
+        "extractionMethod": None,
+        "status": "unusable",
+        "reason": None,
+    }
+
+    try:
+
+        content_type, data = fetch_source(url)
+
+        result["contentType"] = content_type
+
+        if content_type == "pdf":
+            text = extract_pdf_text(data)
+
+            geo_tables, sector_tables = (
+                extract_pdf_tables(data)
             )
 
-            if 2 <= len(value) <= 120:
-                return value
+        else:
+            text = extract_html_text(data)
 
-    return None
+            geo_tables = []
+            sector_tables = []
 
+        result["fundMatchScore"] = fund_match_score(
+            fund_name,
+            text,
+        )
 
-def extract_factsheet_date(
-    text: str,
-) -> str | None:
+        manager = extract_manager(text)
 
-    match = DATE_RE.search(text)
+        if manager:
+            result["managerName"] = manager
 
-    if match:
-        return match.group(0)
+        sections = extract_sections(text)
 
-    return None
+        geographic = parse_allocation_lines(
+            sections["geographic"],
+            "geographic",
+        )
+
+        sector = parse_allocation_lines(
+            sections["sector"],
+            "sector",
+        )
+
+        if geo_tables:
+            geographic.extend(geo_tables)
+
+        if sector_tables:
+            sector.extend(sector_tables)
+
+        geographic = dedupe_allocations(
+            geographic
+        )
+
+        sector = dedupe_allocations(
+            sector
+        )
+
+        result["geographicAllocation"] = geographic
+        result["sectorAllocation"] = sector
+
+        if geographic or sector:
+            result["extractionMethod"] = (
+                "explicit_text_or_table"
+            )
+
+        if (
+            result["fundMatchScore"] < 35
+            and "prudential.com.sg" not in domain_of(url)
+        ):
+            result["status"] = "rejected"
+            result["reason"] = (
+                "source_fund_name_match_too_low"
+            )
+            return result
+
+        if geographic or sector:
+
+            result["status"] = "candidate"
+
+            if geographic and sector:
+                result["reason"] = (
+                    "geographic_and_sector_found"
+                )
+            elif geographic:
+                result["reason"] = (
+                    "geographic_found_only"
+                )
+            else:
+                result["reason"] = (
+                    "sector_found_only"
+                )
+
+        else:
+
+            result["status"] = "unusable"
+            result["reason"] = (
+                "no_explicit_allocation_values_found"
+            )
+
+    except Exception as exc:
+
+        result["status"] = "error"
+        result["reason"] = str(exc)
+
+    return result
 
 
 # ============================================================
-# PARSE COMPLETE PDF
+# SOURCE SELECTION
 # ============================================================
 
-def parse_pdf(
-    pdf_bytes: bytes,
-    candidate: Candidate,
-) -> dict[str, Any]:
+def source_priority(
+    source: Dict[str, Any],
+) -> int:
 
-    text, pages = extract_pdf(
-        pdf_bytes
-    )
-
-    lines = [
-        clean(line)
-        for line in text.splitlines()
-        if clean(line)
-    ]
-
-    geographic = extract_line_allocations(
-        lines,
-        GEOGRAPHIC_HEADINGS,
-    )
-
-    geographic.extend(
-        extract_table_allocations(
-            pages,
-            GEOGRAPHIC_HEADINGS,
+    score = int(
+        source.get(
+            "sourceScore",
+            0,
         )
     )
 
-    geographic = deduplicate(
+    geographic = source.get(
+        "geographicAllocation",
+        [],
+    )
+
+    sector = source.get(
+        "sectorAllocation",
+        [],
+    )
+
+    score += allocation_quality(
         geographic
     )
 
-    sector = extract_line_allocations(
-        lines,
-        SECTOR_HEADINGS,
-    )
-
-    sector.extend(
-        extract_table_allocations(
-            pages,
-            SECTOR_HEADINGS,
-        )
-    )
-
-    sector = deduplicate(
+    score += allocation_quality(
         sector
     )
 
-    return {
-        "factsheetDate": extract_factsheet_date(
-            text
-        ),
-        "managerName": extract_manager_name(
-            text
-        ),
-        "geographic": geographic,
-        "sector": sector,
-        "sha256": sha256_bytes(
-            pdf_bytes
-        ),
-        "candidate": asdict(
-            candidate
-        ),
-    }
+    if geographic and sector:
+        score += 40
+
+    if source.get(
+        "sourceClass"
+    ) == "official":
+        score += 20
+
+    return score
 
 
-# ============================================================
-# MANAGER FALLBACK DISCOVERY
-# ============================================================
+def select_best_source(
+    candidates: List[Dict[str, Any]],
+) -> Optional[Dict[str, Any]]:
 
-def discover_manager_candidates(
-    client: HttpClient,
-    html: str,
-    base_url: str,
-) -> list[Candidate]:
+    usable = [
+        candidate
+        for candidate in candidates
+        if candidate.get("status") == "candidate"
+    ]
 
-    soup = BeautifulSoup(
-        html,
-        "html.parser",
-    )
+    if not usable:
+        return None
 
-    candidates: dict[str, Candidate] = {}
-
-    manager_pages = []
-
-    for anchor in soup.find_all(
-        "a",
-        href=True,
-    ):
-
-        url = urljoin(
-            base_url,
-            anchor["href"],
-        )
-
-        text = clean(
-            anchor.get_text(
-                " ",
-                strip=True,
-            )
-        )
-
-        title = clean(
-            anchor.get("title")
-        )
-
-        haystack = (
-            f"{url} {text} {title}"
-        ).lower()
-
-        # Direct manager factsheet.
-        if is_pdf_url(url):
-
-            if any(
-                term in haystack
-                for term in (
-                    "factsheet",
-                    "fund manager",
-                    "investment manager",
-                )
-            ):
-
-                candidates[url] = Candidate(
-                    url=url,
-                    source_type="fund_manager",
-                    discovered_from=base_url,
-                    title=text or title,
-                    score=candidate_score(
-                        url,
-                        text or title,
-                    ),
-                )
-
-        # Manager-related landing page.
-        elif any(
-            term in text.lower()
-            for term in (
-                "fund manager",
-                "investment manager",
-                "manager",
-            )
-        ):
-
-            manager_pages.append(url)
-
-    # --------------------------------------------------------
-    # Follow only manager-related links exposed by Prudential.
-    # --------------------------------------------------------
-
-    for manager_page in list(
-        dict.fromkeys(manager_pages)
-    )[:5]:
-
-        response = client.get(
-            manager_page
-        )
-
-        if response is None:
-            continue
-
-        page_candidates = discover_pdf_candidates(
-            response.text,
-            response.url,
-            "fund_manager",
-        )
-
-        for candidate in page_candidates:
-
-            candidate.source_type = (
-                "fund_manager"
-            )
-
-            candidates[
-                candidate.url
-            ] = candidate
-
-    return sorted(
-        candidates.values(),
-        key=lambda item: item.score,
+    usable.sort(
+        key=source_priority,
         reverse=True,
     )
 
-
-# ============================================================
-# EMPTY RESULT
-# ============================================================
-
-def unresolved_result(
-    fund: Fund,
-    reason: str,
-) -> dict[str, Any]:
-
-    return {
-        "fundName": fund.name,
-        "prudentialUrl": fund.prudential_url,
-        "sourceUniverse": fund.source_universe,
-
-        "source": None,
-
-        "factsheetDate": None,
-        "managerName": None,
-
-        "geographicAllocation": [],
-        "sectorAllocation": [],
-
-        "status": "unresolved",
-        "reason": reason,
-
-        "retrievedAt": now_utc(),
-    }
+    return usable[0]
 
 
 # ============================================================
-# PROCESS ONE FUND
+# FUND PROCESSING
 # ============================================================
 
 def process_fund(
-    client: HttpClient,
-    fund: Fund,
-) -> tuple[
-    dict[str, Any],
-    dict[str, Any],
-]:
+    index: int,
+    total: int,
+    fund: Dict[str, str],
+    api_key: str,
+    cse_id: str,
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
-    diagnostics = {
-        "fundName": fund.name,
-        "row": fund.row,
-        "prudentialUrl": fund.prudential_url,
-        "attemptedSources": [],
-        "errors": [],
+    fund_name = fund["fundName"]
+
+    logger.info(
+        "[%d/%d] %s",
+        index,
+        total,
+        fund_name,
+    )
+
+    ranked_results, search_log = search_fund(
+        fund_name,
+        api_key,
+        cse_id,
+    )
+
+    candidates = []
+
+    for source in ranked_results[
+        :MAX_CANDIDATES_TO_FETCH
+    ]:
+
+        logger.info(
+            "  Candidate: %s | score=%s | %s",
+            source.get("title"),
+            source.get("score"),
+            source.get("link"),
+        )
+
+        try:
+
+            analyzed = analyze_source(
+                fund_name,
+                source,
+            )
+
+            candidates.append(analyzed)
+
+            logger.info(
+                "    -> %s | geo=%d | sector=%d",
+                analyzed.get("status"),
+                len(
+                    analyzed.get(
+                        "geographicAllocation",
+                        [],
+                    )
+                ),
+                len(
+                    analyzed.get(
+                        "sectorAllocation",
+                        [],
+                    )
+                ),
+            )
+
+        except Exception as exc:
+
+            logger.warning(
+                "Source analysis failed: %s",
+                exc,
+            )
+
+        time.sleep(
+            SOURCE_FETCH_DELAY_SECONDS
+        )
+
+    best = select_best_source(
+        candidates
+    )
+
+    if best:
+
+        geographic = best.get(
+            "geographicAllocation",
+            [],
+        )
+
+        sector = best.get(
+            "sectorAllocation",
+            [],
+        )
+
+        if geographic and sector:
+            status = "resolved"
+        else:
+            status = "partially_resolved"
+
+        record = {
+            "fundName": fund_name,
+            "prudentialUrl": fund.get(
+                "prudentialUrl",
+                "",
+            ),
+            "source": {
+                "discovery": "google_custom_search",
+                "type": best.get(
+                    "sourceClass",
+                    "other",
+                ),
+                "url": best.get(
+                    "url",
+                    "",
+                ),
+                "domain": best.get(
+                    "domain",
+                    "",
+                ),
+                "title": best.get(
+                    "title",
+                    "",
+                ),
+                "query": next(
+                    (
+                        item.get("query")
+                        for item in ranked_results
+                        if item.get("link")
+                        == best.get("url")
+                    ),
+                    None,
+                ),
+            },
+            "managerName": best.get(
+                "managerName"
+            ),
+            "factsheetDate": best.get(
+                "factsheetDate"
+            ),
+            "geographicAllocation": geographic,
+            "sectorAllocation": sector,
+            "status": status,
+            "reason": best.get(
+                "reason"
+            ),
+            "retrievedAt": utc_now(),
+        }
+
+    else:
+
+        record = {
+            "fundName": fund_name,
+            "prudentialUrl": fund.get(
+                "prudentialUrl",
+                "",
+            ),
+            "source": {
+                "discovery": "google_custom_search",
+                "type": None,
+                "url": None,
+                "domain": None,
+                "title": None,
+                "query": None,
+            },
+            "managerName": None,
+            "factsheetDate": None,
+            "geographicAllocation": [],
+            "sectorAllocation": [],
+            "status": "unresolved",
+            "reason": (
+                "google_candidates_contained_no_verified_"
+                "explicit_geographic_or_sector_values"
+            ),
+            "retrievedAt": utc_now(),
+        }
+
+    diagnostic = {
+        "fundName": fund_name,
+        "prudentialUrl": fund.get(
+            "prudentialUrl",
+            "",
+        ),
+        "searches": search_log,
+        "googleResults": ranked_results,
+        "analyzedCandidates": candidates,
+        "selectedSource": (
+            best.get("url")
+            if best
+            else None
+        ),
+        "completedAt": utc_now(),
     }
 
-    # --------------------------------------------------------
-    # Fetch Prudential landing page.
-    # --------------------------------------------------------
-
-    prudential_page = client.get(
-        fund.prudential_url
-    )
-
-    if prudential_page is None:
-
-        diagnostics["errors"].append(
-            "Unable to fetch Prudential fund page"
-        )
-
-        return (
-            unresolved_result(
-                fund,
-                "Prudential fund page unavailable",
-            ),
-            diagnostics,
-        )
-
-    # --------------------------------------------------------
-    # PRIMARY SOURCE
-    # Official Prudential factsheet.
-    # --------------------------------------------------------
-
-    candidates = discover_pdf_candidates(
-        prudential_page.text,
-        prudential_page.url,
-        "prudential",
-    )
-
-    prudential_candidates = [
-        candidate
-        for candidate in candidates
-        if is_prudential_url(
-            candidate.url
-        )
-    ]
-
-    for candidate in prudential_candidates[:15]:
-
-        diagnostics[
-            "attemptedSources"
-        ].append({
-            "type": "prudential",
-            "url": candidate.url,
-        })
-
-        fetched = fetch_pdf(
-            client,
-            candidate,
-        )
-
-        if fetched is None:
-            continue
-
-        pdf_bytes, final_url = fetched
-
-        try:
-
-            parsed = parse_pdf(
-                pdf_bytes,
-                candidate,
-            )
-
-        except Exception as exc:
-
-            diagnostics[
-                "errors"
-            ].append(
-                f"Prudential PDF parse failed: "
-                f"{candidate.url}: {exc}"
-            )
-
-            continue
-
-        if not (
-            parsed["geographic"]
-            or parsed["sector"]
-        ):
-            continue
-
-        source = {
-            "type": "prudential",
-            "url": final_url,
-            "title": candidate.title,
-            "sha256": parsed["sha256"],
-        }
-
-        diagnostics[
-            "selectedSource"
-        ] = source
-
-        return (
-            {
-                "fundName": fund.name,
-                "prudentialUrl": fund.prudential_url,
-                "sourceUniverse": fund.source_universe,
-
-                "source": source,
-
-                "factsheetDate": parsed[
-                    "factsheetDate"
-                ],
-
-                "managerName": parsed[
-                    "managerName"
-                ],
-
-                "geographicAllocation": parsed[
-                    "geographic"
-                ],
-
-                "sectorAllocation": parsed[
-                    "sector"
-                ],
-
-                "status": "resolved",
-
-                "reason": (
-                    "Published allocation data "
-                    "extracted from official "
-                    "Prudential factsheet"
-                ),
-
-                "retrievedAt": now_utc(),
-            },
-            diagnostics,
-        )
-
-    # --------------------------------------------------------
-    # FALLBACK
-    # Official underlying fund manager factsheet.
-    # --------------------------------------------------------
-
-    manager_candidates = (
-        discover_manager_candidates(
-            client,
-            prudential_page.text,
-            prudential_page.url,
-        )
-    )
-
-    for candidate in manager_candidates[:15]:
-
-        diagnostics[
-            "attemptedSources"
-        ].append({
-            "type": "fund_manager",
-            "url": candidate.url,
-        })
-
-        fetched = fetch_pdf(
-            client,
-            candidate,
-        )
-
-        if fetched is None:
-            continue
-
-        pdf_bytes, final_url = fetched
-
-        try:
-
-            parsed = parse_pdf(
-                pdf_bytes,
-                candidate,
-            )
-
-        except Exception as exc:
-
-            diagnostics[
-                "errors"
-            ].append(
-                f"Manager PDF parse failed: "
-                f"{candidate.url}: {exc}"
-            )
-
-            continue
-
-        if not (
-            parsed["geographic"]
-            or parsed["sector"]
-        ):
-            continue
-
-        source = {
-            "type": "fund_manager",
-            "url": final_url,
-            "title": candidate.title,
-            "sha256": parsed["sha256"],
-        }
-
-        diagnostics[
-            "selectedSource"
-        ] = source
-
-        return (
-            {
-                "fundName": fund.name,
-                "prudentialUrl": fund.prudential_url,
-                "sourceUniverse": fund.source_universe,
-
-                "source": source,
-
-                "factsheetDate": parsed[
-                    "factsheetDate"
-                ],
-
-                "managerName": parsed[
-                    "managerName"
-                ],
-
-                "geographicAllocation": parsed[
-                    "geographic"
-                ],
-
-                "sectorAllocation": parsed[
-                    "sector"
-                ],
-
-                "status": "resolved",
-
-                "reason": (
-                    "Published allocation data "
-                    "extracted from official "
-                    "underlying fund-manager factsheet"
-                ),
-
-                "retrievedAt": now_utc(),
-            },
-            diagnostics,
-        )
-
-    # --------------------------------------------------------
-    # UNRESOLVED
-    # --------------------------------------------------------
-
-    return (
-        unresolved_result(
-            fund,
-            (
-                "No usable published geographic "
-                "or sector allocation found"
-            ),
-        ),
-        diagnostics,
-    )
-
-
-# ============================================================
-# JSON WRITER
-# ============================================================
-
-def write_json(
-    path: Path,
-    payload: Any,
-) -> None:
-
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    path.write_text(
-        json.dumps(
-            payload,
-            indent=2,
-            ensure_ascii=False,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    return record, diagnostic
 
 
 # ============================================================
@@ -1666,231 +1810,233 @@ def write_json(
 
 def main() -> int:
 
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "--workbook",
-        default="Funds Links.xlsm",
+    api_key = os.getenv(
+        "GOOGLE_API_KEY"
     )
 
-    parser.add_argument(
-        "--funds-json",
-        default="data/funds.json",
+    cse_id = os.getenv(
+        "GOOGLE_CSE_ID"
     )
 
-    parser.add_argument(
-        "--output",
-        default=(
-            "data/"
-            "fundfactsheet_exposure.json"
-        ),
+    if not api_key:
+        logger.error(
+            "GOOGLE_API_KEY environment variable is missing."
+        )
+        return 2
+
+    if not cse_id:
+        logger.error(
+            "GOOGLE_CSE_ID environment variable is missing."
+        )
+        return 2
+
+    logger.info(
+        "Using master universe: %s",
+        MASTER_XLSM.name,
     )
 
-    parser.add_argument(
-        "--diagnostics",
-        default=(
-            "data/"
-            "fundfactsheet_exposure_diagnostics.json"
-        ),
-    )
+    funds = load_master_universe()
 
-    parser.add_argument(
-        "--delay",
-        type=float,
-        default=DEFAULT_DELAY,
-    )
-
-    args = parser.parse_args()
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format=(
-            "%(asctime)s | "
-            "%(levelname)s | "
-            "%(message)s"
-        ),
-    )
-
-    funds = load_universe(
-        Path(args.workbook),
-        Path(args.funds_json),
-    )
-
-    logging.info(
+    logger.info(
         "Loaded %d funds",
         len(funds),
     )
 
-    client = HttpClient()
+    if not funds:
+        logger.error(
+            "No funds found in master universe."
+        )
+        return 1
 
-    results = []
-    diagnostics = []
+    output_funds: List[Dict[str, Any]] = []
+    diagnostics: List[Dict[str, Any]] = []
 
     for index, fund in enumerate(
         funds,
         start=1,
     ):
 
-        logging.info(
-            "[%d/%d] %s",
-            index,
-            len(funds),
-            fund.name,
-        )
-
         try:
 
-            result, diagnostic = process_fund(
-                client,
-                fund,
+            record, diagnostic = process_fund(
+                index=index,
+                total=len(funds),
+                fund=fund,
+                api_key=api_key,
+                cse_id=cse_id,
             )
+
+            output_funds.append(record)
+            diagnostics.append(diagnostic)
 
         except Exception as exc:
 
-            logging.exception(
-                "Unhandled error for %s",
-                fund.name,
+            logger.exception(
+                "Fatal fund-level error for %s",
+                fund.get("fundName"),
             )
 
-            result = unresolved_result(
-                fund,
-                f"Unhandled extraction error: {exc}",
+            output_funds.append(
+                {
+                    "fundName": fund.get(
+                        "fundName"
+                    ),
+                    "prudentialUrl": fund.get(
+                        "prudentialUrl",
+                        "",
+                    ),
+                    "source": {
+                        "discovery": "google_custom_search",
+                        "type": None,
+                        "url": None,
+                        "domain": None,
+                        "title": None,
+                        "query": None,
+                    },
+                    "managerName": None,
+                    "factsheetDate": None,
+                    "geographicAllocation": [],
+                    "sectorAllocation": [],
+                    "status": "unresolved",
+                    "reason": (
+                        "fund_processing_error: "
+                        + str(exc)
+                    ),
+                    "retrievedAt": utc_now(),
+                }
             )
 
-            diagnostic = {
-                "fundName": fund.name,
-                "row": fund.row,
-                "prudentialUrl": fund.prudential_url,
-                "attemptedSources": [],
-                "errors": [str(exc)],
-            }
-
-        results.append(result)
-        diagnostics.append(diagnostic)
-
-        time.sleep(
-            max(
-                args.delay,
-                0,
+            diagnostics.append(
+                {
+                    "fundName": fund.get(
+                        "fundName"
+                    ),
+                    "error": str(exc),
+                    "completedAt": utc_now(),
+                }
             )
-        )
-
-    # ========================================================
-    # SUMMARY
-    # ========================================================
 
     resolved = sum(
-        item["status"] == "resolved"
-        for item in results
+        1
+        for fund in output_funds
+        if fund.get("status")
+        == "resolved"
     )
 
-    unresolved = (
-        len(results)
-        - resolved
+    partial = sum(
+        1
+        for fund in output_funds
+        if fund.get("status")
+        == "partially_resolved"
     )
 
-    prudential_count = sum(
-        isinstance(
-            item.get("source"),
-            dict,
+    unresolved = sum(
+        1
+        for fund in output_funds
+        if fund.get("status")
+        == "unresolved"
+    )
+
+    geographic_count = sum(
+        1
+        for fund in output_funds
+        if fund.get(
+            "geographicAllocation"
         )
-        and item["source"].get(
-            "type"
-        ) == "prudential"
-        for item in results
     )
 
-    manager_count = sum(
-        isinstance(
-            item.get("source"),
-            dict,
+    sector_count = sum(
+        1
+        for fund in output_funds
+        if fund.get(
+            "sectorAllocation"
         )
-        and item["source"].get(
-            "type"
-        ) == "fund_manager"
-        for item in results
     )
-
-    # ========================================================
-    # MAIN OUTPUT
-    # ========================================================
 
     output = {
-        "schemaVersion": "1.0.0",
-
-        "generatedAt": now_utc(),
-
+        "schemaVersion": "2.0",
+        "generatedAt": utc_now(),
         "sourcePolicy": {
-            "primary": (
-                "Official Prudential "
-                "Singapore factsheet"
-            ),
-
-            "fallback": (
-                "Official underlying "
-                "fund-manager factsheet"
-            ),
-
-            "unresolvedRule": (
-                "No usable published "
-                "allocation data; "
-                "no inference"
-            ),
+            "discovery": "Google Custom Search JSON API",
+            "primary": "Official Prudential Singapore",
+            "secondary": "Official underlying fund manager",
+            "tertiary": "Reputable secondary source",
+            "allowInference": False,
+            "allowHoldingBasedEstimation": False,
         },
-
         "summary": {
-            "totalFunds": len(results),
-            "resolved": resolved,
-            "unresolved": unresolved,
-            "prudentialFactsheets": (
-                prudential_count
-            ),
-            "fundManagerFactsheets": (
-                manager_count
-            ),
+            "fundCount": len(output_funds),
+            "resolvedCount": resolved,
+            "partiallyResolvedCount": partial,
+            "unresolvedCount": unresolved,
+            "geographicCount": geographic_count,
+            "sectorCount": sector_count,
         },
-
-        "funds": results,
+        "funds": output_funds,
     }
 
-    # ========================================================
-    # DIAGNOSTICS OUTPUT
-    # ========================================================
-
-    diagnostic_output = {
-        "schemaVersion": "1.0.0",
-
-        "generatedAt": now_utc(),
-
-        "summary": {
-            "totalFunds": len(results),
-            "resolved": resolved,
-            "unresolved": unresolved,
-            "prudentialFactsheets": (
-                prudential_count
-            ),
-            "fundManagerFactsheets": (
-                manager_count
-            ),
+    diagnostics_output = {
+        "schemaVersion": "2.0",
+        "generatedAt": utc_now(),
+        "searchProvider": {
+            "provider": "Google Custom Search JSON API",
+            "queriesPerFund": 2,
+            "maximumFunds": len(funds),
+            "maximumSearchQueries": len(funds) * 2,
         },
-
         "funds": diagnostics,
     }
 
-    write_json(
-        Path(args.output),
+    safe_json_write(
+        OUTPUT_JSON,
         output,
     )
 
-    write_json(
-        Path(args.diagnostics),
-        diagnostic_output,
+    safe_json_write(
+        DIAGNOSTICS_JSON,
+        diagnostics_output,
     )
 
-    logging.info(
-        "Completed: %d resolved / %d unresolved",
+    logger.info(
+        "========================================"
+    )
+    logger.info(
+        "Completed Google discovery extraction"
+    )
+    logger.info(
+        "Total funds: %d",
+        len(output_funds),
+    )
+    logger.info(
+        "Resolved: %d",
         resolved,
+    )
+    logger.info(
+        "Partially resolved: %d",
+        partial,
+    )
+    logger.info(
+        "Unresolved: %d",
         unresolved,
+    )
+    logger.info(
+        "Geographic data: %d",
+        geographic_count,
+    )
+    logger.info(
+        "Sector data: %d",
+        sector_count,
+    )
+    logger.info(
+        "Output: %s",
+        OUTPUT_JSON,
+    )
+    logger.info(
+        "Diagnostics: %s",
+        DIAGNOSTICS_JSON,
+    )
+    logger.info(
+        "========================================"
     )
 
     return 0
