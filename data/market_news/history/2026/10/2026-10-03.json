@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-03",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "source": "CNBC",
+  "articles": [
+    {
+      "id": "fb7646c902efeb1030184186aea652b650a017706f3b679042ac0a347e822e61",
+      "source": "CNBC",
+      "title": "10-year Treasury yield ticks higher despite weaker-than-expected jobs report",
+      "publishedAtSgt": "2026-10-03T02:58:09+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/treasury-yields-bonds-nonfarm-payrolls.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "The benchmark 10-year Treasury yield rose almost 5 basis points to 5.281%. Earlier this week, the yield reached its highest levels since 2002. The recent rise in yields reflects concerns about stubborn inflation and hawkish central bank commentary, fueling expectations that interest rates could remain elevated for longer.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-03T03:12:51+08:00"
+    },
+    {
+      "id": "e753696db4c45c743e5a8205496e44ee57c9b705b25e902d7127316df5341092",
+      "source": "CNBC",
+      "title": "Your health insurance premiums may take a big jump in 2027 — here's why",
+      "publishedAtSgt": "2026-10-03T00:26:57+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/health-insurance-premiums-2027-inflation-aca-obamacare.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "inflation rate push up costs across the healthcare system, experts said. Employers generally subsidize the cost of health insurance for their workers by covering a large portion of their monthly premium payments. \"It doesn't always just show up through the premiums.\" Growth in the cost of deductibles and family premiums has each outpaced inflation over the past decade, rising 54% and 53%, respectively, versus an overall inflation rate of 36%, according to KFF.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-03T03:12:50+08:00"
+    },
+    {
+      "id": "1a4a7a77ca11b9e96a5df5a132216c36b712859d615b724a578e1e345e5231ca",
+      "source": "CNBC",
+      "title": "1.7 million skilled trade jobs will open annually through 2035, report says—experts don't know who will fill them",
+      "publishedAtSgt": "2026-10-03T00:15:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/1point7-million-skilled-trade-jobs-to-open-annually-through-2035-report-says.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "Skilled trade workers are already in high demand, and researchers say the industry will continue to see steady job growth in the decade to come. The State of America's Skilled Trades report, published Wednesday, found that 1.7 million skilled trade jobs will open each year through 2035.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-03T03:12:51+08:00"
+    }
+  ],
+  "articleCount": 3,
+  "updatedAtSgt": "2026-10-03T03:12:51+08:00"
+}

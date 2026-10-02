@@ -1,12 +1,58 @@
 {
-  "generatedAtSgt": "2026-10-03T00:12:13+08:00",
+  "generatedAtSgt": "2026-10-03T03:12:56+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
   "maxArticles": 100,
   "source": "CNBC",
-  "articleCount": 67,
+  "articleCount": 69,
   "articles": [
+    {
+      "id": "fb7646c902efeb1030184186aea652b650a017706f3b679042ac0a347e822e61",
+      "source": "CNBC",
+      "title": "10-year Treasury yield ticks higher despite weaker-than-expected jobs report",
+      "publishedAtSgt": "2026-10-03T02:58:09+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/treasury-yields-bonds-nonfarm-payrolls.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "The benchmark 10-year Treasury yield rose almost 5 basis points to 5.281%. Earlier this week, the yield reached its highest levels since 2002. The recent rise in yields reflects concerns about stubborn inflation and hawkish central bank commentary, fueling expectations that interest rates could remain elevated for longer.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-03T03:12:51+08:00"
+    },
+    {
+      "id": "e753696db4c45c743e5a8205496e44ee57c9b705b25e902d7127316df5341092",
+      "source": "CNBC",
+      "title": "Your health insurance premiums may take a big jump in 2027 — here's why",
+      "publishedAtSgt": "2026-10-03T00:26:57+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/health-insurance-premiums-2027-inflation-aca-obamacare.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "inflation rate push up costs across the healthcare system, experts said. Employers generally subsidize the cost of health insurance for their workers by covering a large portion of their monthly premium payments. \"It doesn't always just show up through the premiums.\" Growth in the cost of deductibles and family premiums has each outpaced inflation over the past decade, rising 54% and 53%, respectively, versus an overall inflation rate of 36%, according to KFF.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-03T03:12:50+08:00"
+    },
+    {
+      "id": "1a4a7a77ca11b9e96a5df5a132216c36b712859d615b724a578e1e345e5231ca",
+      "source": "CNBC",
+      "title": "1.7 million skilled trade jobs will open annually through 2035, report says—experts don't know who will fill them",
+      "publishedAtSgt": "2026-10-03T00:15:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/1point7-million-skilled-trade-jobs-to-open-annually-through-2035-report-says.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "Skilled trade workers are already in high demand, and researchers say the industry will continue to see steady job growth in the decade to come. The State of America's Skilled Trades report, published Wednesday, found that 1.7 million skilled trade jobs will open each year through 2035.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-03T03:12:51+08:00"
+    },
     {
       "id": "4852b5e8391bb5451bd9e5cb96aa7237e5e2eae77053e85666e6c9fc970232f1",
       "source": "CNBC",
@@ -1019,21 +1065,6 @@
         "economy"
       ],
       "collectedAtSgt": "2026-10-02T12:09:54+08:00"
-    },
-    {
-      "id": "1d15d9a1b3f11b85c0b5f214b55515c553f2962588bfb5f9fe4b30b4ad44311b",
-      "source": "CNBC",
-      "title": "Three words from Kevin Warsh have Wall Street wondering how far the Fed will go with rate hikes",
-      "publishedAtSgt": "2026-09-19T02:28:31+08:00",
-      "url": "https://www.cnbc.com/2026/09/18/three-words-from-kevin-warsh-have-wall-street-wondering-how-far-the-fed-will-go-with-rate-hikes.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "Warsh described Wednesday's decision to lift the central bank's benchmark rate by a quarter percentage point not specifically as a tightening of policy but rather as removing \"a dose of accommodation.\" Further, he said the move was possible because of a U.S. While the language may sound like central bank semantics, it gets to the heart of what markets are debating now: How far will the Warsh Fed go if it has only removed a \"dose\" of help, and what are the guidelines it will be using to...",
-      "feeds": [
-        "finance"
-      ],
-      "collectedAtSgt": "2026-10-02T12:09:52+08:00"
     }
   ]
 }
