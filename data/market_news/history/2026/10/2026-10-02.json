@@ -5,6 +5,71 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "476710c8ba3b27f3c0916191464df90bdfe44843426ef3f522c9a4f3b8f60b02",
+      "source": "CNBC",
+      "title": "Labor market faltered in September as jobs increased by just 29,000, unemployment rate rose to 4.2%",
+      "publishedAtSgt": "2026-10-02T21:11:35+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/jobs-report-september-2026.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 102,
+      "relevanceReason": "strong_economic_title",
+      "summary": "The report comes with Federal Reserve officials weighing the state of the economy and how it should impact their next interest rate move. Following statements in recent days from central bank policymakers, markets have recalibrated expectations and now expect the rate-setting Federal Open Market Committee to hold off until December for their next hike. The most recent indicator of the central bank's preferred gauge showed core inflation at a 3% annual rate.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-02T21:14:11+08:00"
+    },
+    {
+      "id": "5074a0df4cdf553d9613d088c24023ccca893599e50e236919572ebf410ba082",
+      "source": "CNBC",
+      "title": "'The hottest skill on Wall Street’: Demand for this AI ability jumped 1,721% as banks embrace agents",
+      "publishedAtSgt": "2026-10-02T19:03:31+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/ai-skills-most-in-demand-at-jpmorgan-chase-citigroup-capital-one.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Before artificial intelligence can take Wall Street jobs, it is first creating them. Posts for AI-related roles at banks including JPMorgan Chase, Citigroup and Capital One surged 49% this year compared with 2025 to 139,819 listings, according to an analysis by enterprise hiring data firm Draup that was provided exclusively to CNBC. Other growth areas within AI include those responsible for creating guardrails around the emerging systems, including demand for risk and control infrastructure.",
+      "feeds": [
+        "finance",
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-02T21:14:11+08:00"
+    },
+    {
+      "id": "475ceebd20bc829b1d77522b2eddac69ae297a6488b22babb0f3fe2c5e0f7665",
+      "source": "CNBC",
+      "title": "Google has been playing catch up with OpenAI and Anthropic. Does its new flagship model really compete at the frontier?",
+      "publishedAtSgt": "2026-10-02T19:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/tech-download-google-argon-frontier-openai-anthropic.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 53,
+      "relevanceReason": "supporting_technology_description",
+      "summary": "2026 has been a turbulent year for Google's AI hopes and dreams. Gemini 3, which launched towards the end of 2025, put Google very much in the frontier AI conversation. But for much of the rest of this year, it's Anthropic and OpenAI that have been at the forefront of AI advances.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-02T21:14:11+08:00"
+    },
+    {
+      "id": "ac415691020cebb602b4ca96d93bb35d468906c6b8c81ff256e6fa72179f3588",
+      "source": "CNBC",
+      "title": "The secret signs the bond sell-off might be ending",
+      "publishedAtSgt": "2026-10-02T18:37:26+08:00",
+      "url": "https://www.cnbc.com/2026/10/02/the-secret-signs-the-bond-sell-off-might-be-ending.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "bond market firmed Thursday and the iShares 20+ Year Treasury Bond ETF (TLT) posted its best intraday rally in at least a month, some less notable but equally important action for bond bulls happened in two corners of the options market. The utilities trade wasn't the only under-the-radar options trade that suggests the bond sell-off is slowing. Later in the day, in the bond pits at the Chicago Mercantile Exchange, someone placed a $4.4 million bond trade that short-term rates will reverse.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-02T21:14:11+08:00"
+    },
+    {
       "id": "d6e3d4197c2892f8248dbcd5d22f420ec83e452b77cdcf47200360c852b71c0e",
       "source": "CNBC",
       "title": "Nike shares plummet 10% after weak revenue outlook and layoff plans underway",
@@ -272,6 +337,6 @@
       "collectedAtSgt": "2026-10-02T12:10:03+08:00"
     }
   ],
-  "articleCount": 17,
-  "updatedAtSgt": "2026-10-02T18:12:22+08:00"
+  "articleCount": 21,
+  "updatedAtSgt": "2026-10-02T21:14:11+08:00"
 }
