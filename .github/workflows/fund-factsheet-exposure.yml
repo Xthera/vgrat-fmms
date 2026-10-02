@@ -1,13 +1,13 @@
-name: Fund Factsheet Exposure
+name: Fund Factsheet Geographic and Sector Exposure
 
 on:
   workflow_dispatch:
 
+  # Monthly automatic refresh
+  # Singapore time: 1st day of every month at 02:00 SGT
+  # 02:00 SGT = 18:00 UTC previous day
   schedule:
-    # 02:00 Singapore time
-    # Singapore = UTC+8
-    # Therefore 18:00 UTC on the previous day.
-    - cron: "0 18 * * *"
+    - cron: "0 18 1 * *"
 
 permissions:
   contents: write
@@ -17,238 +17,190 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-
-  extract-fund-factsheets:
+  extract-fund-factsheet-exposure:
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
 
-      # ==========================================================
-      # 1. CHECKOUT
-      # ==========================================================
-
+      # --------------------------------------------------------
+      # 1. Checkout repository
+      # --------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
-
-      # ==========================================================
-      # 2. PYTHON
-      # ==========================================================
-
-      - name: Set up Python
+      # --------------------------------------------------------
+      # 2. Setup Python
+      # --------------------------------------------------------
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
 
-
-      # ==========================================================
-      # 3. DEPENDENCIES
-      # ==========================================================
-
-     - name: Install dependencies
-  run: |
-    python -m pip install --upgrade pip
-    pip install -r scripts/requirements.txt
-
-
-      # ==========================================================
-      # 4. VERIFY INPUTS
-      # ==========================================================
-
-      - name: Verify factsheet pipeline files
-        shell: bash
+      # --------------------------------------------------------
+      # 3. Install shared dependencies
+      # --------------------------------------------------------
+      - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements.txt
 
-          set -e
-
-          echo "Checking independent factsheet pipeline..."
-
-          test -f \
-            "scripts/fetch_fundfactsheet_exposure.py"
-
-          if [ -f "Funds Links.xlsm" ]; then
-
-            echo "Master universe:"
-            echo "Funds Links.xlsm"
-
-          elif [ -f "data/funds.json" ]; then
-
-            echo "Fallback universe:"
-            echo "data/funds.json"
-
-          else
-
-            echo "ERROR:"
-            echo "No fund universe found."
-
-            echo "Expected either:"
-            echo "  Funds Links.xlsm"
-            echo "or"
-            echo "  data/funds.json"
-
-            exit 1
-
-          fi
-
-
-      # ==========================================================
-      # 5. RUN EXTRACTION
-      # ==========================================================
-
-      - name: Extract geographic and sector allocations
+      # --------------------------------------------------------
+      # 4. Check required files
+      # --------------------------------------------------------
+      - name: Check required files
         run: |
+          test -f "Funds Links.xlsm"
+          test -f "scripts/fetch_fundfactsheet_exposure.py"
+          test -f "scripts/requirements.txt"
 
-          python \
-            scripts/fetch_fundfactsheet_exposure.py \
-            --workbook "Funds Links.xlsm" \
-            --funds-json "data/funds.json" \
-            --output \
-              "data/fundfactsheet_exposure.json" \
-            --diagnostics \
-              "data/fundfactsheet_exposure_diagnostics.json"
+      # --------------------------------------------------------
+      # 5. Run factsheet extraction
+      # --------------------------------------------------------
+      - name: Extract geographic and sector exposure
+        run: |
+          python scripts/fetch_fundfactsheet_exposure.py
 
-
-      # ==========================================================
-      # 6. VALIDATE OUTPUT
-      # ==========================================================
-
+      # --------------------------------------------------------
+      # 6. Validate output
+      # --------------------------------------------------------
       - name: Validate output
         run: |
+          test -f "data/fundfactsheet_exposure.json"
+          test -f "data/fundfactsheet_exposure_diagnostics.json"
 
           python - <<'PY'
-
           import json
-          from pathlib import Path
+          import sys
 
-          output = Path(
-              "data/fundfactsheet_exposure.json"
-          )
+          output_path = "data/fundfactsheet_exposure.json"
+          diagnostics_path = "data/fundfactsheet_exposure_diagnostics.json"
 
-          diagnostics = Path(
-              "data/fundfactsheet_exposure_diagnostics.json"
-          )
+          with open(output_path, "r", encoding="utf-8") as f:
+              data = json.load(f)
 
-          if not output.exists():
-              raise SystemExit(
-                  "Missing fundfactsheet_exposure.json"
-              )
+          with open(diagnostics_path, "r", encoding="utf-8") as f:
+              diagnostics = json.load(f)
 
-          if not diagnostics.exists():
-              raise SystemExit(
-                  "Missing "
-                  "fundfactsheet_exposure_diagnostics.json"
-              )
+          funds = data.get("funds", [])
 
-          payload = json.loads(
-              output.read_text(
-                  encoding="utf-8"
-              )
-          )
+          print("========================================")
+          print("Fund Factsheet Exposure Extraction")
+          print("========================================")
+          print("Fund count:", len(funds))
 
-          diagnostic_payload = json.loads(
-              diagnostics.read_text(
-                  encoding="utf-8"
-              )
-          )
+          statuses = {}
 
-          assert (
-              payload["schemaVersion"]
-              == "1.0.0"
-          )
+          for fund in funds:
+              status = fund.get("status", "unknown")
+              statuses[status] = statuses.get(status, 0) + 1
 
-          assert isinstance(
-              payload["funds"],
-              list,
-          )
+          print("Statuses:")
 
-          assert isinstance(
-              diagnostic_payload["funds"],
-              list,
-          )
+          for status, count in sorted(statuses.items()):
+              print(f"  {status}: {count}")
 
-          summary = payload["summary"]
+          print("----------------------------------------")
+          print("Output:", output_path)
+          print("Diagnostics:", diagnostics_path)
+          print("----------------------------------------")
 
-          print("")
-          print(
-              "========================================"
-          )
-          print(
-              "FUND FACTSHEET EXPOSURE SUMMARY"
-          )
-          print(
-              "========================================"
-          )
+          if not isinstance(funds, list):
+              print("ERROR: 'funds' is not a list.")
+              sys.exit(1)
 
-          print(
-              f"Total funds:       "
-              f"{summary['totalFunds']}"
-          )
+          for index, fund in enumerate(funds, start=1):
 
-          print(
-              f"Resolved:          "
-              f"{summary['resolved']}"
-          )
+              if not isinstance(fund, dict):
+                  print(f"ERROR: Fund record {index} is not an object.")
+                  sys.exit(1)
 
-          print(
-              f"Unresolved:        "
-              f"{summary['unresolved']}"
-          )
+              if not fund.get("fundName"):
+                  print(f"ERROR: Fund record {index} has no fundName.")
+                  sys.exit(1)
 
-          print(
-              f"Prudential:       "
-              f"{summary['prudentialFactsheets']}"
-          )
-
-          print(
-              f"Manager fallback:  "
-              f"{summary['fundManagerFactsheets']}"
-          )
-
-          print(
-              "========================================"
-          )
-
+          print("JSON validation passed.")
           PY
 
-
-      # ==========================================================
-      # 7. COMMIT ONLY THIS PIPELINE'S FILES
-      # ==========================================================
-
-      - name: Commit only factsheet outputs
-        shell: bash
+      # --------------------------------------------------------
+      # 7. Show extraction summary
+      # --------------------------------------------------------
+      - name: Show extraction summary
         run: |
+          python - <<'PY'
+          import json
 
-          set -e
+          path = "data/fundfactsheet_exposure.json"
 
-          git config \
-            user.name \
-            "github-actions[bot]"
+          with open(path, "r", encoding="utf-8") as f:
+              data = json.load(f)
 
-          git config \
-            user.email \
-            "41898282+github-actions[bot]@users.noreply.github.com"
+          funds = data.get("funds", [])
 
-          git add -- \
-            "data/fundfactsheet_exposure.json" \
-            "data/fundfactsheet_exposure_diagnostics.json"
+          prudential = 0
+          manager = 0
+          unresolved = 0
+
+          geographic = 0
+          sector = 0
+          both = 0
+
+          for fund in funds:
+
+              status = fund.get("status", "")
+
+              if status == "resolved_prudential":
+                  prudential += 1
+
+              elif status == "resolved_manager":
+                  manager += 1
+
+              elif status == "unresolved":
+                  unresolved += 1
+
+              has_geo = bool(fund.get("geographicAllocation"))
+              has_sector = bool(fund.get("sectorAllocation"))
+
+              if has_geo:
+                  geographic += 1
+
+              if has_sector:
+                  sector += 1
+
+              if has_geo and has_sector:
+                  both += 1
+
+          print("")
+          print("========================================")
+          print("FINAL EXTRACTION SUMMARY")
+          print("========================================")
+          print("Total funds:              ", len(funds))
+          print("Resolved from Prudential: ", prudential)
+          print("Resolved from manager:     ", manager)
+          print("Unresolved:                ", unresolved)
+          print("----------------------------------------")
+          print("Geographic allocation:     ", geographic)
+          print("Sector allocation:         ", sector)
+          print("Both geographic + sector:  ", both)
+          print("========================================")
+          PY
+
+      # --------------------------------------------------------
+      # 8. Commit ONLY factsheet research output
+      # --------------------------------------------------------
+      - name: Commit factsheet exposure JSON
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/fundfactsheet_exposure.json
+          git add data/fundfactsheet_exposure_diagnostics.json
 
           if git diff --cached --quiet; then
-
-            echo "No factsheet output changes."
-
-            exit 0
-
+            echo "No factsheet exposure changes to commit."
+          else
+            git commit -m "Update fund factsheet geographic and sector exposure"
+            git push
           fi
-
-          git commit \
-            -m \
-            "Update fund factsheet exposure data"
-
-          git push
