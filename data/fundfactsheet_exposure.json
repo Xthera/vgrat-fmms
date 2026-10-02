@@ -1,0 +1,1770 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-10-02T14:20:04+00:00",
+  "sourcePolicy": {
+    "primary": "Official Prudential Singapore fund pages and factsheet PDFs",
+    "geographicRule": "Only explicitly published geographic/country/regional allocation is accepted.",
+    "sectorRule": "Only explicitly published sector/industry allocation is accepted.",
+    "holdingsInference": false,
+    "forcedTotals": false
+  },
+  "summary": {
+    "fundCount": 67,
+    "resolved": 33,
+    "unresolved": 34
+  },
+  "funds": [
+    {
+      "fundName": "PRULink ActiveInvest Portfolio - Balanced (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-activeinvest-portfolio-balanced-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T13:59:32+00:00"
+    },
+    {
+      "fundName": "PRULink ActiveInvest Portfolio - Conservative (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-activeinvest-portfolio-conservative-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:00:01+00:00"
+    },
+    {
+      "fundName": "PRULink ActiveInvest Portfolio - Growth (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-activeinvest-portfolio-growth-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:00:24+00:00"
+    },
+    {
+      "fundName": "PRULink ActiveInvest Portfolio - Moderate (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-activeinvest-portfolio-moderate-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:00:46+00:00"
+    },
+    {
+      "fundName": "PruLink Adapt 2035 Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-adapt-2035-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:01:06+00:00"
+    },
+    {
+      "fundName": "PruLink America Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-america-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-america-fund.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "CPFIS Risk Classification of Investment-linked Insurance",
+      "geographicAllocation": [
+        {
+          "name": "IENTIFIC INC",
+          "weight": 2.3
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:01:31+00:00"
+    },
+    {
+      "fundName": "PRULink America Fund (USD) (Acc) (USD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-america-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-america-fund-usd-accumulation.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "CPFIS Risk Classification of Investment-linked Insurance",
+      "geographicAllocation": [
+        {
+          "name": "IENTIFIC INC",
+          "weight": 2.3
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:01:40+00:00"
+    },
+    {
+      "fundName": "PruLink Asian American Managed Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-asian-american-managed-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_eiut.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "Eastspring Investments (Singapore) Limited",
+      "geographicAllocation": [
+        {
+          "name": "(ex-Singapore) Index +",
+          "weight": 30.0
+        },
+        {
+          "name": "also invest up to",
+          "weight": 30.0
+        },
+        {
+          "name": "There is a",
+          "weight": 5.0
+        },
+        {
+          "name": "The custodian fee is below",
+          "weight": 0.02
+        }
+      ],
+      "sectorAllocation": [
+        {
+          "name": "PRULink Global Technology Fund",
+          "weight": 1.7
+        },
+        {
+          "name": "Global Technology Fund",
+          "weight": 20.6
+        }
+      ],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:01:52+00:00"
+    },
+    {
+      "fundName": "PruLink Asian Equity Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-asian-equity-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-asian-equity-fund.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "and the Fund is not",
+      "geographicAllocation": [
+        {
+          "name": "2016 8.0%",
+          "weight": 8.2
+        },
+        {
+          "name": "2017 16.0%",
+          "weight": 26.7
+        },
+        {
+          "name": "2018 -13.3%",
+          "weight": -12.2
+        },
+        {
+          "name": "2019 13.7%",
+          "weight": 17.6
+        },
+        {
+          "name": "2020 10.5%",
+          "weight": 20.3
+        },
+        {
+          "name": "2021 -5.7%",
+          "weight": -0.9
+        },
+        {
+          "name": "2022 -19.9%",
+          "weight": -17.9
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:02:19+00:00"
+    },
+    {
+      "fundName": "PruLink Asian Fixed-Income Fund (Acc) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-asian-fixed-income-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-asian-fixed-income-fund-accumulation.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "and the Fund is not",
+      "geographicAllocation": [
+        {
+          "name": "1%",
+          "weight": -0.9
+        },
+        {
+          "name": "2025 5.2%",
+          "weight": 5.6
+        },
+        {
+          "name": "Apr 2025",
+          "weight": 1.25
+        },
+        {
+          "name": "Jun 2025",
+          "weight": 1.25
+        },
+        {
+          "name": "Sep 2025",
+          "weight": 1.25
+        },
+        {
+          "name": "Dec 2025",
+          "weight": 1.25
+        },
+        {
+          "name": "Mar 2026",
+          "weight": 1.25
+        },
+        {
+          "name": "Jun 2026",
+          "weight": 1.25
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:02:30+00:00"
+    },
+    {
+      "fundName": "PruLink Asian Fixed-Income Fund (Dis) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-asian-fixed-income-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-asian-fixed-income-fund-distribution.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "and the Fund is not",
+      "geographicAllocation": [
+        {
+          "name": "1%",
+          "weight": -0.9
+        },
+        {
+          "name": "2025 5.2%",
+          "weight": 5.6
+        },
+        {
+          "name": "Apr 2025",
+          "weight": 1.25
+        },
+        {
+          "name": "Jun 2025",
+          "weight": 1.25
+        },
+        {
+          "name": "Sep 2025",
+          "weight": 1.25
+        },
+        {
+          "name": "Dec 2025",
+          "weight": 1.25
+        },
+        {
+          "name": "Mar 2026",
+          "weight": 1.25
+        },
+        {
+          "name": "Jun 2026",
+          "weight": 1.25
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:02:40+00:00"
+    },
+    {
+      "fundName": "PruLink Asian Income and Growth Fund (Acc) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-asian-income-and-growth-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_asian_income_and_growth.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2026-03-31",
+      "managerName": "Manager of the Fund",
+      "geographicAllocation": [
+        {
+          "name": "14.01% 9.23% 3.70% 5.85%",
+          "weight": 5.5
+        },
+        {
+          "name": "14.01 9.23% 3.70% 5.58%",
+          "weight": 5.5
+        },
+        {
+          "name": "14.01% N/A N/A N/A",
+          "weight": 11.05
+        },
+        {
+          "name": "Fund (Accumulation)",
+          "weight": 1.44
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:02:50+00:00"
+    },
+    {
+      "fundName": "PruLink Asian Income and Growth Fund (Dis) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-asian-income-and-growth-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_asian_income_and_growth.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2026-03-31",
+      "managerName": "Manager of the Fund",
+      "geographicAllocation": [
+        {
+          "name": "14.01% 9.23% 3.70% 5.85%",
+          "weight": 5.5
+        },
+        {
+          "name": "14.01 9.23% 3.70% 5.58%",
+          "weight": 5.5
+        },
+        {
+          "name": "14.01% N/A N/A N/A",
+          "weight": 11.05
+        },
+        {
+          "name": "Fund (Accumulation)",
+          "weight": 1.44
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:03:12+00:00"
+    },
+    {
+      "fundName": "PRULink Asian Income and Growth Fund (USD) (Acc) (USD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-asian-income-and-growth-fund-usd-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_asian_income_and_growth.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2026-03-31",
+      "managerName": "Manager of the Fund",
+      "geographicAllocation": [
+        {
+          "name": "14.01% 9.23% 3.70% 5.85%",
+          "weight": 5.5
+        },
+        {
+          "name": "14.01 9.23% 3.70% 5.58%",
+          "weight": 5.5
+        },
+        {
+          "name": "14.01% N/A N/A N/A",
+          "weight": 11.05
+        },
+        {
+          "name": "Fund (Accumulation)",
+          "weight": 1.44
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:03:29+00:00"
+    },
+    {
+      "fundName": "PruLink Asian Income Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-asian-income-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_asian_income_fund.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "Financial Year End",
+      "geographicAllocation": [
+        {
+          "name": "2022 5.79% 5.78% N/A N/A",
+          "weight": 3.78
+        },
+        {
+          "name": "PRULink Global Dividend Wealth Fund",
+          "weight": 1.38
+        },
+        {
+          "name": "2024 13.99% N/A N/A N/A",
+          "weight": 18.33
+        },
+        {
+          "name": "(SGD) 15.32% N/A N/A N/A",
+          "weight": 17.13
+        },
+        {
+          "name": "PRULink Global Equity Growth Fund",
+          "weight": 1.37
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:03:49+00:00"
+    },
+    {
+      "fundName": "PRULink Asian Low Vol Equity Fund (Accumulation) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-asian-low-volatility-equity-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_asian_income_asian_fixed_income_fund.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "of the",
+      "geographicAllocation": [
+        {
+          "name": "2022 5.79% 5.78% N/A N/A",
+          "weight": 3.78
+        },
+        {
+          "name": "PRULink Global Dividend Wealth Fund",
+          "weight": 1.38
+        },
+        {
+          "name": "2024 13.99% N/A N/A N/A",
+          "weight": 18.33
+        },
+        {
+          "name": "(SGD) 15.32% N/A N/A N/A",
+          "weight": 17.13
+        },
+        {
+          "name": "PRULink Global Equity Growth Fund",
+          "weight": 1.37
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:04:15+00:00"
+    },
+    {
+      "fundName": "PRULink Asian Multi-Asset Income Fund (Acc) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-asian-multi-asset-income-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-asian-multi-asset-income-fund-accumulation.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "and the Fund is not",
+      "geographicAllocation": [
+        {
+          "name": "Apr 2025 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Jun 2025 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Sep 2025 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Dec 2025 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Mar 2026 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Jun 2026 1.25%",
+          "weight": 1.72
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:04:39+00:00"
+    },
+    {
+      "fundName": "PRULink Asian Multi-Asset Income Fund (Decu) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-asian-multi-asset-income-fund-decumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-asian-multi-asset-income-fund-decumulation.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "and the Fund is not",
+      "geographicAllocation": [
+        {
+          "name": "Apr 2025 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Jun 2025 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Sep 2025 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Dec 2025 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Mar 2026 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Jun 2026 1.25%",
+          "weight": 1.72
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:04:49+00:00"
+    },
+    {
+      "fundName": "PRULink Asian Multi-Asset Income Fund (Dis) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-asian-multi-asset-income-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-asian-multi-asset-income-fund-distribution.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "and the Fund is not",
+      "geographicAllocation": [
+        {
+          "name": "Apr 2025 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Jun 2025 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Sep 2025 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Dec 2025 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Mar 2026 1.25%",
+          "weight": 1.72
+        },
+        {
+          "name": "Jun 2026 1.25%",
+          "weight": 1.72
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:04:58+00:00"
+    },
+    {
+      "fundName": "PruLink China India Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-china-india-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_eiut.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "Benchmark",
+      "geographicAllocation": [
+        {
+          "name": "(ex-Singapore) Index +",
+          "weight": 30.0
+        },
+        {
+          "name": "also invest up to",
+          "weight": 30.0
+        },
+        {
+          "name": "There is a",
+          "weight": 5.0
+        },
+        {
+          "name": "The custodian fee is below",
+          "weight": 0.02
+        }
+      ],
+      "sectorAllocation": [
+        {
+          "name": "PRULink Global Technology Fund",
+          "weight": 1.7
+        },
+        {
+          "name": "Global Technology Fund",
+          "weight": 20.6
+        }
+      ],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:05:08+00:00"
+    },
+    {
+      "fundName": "PruLink Emerging Markets Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-emerging-markets-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:05:31+00:00"
+    },
+    {
+      "fundName": "PRULink FlexGrowth Fund (SGD) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-flexgrowth-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-flexgrowth-fund-sgd.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "of the",
+      "geographicAllocation": [
+        {
+          "name": "2023 2.2%",
+          "weight": 13.3
+        },
+        {
+          "name": "2024 -2.4%",
+          "weight": 0.6
+        },
+        {
+          "name": "2025 3.8%",
+          "weight": 7.4
+        },
+        {
+          "name": "0% 20% 40% 60% 80%",
+          "weight": 100.0
+        },
+        {
+          "name": "Asset Type",
+          "weight": 40.0
+        },
+        {
+          "name": "40%",
+          "weight": 60.0
+        },
+        {
+          "name": "Equity Fixed Income",
+          "weight": 40.0
+        },
+        {
+          "name": "30%",
+          "weight": 16.0
+        },
+        {
+          "name": "16%",
+          "weight": 0.0
+        },
+        {
+          "name": "0%",
+          "weight": 7.0
+        },
+        {
+          "name": "7%",
+          "weight": 7.0
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:05:51+00:00"
+    },
+    {
+      "fundName": "PRULink Global Bal Income and Growth Fund (Dist) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-balanced-income-and-growth-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:06:02+00:00"
+    },
+    {
+      "fundName": "PruLink Global Bond Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-bond-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-global-bond-fund.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "and the Fund is not",
+      "geographicAllocation": [
+        {
+          "name": "2016 3.7%",
+          "weight": 3.5
+        },
+        {
+          "name": "2017 -0.3%",
+          "weight": -0.4
+        },
+        {
+          "name": "2018 0.4%",
+          "weight": 1.1
+        },
+        {
+          "name": "2019 5.7%",
+          "weight": 4.5
+        },
+        {
+          "name": "2020 8.5%",
+          "weight": 8.2
+        },
+        {
+          "name": "2021 -4.5%",
+          "weight": -5.1
+        },
+        {
+          "name": "2022 -18.0%",
+          "weight": -18.7
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:06:21+00:00"
+    },
+    {
+      "fundName": "PRULink Global Bond Income Fund (Distribution) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-bond-income-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:06:31+00:00"
+    },
+    {
+      "fundName": "PRULink Global Climate Change Equity Fund (Acc) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-climate-change-equity-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:06:51+00:00"
+    },
+    {
+      "fundName": "PRULink Global Diversified Income Fund (Dis) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-diversified-income-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-global-diversified-income-fund-distribution.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "and the Fund is not necessarily indicative of its future performance. The value of units in the Fund",
+      "geographicAllocation": [
+        {
+          "name": "2025 5.6%",
+          "weight": 6.8
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:07:13+00:00"
+    },
+    {
+      "fundName": "PRULink Global Dividend Wealth Fund (Distribution) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-dividend-wealth-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_asian_income_asian_fixed_income_fund.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "and the Fund is not necessarily indicative of its future",
+      "geographicAllocation": [
+        {
+          "name": "2022 5.79% 5.78% N/A N/A",
+          "weight": 3.78
+        },
+        {
+          "name": "PRULink Global Dividend Wealth Fund",
+          "weight": 1.38
+        },
+        {
+          "name": "2024 13.99% N/A N/A N/A",
+          "weight": 18.33
+        },
+        {
+          "name": "(SGD) 15.32% N/A N/A N/A",
+          "weight": 17.13
+        },
+        {
+          "name": "PRULink Global Equity Growth Fund",
+          "weight": 1.37
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:07:22+00:00"
+    },
+    {
+      "fundName": "PRULink Global Episode Macro Fund (Acc) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-episode-macro-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:07:46+00:00"
+    },
+    {
+      "fundName": "PruLink Global Equity Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-equity-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:08:06+00:00"
+    },
+    {
+      "fundName": "PruLink Global Equity Fund (Dis) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-equity-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:08:27+00:00"
+    },
+    {
+      "fundName": "PRULink Global Equity Fund (USD) (Acc) (USD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-equity-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:08:45+00:00"
+    },
+    {
+      "fundName": "PRULink Global Equity Growth Fund (Accumulation) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-equity-growth-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_asian_income_asian_fixed_income_fund.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "Financial Year End",
+      "geographicAllocation": [
+        {
+          "name": "2022 5.79% 5.78% N/A N/A",
+          "weight": 3.78
+        },
+        {
+          "name": "PRULink Global Dividend Wealth Fund",
+          "weight": 1.38
+        },
+        {
+          "name": "2024 13.99% N/A N/A N/A",
+          "weight": 18.33
+        },
+        {
+          "name": "(SGD) 15.32% N/A N/A N/A",
+          "weight": 17.13
+        },
+        {
+          "name": "PRULink Global Equity Growth Fund",
+          "weight": 1.37
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:09:04+00:00"
+    },
+    {
+      "fundName": "PruLink Global Fixed-Income Fund (Acc) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-fixed-income-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:09:27+00:00"
+    },
+    {
+      "fundName": "PRULink Global Fixed-Income Fund (USD) (Acc) (USD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-fixed-income-fund-usd-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:09:51+00:00"
+    },
+    {
+      "fundName": "PRULink Global Growth Fund (Accumulation) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-growth-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib-prulink-global-growth-and-income-funds.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "of the",
+      "geographicAllocation": [
+        {
+          "name": "composite of",
+          "weight": 45.0
+        },
+        {
+          "name": "Index",
+          "weight": 50.0
+        },
+        {
+          "name": "9.16% NA NA",
+          "weight": 9.19
+        },
+        {
+          "name": "PRULink Global Income Fund",
+          "weight": 1.6
+        },
+        {
+          "name": "United CIO Income Fund",
+          "weight": 68.57
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:10:14+00:00"
+    },
+    {
+      "fundName": "PRULink Global Impact ESG Equity Fund (Acc) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-impact-esg-equity-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:10:32+00:00"
+    },
+    {
+      "fundName": "PRULink Global Income Fund (Accumulation) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-income-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib-prulink-global-growth-and-income-funds.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "of the",
+      "geographicAllocation": [
+        {
+          "name": "composite of",
+          "weight": 45.0
+        },
+        {
+          "name": "Index",
+          "weight": 50.0
+        },
+        {
+          "name": "9.16% NA NA",
+          "weight": 9.19
+        },
+        {
+          "name": "PRULink Global Income Fund",
+          "weight": 1.6
+        },
+        {
+          "name": "United CIO Income Fund",
+          "weight": 68.57
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:10:55+00:00"
+    },
+    {
+      "fundName": "PRULink Global Innovation Equity Fund (Acc) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-innovation-equity-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:11:13+00:00"
+    },
+    {
+      "fundName": "PruLink Global Managed Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-managed-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:11:35+00:00"
+    },
+    {
+      "fundName": "PruLink Global Managed Fund (Dis) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-managed-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:11:54+00:00"
+    },
+    {
+      "fundName": "PruLink Global Multi-Asset Income Fund (Acc) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-multi-asset-income-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-global-multi-asset-income-fund-accumulation.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "and the F und",
+      "geographicAllocation": [
+        {
+          "name": "Apr 2025 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Jun 2025 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Sep 2025 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Dec 2025 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Mar 2026 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Jun 2026 1.12%",
+          "weight": 1.57
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:12:12+00:00"
+    },
+    {
+      "fundName": "PruLink Global Multi-Asset Income Fund (Decu) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-multi-asset-income-fund-decumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-global-multi-asset-income-fund-decumulation.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "and the F und",
+      "geographicAllocation": [
+        {
+          "name": "Apr 2025 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Jun 2025 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Sep 2025 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Dec 2025 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Mar 2026 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Jun 2026 1.12%",
+          "weight": 1.57
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:12:22+00:00"
+    },
+    {
+      "fundName": "PruLink Global Multi-Asset Income Fund (Dis) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-multi-asset-income-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-global-multi-asset-income-fund-distribution.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "and the F und",
+      "geographicAllocation": [
+        {
+          "name": "Apr 2025 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Jun 2025 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Sep 2025 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Dec 2025 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Mar 2026 1.12%",
+          "weight": 1.57
+        },
+        {
+          "name": "Jun 2026 1.12%",
+          "weight": 1.57
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:12:31+00:00"
+    },
+    {
+      "fundName": "PruLink Global Property Securities Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-property-securities-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_global_property_securities_fund.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2024-12-31",
+      "managerName": "of the",
+      "geographicAllocation": [
+        {
+          "name": "3.29% 5.17% 2.20% 2.24%",
+          "weight": 1.6
+        },
+        {
+          "name": "PRULink Global Property Securities Fund",
+          "weight": 2.46
+        },
+        {
+          "name": "Class D",
+          "weight": 54.0
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:12:41+00:00"
+    },
+    {
+      "fundName": "PRULink Global Signature CIO Balance Fund (Acc) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-signature-cio-balance-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:12:57+00:00"
+    },
+    {
+      "fundName": "PRULink Global Signature CIO Growth Fund (Acc) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-signature-cio-growth-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:13:16+00:00"
+    },
+    {
+      "fundName": "PRULink Global Signature CIO Income Fund (Dist) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-signature-cio-income-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:13:35+00:00"
+    },
+    {
+      "fundName": "PruLink Global Technology Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-global-technology-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_eiut.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "Eastspring Investments (Singapore) Limited",
+      "geographicAllocation": [
+        {
+          "name": "(ex-Singapore) Index +",
+          "weight": 30.0
+        },
+        {
+          "name": "also invest up to",
+          "weight": 30.0
+        },
+        {
+          "name": "There is a",
+          "weight": 5.0
+        },
+        {
+          "name": "The custodian fee is below",
+          "weight": 0.02
+        }
+      ],
+      "sectorAllocation": [
+        {
+          "name": "PRULink Global Technology Fund",
+          "weight": 1.7
+        },
+        {
+          "name": "Global Technology Fund",
+          "weight": 20.6
+        }
+      ],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:13:54+00:00"
+    },
+    {
+      "fundName": "PruLink Greater China Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-greater-china-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-greater-china-fund.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "of the Underlying Fund",
+      "geographicAllocation": [
+        {
+          "name": "ing Co Ltd",
+          "weight": 2.1
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:14:16+00:00"
+    },
+    {
+      "fundName": "PRULink Greater China Fund (USD) (Acc) (USD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-greater-china-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/factsheets/prulink-funds/prulink-greater-china-fund-usd-accumulation.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "View factsheet"
+      },
+      "factsheetDate": "2026-07-31",
+      "managerName": "of the Underlying Fund",
+      "geographicAllocation": [
+        {
+          "name": "ing Co Ltd",
+          "weight": 2.1
+        }
+      ],
+      "sectorAllocation": [],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:14:25+00:00"
+    },
+    {
+      "fundName": "PRULink India Opp Equity Fund (Accumulation) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-india-opportunity-equity-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:14:36+00:00"
+    },
+    {
+      "fundName": "PRULink Islamic Global Equity Index Fund (Acc) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-islamic-global-equity-index-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:14:57+00:00"
+    },
+    {
+      "fundName": "PruLink Pan European Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-pan-european-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_eiut.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "MSCI Europe Index**",
+      "geographicAllocation": [
+        {
+          "name": "(ex-Singapore) Index +",
+          "weight": 30.0
+        },
+        {
+          "name": "also invest up to",
+          "weight": 30.0
+        },
+        {
+          "name": "There is a",
+          "weight": 5.0
+        },
+        {
+          "name": "The custodian fee is below",
+          "weight": 0.02
+        }
+      ],
+      "sectorAllocation": [
+        {
+          "name": "PRULink Global Technology Fund",
+          "weight": 1.7
+        },
+        {
+          "name": "Global Technology Fund",
+          "weight": 20.6
+        }
+      ],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:15:18+00:00"
+    },
+    {
+      "fundName": "PruLink Singapore ASEAN Managed Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-singapore-asean-managed-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_eiut.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "Morningstar Sustainability Rating™ #",
+      "geographicAllocation": [
+        {
+          "name": "(ex-Singapore) Index +",
+          "weight": 30.0
+        },
+        {
+          "name": "also invest up to",
+          "weight": 30.0
+        },
+        {
+          "name": "There is a",
+          "weight": 5.0
+        },
+        {
+          "name": "The custodian fee is below",
+          "weight": 0.02
+        }
+      ],
+      "sectorAllocation": [
+        {
+          "name": "PRULink Global Technology Fund",
+          "weight": 1.7
+        },
+        {
+          "name": "Global Technology Fund",
+          "weight": 20.6
+        }
+      ],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:15:39+00:00"
+    },
+    {
+      "fundName": "PruLink Singapore Asian Managed Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-singapore-asian-managed-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:16:00+00:00"
+    },
+    {
+      "fundName": "PruLink Singapore Cash Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-singapore-cash-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:16:18+00:00"
+    },
+    {
+      "fundName": "PruLink Singapore Dynamic Bond Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-singapore-dynamic-bond-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_eiut.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "of the",
+      "geographicAllocation": [
+        {
+          "name": "(ex-Singapore) Index +",
+          "weight": 30.0
+        },
+        {
+          "name": "also invest up to",
+          "weight": 30.0
+        },
+        {
+          "name": "There is a",
+          "weight": 5.0
+        },
+        {
+          "name": "The custodian fee is below",
+          "weight": 0.02
+        }
+      ],
+      "sectorAllocation": [
+        {
+          "name": "PRULink Global Technology Fund",
+          "weight": 1.7
+        },
+        {
+          "name": "Global Technology Fund",
+          "weight": 20.6
+        }
+      ],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:16:38+00:00"
+    },
+    {
+      "fundName": "PruLink Singapore Dynamic Bond Fund (Dis) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-singapore-dynamic-bond-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": {
+        "type": "prudential_factsheet",
+        "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/media/ilp/fund-documents/fib_prulink_eiut.pdf",
+        "domain": "www.prudential.com.sg",
+        "title": "Download"
+      },
+      "factsheetDate": "2025-12-31",
+      "managerName": "of the",
+      "geographicAllocation": [
+        {
+          "name": "(ex-Singapore) Index +",
+          "weight": 30.0
+        },
+        {
+          "name": "also invest up to",
+          "weight": 30.0
+        },
+        {
+          "name": "There is a",
+          "weight": 5.0
+        },
+        {
+          "name": "The custodian fee is below",
+          "weight": 0.02
+        }
+      ],
+      "sectorAllocation": [
+        {
+          "name": "PRULink Global Technology Fund",
+          "weight": 1.7
+        },
+        {
+          "name": "Global Technology Fund",
+          "weight": 20.6
+        }
+      ],
+      "status": "resolved_prudential",
+      "reason": "explicit allocation data extracted from official Prudential factsheet",
+      "retrievedAt": "2026-10-02T14:16:59+00:00"
+    },
+    {
+      "fundName": "PruLink Singapore Growth Fund (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-singapore-growth-fund.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:17:20+00:00"
+    },
+    {
+      "fundName": "PRULink StrategicInvest Income Fund (Distribution) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-strategicinvest-income-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:17:40+00:00"
+    },
+    {
+      "fundName": "PRULink StrategicInvest Income Fund (USD) (Dist) (USD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-strategicinvest-income-fund-usd-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:18:05+00:00"
+    },
+    {
+      "fundName": "PRULink US Dividend Wealth Fund (Distribution) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-us-dividend-wealth-fund-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:18:29+00:00"
+    },
+    {
+      "fundName": "PRULink US Dividend Wealth Fund (USD) (Dist) (USD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/prulink-us-dividend-wealth-fund-usd-distribution.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:18:50+00:00"
+    },
+    {
+      "fundName": "PRUPrime CIO Balanced Fund (Accum) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/pruprime-cio-balanced-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:19:11+00:00"
+    },
+    {
+      "fundName": "PRUPrime CIO Conservative Fund (Accum) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/pruprime-cio-conservative-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:19:30+00:00"
+    },
+    {
+      "fundName": "PRUPrime CIO Growth Fund (Accumulation) (SGD)",
+      "prudentialUrl": "https://www.prudential.com.sg/content/prudential-aem-lbu/pacs/en/products/wealth/ilp/prulink-funds/pruprime-cio-growth-fund-accumulation.html",
+      "sourceUniverse": "Funds Links.xlsm",
+      "source": null,
+      "factsheetDate": null,
+      "managerName": null,
+      "geographicAllocation": [],
+      "sectorAllocation": [],
+      "status": "unresolved",
+      "reason": "factsheet_candidates_found_but_no_verified_explicit_allocations_extracted",
+      "retrievedAt": "2026-10-02T14:19:47+00:00"
+    }
+  ]
+}
