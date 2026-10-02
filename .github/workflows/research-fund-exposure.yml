@@ -1,23 +1,40 @@
-name: AI Fund Exposure Research
+name: Research Fund Exposure
 
 on:
-  workflow_dispatch:
-
+  # ============================================================
+  # DAILY AUTO RUN
+  # 00:00 Singapore Time = 16:00 UTC (previous day)
+  # ============================================================
   schedule:
-    # 00:00 Singapore time (UTC+8)
-    # = 16:00 UTC previous day
     - cron: "0 16 * * *"
+
+  # ============================================================
+  # MANUAL RUN
+  # ============================================================
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+# ==============================================================
+# IMPORTANT:
+# This concurrency group ONLY controls duplicate instances of
+# THIS workflow.
+#
+# It does NOT block:
+# - Build Funds Data
+# - Market News
+# - Other workflows
+#
+# Therefore all 3 workflows can run at the same time.
+# ==============================================================
 concurrency:
   group: fund-exposure-research
   cancel-in-progress: false
 
 jobs:
 
-  research-fund-exposure:
+  research-exposure:
 
     runs-on: ubuntu-latest
 
@@ -25,62 +42,60 @@ jobs:
 
     steps:
 
-      # ======================================================
+      # ========================================================
       # 1. CHECKOUT
-      # ======================================================
-
+      # ========================================================
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
-
-      # ======================================================
-      # 2. PYTHON
-      # ======================================================
-
-      - name: Set up Python
+      # ========================================================
+      # 2. SETUP PYTHON
+      # ========================================================
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-          cache: "pip"
+          python-version: "3.11"
+          cache: pip
 
-
-      # ======================================================
+      # ========================================================
       # 3. VERIFY REQUIRED FILES
-      # ======================================================
-
-      - name: Verify repository files
+      # ========================================================
+      - name: Verify required files
+        shell: bash
         run: |
+          set -e
 
           echo "Checking required files..."
 
           test -f "Funds Links.xlsx"
-
           test -f "scripts/research_fund_exposure.py"
-
           test -f "scripts/exposure_categories.txt"
 
           echo "Required files found."
 
-          echo ""
-          echo "Repository structure:"
-          echo ""
-
-          ls -la
-
-          echo ""
-          echo "Scripts:"
-          echo ""
-
-          ls -la scripts
-
-
-      # ======================================================
-      # 4. INSTALL DEPENDENCIES
-      # ======================================================
-
-      - name: Install Python dependencies
+      # ========================================================
+      # 4. SHOW EXPOSURE VOCABULARY
+      # ========================================================
+      - name: Show exposure vocabulary
+        shell: bash
         run: |
+          echo "============================================================"
+          echo "Allowed Geography / Sector Vocabulary"
+          echo "============================================================"
 
+          cat scripts/exposure_categories.txt
+
+          echo "============================================================"
+
+      # ========================================================
+      # 5. INSTALL DEPENDENCIES
+      # ========================================================
+      - name: Install dependencies
+        shell: bash
+        run: |
           python -m pip install --upgrade pip
 
           pip install \
@@ -92,321 +107,208 @@ jobs:
             "beautifulsoup4>=4.12" \
             "requests>=2.32"
 
-
-      # ======================================================
-      # 5. SHOW CONFIGURATION
-      # ======================================================
-
-      - name: Show exposure configuration
-        run: |
-
-          echo "================================================"
-          echo "Exposure categories"
-          echo "================================================"
-
-          cat scripts/exposure_categories.txt
-
-          echo ""
-          echo "================================================"
-          echo "Python version"
-          echo "================================================"
-
-          python --version
-
-
-      # ======================================================
-      # 6. RUN AI RESEARCH
-      # ======================================================
-
-      - name: Research fund exposure
+      # ========================================================
+      # 6. RUN AI FUND EXPOSURE RESEARCH
+      # ========================================================
+      - name: Research fund geography and sector
+        shell: bash
         env:
-
-          HF_MODEL: Qwen/Qwen3-1.7B
-
-          REQUEST_TIMEOUT: "30"
-
-          MAX_SEARCH_RESULTS: "8"
-
-          MAX_DOCUMENTS_PER_FUND: "5"
-
-          HF_HUB_DISABLE_TELEMETRY: "1"
-
+          PYTHONUNBUFFERED: "1"
         run: |
-
           python scripts/research_fund_exposure.py
 
-
-      # ======================================================
-      # 7. VALIDATE OUTPUT
-      # ======================================================
-
-      - name: Validate exposure output
+      # ========================================================
+      # 7. VERIFY OUTPUT
+      # ========================================================
+      - name: Verify output
+        shell: bash
         run: |
+          set -e
 
-          test -f "data/fund_exposure.json"
+          OUTPUT="data/fund_exposure.json"
 
-          python - <<'PY'
-
-          import json
-
-          from pathlib import Path
-
-
-          output_path = Path(
-              "data/fund_exposure.json"
-          )
-
-          category_path = Path(
-              "scripts/exposure_categories.txt"
-          )
-
-
-          # --------------------------------------------------
-          # Load output
-          # --------------------------------------------------
-
-          with output_path.open(
-              "r",
-              encoding="utf-8"
-          ) as f:
-
-              data = json.load(f)
-
-
-          assert isinstance(
-              data,
-              dict
-          )
-
-
-          assert isinstance(
-              data.get("funds"),
-              list
-          )
-
-
-          # --------------------------------------------------
-          # Load allowed categories
-          # --------------------------------------------------
-
-          geography = []
-
-          sector = []
-
-          current = None
-
-
-          with category_path.open(
-              "r",
-              encoding="utf-8"
-          ) as f:
-
-              for raw_line in f:
-
-                  line = raw_line.strip()
-
-
-                  if not line:
-                      continue
-
-
-                  if line.startswith("#"):
-                      continue
-
-
-                  if line.upper() == "[GEOGRAPHY]":
-                      current = "geography"
-                      continue
-
-
-                  if line.upper() == "[SECTOR]":
-                      current = "sector"
-                      continue
-
-
-                  if current == "geography":
-                      geography.append(line)
-
-
-                  elif current == "sector":
-                      sector.append(line)
-
-
-          geography_set = set(
-              geography
-          )
-
-          sector_set = set(
-              sector
-          )
-
-
-          # --------------------------------------------------
-          # Validate every fund
-          # --------------------------------------------------
-
-          for fund in data["funds"]:
-
-              geo = fund.get(
-                  "geography",
-                  []
-              )
-
-              sec = fund.get(
-                  "sector",
-                  []
-              )
-
-
-              assert isinstance(
-                  geo,
-                  list
-              )
-
-              assert isinstance(
-                  sec,
-                  list
-              )
-
-
-              assert len(geo) <= 3
-
-              assert len(sec) <= 3
-
-
-              for value in geo:
-
-                  assert value in geography_set, (
-                      f"Invalid geography "
-                      f"category: {value}"
-                  )
-
-
-              for value in sec:
-
-                  assert value in sector_set, (
-                      f"Invalid sector "
-                      f"category: {value}"
-                  )
-
-
-          print(
-              f"Validated "
-              f"{len(data['funds'])} funds."
-          )
-
-          print(
-              "Maximum geography: 3"
-          )
-
-          print(
-              "Maximum sector: 3"
-          )
-
-          print(
-              "Percentages: not stored"
-          )
-
-          print(
-              "Vocabulary enforcement: enabled"
-          )
-
-          PY
-
-
-      # ======================================================
-      # 8. SHOW RESULT SUMMARY
-      # ======================================================
-
-      - name: Show result summary
-        run: |
-
-          python - <<'PY'
-
-          import json
-
-          with open(
-              "data/fund_exposure.json",
-              "r",
-              encoding="utf-8"
-          ) as f:
-
-              data = json.load(f)
-
-
-          print("")
-          print(
-              "=============================================="
-          )
-
-          print(
-              "AI FUND EXPOSURE SUMMARY"
-          )
-
-          print(
-              "=============================================="
-          )
-
-          print(
-              f"Funds processed: "
-              f"{data['summary']['fundsProcessed']}"
-          )
-
-          print(
-              f"Successful: "
-              f"{data['summary']['successful']}"
-          )
-
-          print(
-              f"No source: "
-              f"{data['summary']['noSource']}"
-          )
-
-          print(
-              f"No reliable exposure: "
-              f"{data['summary']['noReliableExposure']}"
-          )
-
-          print(
-              f"AI errors: "
-              f"{data['summary']['aiErrors']}"
-          )
-
-          print(
-              "=============================================="
-          )
-
-          PY
-
-
-      # ======================================================
-      # 9. COMMIT RESULT
-      # ======================================================
-
-      - name: Commit exposure data
-        run: |
-
-          git config user.name \
-            "github-actions[bot]"
-
-          git config user.email \
-            "41898282+github-actions[bot]@users.noreply.github.com"
-
-
-          git add data/fund_exposure.json
-
-
-          if git diff --cached --quiet; then
-
-            echo "No exposure changes."
-
-            exit 0
-
+          if [ ! -f "$OUTPUT" ]; then
+            echo "ERROR: $OUTPUT was not created."
+            exit 1
           fi
 
+          echo "Output created:"
+          ls -lh "$OUTPUT"
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/fund_exposure.json")
+
+          with path.open("r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          if not isinstance(data, dict):
+              raise SystemExit("ERROR: Output JSON root is not an object.")
+
+          if "funds" not in data:
+              raise SystemExit("ERROR: Output JSON does not contain 'funds'.")
+
+          if not isinstance(data["funds"], list):
+              raise SystemExit("ERROR: 'funds' is not a list.")
+
+          print(f"Funds researched: {len(data['funds'])}")
+
+          for i, fund in enumerate(data["funds"], start=1):
+
+              if not isinstance(fund, dict):
+                  raise SystemExit(
+                      f"ERROR: Fund record #{i} is not an object."
+                  )
+
+              geography = fund.get("geography", [])
+              sector = fund.get("sector", [])
+
+              if not isinstance(geography, list):
+                  raise SystemExit(
+                      f"ERROR: Fund #{i} geography is not a list."
+                  )
+
+              if not isinstance(sector, list):
+                  raise SystemExit(
+                      f"ERROR: Fund #{i} sector is not a list."
+                  )
+
+              if len(geography) > 3:
+                  raise SystemExit(
+                      f"ERROR: Fund #{i} has more than 3 geography categories."
+                  )
+
+              if len(sector) > 3:
+                  raise SystemExit(
+                      f"ERROR: Fund #{i} has more than 3 sector categories."
+                  )
+
+              # Percentages must not appear in the final categories.
+              for category in geography + sector:
+
+                  if not isinstance(category, str):
+                      raise SystemExit(
+                          f"ERROR: Fund #{i} contains non-string category."
+                      )
+
+                  if "%" in category:
+                      raise SystemExit(
+                          f"ERROR: Percentage found in fund #{i}: {category}"
+                      )
+
+          print("Output validation passed.")
+
+          PY
+
+      # ========================================================
+      # 8. SHOW SUMMARY
+      # ========================================================
+      - name: Show research summary
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+
+          with open("data/fund_exposure.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          summary = data.get("summary", {})
+
+          print("")
+          print("============================================================")
+          print("FUND EXPOSURE RESEARCH SUMMARY")
+          print("============================================================")
+
+          for key, value in summary.items():
+              print(f"{key}: {value}")
+
+          print("============================================================")
+          print("")
+
+          PY
+
+      # ========================================================
+      # 9. CONFIGURE GIT
+      # ========================================================
+      - name: Configure Git
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # ========================================================
+      # 10. CHECK FOR CHANGES
+      # ========================================================
+      - name: Check for changes
+        id: changes
+        shell: bash
+        run: |
+          git status --short
+
+          if git diff --quiet -- data/fund_exposure.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected in fund_exposure.json."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Changes detected."
+          fi
+
+      # ========================================================
+      # 11. COMMIT LOCAL RESULT
+      # ========================================================
+      - name: Commit exposure data
+        if: steps.changes.outputs.changed == 'true'
+        shell: bash
+        run: |
+          git add data/fund_exposure.json
 
           git commit \
-            -m "Update AI fund exposure research"
+            -m "Update fund geography and sector exposure"
 
+      # ========================================================
+      # 12. SAFE PUSH
+      #
+      # Another workflow may have pushed to main while this
+      # workflow was researching.
+      #
+      # Therefore:
+      #   fetch latest main
+      #   rebase our commit
+      #   push
+      #
+      # Retry a few times in case another workflow pushes between
+      # fetch/rebase/push.
+      # ========================================================
+      - name: Push exposure data safely
+        if: steps.changes.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -e
 
-          git push
+          BRANCH="${GITHUB_REF_NAME}"
+
+          for attempt in 1 2 3 4 5
+          do
+            echo "============================================================"
+            echo "Push attempt $attempt / 5"
+            echo "============================================================"
+
+            git fetch origin "$BRANCH"
+
+            git rebase "origin/$BRANCH"
+
+            if git push origin "HEAD:$BRANCH"; then
+              echo "Push successful."
+              exit 0
+            fi
+
+            echo "Push failed because the remote changed."
+            echo "Retrying..."
+
+            sleep 5
+          done
+
+          echo "ERROR: Unable to push after 5 attempts."
+          exit 1
