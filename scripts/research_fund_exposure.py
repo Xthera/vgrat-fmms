@@ -3,62 +3,32 @@
 """
 VGrat FMS - AI FUND EXPOSURE RESEARCH
 
-Purpose
--------
-Research geography and sector exposure for every fund in the controlling
-Funds Links workbook using a local Hugging Face Qwen model.
+AI-only geography and sector research.
 
-IMPORTANT
----------
-This script does NOT use DuckDuckGo or any search engine.
+Source:
+    Prudential URL supplied in Funds Links.xlsx / Funds Links.xlsm
 
-The analysis source is the Prudential URL/document supplied in the workbook.
-The AI performs the geography and sector classification.
+Analysis:
+    Local Hugging Face Qwen model
 
-Transactional publishing:
-    - A completely successful run replaces fund_exposure.json.
-    - Any failure preserves the existing fund_exposure.json.
-    - Partial results are NEVER published.
+Search engines:
+    NONE
 
-Expected output:
-
-{
-  "generatedAt": "...",
-  "model": "Qwen/Qwen3-1.7B",
-  "fundCount": 67,
-  "funds": [
-    {
-      "fundName": "...",
-      "prudentialUrl": "...",
-      "geography": [
-        "United States",
-        "Europe"
-      ],
-      "sector": [
-        "Technology"
-      ],
-      "status": "success",
-      "sources": [
-        "..."
-      ]
-    }
-  ],
-  "summary": {
-    "totalFunds": 67,
-    "successful": 67,
-    "failed": 0
-  }
-}
+Publishing rule:
+    - Complete successful run -> replace fund_exposure.json
+    - Any failed fund -> preserve existing fund_exposure.json
+    - Any AI/model/validation failure -> preserve existing file
+    - Partial results are NEVER published
 """
 
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import re
 import sys
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -82,30 +52,57 @@ MODEL_NAME = os.getenv(
     "Qwen/Qwen3-1.7B",
 )
 
-HF_TOKEN = os.getenv("HF_TOKEN", "").strip()
+HF_TOKEN = os.getenv(
+    "HF_TOKEN",
+    "",
+).strip()
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPOSITORY_ROOT = SCRIPT_DIR.parent
 
-CATEGORIES_FILE = SCRIPT_DIR / "exposure_categories.txt"
-OUTPUT_PATH = REPOSITORY_ROOT / "data" / "fund_exposure.json"
+CATEGORIES_FILE = (
+    SCRIPT_DIR / "exposure_categories.txt"
+)
 
-REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "60"))
+OUTPUT_PATH = (
+    REPOSITORY_ROOT
+    / "data"
+    / "fund_exposure.json"
+)
 
-MAX_SOURCE_CHARS = int(
-    os.getenv("MAX_SOURCE_CHARS", "50000")
+REQUEST_TIMEOUT = int(
+    os.getenv(
+        "REQUEST_TIMEOUT",
+        "60",
+    )
 )
 
 MAX_PDF_PAGES = int(
-    os.getenv("MAX_PDF_PAGES", "30")
+    os.getenv(
+        "MAX_PDF_PAGES",
+        "40",
+    )
+)
+
+MAX_SOURCE_CHARS = int(
+    os.getenv(
+        "MAX_SOURCE_CHARS",
+        "60000",
+    )
+)
+
+MAX_AI_SOURCE_CHARS = int(
+    os.getenv(
+        "MAX_AI_SOURCE_CHARS",
+        "30000",
+    )
 )
 
 MAX_NEW_TOKENS = int(
-    os.getenv("MAX_NEW_TOKENS", "700")
-)
-
-TEMPERATURE = float(
-    os.getenv("AI_TEMPERATURE", "0.0")
+    os.getenv(
+        "MAX_NEW_TOKENS",
+        "800",
+    )
 )
 
 USER_AGENT = (
@@ -120,14 +117,15 @@ HEADERS = {
     "Accept": (
         "text/html,application/xhtml+xml,"
         "application/xml;q=0.9,"
-        "application/pdf;q=0.8,*/*;q=0.7"
+        "application/pdf;q=0.9,"
+        "*/*;q=0.8"
     ),
     "Accept-Language": "en-US,en;q=0.9",
 }
 
 
 # ============================================================
-# GLOBAL MODEL OBJECTS
+# GLOBAL AI OBJECTS
 # ============================================================
 
 TOKENIZER = None
@@ -135,56 +133,84 @@ MODEL = None
 
 
 # ============================================================
-# GENERAL HELPERS
+# LOGGING
 # ============================================================
 
 def log(message: str = "") -> None:
-    print(message, flush=True)
+    print(
+        message,
+        flush=True,
+    )
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(
+        timezone.utc
+    ).isoformat()
 
 
-def clean_text(text: str) -> str:
-    """
-    Normalise extracted document text.
-    """
+# ============================================================
+# TEXT HELPERS
+# ============================================================
+
+def clean_text(
+    text: str,
+) -> str:
+
     if not text:
         return ""
 
-    text = text.replace("\x00", " ")
-    text = text.replace("\r\n", "\n")
-    text = text.replace("\r", "\n")
+    text = text.replace(
+        "\x00",
+        " ",
+    )
 
-    # Remove excessive whitespace while preserving useful line breaks.
-    text = re.sub(r"[ \t]+", " ", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = text.replace(
+        "\r\n",
+        "\n",
+    )
+
+    text = text.replace(
+        "\r",
+        "\n",
+    )
+
+    text = re.sub(
+        r"[ \t]+",
+        " ",
+        text,
+    )
+
+    text = re.sub(
+        r"\n{3,}",
+        "\n\n",
+        text,
+    )
 
     return text.strip()
 
 
-def truncate_text(text: str, max_chars: int = MAX_SOURCE_CHARS) -> str:
-    """
-    Keep prompt size manageable.
-    """
-    if len(text) <= max_chars:
+def truncate_text(
+    text: str,
+    maximum: int,
+) -> str:
+
+    if len(text) <= maximum:
         return text
 
-    return text[:max_chars] + "\n\n[DOCUMENT TRUNCATED]"
+    return (
+        text[:maximum]
+        + "\n\n[DOCUMENT TRUNCATED]"
+    )
 
 
 # ============================================================
 # WORKBOOK
 # ============================================================
 
-def find_funds_excel_file(repository_root: Path) -> Path:
-    """
-    Prefer Funds Links.xlsx.
-
-    Fallback:
-        Funds Links.xlsm
-    """
+def find_funds_excel_file(
+    repository_root: Path,
+) -> Path:
 
     candidates = [
         repository_root / "Funds Links.xlsx",
@@ -196,23 +222,18 @@ def find_funds_excel_file(repository_root: Path) -> Path:
             return candidate
 
     raise FileNotFoundError(
-        "Could not find Funds Links.xlsx or Funds Links.xlsm "
-        f"in {repository_root}"
+        "Could not find Funds Links.xlsx or "
+        f"Funds Links.xlsm in {repository_root}"
     )
 
 
-def load_funds(workbook_path: Path) -> List[Dict[str, str]]:
-    """
-    Load controlling fund universe.
+def load_funds(
+    workbook_path: Path,
+) -> List[Dict[str, str]]:
 
-    Column A:
-        Prudential URL
-
-    Column B:
-        Exact fund name
-    """
-
-    log(f"Loading workbook: {workbook_path}")
+    log(
+        f"Loading workbook: {workbook_path}"
+    )
 
     workbook = load_workbook(
         workbook_path,
@@ -221,6 +242,7 @@ def load_funds(workbook_path: Path) -> List[Dict[str, str]]:
     )
 
     try:
+
         worksheet = workbook.active
 
         funds: List[Dict[str, str]] = []
@@ -232,25 +254,44 @@ def load_funds(workbook_path: Path) -> List[Dict[str, str]]:
             ),
             start=2,
         ):
-            url = row[0] if len(row) >= 1 else None
-            fund_name = row[1] if len(row) >= 2 else None
 
-            if url is None and fund_name is None:
+            url = (
+                row[0]
+                if len(row) >= 1
+                else None
+            )
+
+            fund_name = (
+                row[1]
+                if len(row) >= 2
+                else None
+            )
+
+            if (
+                url is None
+                and fund_name is None
+            ):
                 continue
 
-            url = str(url or "").strip()
-            fund_name = str(fund_name or "").strip()
+            url = str(
+                url or ""
+            ).strip()
+
+            fund_name = str(
+                fund_name or ""
+            ).strip()
 
             if not fund_name:
                 log(
-                    f"WARNING: Row {row_number} has no fund name. "
-                    "Skipping."
+                    f"WARNING: Row {row_number} "
+                    "has no fund name. Skipping."
                 )
                 continue
 
             if not url:
                 raise RuntimeError(
-                    f"Row {row_number} ({fund_name}) has no Prudential URL."
+                    f"Row {row_number} "
+                    f"({fund_name}) has no Prudential URL."
                 )
 
             funds.append(
@@ -262,10 +303,12 @@ def load_funds(workbook_path: Path) -> List[Dict[str, str]]:
 
         if not funds:
             raise RuntimeError(
-                "No funds were found in the controlling workbook."
+                "No funds found in workbook."
             )
 
-        log(f"Funds loaded: {len(funds)}")
+        log(
+            f"Funds loaded: {len(funds)}"
+        )
 
         return funds
 
@@ -280,25 +323,11 @@ def load_funds(workbook_path: Path) -> List[Dict[str, str]]:
 def load_categories(
     categories_path: Path,
 ) -> Tuple[List[str], List[str]]:
-    """
-    Read canonical geography and sector vocabulary.
-
-    Expected format:
-
-    [GEOGRAPHY]
-    United States
-    Europe
-    ...
-
-    [SECTOR]
-    Technology
-    Financials
-    ...
-    """
 
     if not categories_path.exists():
         raise FileNotFoundError(
-            f"Category file not found: {categories_path}"
+            f"Category file not found: "
+            f"{categories_path}"
         )
 
     geography: List[str] = []
@@ -310,7 +339,9 @@ def load_categories(
         "r",
         encoding="utf-8",
     ) as file:
+
         for raw_line in file:
+
             line = raw_line.strip()
 
             if not line:
@@ -335,43 +366,37 @@ def load_categories(
             elif current_section == "sector":
                 sector.append(line)
 
+    geography = list(
+        dict.fromkeys(geography)
+    )
+
+    sector = list(
+        dict.fromkeys(sector)
+    )
+
     if not geography:
         raise RuntimeError(
-            "No geography categories found in exposure_categories.txt."
+            "No geography categories found."
         )
 
     if not sector:
         raise RuntimeError(
-            "No sector categories found in exposure_categories.txt."
+            "No sector categories found."
         )
 
-    # Remove duplicates while preserving order.
-    geography = list(dict.fromkeys(geography))
-    sector = list(dict.fromkeys(sector))
-
-    return geography, sector
+    return (
+        geography,
+        sector,
+    )
 
 
 # ============================================================
-# HTTP / DOCUMENT FETCHING
+# HTTP
 # ============================================================
 
-def fetch_url(
+def get_response(
     url: str,
-) -> Tuple[str, str]:
-    """
-    Download a URL.
-
-    Returns:
-        (content_type, body)
-
-    body is text for HTML and raw bytes encoded as latin-1 for PDF
-    handling by the caller.
-
-    Raises on failure.
-    """
-
-    log(f"        Fetching: {url}")
+) -> requests.Response:
 
     response = requests.get(
         url,
@@ -382,66 +407,60 @@ def fetch_url(
 
     response.raise_for_status()
 
-    content_type = (
-        response.headers.get(
-            "Content-Type",
-            "",
-        )
-        .lower()
-    )
-
-    if (
-        "application/pdf" in content_type
-        or response.url.lower().split("?")[0].endswith(".pdf")
-    ):
-        return (
-            "pdf",
-            response.content.decode(
-                "latin-1",
-                errors="ignore",
-            ),
-        )
-
-    return (
-        "html",
-        response.text,
-    )
+    return response
 
 
-def extract_pdf_text_from_bytes(
+# ============================================================
+# PDF EXTRACTION
+# ============================================================
+
+def extract_pdf_text(
     raw_bytes: bytes,
 ) -> str:
-    """
-    Extract text from PDF bytes.
-    """
-
-    import io
 
     reader = PdfReader(
         io.BytesIO(raw_bytes)
     )
 
-    pages = min(
+    page_count = min(
         len(reader.pages),
         MAX_PDF_PAGES,
     )
 
     chunks: List[str] = []
 
-    for index in range(pages):
-        try:
-            page_text = reader.pages[index].extract_text() or ""
+    for page_number in range(
+        page_count
+    ):
 
-            if page_text.strip():
+        try:
+
+            page_text = (
+                reader.pages[
+                    page_number
+                ].extract_text()
+                or ""
+            )
+
+            page_text = clean_text(
+                page_text
+            )
+
+            if page_text:
+
                 chunks.append(
-                    f"\n--- PAGE {index + 1} ---\n"
+                    "\n"
+                    f"--- PAGE "
+                    f"{page_number + 1} ---\n"
                     f"{page_text}"
                 )
 
         except Exception as exc:
+
             log(
-                f"        PDF page {index + 1} extraction failed: "
-                f"{exc}"
+                f"        PDF page "
+                f"{page_number + 1} "
+                f"extraction failed: {exc}"
             )
 
     return clean_text(
@@ -449,19 +468,20 @@ def extract_pdf_text_from_bytes(
     )
 
 
-def extract_html_text(
+# ============================================================
+# HTML EXTRACTION
+# ============================================================
+
+def extract_html(
     html: str,
 ) -> Tuple[str, List[str]]:
-    """
-    Extract visible text and linked PDF/document URLs.
-    """
 
     soup = BeautifulSoup(
         html,
         "html.parser",
     )
 
-    for element in soup(
+    for tag in soup(
         [
             "script",
             "style",
@@ -469,24 +489,22 @@ def extract_html_text(
             "svg",
         ]
     ):
-        element.decompose()
+        tag.decompose()
 
     links: List[str] = []
 
     for anchor in soup.find_all("a"):
-        href = anchor.get("href")
+
+        href = anchor.get(
+            "href"
+        )
 
         if not href:
             continue
 
         href = href.strip()
 
-        absolute = urljoin(
-            "",
-            href,
-        )
-
-        links.append(absolute)
+        links.append(href)
 
     text = clean_text(
         soup.get_text(
@@ -495,36 +513,27 @@ def extract_html_text(
         )
     )
 
-    return text, links
+    return (
+        text,
+        links,
+    )
 
+
+# ============================================================
+# PRUDENTIAL SOURCE COLLECTION
+# ============================================================
 
 def fetch_prudential_document(
     url: str,
 ) -> Tuple[str, List[str]]:
-    """
-    Fetch the Prudential source page and any directly linked PDF.
 
-    No search engine is used.
+    log(
+        f"        Fetching source: {url}"
+    )
 
-    Returns:
-        source_text
-        source_urls
-    """
-
-    try:
-        response = requests.get(
-            url,
-            headers=HEADERS,
-            timeout=REQUEST_TIMEOUT,
-            allow_redirects=True,
-        )
-
-        response.raise_for_status()
-
-    except Exception as exc:
-        raise RuntimeError(
-            f"Prudential URL fetch failed: {exc}"
-        ) from exc
+    response = get_response(
+        url
+    )
 
     final_url = response.url
 
@@ -537,7 +546,7 @@ def fetch_prudential_document(
     )
 
     source_urls = [
-        final_url,
+        final_url
     ]
 
     # --------------------------------------------------------
@@ -545,21 +554,27 @@ def fetch_prudential_document(
     # --------------------------------------------------------
 
     if (
-        "application/pdf" in content_type
-        or final_url.lower().split("?")[0].endswith(".pdf")
+        "application/pdf"
+        in content_type
+        or final_url.lower()
+        .split("?")[0]
+        .endswith(".pdf")
     ):
-        text = extract_pdf_text_from_bytes(
+
+        text = extract_pdf_text(
             response.content
         )
 
         if not text:
             raise RuntimeError(
-                "Prudential PDF was downloaded but contained "
-                "no extractable text."
+                "PDF contained no extractable text."
             )
 
         return (
-            truncate_text(text),
+            truncate_text(
+                text,
+                MAX_SOURCE_CHARS,
+            ),
             source_urls,
         )
 
@@ -567,76 +582,55 @@ def fetch_prudential_document(
     # HTML
     # --------------------------------------------------------
 
-    html = response.text
-
-    html_text, links = extract_html_text(
-        html
+    html_text, links = extract_html(
+        response.text
     )
-
-    # --------------------------------------------------------
-    # Find linked PDFs.
-    #
-    # We intentionally only follow documents linked directly
-    # from the supplied Prudential page. No web search.
-    # --------------------------------------------------------
 
     pdf_links: List[str] = []
 
     for link in links:
-        lower = link.lower()
+
+        absolute = urljoin(
+            final_url,
+            link,
+        )
+
+        lower = absolute.lower()
 
         if (
             ".pdf" in lower
-            or "pdf" in lower
             or "factsheet" in lower
+            or "fact-sheet" in lower
             or "fund-fact" in lower
+            or "fundfactsheet" in lower
         ):
-            absolute = urljoin(
-                final_url,
-                link,
-            )
 
             if absolute not in pdf_links:
-                pdf_links.append(absolute)
+                pdf_links.append(
+                    absolute
+                )
 
     pdf_texts: List[str] = []
 
-    for pdf_url in pdf_links[:5]:
+    for pdf_url in pdf_links[:10]:
+
         try:
+
             log(
-                f"        Linked document: {pdf_url}"
+                f"        Linked document: "
+                f"{pdf_url}"
             )
 
-            pdf_response = requests.get(
-                pdf_url,
-                headers=HEADERS,
-                timeout=REQUEST_TIMEOUT,
-                allow_redirects=True,
+            pdf_response = get_response(
+                pdf_url
             )
 
-            pdf_response.raise_for_status()
-
-            pdf_content_type = (
-                pdf_response.headers.get(
-                    "Content-Type",
-                    "",
-                )
-                .lower()
-            )
-
-            if (
-                "application/pdf" not in pdf_content_type
-                and not pdf_response.url.lower()
-                .split("?")[0]
-                .endswith(".pdf")
-            ):
-                continue
-
-            pdf_text = extract_pdf_text_from_bytes(
+            pdf_text = extract_pdf_text(
                 pdf_response.content
             )
 
             if pdf_text:
+
                 source_urls.append(
                     pdf_response.url
                 )
@@ -646,39 +640,225 @@ def fetch_prudential_document(
                 )
 
         except Exception as exc:
+
             log(
-                f"        Linked document failed: {exc}"
+                f"        Linked PDF failed: "
+                f"{exc}"
             )
 
-    combined_parts: List[str] = []
+    parts: List[str] = []
 
     if html_text:
-        combined_parts.append(
+
+        parts.append(
             "--- PRUDENTIAL WEB PAGE ---\n"
             + html_text
         )
 
-    for index, pdf_text in enumerate(
+    for number, pdf_text in enumerate(
         pdf_texts,
         start=1,
     ):
-        combined_parts.append(
-            f"--- LINKED PRUDENTIAL DOCUMENT {index} ---\n"
+
+        parts.append(
+            f"--- LINKED PRUDENTIAL "
+            f"DOCUMENT {number} ---\n"
             + pdf_text
         )
 
     combined = clean_text(
-        "\n\n".join(combined_parts)
+        "\n\n".join(parts)
     )
 
     if not combined:
         raise RuntimeError(
-            "Prudential source produced no usable text."
+            "No usable text was extracted "
+            "from the Prudential source."
         )
 
     return (
-        truncate_text(combined),
-        list(dict.fromkeys(source_urls)),
+        truncate_text(
+            combined,
+            MAX_SOURCE_CHARS,
+        ),
+        list(
+            dict.fromkeys(
+                source_urls
+            )
+        ),
+    )
+
+
+# ============================================================
+# RELEVANT SECTION EXTRACTION
+# ============================================================
+
+EXPOSURE_SECTION_PATTERNS = [
+    r"asset allocation",
+    r"asset mix",
+    r"geographical allocation",
+    r"geographic allocation",
+    r"geographical exposure",
+    r"geographic exposure",
+    r"country allocation",
+    r"country exposure",
+    r"regional allocation",
+    r"regional exposure",
+    r"sector allocation",
+    r"sector exposure",
+    r"industry allocation",
+    r"industry exposure",
+    r"top holdings",
+    r"top holding",
+    r"holdings",
+    r"portfolio allocation",
+    r"portfolio holdings",
+    r"equity allocation",
+    r"equities",
+    r"fixed income",
+    r"bond allocation",
+    r"underlying fund",
+    r"underlying funds",
+    r"investment objective",
+    r"investment strategy",
+    r"investment approach",
+]
+
+
+def extract_relevant_sections(
+    source_text: str,
+) -> str:
+    """
+    Extract document regions around financially relevant
+    headings/phrases.
+
+    IMPORTANT:
+        This function does NOT classify geography or sector.
+
+    It only reduces the document presented to the AI so that
+    Qwen can focus on useful financial information.
+    """
+
+    lines = source_text.splitlines()
+
+    if not lines:
+        return ""
+
+    matched_indexes: List[int] = []
+
+    for index, line in enumerate(lines):
+
+        lower = line.lower()
+
+        for pattern in EXPOSURE_SECTION_PATTERNS:
+
+            if re.search(
+                pattern,
+                lower,
+            ):
+
+                # Capture context around the matching line.
+                start = max(
+                    0,
+                    index - 12,
+                )
+
+                end = min(
+                    len(lines),
+                    index + 45,
+                )
+
+                matched_indexes.extend(
+                    range(
+                        start,
+                        end,
+                    )
+                )
+
+                break
+
+    if not matched_indexes:
+        return ""
+
+    unique_indexes = sorted(
+        set(matched_indexes)
+    )
+
+    chunks: List[str] = []
+
+    current_chunk: List[str] = []
+    previous_index: Optional[int] = None
+
+    for index in unique_indexes:
+
+        if (
+            previous_index is not None
+            and index > previous_index + 1
+        ):
+
+            if current_chunk:
+                chunks.append(
+                    "\n".join(
+                        current_chunk
+                    )
+                )
+
+            current_chunk = []
+
+        current_chunk.append(
+            lines[index]
+        )
+
+        previous_index = index
+
+    if current_chunk:
+        chunks.append(
+            "\n".join(
+                current_chunk
+            )
+        )
+
+    relevant = clean_text(
+        "\n\n--- RELEVANT DOCUMENT SECTION ---\n\n"
+        .join(chunks)
+    )
+
+    return truncate_text(
+        relevant,
+        MAX_AI_SOURCE_CHARS,
+    )
+
+
+def prepare_ai_source(
+    source_text: str,
+) -> str:
+    """
+    Prefer financially relevant document sections.
+
+    If none can be identified, provide the complete source.
+    """
+
+    relevant = extract_relevant_sections(
+        source_text
+    )
+
+    if relevant:
+
+        log(
+            f"        Relevant source characters: "
+            f"{len(relevant)}"
+        )
+
+        return relevant
+
+    log(
+        "        No specific allocation section "
+        "detected; using full extracted source."
+    )
+
+    return truncate_text(
+        source_text,
+        MAX_AI_SOURCE_CHARS,
     )
 
 
@@ -687,9 +867,6 @@ def fetch_prudential_document(
 # ============================================================
 
 def load_ai_model() -> None:
-    """
-    Load Qwen locally.
-    """
 
     global TOKENIZER
     global MODEL
@@ -698,36 +875,55 @@ def load_ai_model() -> None:
     log("=" * 70)
     log("LOADING LOCAL AI MODEL")
     log("=" * 70)
-    log(f"Model: {MODEL_NAME}")
+
+    log(
+        f"Model: {MODEL_NAME}"
+    )
 
     token_kwargs: Dict[str, Any] = {}
 
     if HF_TOKEN:
+
         token_kwargs["token"] = HF_TOKEN
-        log("Hugging Face authentication: enabled")
-    else:
+
         log(
-            "Hugging Face authentication: not configured "
-            "(public model access)"
+            "Hugging Face authentication: enabled"
         )
 
-    TOKENIZER = AutoTokenizer.from_pretrained(
-        MODEL_NAME,
-        **token_kwargs,
+    else:
+
+        log(
+            "Hugging Face authentication: "
+            "not configured"
+        )
+
+    TOKENIZER = (
+        AutoTokenizer.from_pretrained(
+            MODEL_NAME,
+            **token_kwargs,
+        )
     )
 
-    MODEL = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME,
-        torch_dtype="auto",
-        device_map="auto",
-        trust_remote_code=True,
-        **token_kwargs,
+    MODEL = (
+        AutoModelForCausalLM.from_pretrained(
+            MODEL_NAME,
+            torch_dtype="auto",
+            device_map="auto",
+            trust_remote_code=True,
+            **token_kwargs,
+        )
     )
 
     MODEL.eval()
 
-    log("AI model loaded successfully.")
+    log(
+        "AI model loaded successfully."
+    )
 
+
+# ============================================================
+# PROMPT
+# ============================================================
 
 def build_prompt(
     fund_name: str,
@@ -735,52 +931,54 @@ def build_prompt(
     geography_categories: List[str],
     sector_categories: List[str],
 ) -> str:
-    """
-    Build strict JSON-only classification prompt.
-    """
 
     geography_text = "\n".join(
-        f"- {category}"
-        for category in geography_categories
+        f"- {item}"
+        for item in geography_categories
     )
 
     sector_text = "\n".join(
-        f"- {category}"
-        for category in sector_categories
+        f"- {item}"
+        for item in sector_categories
     )
 
     return f"""
-You are a financial-fund research analyst.
+You are a professional financial fund research analyst.
 
-Analyze ONLY the supplied source document.
+Analyze the supplied Prudential fund documentation for:
 
 Fund:
 {fund_name}
 
-Your task is to identify the fund's actual:
+Determine the fund's actual:
 
 1. Geographic exposure
 2. Sector exposure
 
-IMPORTANT RULES:
+STRICT RULES:
 
-- Use ONLY information supported by the supplied document.
-- Do NOT use your general knowledge.
-- Do NOT infer exposure merely from the fund name.
-- Do NOT invent holdings.
-- Do NOT guess.
-- Do NOT calculate or return percentages.
-- Do NOT return percentages in category names.
-- Return at most 3 geography categories.
-- Return at most 3 sector categories.
-- Return fewer than 3 when fewer are supported.
-- If no valid geography can be established, return [].
-- If no valid sector can be established, return [].
-- You MUST use the canonical category names supplied below.
+- Analyze ONLY the supplied document.
+- Do not use outside knowledge.
+- Do not use the fund name as evidence.
+- Do not guess.
+- Do not invent holdings.
+- Do not assume that a company or industry is present unless the
+  supplied document supports it.
+- Use the investment strategy, underlying funds, holdings,
+  country allocation, regional allocation, asset allocation,
+  sector allocation and related portfolio information when available.
+- If the document provides evidence for an underlying fund's
+  geography or sector exposure, you may use that evidence.
+- Select up to 3 geography categories.
+- Select up to 3 sector categories.
+- If only 1 or 2 categories are supported, return only those.
+- Do not return percentages.
+- Do not include percentages in category names.
+- Use ONLY the canonical category names below.
 - Do not create new category names.
-- Do not combine categories.
-- Do not add explanations.
-- Return ONLY valid JSON.
+- Return ONLY JSON.
+- No explanation.
+- No markdown.
 
 CANONICAL GEOGRAPHY CATEGORIES:
 
@@ -790,37 +988,43 @@ CANONICAL SECTOR CATEGORIES:
 
 {sector_text}
 
-Required JSON format:
+OUTPUT FORMAT:
 
 {{
   "geography": [],
   "sector": []
 }}
 
-SOURCE DOCUMENT:
+DOCUMENT:
 
 {source_text}
 """.strip()
 
 
+# ============================================================
+# AI INFERENCE
+# ============================================================
+
 def generate_ai_response(
     prompt: str,
 ) -> str:
-    """
-    Run local Qwen inference.
-    """
 
-    if TOKENIZER is None or MODEL is None:
+    if TOKENIZER is None:
         raise RuntimeError(
-            "AI model is not loaded."
+            "Tokenizer is not loaded."
+        )
+
+    if MODEL is None:
+        raise RuntimeError(
+            "Model is not loaded."
         )
 
     messages = [
         {
             "role": "system",
             "content": (
-                "You are a precise financial research "
-                "classification model. "
+                "You are a precise financial "
+                "research analyst. "
                 "Return only valid JSON."
             ),
         },
@@ -830,63 +1034,67 @@ def generate_ai_response(
         },
     ]
 
-    # --------------------------------------------------------
-    # Qwen3 chat template.
-    # --------------------------------------------------------
-
     try:
-        inputs = TOKENIZER.apply_chat_template(
-            messages,
-            tokenize=True,
-            add_generation_prompt=True,
-            enable_thinking=False,
-            return_dict=True,
-            return_tensors="pt",
+
+        inputs = (
+            TOKENIZER.apply_chat_template(
+                messages,
+                tokenize=True,
+                add_generation_prompt=True,
+                enable_thinking=False,
+                return_dict=True,
+                return_tensors="pt",
+            )
         )
 
     except TypeError:
-        inputs = TOKENIZER.apply_chat_template(
-            messages,
-            tokenize=True,
-            add_generation_prompt=True,
-            return_tensors="pt",
+
+        inputs = (
+            TOKENIZER.apply_chat_template(
+                messages,
+                tokenize=True,
+                add_generation_prompt=True,
+                return_tensors="pt",
+            )
         )
 
-    # --------------------------------------------------------
-    # Move tensors to model device.
-    # --------------------------------------------------------
+    try:
 
-    if hasattr(inputs, "to"):
-        try:
-            inputs = inputs.to(
-                MODEL.device
-            )
-        except Exception:
-            pass
+        inputs = inputs.to(
+            MODEL.device
+        )
 
-    input_length = (
-        inputs["input_ids"].shape[-1]
+    except Exception:
+        pass
+
+    input_tokens = (
+        inputs[
+            "input_ids"
+        ].shape[-1]
     )
 
     log(
-        f"        Input tokens: {input_length}"
+        f"        Input tokens: "
+        f"{input_tokens}"
     )
 
     with torch.inference_mode():
+
         generated = MODEL.generate(
             **inputs,
             max_new_tokens=MAX_NEW_TOKENS,
             do_sample=False,
-            temperature=TEMPERATURE,
             pad_token_id=(
                 TOKENIZER.eos_token_id
             ),
         )
 
-    generated_tokens = generated[
-        0,
-        input_length:,
-    ]
+    generated_tokens = (
+        generated[
+            0,
+            input_tokens:
+        ]
+    )
 
     response = TOKENIZER.decode(
         generated_tokens,
@@ -897,25 +1105,18 @@ def generate_ai_response(
 
 
 # ============================================================
-# AI RESPONSE PARSING
+# JSON PARSING
 # ============================================================
 
 def extract_json_object(
     response: str,
 ) -> Optional[Dict[str, Any]]:
-    """
-    Extract JSON object from model response.
-
-    The model is asked to return JSON only, but this also handles
-    accidental markdown fences.
-    """
 
     if not response:
         return None
 
     cleaned = response.strip()
 
-    # Remove markdown code fences.
     cleaned = re.sub(
         r"^```(?:json)?\s*",
         "",
@@ -929,19 +1130,21 @@ def extract_json_object(
         cleaned,
     )
 
-    # Direct parse.
     try:
+
         parsed = json.loads(
             cleaned
         )
 
-        if isinstance(parsed, dict):
+        if isinstance(
+            parsed,
+            dict,
+        ):
             return parsed
 
     except json.JSONDecodeError:
         pass
 
-    # Search for the first JSON object.
     match = re.search(
         r"\{.*\}",
         cleaned,
@@ -952,11 +1155,15 @@ def extract_json_object(
         return None
 
     try:
+
         parsed = json.loads(
             match.group(0)
         )
 
-        if isinstance(parsed, dict):
+        if isinstance(
+            parsed,
+            dict,
+        ):
             return parsed
 
     except json.JSONDecodeError:
@@ -965,22 +1172,26 @@ def extract_json_object(
     return None
 
 
+# ============================================================
+# AI RESULT VALIDATION
+# ============================================================
+
 def validate_ai_result(
     parsed: Dict[str, Any],
     geography_categories: List[str],
     sector_categories: List[str],
-) -> Tuple[bool, str, List[str], List[str]]:
-    """
-    Validate AI output.
+) -> Tuple[
+    bool,
+    str,
+    List[str],
+    List[str],
+]:
 
-    Returns:
-        valid
-        error
-        geography
-        sector
-    """
+    if not isinstance(
+        parsed,
+        dict,
+    ):
 
-    if not isinstance(parsed, dict):
         return (
             False,
             "AI result is not an object.",
@@ -1000,6 +1211,7 @@ def validate_ai_result(
         geography,
         list,
     ):
+
         return (
             False,
             "AI geography is not a list.",
@@ -1011,6 +1223,7 @@ def validate_ai_result(
         sector,
         list,
     ):
+
         return (
             False,
             "AI sector is not a list.",
@@ -1019,17 +1232,19 @@ def validate_ai_result(
         )
 
     if len(geography) > 3:
+
         return (
             False,
-            "AI returned more than 3 geography categories.",
+            "More than 3 geography categories.",
             [],
             [],
         )
 
     if len(sector) > 3:
+
         return (
             False,
-            "AI returned more than 3 sector categories.",
+            "More than 3 sector categories.",
             [],
             [],
         )
@@ -1046,13 +1261,15 @@ def validate_ai_result(
     clean_sector: List[str] = []
 
     for category in geography:
+
         if not isinstance(
             category,
             str,
         ):
+
             return (
                 False,
-                "Geography contains a non-string category.",
+                "Geography contains non-string value.",
                 [],
                 [],
             )
@@ -1060,42 +1277,49 @@ def validate_ai_result(
         category = category.strip()
 
         if not category:
+
             return (
                 False,
-                "Geography contains an empty category.",
+                "Geography contains empty category.",
                 [],
                 [],
             )
 
         if "%" in category:
+
             return (
                 False,
-                f"Percentage found in geography: {category}",
+                "Percentage found in geography.",
                 [],
                 [],
             )
 
         if category not in geography_set:
+
             return (
                 False,
-                f"Invalid geography category: {category}",
+                f"Invalid geography category: "
+                f"{category}",
                 [],
                 [],
             )
 
         if category not in clean_geography:
+
             clean_geography.append(
                 category
             )
 
     for category in sector:
+
         if not isinstance(
             category,
             str,
         ):
+
             return (
                 False,
-                "Sector contains a non-string category.",
+                "Sector contains non-string value.",
                 [],
                 [],
             )
@@ -1103,39 +1327,48 @@ def validate_ai_result(
         category = category.strip()
 
         if not category:
+
             return (
                 False,
-                "Sector contains an empty category.",
+                "Sector contains empty category.",
                 [],
                 [],
             )
 
         if "%" in category:
+
             return (
                 False,
-                f"Percentage found in sector: {category}",
+                "Percentage found in sector.",
                 [],
                 [],
             )
 
         if category not in sector_set:
+
             return (
                 False,
-                f"Invalid sector category: {category}",
+                f"Invalid sector category: "
+                f"{category}",
                 [],
                 [],
             )
 
         if category not in clean_sector:
+
             clean_sector.append(
                 category
             )
 
     # --------------------------------------------------------
-    # Empty / empty is a failed research result.
+    # Empty result is a FAILED research result.
     # --------------------------------------------------------
 
-    if not clean_geography and not clean_sector:
+    if (
+        not clean_geography
+        and not clean_sector
+    ):
+
         return (
             False,
             "AI found no valid geography or sector exposure.",
@@ -1163,26 +1396,40 @@ def process_fund(
     total: int,
 ) -> Dict[str, Any]:
 
-    fund_name = fund["fundName"]
-    prudential_url = fund["prudentialUrl"]
+    fund_name = fund[
+        "fundName"
+    ]
+
+    prudential_url = fund[
+        "prudentialUrl"
+    ]
 
     log("")
-    log("-" * 70)
     log(
-        f"[{index}/{total}] {fund_name}"
+        "-" * 70
     )
-    log("-" * 70)
+
+    log(
+        f"[{index}/{total}] "
+        f"{fund_name}"
+    )
+
+    log(
+        "-" * 70
+    )
 
     log("")
     log(
-        f"      Researching: {fund_name}"
+        f"      Researching: "
+        f"{fund_name}"
     )
 
     # --------------------------------------------------------
-    # Fetch Prudential source.
+    # SOURCE
     # --------------------------------------------------------
 
     try:
+
         source_text, source_urls = (
             fetch_prudential_document(
                 prudential_url
@@ -1190,8 +1437,10 @@ def process_fund(
         )
 
     except Exception as exc:
+
         log(
-            f"        source failed: {exc}"
+            f"        Source failed: "
+            f"{exc}"
         )
 
         return {
@@ -1207,19 +1456,55 @@ def process_fund(
         }
 
     log(
-        f"        Source characters: {len(source_text)}"
+        f"        Source characters: "
+        f"{len(source_text)}"
     )
 
     # --------------------------------------------------------
-    # AI analysis.
+    # PREPARE RELEVANT AI INPUT
+    # --------------------------------------------------------
+
+    ai_source = prepare_ai_source(
+        source_text
+    )
+
+    # Diagnostic preview.
+    log("")
+    log(
+        "        SOURCE PREVIEW:"
+    )
+    log(
+        "        "
+        + "-" * 60
+    )
+
+    preview = ai_source[:4000]
+
+    for line in preview.splitlines():
+
+        log(
+            f"        {line}"
+        )
+
+    log(
+        "        "
+        + "-" * 60
+    )
+
+    # --------------------------------------------------------
+    # PROMPT
     # --------------------------------------------------------
 
     prompt = build_prompt(
         fund_name=fund_name,
-        source_text=source_text,
+        source_text=ai_source,
         geography_categories=geography_categories,
         sector_categories=sector_categories,
     )
+
+    # --------------------------------------------------------
+    # AI
+    # --------------------------------------------------------
 
     log("")
     log(
@@ -1227,13 +1512,16 @@ def process_fund(
     )
 
     try:
+
         response = generate_ai_response(
             prompt
         )
 
     except Exception as exc:
+
         log(
-            f"        AI failed: {exc}"
+            f"        AI failed: "
+            f"{exc}"
         )
 
         return {
@@ -1250,10 +1538,13 @@ def process_fund(
     log(
         "      AI response:"
     )
-    log(response)
+
+    log(
+        response
+    )
 
     # --------------------------------------------------------
-    # Parse AI response.
+    # PARSE
     # --------------------------------------------------------
 
     parsed = extract_json_object(
@@ -1261,10 +1552,6 @@ def process_fund(
     )
 
     if parsed is None:
-        log(
-            "        ERROR: AI response could not "
-            "be parsed as JSON."
-        )
 
         return {
             "fundName": fund_name,
@@ -1273,18 +1560,19 @@ def process_fund(
             "sector": [],
             "status": "ai_error",
             "error": (
-                "AI response could not be parsed as JSON."
+                "AI response could not "
+                "be parsed as JSON."
             ),
             "sources": source_urls,
         }
 
     # --------------------------------------------------------
-    # Validate.
+    # VALIDATE
     # --------------------------------------------------------
 
     (
         valid,
-        validation_error,
+        error,
         geography,
         sector,
     ) = validate_ai_result(
@@ -1294,8 +1582,10 @@ def process_fund(
     )
 
     if not valid:
+
         log(
-            f"        ERROR: {validation_error}"
+            f"        ERROR: "
+            f"{error}"
         )
 
         return {
@@ -1304,25 +1594,27 @@ def process_fund(
             "geography": geography,
             "sector": sector,
             "status": "ai_error",
-            "error": validation_error,
+            "error": error,
             "sources": source_urls,
         }
 
     # --------------------------------------------------------
-    # Success.
+    # SUCCESS
     # --------------------------------------------------------
 
     log("")
     log(
-        f"      Geography: {geography}"
+        f"        Geography: "
+        f"{geography}"
     )
 
     log(
-        f"      Sector: {sector}"
+        f"        Sector: "
+        f"{sector}"
     )
 
     log(
-        "      Status: success"
+        "        Status: success"
     )
 
     return {
@@ -1343,34 +1635,39 @@ def ai_health_check(
     geography_categories: List[str],
     sector_categories: List[str],
 ) -> bool:
-    """
-    Confirm that the local model can produce valid JSON before
-    processing the fund universe.
-    """
 
     log("")
-    log("=" * 70)
-    log("AI HEALTH CHECK")
-    log("=" * 70)
+    log(
+        "=" * 70
+    )
+    log(
+        "AI HEALTH CHECK"
+    )
+    log(
+        "=" * 70
+    )
 
     prompt = build_prompt(
         fund_name="HEALTH CHECK",
         source_text=(
             "This is a model health check. "
-            "The document contains no actual fund exposure. "
-            "Return empty arrays if no exposure is supported."
+            "Return JSON using the required schema. "
+            "There is no actual fund exposure "
+            "information in this test document."
         ),
         geography_categories=geography_categories,
         sector_categories=sector_categories,
     )
 
     try:
+
         response = generate_ai_response(
             prompt
         )
 
         log(
-            f"Health-check response: {response}"
+            f"Health-check response: "
+            f"{response}"
         )
 
         parsed = extract_json_object(
@@ -1378,35 +1675,26 @@ def ai_health_check(
         )
 
         if parsed is None:
+
             log(
-                "ERROR: AI health check returned invalid JSON."
+                "ERROR: Health check "
+                "returned invalid JSON."
             )
-            return False
 
-        geography = parsed.get(
-            "geography"
-        )
-
-        sector = parsed.get(
-            "sector"
-        )
-
-        if not isinstance(
-            geography,
-            list,
-        ):
-            log(
-                "ERROR: AI health check geography is invalid."
-            )
             return False
 
         if not isinstance(
-            sector,
+            parsed.get("geography"),
             list,
         ):
-            log(
-                "ERROR: AI health check sector is invalid."
-            )
+
+            return False
+
+        if not isinstance(
+            parsed.get("sector"),
+            list,
+        ):
+
             return False
 
         log(
@@ -1416,39 +1704,30 @@ def ai_health_check(
         return True
 
     except Exception as exc:
+
         log(
-            f"ERROR: AI health check failed: {exc}"
+            f"ERROR: AI health check "
+            f"failed: {exc}"
         )
+
         return False
 
 
 # ============================================================
-# COMPLETE RESULT VALIDATION
+# COMPLETE OUTPUT VALIDATION
 # ============================================================
 
 def validate_complete_result(
     output: Dict[str, Any],
-    total_expected: int,
+    expected_count: int,
     geography_categories: List[str],
     sector_categories: List[str],
-) -> Tuple[bool, List[str]]:
-    """
-    Validate the entire run.
-
-    A run is successful ONLY when every expected fund has
-    status == success.
-    """
+) -> Tuple[
+    bool,
+    List[str],
+]:
 
     errors: List[str] = []
-
-    if not isinstance(
-        output,
-        dict,
-    ):
-        errors.append(
-            "Output root is not an object."
-        )
-        return False, errors
 
     funds = output.get(
         "funds"
@@ -1458,15 +1737,19 @@ def validate_complete_result(
         funds,
         list,
     ):
-        errors.append(
-            "Output does not contain a funds list."
-        )
-        return False, errors
 
-    if len(funds) != total_expected:
+        return (
+            False,
+            [
+                "Output funds is not a list."
+            ],
+        )
+
+    if len(funds) != expected_count:
+
         errors.append(
-            f"Fund count mismatch: expected "
-            f"{total_expected}, got {len(funds)}."
+            f"Expected {expected_count} funds, "
+            f"got {len(funds)}."
         )
 
     geography_set = set(
@@ -1481,16 +1764,19 @@ def validate_complete_result(
         funds,
         start=1,
     ):
+
         if not isinstance(
             fund,
             dict,
         ):
+
             errors.append(
                 f"Fund #{index} is not an object."
             )
+
             continue
 
-        fund_name = fund.get(
+        name = fund.get(
             "fundName",
             f"Fund #{index}",
         )
@@ -1499,14 +1785,11 @@ def validate_complete_result(
             "status"
         )
 
-        # ----------------------------------------------------
-        # THE KEY RULE:
-        # ANYTHING OTHER THAN SUCCESS FAILS THE ENTIRE RUN.
-        # ----------------------------------------------------
-
         if status != "success":
+
             errors.append(
-                f"{fund_name}: status={status!r}"
+                f"{name}: "
+                f"status={status!r}"
             )
 
         geography = fund.get(
@@ -1523,70 +1806,92 @@ def validate_complete_result(
             geography,
             list,
         ):
+
             errors.append(
-                f"{fund_name}: geography is not a list."
+                f"{name}: geography is not a list."
             )
+
             continue
 
         if not isinstance(
             sector,
             list,
         ):
+
             errors.append(
-                f"{fund_name}: sector is not a list."
+                f"{name}: sector is not a list."
             )
+
             continue
 
         if len(geography) > 3:
+
             errors.append(
-                f"{fund_name}: more than 3 geography categories."
+                f"{name}: more than "
+                "3 geography categories."
             )
 
         if len(sector) > 3:
+
             errors.append(
-                f"{fund_name}: more than 3 sector categories."
+                f"{name}: more than "
+                "3 sector categories."
             )
 
         for category in geography:
+
             if not isinstance(
                 category,
                 str,
             ):
+
                 errors.append(
-                    f"{fund_name}: non-string geography."
+                    f"{name}: invalid "
+                    "geography type."
                 )
+
                 continue
 
             if "%" in category:
+
                 errors.append(
-                    f"{fund_name}: percentage in geography."
+                    f"{name}: percentage "
+                    "in geography."
                 )
 
             if category not in geography_set:
+
                 errors.append(
-                    f"{fund_name}: invalid geography "
-                    f"category {category!r}."
+                    f"{name}: invalid "
+                    f"geography {category!r}."
                 )
 
         for category in sector:
+
             if not isinstance(
                 category,
                 str,
             ):
+
                 errors.append(
-                    f"{fund_name}: non-string sector."
+                    f"{name}: invalid "
+                    "sector type."
                 )
+
                 continue
 
             if "%" in category:
+
                 errors.append(
-                    f"{fund_name}: percentage in sector."
+                    f"{name}: percentage "
+                    "in sector."
                 )
 
             if category not in sector_set:
+
                 errors.append(
-                    f"{fund_name}: invalid sector "
-                    f"category {category!r}."
+                    f"{name}: invalid "
+                    f"sector {category!r}."
                 )
 
     return (
@@ -1603,36 +1908,19 @@ def publish_output_atomically(
     output: Dict[str, Any],
     output_path: Path,
 ) -> None:
-    """
-    Safely replace the existing output.
-
-    The existing file is not touched until the new file has been:
-
-        1. Written completely.
-        2. Flushed.
-        3. Synced.
-        4. Read back.
-        5. Parsed successfully.
-
-    Then os.replace() atomically swaps it in.
-    """
 
     output_path.parent.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    temp_path = output_path.with_suffix(
+    temporary_path = output_path.with_suffix(
         output_path.suffix + ".tmp"
     )
 
     try:
-        log("")
-        log(
-            f"Preparing temporary output: {temp_path}"
-        )
 
-        with temp_path.open(
+        with temporary_path.open(
             "w",
             encoding="utf-8",
         ) as file:
@@ -1652,14 +1940,12 @@ def publish_output_atomically(
                 file.fileno()
             )
 
-        # ----------------------------------------------------
-        # Verify temporary file.
-        # ----------------------------------------------------
-
-        with temp_path.open(
+        # Verify temporary JSON.
+        with temporary_path.open(
             "r",
             encoding="utf-8",
         ) as file:
+
             verified = json.load(
                 file
             )
@@ -1668,44 +1954,37 @@ def publish_output_atomically(
             verified,
             dict,
         ):
+
             raise RuntimeError(
-                "Temporary output validation failed: "
-                "root is not an object."
+                "Temporary output is not an object."
             )
 
         if not isinstance(
             verified.get("funds"),
             list,
         ):
+
             raise RuntimeError(
-                "Temporary output validation failed: "
-                "'funds' is not a list."
+                "Temporary output funds "
+                "is not a list."
             )
 
         # ----------------------------------------------------
-        # ONLY HERE do we replace the existing file.
+        # ONLY successful point reaches here.
         # ----------------------------------------------------
 
         os.replace(
-            temp_path,
+            temporary_path,
             output_path,
         )
 
-        log("")
-        log(
-            f"Successfully replaced: {output_path}"
-        )
-
     except Exception:
-        # ----------------------------------------------------
-        # Most important safety rule:
-        # delete only the temporary file.
-        # Never delete or modify the existing output.
-        # ----------------------------------------------------
 
         try:
-            if temp_path.exists():
-                temp_path.unlink()
+
+            if temporary_path.exists():
+                temporary_path.unlink()
+
         except Exception:
             pass
 
@@ -1717,20 +1996,15 @@ def publish_output_atomically(
 # ============================================================
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Research fund geography and sector exposure "
-            "using local Qwen AI."
-        )
-    )
+
+    parser = argparse.ArgumentParser()
 
     parser.add_argument(
         "--limit",
         type=int,
         default=None,
         help=(
-            "Process only the first N funds. "
-            "Useful for testing."
+            "Process only first N funds."
         ),
     )
 
@@ -1746,28 +2020,42 @@ def main() -> int:
     args = parse_args()
 
     log("")
-    log("=" * 70)
-    log("VGRAT FMS - AI FUND EXPOSURE RESEARCH")
-    log("=" * 70)
+    log(
+        "=" * 70
+    )
+    log(
+        "VGRAT FMS - AI FUND EXPOSURE RESEARCH"
+    )
+    log(
+        "=" * 70
+    )
+
     log(
         f"Model: {MODEL_NAME}"
     )
+
     log(
         "Search engine: DISABLED"
     )
+
     log(
         "Analysis: LOCAL AI ONLY"
     )
+
     log(
         f"Output: {OUTPUT_PATH}"
     )
-    log("=" * 70)
+
+    log(
+        "=" * 70
+    )
 
     # --------------------------------------------------------
-    # Load categories.
+    # Categories
     # --------------------------------------------------------
 
     try:
+
         geography_categories, sector_categories = (
             load_categories(
                 CATEGORIES_FILE
@@ -1775,30 +2063,38 @@ def main() -> int:
         )
 
     except Exception as exc:
-        log("")
+
         log(
-            f"ERROR: Failed to load categories: {exc}"
+            f"ERROR: Category loading failed: {exc}"
         )
+
         log(
-            "Existing fund_exposure.json has NOT been modified."
+            "Existing fund_exposure.json "
+            "has NOT been modified."
         )
+
         return 1
 
-    log("")
     log(
-        f"Geography categories: {len(geography_categories)}"
+        f"Geography categories: "
+        f"{len(geography_categories)}"
     )
+
     log(
-        f"Sector categories: {len(sector_categories)}"
+        f"Sector categories: "
+        f"{len(sector_categories)}"
     )
 
     # --------------------------------------------------------
-    # Load workbook.
+    # Funds
     # --------------------------------------------------------
 
     try:
-        workbook_path = find_funds_excel_file(
-            REPOSITORY_ROOT
+
+        workbook_path = (
+            find_funds_excel_file(
+                REPOSITORY_ROOT
+            )
         )
 
         funds = load_funds(
@@ -1806,89 +2102,102 @@ def main() -> int:
         )
 
     except Exception as exc:
-        log("")
+
         log(
-            f"ERROR: Failed to load fund universe: {exc}"
+            f"ERROR: Fund loading failed: {exc}"
         )
+
         log(
-            "Existing fund_exposure.json has NOT been modified."
+            "Existing fund_exposure.json "
+            "has NOT been modified."
         )
+
         return 1
 
     # --------------------------------------------------------
-    # Apply optional test limit.
+    # Limit
     # --------------------------------------------------------
-
-    original_total = len(funds)
 
     if args.limit is not None:
 
         if args.limit <= 0:
+
             log(
-                "ERROR: --limit must be greater than zero."
+                "ERROR: --limit must be > 0."
             )
+
             return 1
 
         funds = funds[
             :args.limit
         ]
 
-        log("")
         log(
-            f"TEST LIMIT ENABLED: "
-            f"{len(funds)} of {original_total} funds"
+            f"TEST LIMIT: "
+            f"{len(funds)} funds"
         )
 
     total = len(funds)
 
     if total == 0:
+
         log(
             "ERROR: No funds selected."
         )
+
         return 1
 
     # --------------------------------------------------------
-    # Load model.
+    # Model
     # --------------------------------------------------------
 
     try:
+
         load_ai_model()
 
     except Exception as exc:
-        log("")
+
         log(
-            f"ERROR: Failed to load AI model: {exc}"
+            f"ERROR: Model loading failed: {exc}"
         )
+
         log(
-            "Existing fund_exposure.json has NOT been modified."
+            "Existing fund_exposure.json "
+            "has NOT been modified."
         )
+
         return 1
 
     # --------------------------------------------------------
-    # Health check.
+    # Health check
     # --------------------------------------------------------
 
     if not ai_health_check(
         geography_categories,
         sector_categories,
     ):
-        log("")
+
         log(
-            "AI HEALTH CHECK FAILED."
+            "AI health check FAILED."
         )
+
         log(
-            "Existing fund_exposure.json has NOT been modified."
+            "Existing fund_exposure.json "
+            "has NOT been modified."
         )
+
         return 1
 
     # --------------------------------------------------------
-    # Research all selected funds.
+    # Research
     # --------------------------------------------------------
 
-    results: List[Dict[str, Any]] = []
+    results: List[
+        Dict[str, Any]
+    ] = []
 
-    success_count = 0
-    failure_count = 0
+    successful = 0
+    failed = 0
 
     for index, fund in enumerate(
         funds,
@@ -1897,8 +2206,12 @@ def main() -> int:
 
         result = process_fund(
             fund=fund,
-            geography_categories=geography_categories,
-            sector_categories=sector_categories,
+            geography_categories=(
+                geography_categories
+            ),
+            sector_categories=(
+                sector_categories
+            ),
             index=index,
             total=total,
         )
@@ -1907,15 +2220,18 @@ def main() -> int:
             result
         )
 
-        if result.get("status") == "success":
-            success_count += 1
+        if result.get(
+            "status"
+        ) == "success":
+
+            successful += 1
+
         else:
-            failure_count += 1
+
+            failed += 1
 
     # --------------------------------------------------------
-    # Build complete result in MEMORY ONLY.
-    #
-    # Nothing has been written to fund_exposure.json.
+    # Build result in memory.
     # --------------------------------------------------------
 
     output: Dict[str, Any] = {
@@ -1925,39 +2241,49 @@ def main() -> int:
         "funds": results,
         "summary": {
             "totalFunds": total,
-            "successful": success_count,
-            "failed": failure_count,
+            "successful": successful,
+            "failed": failed,
         },
     }
 
     # --------------------------------------------------------
-    # Complete validation.
-    #
-    # Any single failed fund prevents publishing.
+    # FINAL VALIDATION
     # --------------------------------------------------------
 
-    valid, errors = validate_complete_result(
-        output=output,
-        total_expected=total,
-        geography_categories=geography_categories,
-        sector_categories=sector_categories,
-    )
-
     log("")
-    log("=" * 70)
-    log("FINAL VALIDATION")
-    log("=" * 70)
+    log(
+        "=" * 70
+    )
+    log(
+        "FINAL VALIDATION"
+    )
+    log(
+        "=" * 70
+    )
 
     log(
         f"Total funds: {total}"
     )
 
     log(
-        f"Successful: {success_count}"
+        f"Successful: {successful}"
     )
 
     log(
-        f"Failed: {failure_count}"
+        f"Failed: {failed}"
+    )
+
+    valid, errors = (
+        validate_complete_result(
+            output=output,
+            expected_count=total,
+            geography_categories=(
+                geography_categories
+            ),
+            sector_categories=(
+                sector_categories
+            ),
+        )
     )
 
     if not valid:
@@ -1968,7 +2294,8 @@ def main() -> int:
         )
 
         log(
-            "The existing fund_exposure.json will NOT be replaced."
+            "The existing fund_exposure.json "
+            "will NOT be replaced."
         )
 
         log("")
@@ -1977,6 +2304,7 @@ def main() -> int:
         )
 
         for error in errors:
+
             log(
                 f"  - {error}"
             )
@@ -1984,27 +2312,11 @@ def main() -> int:
         return 1
 
     # --------------------------------------------------------
-    # Additional success condition.
-    # --------------------------------------------------------
-
-    if success_count != total:
-
-        log("")
-        log(
-            "ERROR: Not all funds succeeded."
-        )
-
-        log(
-            "The existing fund_exposure.json will NOT be replaced."
-        )
-
-        return 1
-
-    # --------------------------------------------------------
-    # Publish atomically.
+    # Atomic publish
     # --------------------------------------------------------
 
     try:
+
         publish_output_atomically(
             output,
             OUTPUT_PATH,
@@ -2014,12 +2326,13 @@ def main() -> int:
 
         log("")
         log(
-            f"ERROR: Failed to publish output: {exc}"
+            f"ERROR: Output publishing failed: "
+            f"{exc}"
         )
 
         log(
-            "The existing fund_exposure.json "
-            "was not intentionally replaced."
+            "Existing fund_exposure.json "
+            "was preserved."
         )
 
         return 1
@@ -2029,13 +2342,21 @@ def main() -> int:
     # --------------------------------------------------------
 
     log("")
-    log("=" * 70)
-    log("RESEARCH SUCCESS")
-    log("=" * 70)
+    log(
+        "=" * 70
+    )
 
     log(
-        f"Funds successfully researched: "
-        f"{success_count}/{total}"
+        "RESEARCH SUCCESS"
+    )
+
+    log(
+        "=" * 70
+    )
+
+    log(
+        f"Successfully researched: "
+        f"{successful}/{total}"
     )
 
     log(
@@ -2043,10 +2364,13 @@ def main() -> int:
     )
 
     log(
-        "Previous output replaced because the complete run succeeded."
+        "The previous output was replaced "
+        "because the complete run succeeded."
     )
 
-    log("=" * 70)
+    log(
+        "=" * 70
+    )
 
     return 0
 
