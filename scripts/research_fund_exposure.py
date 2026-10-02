@@ -7,7 +7,7 @@ VGrat FMS - AI Fund Exposure Research
 PURPOSE
 ============================================================
 
-Research every PRULink fund in Funds Links.xlsx and identify:
+Research every PRULink fund in Funds Links.xlsm and identify:
 
     - Up to 3 geographic exposures
     - Up to 3 sector exposures
@@ -29,7 +29,7 @@ The AI may NOT invent categories.
 INPUT
 ============================================================
 
-Funds Links.xlsx
+Funds Links.xlsm
 
 Column A:
     Prudential URL
@@ -47,7 +47,7 @@ data/fund_exposure.json
 SOURCE PRIORITY
 ============================================================
 
-1. Prudential source from Funds Links.xlsx
+1. Prudential source from Funds Links.xlsm
 2. Official Prudential documents
 3. Official underlying investment manager documents
 4. Reputable secondary sources
@@ -124,7 +124,7 @@ CATEGORIES_FILE = (
 )
 
 EXCEL_PATH = (
-    REPOSITORY_ROOT / "Funds Links.xlsx"
+    REPOSITORY_ROOT / "Funds Links.xlsm"
 )
 
 OUTPUT_PATH = (
@@ -287,7 +287,7 @@ def load_funds_from_excel(
 
     if not path.exists():
         raise FileNotFoundError(
-            "Funds Links.xlsx not found:\n"
+            "Funds Links.xlsm not found:\n"
             f"{path}"
         )
 
@@ -749,7 +749,7 @@ def research_fund(
                 "url": prudential_url,
                 "title": (
                     "Prudential source "
-                    "from Funds Links.xlsx"
+                    "from Funds Links.xlsm"
                 ),
                 "snippet": "",
                 "priority": 1,
