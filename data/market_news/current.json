@@ -1,12 +1,27 @@
 {
-  "generatedAtSgt": "2026-10-03T20:39:56+08:00",
+  "generatedAtSgt": "2026-10-04T02:19:20+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
   "maxArticles": 100,
   "source": "CNBC",
-  "articleCount": 71,
+  "articleCount": 72,
   "articles": [
+    {
+      "id": "89a4d9ee0be2e8f2a3f433a9fda45b2c08490c5c193949ceb6821340d92df60b",
+      "source": "CNBC",
+      "title": "Berkshire buys more Lennar shares, but pace of purchases slows",
+      "publishedAtSgt": "2026-10-03T20:55:31+08:00",
+      "url": "https://www.cnbc.com/2026/10/03/berkshire-buys-more-lennar-shares-but-pace-of-purchases-slows.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "In an SEC filing late Wednesday, Berkshire disclosed it bought a total of $53.6 million of Lennar's Class A shares and another $329,000 of the super-voting B shares on Monday, Tuesday, and Wednesday. That puts the position at a total of 26.6 million shares valued at $2.1 billion based on Friday's closing prices.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-04T02:19:20+08:00"
+    },
     {
       "id": "b1ded2d49629424e71829a345c6f825f471329f851494334d707442cc673da2e",
       "source": "CNBC",
