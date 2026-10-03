@@ -1,4 +1,4 @@
-name: Test Gemini API
+name: Test Gemini News Analysis
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 jobs:
-  test-gemini:
+  test-gemini-news:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -25,36 +25,99 @@ jobs:
           python -m pip install --upgrade pip
           pip install -U google-genai
 
-      - name: Test Gemini API
+      - name: Test Gemini with one news article
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python - <<'PY'
+          import json
           import os
           from google import genai
+
+          CURRENT_FILE = "data/market_news/current.json"
+
+          with open(CURRENT_FILE, "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          articles = data.get("articles", [])
+
+          if not articles:
+              raise RuntimeError("No articles found in current.json.")
+
+          article = articles[0]
+
+          print("=" * 70)
+          print("ARTICLE SELECTED")
+          print("=" * 70)
+          print(f"ID:       {article.get('id')}")
+          print(f"Source:   {article.get('source')}")
+          print(f"Title:    {article.get('title')}")
+          print(f"Published:{article.get('publishedAtSgt')}")
+          print(f"URL:      {article.get('url')}")
+          print("=" * 70)
 
           api_key = os.environ.get("GEMINI_API_KEY")
 
           if not api_key:
               raise RuntimeError("GEMINI_API_KEY is not available.")
 
-          print("GEMINI_API_KEY detected.")
-          print("Testing Gemini 3.8 Flash...")
-
           client = genai.Client(api_key=api_key)
+
+          prompt = f"""
+          You are a financial and market-news analyst.
+
+          Analyze the following CNBC article objectively and factually.
+
+          ARTICLE TITLE:
+          {article.get("title", "")}
+
+          ARTICLE SUMMARY:
+          {article.get("summary", "")}
+
+          SOURCE:
+          {article.get("source", "")}
+
+          PUBLISHED:
+          {article.get("publishedAtSgt", "")}
+
+          ORIGINAL URL:
+          {article.get("url", "")}
+
+          Return a concise structured analysis with exactly these sections:
+
+          1. What happened
+          2. Why it matters
+          3. Key impact
+          4. Market implications
+          5. Overall assessment
+
+          Do not make investment recommendations.
+          Do not recommend individual funds.
+          Do not predict specific investment returns.
+
+          Return the answer as plain text.
+          """
+
+          print()
+          print("=" * 70)
+          print("SENDING ARTICLE TO GEMINI...")
+          print("=" * 70)
 
           interaction = client.interactions.create(
               model="gemini-3.8-flash",
-              input="Reply with exactly: GEMINI_TEST_OK"
+              input=prompt
           )
 
-          print("Gemini response:")
+          print()
+          print("=" * 70)
+          print("GEMINI ANALYSIS")
+          print("=" * 70)
           print(interaction.output_text)
+          print("=" * 70)
 
-          if "GEMINI_TEST_OK" not in interaction.output_text:
-              raise RuntimeError(
-                  "Gemini responded, but the expected test text was not returned."
-              )
+          if not interaction.output_text.strip():
+              raise RuntimeError("Gemini returned an empty response.")
 
-          print("Gemini API test PASSED.")
+          print()
+          print("REAL ARTICLE ANALYSIS TEST PASSED.")
           PY
