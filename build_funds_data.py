@@ -6,62 +6,108 @@ VGrat FMS - BUILD FUNDS DATA
 Merges the outputs of the extraction pipelines into two data files that
 share the SAME layout (same envelope, same per-fund identity block):
 
-    data/funds.json          fund info + Top Holdings
-    data/bid_history.json    historical BID observations
+    data/funds.json
+    data/bid_history.json
+
 
 MASTER UNIVERSE
 ===============
 
 Funds Links.xlsm, Column A (Prudential URL) / Column B (PruAccess name).
-Every populated row becomes exactly one record in BOTH files, ordered by
-Excel row.
+
+Every populated row in Funds Links.xlsm becomes exactly one record in
+BOTH output files, ordered by Excel row.
+
+Funds Links.xlsm is the MASTER UNIVERSE.
+
+Research Funds.xlsx is an EXISTING RESEARCH INPUT only.
+
+No AI research, web research, Morningstar research, factsheet research,
+or additional classification is performed by this script.
+
+
+RESEARCH INPUT
+==============
+
+Research workbook:
+
+    Research Funds.xlsx
+
+Worksheet:
+
+    Fund Research
+
+Matching rule:
+
+    Funds Links.xlsm Column B
+        exact match
+    ->
+    Research Funds.xlsx Fund Research
+        fund-name column
+
+Research fields extracted:
+
+    Geographic 1
+    Geographic 2
+    Sector 1
+    Sector 2
+
+Research data is copied exactly from the research workbook after
+whitespace normalization.
+
+The research workbook does NOT determine the master fund universe.
+
+A research workbook row cannot create a new fund.
+
+A missing research match does NOT make the core fund unresolved.
+
 
 HOLDINGS RESOLUTION
 ===================
 
 Stage order:
 
-    baseline  ->  recovery1  ->  recovery2  ->  recovery3
+    baseline -> recovery1 -> recovery2 -> recovery3
 
 - A fund that succeeded in the baseline keeps its baseline result.
-- A fund the baseline marked "no_holdings_section" is kept AS IS
-  (empty holdings, status "no_holdings_section"). It is never replaced.
-- A fund that FAILED in the baseline is replaced by the first recovery
-  stage that resolved it (holdings, or a genuine no_holdings_section).
-- A fund still failed after Recovery 3 is "unresolved".
+- A fund marked "no_holdings_section" remains as-is.
+- A fund that failed in baseline is replaced by the first recovery
+  stage that resolves it.
+- A fund still unresolved after Recovery 3 is "unresolved".
 
-Unresolved funds (holdings or BID history) fail the build unless
-ALLOW_UNRESOLVED=1, in which case they are written with status
-"unresolved" and empty data. Nothing is ever inferred or fabricated.
+Nothing is inferred or fabricated.
+
 
 BID HISTORY
 ===========
 
-Read from output_pruaccess/funds/<row>_<id>/ (bid_history.json and
-prudential_fund.json). Observations are copied exactly as extracted.
+Read from:
 
-LAYOUT (both files)
-===================
+    output_pruaccess/funds/<row>_<id>/
 
-{
-  "schemaVersion": 1,
-  "generatedAtUtc": "...",
-  "source": "Funds Links.xlsm",
-  "fundCount": N,
-  "summary": { ... },
-  "funds": [
-    {
-      "excelRow": 2,
-      "fundIdentifier": "...",
-      "fundCode": "...",
-      "fundName": "...",
-      "pruAccessName": "...",
-      "prudentialUrl": "...",
-      <payload>          # funds.json: "fund", "topHoldings"
-                         # bid_history.json: "bidHistory"
-    }
-  ]
-}
+Files:
+
+    bid_history.json
+    prudential_fund.json
+
+Observations are copied exactly as extracted.
+
+
+DIVIDEND NORMALIZATION
+======================
+
+If dividendRate exists and is non-empty:
+
+    hasDividend = true
+
+Existing dividendRate and dividendUnits values are not modified.
+
+
+OUTPUT
+======
+
+data/funds.json
+data/bid_history.json
 """
 
 from __future__ import annotations
@@ -80,7 +126,10 @@ from openpyxl import load_workbook
 # CONFIGURATION
 # =============================================================================
 
-EXCEL_FILE = Path("Funds Links.xlsm")
+MASTER_EXCEL_FILE = Path("Funds Links.xlsm")
+
+RESEARCH_EXCEL_FILE = Path("Research Funds.xlsx")
+RESEARCH_SHEET_NAME = "Fund Research"
 
 BASELINE_FILE = Path("output_holdings/all_holdings.json")
 
@@ -93,10 +142,12 @@ RECOVERY_STAGES = [
 PRUACCESS_FUNDS_DIR = Path("output_pruaccess/funds")
 
 DATA_DIR = Path("data")
+
 FUNDS_OUT = DATA_DIR / "funds.json"
 BID_OUT = DATA_DIR / "bid_history.json"
 
 SCHEMA_VERSION = 1
+
 MAX_HOLDINGS = 10
 
 ALLOW_UNRESOLVED = os.environ.get(
@@ -109,47 +160,112 @@ ALLOW_UNRESOLVED = os.environ.get(
 # =============================================================================
 
 def clean_text(value) -> str:
+    """
+    Normalize whitespace without otherwise changing the value.
+    """
     if value is None:
         return ""
-    return re.sub(r"\s+", " ", str(value).replace("\xa0", " ")).strip()
+
+    return re.sub(
+        r"\s+",
+        " ",
+        str(value).replace("\xa0", " ")
+    ).strip()
 
 
 def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(timezone.utc).replace(
+        microsecond=0
+    ).isoformat()
 
 
 def load_json(path: Path):
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(
+            path.read_text(encoding="utf-8")
+        )
     except Exception as error:
-        raise RuntimeError(f"Could not read {path}: {error}") from error
+        raise RuntimeError(
+            f"Could not read {path}: {error}"
+        ) from error
 
 
-def write_json_atomic(path: Path, data, compact: bool = False) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
+def write_json_atomic(
+    path: Path,
+    data,
+    compact: bool = False,
+) -> None:
+    path.parent.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    tmp = path.with_suffix(
+        path.suffix + ".tmp"
+    )
 
     if compact:
         text = json.dumps(
-            data, ensure_ascii=False, separators=(",", ":")
+            data,
+            ensure_ascii=False,
+            separators=(",", ":"),
         )
     else:
-        text = json.dumps(data, indent=2, ensure_ascii=False)
+        text = json.dumps(
+            data,
+            indent=2,
+            ensure_ascii=False,
+        )
 
-    tmp.write_text(text + "\n", encoding="utf-8")
+    tmp.write_text(
+        text + "\n",
+        encoding="utf-8"
+    )
+
     tmp.replace(path)
 
 
+def normalize_match_key(value) -> str:
+    """
+    Matching normalization.
+
+    The actual fund name remains unchanged in the output.
+
+    Matching is case-insensitive and whitespace-normalized so that
+    accidental Excel spacing/case differences do not prevent a match.
+
+    No fuzzy matching is performed.
+    """
+    return clean_text(value).casefold()
+
+
 # =============================================================================
-# EXCEL MASTER UNIVERSE
+# MASTER EXCEL UNIVERSE
 # =============================================================================
 
 def read_excel_funds() -> dict[int, dict]:
-    if not EXCEL_FILE.exists():
-        raise FileNotFoundError(f"Excel file not found: {EXCEL_FILE}")
+    """
+    Read Funds Links.xlsm.
+
+    Column A:
+        Prudential URL
+
+    Column B:
+        PruAccess Fund Name
+
+    Every populated Column A row is part of the master universe.
+    """
+
+    if not MASTER_EXCEL_FILE.exists():
+        raise FileNotFoundError(
+            f"Master Excel file not found: {MASTER_EXCEL_FILE}"
+        )
 
     workbook = load_workbook(
-        EXCEL_FILE, read_only=True, keep_vba=True, data_only=True
+        MASTER_EXCEL_FILE,
+        read_only=True,
+        keep_vba=True,
+        data_only=True,
     )
 
     funds = {}
@@ -157,9 +273,23 @@ def read_excel_funds() -> dict[int, dict]:
     try:
         worksheet = workbook.active
 
-        for row in range(2, worksheet.max_row + 1):
-            url = clean_text(worksheet.cell(row=row, column=1).value)
-            name = clean_text(worksheet.cell(row=row, column=2).value)
+        for row in range(
+            2,
+            worksheet.max_row + 1
+        ):
+            url = clean_text(
+                worksheet.cell(
+                    row=row,
+                    column=1
+                ).value
+            )
+
+            name = clean_text(
+                worksheet.cell(
+                    row=row,
+                    column=2
+                ).value
+            )
 
             if not url:
                 continue
@@ -169,50 +299,331 @@ def read_excel_funds() -> dict[int, dict]:
                 "prudentialUrl": url,
                 "pruAccessName": name,
             }
+
     finally:
         workbook.close()
 
     if not funds:
-        raise RuntimeError("No populated URLs in Excel Column A.")
+        raise RuntimeError(
+            "No populated URLs found in "
+            "Funds Links.xlsm Column A."
+        )
 
     return funds
+
+
+# =============================================================================
+# RESEARCH FUNDS.XLSX
+# =============================================================================
+
+def find_research_headers(
+    worksheet
+) -> dict[str, int]:
+    """
+    Find the required research headers from the first row.
+
+    Required:
+
+        Fund Name
+        Geographic 1
+        Geographic 2
+        Sector 1
+        Sector 2
+
+    The fund-name header accepts the explicit research workbook
+    naming variants used by the project, while the four research
+    fields remain exact.
+    """
+
+    headers = {}
+
+    for column in range(
+        1,
+        worksheet.max_column + 1
+    ):
+        value = clean_text(
+            worksheet.cell(
+                row=1,
+                column=column
+            ).value
+        )
+
+        if value:
+            headers[
+                normalize_match_key(value)
+            ] = column
+
+    fund_name_candidates = [
+        "fund name",
+        "pruaccess fund name",
+        "fund",
+        "name",
+    ]
+
+    fund_name_column = None
+
+    for candidate in fund_name_candidates:
+        column = headers.get(
+            normalize_match_key(candidate)
+        )
+
+        if column is not None:
+            fund_name_column = column
+            break
+
+    if fund_name_column is None:
+        raise RuntimeError(
+            "Research Funds.xlsx / "
+            f"'{RESEARCH_SHEET_NAME}' is missing "
+            "the fund-name column."
+        )
+
+    required_columns = {
+        "Geographic 1": None,
+        "Geographic 2": None,
+        "Sector 1": None,
+        "Sector 2": None,
+    }
+
+    for header in required_columns:
+        column = headers.get(
+            normalize_match_key(header)
+        )
+
+        if column is None:
+            raise RuntimeError(
+                "Research Funds.xlsx / "
+                f"'{RESEARCH_SHEET_NAME}' is missing "
+                f"required column: {header}"
+            )
+
+        required_columns[header] = column
+
+    return {
+        "fundName": fund_name_column,
+        **required_columns,
+    }
+
+
+def read_research_funds() -> dict[str, dict]:
+    """
+    Read the already-researched Research Funds.xlsx workbook.
+
+    Returns:
+
+        normalized PruAccess fund name ->
+        research fields
+
+    No research is performed here.
+    """
+
+    if not RESEARCH_EXCEL_FILE.exists():
+        raise FileNotFoundError(
+            f"Research workbook not found: "
+            f"{RESEARCH_EXCEL_FILE}"
+        )
+
+    workbook = load_workbook(
+        RESEARCH_EXCEL_FILE,
+        read_only=True,
+        data_only=True,
+    )
+
+    research = {}
+
+    try:
+        if RESEARCH_SHEET_NAME not in workbook.sheetnames:
+            raise RuntimeError(
+                f"Research workbook does not contain "
+                f"worksheet '{RESEARCH_SHEET_NAME}'. "
+                f"Available sheets: "
+                f"{', '.join(workbook.sheetnames)}"
+            )
+
+        worksheet = workbook[
+            RESEARCH_SHEET_NAME
+        ]
+
+        columns = find_research_headers(
+            worksheet
+        )
+
+        for row in range(
+            2,
+            worksheet.max_row + 1
+        ):
+            fund_name = clean_text(
+                worksheet.cell(
+                    row=row,
+                    column=columns["fundName"]
+                ).value
+            )
+
+            if not fund_name:
+                continue
+
+            key = normalize_match_key(
+                fund_name
+            )
+
+            record = {
+                "researchFundName": fund_name,
+                "geographic1": clean_text(
+                    worksheet.cell(
+                        row=row,
+                        column=columns["Geographic 1"]
+                    ).value
+                ),
+                "geographic2": clean_text(
+                    worksheet.cell(
+                        row=row,
+                        column=columns["Geographic 2"]
+                    ).value
+                ),
+                "sector1": clean_text(
+                    worksheet.cell(
+                        row=row,
+                        column=columns["Sector 1"]
+                    ).value
+                ),
+                "sector2": clean_text(
+                    worksheet.cell(
+                        row=row,
+                        column=columns["Sector 2"]
+                    ).value
+                ),
+            }
+
+            if key in research:
+                raise RuntimeError(
+                    "Duplicate research fund name found "
+                    f"in Research Funds.xlsx: "
+                    f"{fund_name!r}"
+                )
+
+            research[key] = record
+
+    finally:
+        workbook.close()
+
+    if not research:
+        raise RuntimeError(
+            "No research records found in "
+            f"{RESEARCH_EXCEL_FILE} / "
+            f"{RESEARCH_SHEET_NAME}."
+        )
+
+    return research
+
+
+def get_research_for_fund(
+    pru_access_name: str,
+    research: dict[str, dict],
+) -> tuple[dict | None, str]:
+    """
+    Match the master PruAccess name to Research Funds.xlsx.
+
+    Matching is exact after whitespace/case normalization.
+
+    Returns:
+
+        (research_record, status)
+
+    status:
+
+        matched
+        missing
+        no_master_name
+    """
+
+    master_name = clean_text(
+        pru_access_name
+    )
+
+    if not master_name:
+        return None, "no_master_name"
+
+    key = normalize_match_key(
+        master_name
+    )
+
+    record = research.get(key)
+
+    if record is None:
+        return None, "missing"
+
+    return record, "matched"
 
 
 # =============================================================================
 # HOLDINGS
 # =============================================================================
 
-def clean_holdings(holdings, label: str) -> list[dict]:
-    if not isinstance(holdings, list) or not holdings:
-        raise ValueError(f"{label}: holdings list is empty or invalid.")
+def clean_holdings(
+    holdings,
+    label: str
+) -> list[dict]:
+
+    if (
+        not isinstance(holdings, list)
+        or not holdings
+    ):
+        raise ValueError(
+            f"{label}: holdings list is empty "
+            "or invalid."
+        )
 
     if len(holdings) > MAX_HOLDINGS:
-        raise ValueError(f"{label}: more than {MAX_HOLDINGS} holdings.")
+        raise ValueError(
+            f"{label}: more than "
+            f"{MAX_HOLDINGS} holdings."
+        )
 
     cleaned = []
 
-    for position, item in enumerate(holdings, start=1):
+    for position, item in enumerate(
+        holdings,
+        start=1
+    ):
         if not isinstance(item, dict):
-            raise ValueError(f"{label}: holding {position} is not an object.")
+            raise ValueError(
+                f"{label}: holding {position} "
+                "is not an object."
+            )
 
-        name = clean_text(item.get("name"))
-        weight = item.get("weightPercent")
+        name = clean_text(
+            item.get("name")
+        )
+
+        weight = item.get(
+            "weightPercent"
+        )
 
         if item.get("rank") != position:
             raise ValueError(
-                f"{label}: rank {item.get('rank')} at position {position}."
+                f"{label}: rank "
+                f"{item.get('rank')} at "
+                f"position {position}."
             )
 
         if not name:
-            raise ValueError(f"{label}: holding {position} has no name.")
+            raise ValueError(
+                f"{label}: holding {position} "
+                "has no name."
+            )
 
         if (
             isinstance(weight, bool)
-            or not isinstance(weight, (int, float))
+            or not isinstance(
+                weight,
+                (int, float)
+            )
             or not 0 <= weight <= 100
         ):
             raise ValueError(
-                f"{label}: holding {position} has invalid weight {weight!r}."
+                f"{label}: holding {position} "
+                f"has invalid weight "
+                f"{weight!r}."
             )
 
         cleaned.append(
@@ -220,28 +631,52 @@ def clean_holdings(holdings, label: str) -> list[dict]:
                 "rank": position,
                 "name": name,
                 "weightPercent": weight,
-                "weightText": clean_text(item.get("weightText")),
+                "weightText": clean_text(
+                    item.get("weightText")
+                ),
             }
         )
 
     return cleaned
 
 
-def holdings_block(result: dict, stage: str, label: str):
-    """Return the topHoldings block, or None when the result is a failure."""
+def holdings_block(
+    result: dict,
+    stage: str,
+    label: str
+):
+    """
+    Return the topHoldings block.
 
-    status = result.get("status")
+    Returns None for an unresolved/failure result.
+    """
+
+    status = result.get(
+        "status"
+    )
 
     common = {
         "source": stage,
-        "parser": result.get("holdingsParser"),
-        "factsheetUrl": result.get("factsheetUrl"),
-        "factsheetDocumentDate": result.get("factsheetDocumentDate"),
-        "factsheetDataAsAt": result.get("factsheetDataAsAt"),
+        "parser": result.get(
+            "holdingsParser"
+        ),
+        "factsheetUrl": result.get(
+            "factsheetUrl"
+        ),
+        "factsheetDocumentDate": result.get(
+            "factsheetDocumentDate"
+        ),
+        "factsheetDataAsAt": result.get(
+            "factsheetDataAsAt"
+        ),
     }
 
     if status == "success":
-        holdings = clean_holdings(result.get("topHoldings"), label)
+
+        holdings = clean_holdings(
+            result.get("topHoldings"),
+            label
+        )
 
         return {
             "status": "published",
@@ -251,6 +686,7 @@ def holdings_block(result: dict, stage: str, label: str):
         }
 
     if status == "no_holdings_section":
+
         return {
             "status": "no_holdings_section",
             **common,
@@ -261,54 +697,122 @@ def holdings_block(result: dict, stage: str, label: str):
     return None
 
 
-def resolve_holdings(excel_funds: dict[int, dict]) -> dict[int, dict]:
+def resolve_holdings(
+    excel_funds: dict[int, dict]
+) -> dict[int, dict]:
+
     resolved: dict[int, dict] = {}
 
-    def accept(result: dict, stage: str) -> None:
-        if result.get("excelRow") is None:
-            raise RuntimeError(f"{stage}: result without excelRow.")
+    def accept(
+        result: dict,
+        stage: str
+    ) -> None:
 
-        row = int(result["excelRow"])
+        if result.get("excelRow") is None:
+            raise RuntimeError(
+                f"{stage}: result without excelRow."
+            )
+
+        row = int(
+            result["excelRow"]
+        )
 
         if row not in excel_funds:
-            raise RuntimeError(f"{stage}: row {row} is not in Excel.")
+            raise RuntimeError(
+                f"{stage}: row {row} "
+                "is not in master Excel."
+            )
 
-        # A resolved fund is never replaced by a later stage.
         if row in resolved:
             return
 
-        result_url = clean_text(result.get("prudentialUrl"))
+        result_url = clean_text(
+            result.get(
+                "prudentialUrl"
+            )
+        )
 
-        if result_url and result_url != excel_funds[row]["prudentialUrl"]:
-            raise RuntimeError(f"{stage}: URL mismatch for row {row}.")
+        master_url = excel_funds[
+            row
+        ]["prudentialUrl"]
 
-        block = holdings_block(result, stage, f"{stage} row {row}")
+        if (
+            result_url
+            and result_url != master_url
+        ):
+            raise RuntimeError(
+                f"{stage}: URL mismatch "
+                f"for row {row}."
+            )
+
+        block = holdings_block(
+            result,
+            stage,
+            f"{stage} row {row}"
+        )
 
         if block is not None:
-            block["fundName"] = clean_text(result.get("fundName")) or None
+
+            block["fundName"] = (
+                clean_text(
+                    result.get(
+                        "fundName"
+                    )
+                )
+                or None
+            )
+
             resolved[row] = block
 
-    # ---- baseline --------------------------------------------------------
+    # ------------------------------------------------------------------
+    # Baseline
+    # ------------------------------------------------------------------
 
     if not BASELINE_FILE.exists():
-        raise FileNotFoundError(f"Baseline output not found: {BASELINE_FILE}")
+        raise FileNotFoundError(
+            f"Baseline output not found: "
+            f"{BASELINE_FILE}"
+        )
 
-    baseline = load_json(BASELINE_FILE)
+    baseline = load_json(
+        BASELINE_FILE
+    )
 
-    for result in baseline.get("funds", []):
-        accept(result, "baseline")
+    for result in baseline.get(
+        "funds",
+        []
+    ):
+        accept(
+            result,
+            "baseline"
+        )
 
-    # ---- recovery stages -------------------------------------------------
+    # ------------------------------------------------------------------
+    # Recovery 1 / 2 / 3
+    # ------------------------------------------------------------------
 
     for stage, stage_dir in RECOVERY_STAGES:
-        funds_dir = stage_dir / "funds"
+
+        funds_dir = (
+            stage_dir / "funds"
+        )
 
         if not funds_dir.exists():
-            print(f"WARNING: {funds_dir} not found; {stage} skipped.")
+            print(
+                f"WARNING: {funds_dir} "
+                f"not found; {stage} skipped."
+            )
             continue
 
-        for path in sorted(funds_dir.glob("*/top_holdings.json")):
-            accept(load_json(path), stage)
+        for path in sorted(
+            funds_dir.glob(
+                "*/top_holdings.json"
+            )
+        ):
+            accept(
+                load_json(path),
+                stage
+            )
 
     return resolved
 
@@ -317,70 +821,236 @@ def resolve_holdings(excel_funds: dict[int, dict]) -> dict[int, dict]:
 # PRUACCESS
 # =============================================================================
 
-def validate_bid_history(history: dict, label: str) -> list[dict]:
-    observations = history.get("observations")
+def validate_bid_history(
+    history: dict,
+    label: str
+) -> list[dict]:
 
-    if not isinstance(observations, list) or not observations:
-        raise ValueError(f"{label}: no BID observations.")
+    observations = history.get(
+        "observations"
+    )
 
-    if history.get("observationCount") != len(observations):
-        raise ValueError(f"{label}: observationCount mismatch.")
+    if (
+        not isinstance(
+            observations,
+            list
+        )
+        or not observations
+    ):
+        raise ValueError(
+            f"{label}: no BID observations."
+        )
+
+    if (
+        history.get(
+            "observationCount"
+        )
+        != len(observations)
+    ):
+        raise ValueError(
+            f"{label}: observationCount "
+            "mismatch."
+        )
 
     previous = None
     seen = set()
 
     for item in observations:
-        date = item.get("date")
-        price = item.get("bidPrice")
 
-        if not isinstance(date, str) or not date:
-            raise ValueError(f"{label}: invalid date {date!r}.")
+        date = item.get(
+            "date"
+        )
 
-        if isinstance(price, bool) or not isinstance(price, (int, float)):
-            raise ValueError(f"{label}: invalid BID price on {date}.")
+        price = item.get(
+            "bidPrice"
+        )
+
+        if (
+            not isinstance(
+                date,
+                str
+            )
+            or not date
+        ):
+            raise ValueError(
+                f"{label}: invalid date "
+                f"{date!r}."
+            )
+
+        if (
+            isinstance(price, bool)
+            or not isinstance(
+                price,
+                (int, float)
+            )
+        ):
+            raise ValueError(
+                f"{label}: invalid BID "
+                f"price on {date}."
+            )
 
         if date in seen:
-            raise ValueError(f"{label}: duplicate date {date}.")
+            raise ValueError(
+                f"{label}: duplicate date "
+                f"{date}."
+            )
 
-        if previous is not None and date < previous:
-            raise ValueError(f"{label}: observations not chronological.")
+        if (
+            previous is not None
+            and date < previous
+        ):
+            raise ValueError(
+                f"{label}: observations "
+                "not chronological."
+            )
 
         seen.add(date)
         previous = date
 
     return [
-        {"date": item["date"], "bidPrice": item["bidPrice"]}
+        {
+            "date": item["date"],
+            "bidPrice": item["bidPrice"],
+        }
         for item in observations
     ]
 
 
 def load_pruaccess() -> dict[int, dict]:
+
     result = {}
 
     if not PRUACCESS_FUNDS_DIR.exists():
-        print(f"WARNING: {PRUACCESS_FUNDS_DIR} not found.")
+
+        print(
+            f"WARNING: "
+            f"{PRUACCESS_FUNDS_DIR} "
+            "not found."
+        )
+
         return result
 
-    for directory in sorted(PRUACCESS_FUNDS_DIR.iterdir()):
-        match = re.match(r"^(\d+)_", directory.name)
+    for directory in sorted(
+        PRUACCESS_FUNDS_DIR.iterdir()
+    ):
 
-        if not directory.is_dir() or not match:
+        match = re.match(
+            r"^(\d+)_",
+            directory.name
+        )
+
+        if (
+            not directory.is_dir()
+            or not match
+        ):
             continue
 
-        bid_file = directory / "bid_history.json"
-        fund_file = directory / "prudential_fund.json"
+        bid_file = (
+            directory
+            / "bid_history.json"
+        )
 
-        if not (bid_file.exists() and fund_file.exists()):
-            continue  # failed fund: only failure.json exists
+        fund_file = (
+            directory
+            / "prudential_fund.json"
+        )
 
-        row = int(match.group(1))
+        if not (
+            bid_file.exists()
+            and fund_file.exists()
+        ):
+            continue
+
+        row = int(
+            match.group(1)
+        )
 
         result[row] = {
-            "prudential": load_json(fund_file),
-            "bidHistory": load_json(bid_file),
+            "prudential": load_json(
+                fund_file
+            ),
+            "bidHistory": load_json(
+                bid_file
+            ),
         }
 
     return result
+
+
+# =============================================================================
+# FUND RESEARCH MERGE
+# =============================================================================
+
+def build_research_block(
+    pru_access_name: str,
+    research: dict[str, dict],
+) -> tuple[dict, str]:
+
+    record, status = get_research_for_fund(
+        pru_access_name,
+        research
+    )
+
+    if record is None:
+
+        return (
+            {
+                "status": status,
+                "source": str(
+                    RESEARCH_EXCEL_FILE
+                ),
+                "worksheet": (
+                    RESEARCH_SHEET_NAME
+                ),
+                "geographic1": None,
+                "geographic2": None,
+                "sector1": None,
+                "sector2": None,
+            },
+            status,
+        )
+
+    return (
+        {
+            "status": "matched",
+            "source": str(
+                RESEARCH_EXCEL_FILE
+            ),
+            "worksheet": (
+                RESEARCH_SHEET_NAME
+            ),
+            "researchFundName": (
+                record[
+                    "researchFundName"
+                ]
+            ),
+            "geographic1": (
+                record[
+                    "geographic1"
+                ]
+                or None
+            ),
+            "geographic2": (
+                record[
+                    "geographic2"
+                ]
+                or None
+            ),
+            "sector1": (
+                record[
+                    "sector1"
+                ]
+                or None
+            ),
+            "sector2": (
+                record[
+                    "sector2"
+                ]
+                or None
+            ),
+        },
+        "matched",
+    )
 
 
 # =============================================================================
@@ -388,49 +1058,175 @@ def load_pruaccess() -> dict[int, dict]:
 # =============================================================================
 
 def main() -> int:
-    print("=" * 72)
-    print("VGRAT FMS - BUILD FUNDS DATA")
-    print("=" * 72)
-    print(f"Allow unresolved: {ALLOW_UNRESOLVED}")
 
-    excel_funds = read_excel_funds()
-    holdings = resolve_holdings(excel_funds)
-    pruaccess = load_pruaccess()
+    print("=" * 72)
+    print(
+        "VGRAT FMS - BUILD FUNDS DATA"
+    )
+    print("=" * 72)
 
-    generated_at = utc_now_iso()
+    print(
+        f"Master workbook: "
+        f"{MASTER_EXCEL_FILE}"
+    )
+
+    print(
+        f"Research workbook: "
+        f"{RESEARCH_EXCEL_FILE}"
+    )
+
+    print(
+        f"Research worksheet: "
+        f"{RESEARCH_SHEET_NAME}"
+    )
+
+    print(
+        f"Allow unresolved: "
+        f"{ALLOW_UNRESOLVED}"
+    )
+
+    # ------------------------------------------------------------------
+    # Load inputs
+    # ------------------------------------------------------------------
+
+    excel_funds = (
+        read_excel_funds()
+    )
+
+    research_funds = (
+        read_research_funds()
+    )
+
+    holdings = (
+        resolve_holdings(
+            excel_funds
+        )
+    )
+
+    pruaccess = (
+        load_pruaccess()
+    )
+
+    generated_at = (
+        utc_now_iso()
+    )
+
+    # ------------------------------------------------------------------
+    # Counters
+    # ------------------------------------------------------------------
 
     fund_records = []
     bid_records = []
+
     gaps = []
 
     stage_counts: dict[str, int] = {}
-    published = no_section = unresolved_holdings = 0
-    bid_ok = bid_missing = total_observations = 0
 
-    for row in sorted(excel_funds):
-        excel = excel_funds[row]
-        pru = pruaccess.get(row)
-        prudential = (pru or {}).get("prudential") or {}
-        block = holdings.get(row)
+    published = 0
+    no_section = 0
+    unresolved_holdings = 0
+
+    bid_ok = 0
+    bid_missing = 0
+    total_observations = 0
+
+    research_matched = 0
+    research_missing = 0
+
+    # ------------------------------------------------------------------
+    # Build each master fund
+    # ------------------------------------------------------------------
+
+    for row in sorted(
+        excel_funds
+    ):
+
+        excel = excel_funds[
+            row
+        ]
+
+        pru = pruaccess.get(
+            row
+        )
+
+        prudential = (
+            (pru or {}).get(
+                "prudential"
+            )
+            or {}
+        )
+
+        block = holdings.get(
+            row
+        )
+
+        # ==============================================================
+        # IDENTITY
+        # ==============================================================
 
         identity = {
             "excelRow": row,
-            "fundIdentifier": clean_text(prudential.get("fundIdentifier")) or None,
-            "fundCode": clean_text(prudential.get("fundCode")) or None,
-            "fundName": (
-                clean_text(prudential.get("fundName"))
-                or (block or {}).get("fundName")
+
+            "fundIdentifier": (
+                clean_text(
+                    prudential.get(
+                        "fundIdentifier"
+                    )
+                )
                 or None
             ),
-            "pruAccessName": excel["pruAccessName"] or None,
-            "prudentialUrl": excel["prudentialUrl"],
+
+            "fundCode": (
+                clean_text(
+                    prudential.get(
+                        "fundCode"
+                    )
+                )
+                or None
+            ),
+
+            "fundName": (
+                clean_text(
+                    prudential.get(
+                        "fundName"
+                    )
+                )
+                or (
+                    block or {}
+                ).get(
+                    "fundName"
+                )
+                or None
+            ),
+
+            "pruAccessName": (
+                excel[
+                    "pruAccessName"
+                ]
+                or None
+            ),
+
+            "prudentialUrl": (
+                excel[
+                    "prudentialUrl"
+                ]
+            ),
         }
 
-        # ---- holdings ----------------------------------------------------
+        # ==============================================================
+        # HOLDINGS
+        # ==============================================================
 
         if block is None:
+
             unresolved_holdings += 1
-            gaps.append(f"Row {row}: holdings unresolved after Recovery 3.")
+
+            gaps.append(
+                "Row "
+                f"{row}: holdings "
+                "unresolved after "
+                "Recovery 3."
+            )
 
             top_holdings = {
                 "status": "unresolved",
@@ -438,49 +1234,135 @@ def main() -> int:
                 "count": 0,
                 "holdings": [],
             }
+
         else:
+
             top_holdings = {
-                k: v for k, v in block.items() if k != "fundName"
+                key: value
+                for key, value
+                in block.items()
+                if key != "fundName"
             }
-            stage_counts[block["source"]] = (
-                stage_counts.get(block["source"], 0) + 1
+
+            source = block[
+                "source"
+            ]
+
+            stage_counts[
+                source
+            ] = (
+                stage_counts.get(
+                    source,
+                    0
+                )
+                + 1
             )
 
-            if block["status"] == "published":
+            if (
+                block[
+                    "status"
+                ]
+                == "published"
+            ):
                 published += 1
             else:
                 no_section += 1
 
-        # ---- fund info ---------------------------------------------------
+        # ==============================================================
+        # FUND INFORMATION
+        # ==============================================================
 
         fund_info = None
 
         if prudential:
+
             fund_info = {
-                k: v
-                for k, v in prudential.items()
-                if k not in {"raw", "fundIdentifier", "fundCode", "fundName"}
+                key: value
+                for key, value
+                in prudential.items()
+                if key not in {
+                    "raw",
+                    "fundIdentifier",
+                    "fundCode",
+                    "fundName",
+                }
             }
 
-            # Dividend publication rule:
-            # If Prudential provides a non-empty dividendRate, the fund
-            # must be marked as having dividend data regardless of the
-            # upstream hasDividend flag. Preserve the existing flag when
-            # dividendRate is absent, but never allow a populated
-            # dividendRate to remain marked as false.
-            dividend_rate = fund_info.get("dividendRate")
-            if dividend_rate is not None and clean_text(dividend_rate):
-                fund_info["hasDividend"] = True
+            # ----------------------------------------------------------
+            # Dividend normalization
+            # ----------------------------------------------------------
 
-        fund_records.append(
-            {**identity, "fund": fund_info, "topHoldings": top_holdings}
+            dividend_rate = (
+                fund_info.get(
+                    "dividendRate"
+                )
+            )
+
+            if (
+                dividend_rate is not None
+                and clean_text(
+                    dividend_rate
+                )
+            ):
+                fund_info[
+                    "hasDividend"
+                ] = True
+
+            else:
+                fund_info[
+                    "hasDividend"
+                ] = False
+
+        # ==============================================================
+        # RESEARCH
+        # ==============================================================
+
+        research_block, research_status = (
+            build_research_block(
+                excel[
+                    "pruAccessName"
+                ],
+                research_funds,
+            )
         )
 
-        # ---- bid history -------------------------------------------------
+        if research_status == "matched":
+
+            research_matched += 1
+
+        elif research_status == "missing":
+
+            research_missing += 1
+
+        # ==============================================================
+        # FUNDS.JSON RECORD
+        # ==============================================================
+
+        fund_records.append(
+            {
+                **identity,
+
+                "fund": fund_info,
+
+                "research": research_block,
+
+                "topHoldings": top_holdings,
+            }
+        )
+
+        # ==============================================================
+        # BID HISTORY
+        # ==============================================================
 
         if pru is None:
+
             bid_missing += 1
-            gaps.append(f"Row {row}: BID history missing.")
+
+            gaps.append(
+                "Row "
+                f"{row}: BID history "
+                "missing."
+            )
 
             bid_history = {
                 "status": "unresolved",
@@ -488,93 +1370,305 @@ def main() -> int:
                 "observationCount": 0,
                 "observations": [],
             }
+
         else:
-            history = pru["bidHistory"]
-            observations = validate_bid_history(history, f"row {row} BID")
+
+            history = (
+                pru[
+                    "bidHistory"
+                ]
+            )
+
+            observations = (
+                validate_bid_history(
+                    history,
+                    f"row {row} BID",
+                )
+            )
 
             bid_ok += 1
-            total_observations += len(observations)
+
+            total_observations += (
+                len(
+                    observations
+                )
+            )
 
             bid_history = {
                 "status": "success",
                 "priceType": "BID",
-                "pruAccessFundId": history.get("fundId"),
-                "currency": history.get("currency"),
-                "startDate": history.get("startDate"),
-                "endDate": history.get("endDate"),
-                "observationCount": len(observations),
-                "observations": observations,
+
+                "pruAccessFundId": (
+                    history.get(
+                        "fundId"
+                    )
+                ),
+
+                "currency": (
+                    history.get(
+                        "currency"
+                    )
+                ),
+
+                "startDate": (
+                    history.get(
+                        "startDate"
+                    )
+                ),
+
+                "endDate": (
+                    history.get(
+                        "endDate"
+                    )
+                ),
+
+                "observationCount": (
+                    len(
+                        observations
+                    )
+                ),
+
+                "observations": (
+                    observations
+                ),
             }
 
-        bid_records.append({**identity, "bidHistory": bid_history})
+        bid_records.append(
+            {
+                **identity,
+                "bidHistory": bid_history,
+            }
+        )
 
-    # ---- gate ------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # BUILD GATE
+    # ------------------------------------------------------------------
 
     if gaps:
-        print("\nUNRESOLVED:")
+
+        print()
+        print(
+            "UNRESOLVED:"
+        )
+
         for gap in gaps:
-            print(f" - {gap}")
+            print(
+                f" - {gap}"
+            )
 
         if not ALLOW_UNRESOLVED:
+
+            print()
             print(
-                "\nBUILD FAILED: unresolved funds present. "
-                "Nothing was written. Set ALLOW_UNRESOLVED=1 to publish "
-                "them as 'unresolved'."
+                "BUILD FAILED: "
+                "unresolved core funds "
+                "are present."
             )
+
+            print(
+                "Nothing was written."
+            )
+
+            print(
+                "Set ALLOW_UNRESOLVED=1 "
+                "to publish unresolved "
+                "funds."
+            )
+
             return 1
 
+    # ------------------------------------------------------------------
+    # Output envelope
+    # ------------------------------------------------------------------
+
     envelope = {
-        "schemaVersion": SCHEMA_VERSION,
-        "generatedAtUtc": generated_at,
-        "source": str(EXCEL_FILE),
-        "fundCount": len(fund_records),
+        "schemaVersion": (
+            SCHEMA_VERSION
+        ),
+
+        "generatedAtUtc": (
+            generated_at
+        ),
+
+        "source": (
+            str(
+                MASTER_EXCEL_FILE
+            )
+        ),
+
+        "fundCount": (
+            len(
+                fund_records
+            )
+        ),
     }
+
+    # ------------------------------------------------------------------
+    # funds.json
+    # ------------------------------------------------------------------
 
     write_json_atomic(
         FUNDS_OUT,
+
         {
             **envelope,
+
             "summary": {
-                "holdingsPublished": published,
-                "noHoldingsSection": no_section,
-                "holdingsUnresolved": unresolved_holdings,
-                "holdingsBySource": stage_counts,
+                "holdingsPublished": (
+                    published
+                ),
+
+                "noHoldingsSection": (
+                    no_section
+                ),
+
+                "holdingsUnresolved": (
+                    unresolved_holdings
+                ),
+
+                "holdingsBySource": (
+                    stage_counts
+                ),
+
+                "researchMatched": (
+                    research_matched
+                ),
+
+                "researchMissing": (
+                    research_missing
+                ),
+
+                "researchWorkbook": (
+                    str(
+                        RESEARCH_EXCEL_FILE
+                    )
+                ),
+
+                "researchWorksheet": (
+                    RESEARCH_SHEET_NAME
+                ),
             },
-            "funds": fund_records,
+
+            "funds": (
+                fund_records
+            ),
         },
     )
+
+    # ------------------------------------------------------------------
+    # bid_history.json
+    # ------------------------------------------------------------------
 
     write_json_atomic(
         BID_OUT,
+
         {
             **envelope,
+
             "summary": {
-                "fundsWithBidHistory": bid_ok,
-                "bidHistoryUnresolved": bid_missing,
-                "totalObservations": total_observations,
+                "fundsWithBidHistory": (
+                    bid_ok
+                ),
+
+                "bidHistoryUnresolved": (
+                    bid_missing
+                ),
+
+                "totalObservations": (
+                    total_observations
+                ),
             },
-            "funds": bid_records,
+
+            "funds": (
+                bid_records
+            ),
         },
+
         compact=True,
     )
 
-    print("\nBUILD COMPLETE")
-    print(f"Funds:                 {len(fund_records)}")
-    print(f"Holdings published:    {published}")
-    print(f"No holdings section:   {no_section}")
-    print(f"Holdings unresolved:   {unresolved_holdings}")
-    print(f"Holdings by source:    {stage_counts}")
-    print(f"BID history funds:     {bid_ok}")
-    print(f"BID observations:      {total_observations}")
-    print(f"Wrote: {FUNDS_OUT}")
-    print(f"Wrote: {BID_OUT}")
+    # ------------------------------------------------------------------
+    # Final summary
+    # ------------------------------------------------------------------
+
+    print()
+    print(
+        "BUILD COMPLETE"
+    )
+
+    print(
+        f"Funds:                 "
+        f"{len(fund_records)}"
+    )
+
+    print(
+        f"Holdings published:    "
+        f"{published}"
+    )
+
+    print(
+        f"No holdings section:   "
+        f"{no_section}"
+    )
+
+    print(
+        f"Holdings unresolved:   "
+        f"{unresolved_holdings}"
+    )
+
+    print(
+        f"Holdings by source:    "
+        f"{stage_counts}"
+    )
+
+    print(
+        f"BID history funds:     "
+        f"{bid_ok}"
+    )
+
+    print(
+        f"BID observations:      "
+        f"{total_observations}"
+    )
+
+    print(
+        f"Research matched:      "
+        f"{research_matched}"
+    )
+
+    print(
+        f"Research missing:      "
+        f"{research_missing}"
+    )
+
+    print(
+        f"Wrote: {FUNDS_OUT}"
+    )
+
+    print(
+        f"Wrote: {BID_OUT}"
+    )
 
     return 0
 
 
+# =============================================================================
+# ENTRY POINT
+# =============================================================================
+
 if __name__ == "__main__":
+
     try:
-        raise SystemExit(main())
+        raise SystemExit(
+            main()
+        )
+
     except Exception as error:
-        print(f"\nFATAL BUILD ERROR: {error}", file=sys.stderr)
+
+        print(
+            f"\nFATAL BUILD ERROR: "
+            f"{error}",
+            file=sys.stderr,
+        )
+
         raise SystemExit(1)
