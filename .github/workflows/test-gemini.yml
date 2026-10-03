@@ -1,123 +1,154 @@
-name: Test Gemini News Analysis
+name: Test Market News Gemini Analysis
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  test-gemini-news:
+  test-analysis:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
 
-      - name: Install Gemini SDK
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -U google-genai
+          pip install -r scripts/requirements.txt
 
-      - name: Test Gemini with one news article
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - name: Verify required files
+        run: |
+          test -f scripts/analyze_market_news.py
+          test -f scripts/requirements.txt
+          test -f "Research Funds.xlsx"
+          test -f data/market_news/current.json
+
+          echo "Required files found."
+
+      - name: Show input summary
         run: |
           python - <<'PY'
           import json
-          import os
-          from google import genai
 
-          CURRENT_FILE = "data/market_news/current.json"
+          path = "data/market_news/current.json"
 
-          with open(CURRENT_FILE, "r", encoding="utf-8") as f:
+          with open(path, "r", encoding="utf-8") as f:
               data = json.load(f)
 
           articles = data.get("articles", [])
 
-          if not articles:
-              raise RuntimeError("No articles found in current.json.")
+          print(f"Source: {data.get('source')}")
+          print(f"Generated: {data.get('generatedAtSgt')}")
+          print(f"Article count: {len(articles)}")
 
-          article = articles[0]
-
-          print("=" * 70)
-          print("ARTICLE SELECTED")
-          print("=" * 70)
-          print(f"ID:       {article.get('id')}")
-          print(f"Source:   {article.get('source')}")
-          print(f"Title:    {article.get('title')}")
-          print(f"Published:{article.get('publishedAtSgt')}")
-          print(f"URL:      {article.get('url')}")
-          print("=" * 70)
-
-          api_key = os.environ.get("GEMINI_API_KEY")
-
-          if not api_key:
-              raise RuntimeError("GEMINI_API_KEY is not available.")
-
-          client = genai.Client(api_key=api_key)
-
-          prompt = f"""
-          You are a financial and market-news analyst.
-
-          Analyze the following CNBC article objectively and factually.
-
-          ARTICLE TITLE:
-          {article.get("title", "")}
-
-          ARTICLE SUMMARY:
-          {article.get("summary", "")}
-
-          SOURCE:
-          {article.get("source", "")}
-
-          PUBLISHED:
-          {article.get("publishedAtSgt", "")}
-
-          ORIGINAL URL:
-          {article.get("url", "")}
-
-          Return a concise structured analysis with exactly these sections:
-
-          1. What happened
-          2. Why it matters
-          3. Key impact
-          4. Market implications
-          5. Overall assessment
-
-          Do not make investment recommendations.
-          Do not recommend individual funds.
-          Do not predict specific investment returns.
-
-          Return the answer as plain text.
-          """
-
-          print()
-          print("=" * 70)
-          print("SENDING ARTICLE TO GEMINI...")
-          print("=" * 70)
-
-          interaction = client.interactions.create(
-              model="gemini-3.8-flash",
-              input=prompt
-          )
-
-          print()
-          print("=" * 70)
-          print("GEMINI ANALYSIS")
-          print("=" * 70)
-          print(interaction.output_text)
-          print("=" * 70)
-
-          if not interaction.output_text.strip():
-              raise RuntimeError("Gemini returned an empty response.")
-
-          print()
-          print("REAL ARTICLE ANALYSIS TEST PASSED.")
+          if articles:
+              print(f"First article: {articles[0].get('title')}")
           PY
+
+      - name: Run Gemini market news analysis
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MARKET_NEWS_MODEL: gemini-3.8-flash
+          MARKET_NEWS_AI_RETRIES: "3"
+          MARKET_NEWS_RETRIEVAL_RETRIES: "2"
+          MARKET_NEWS_RETRIEVAL_TIMEOUT: "20"
+          MARKET_NEWS_MAX_ARTICLE_CHARS: "30000"
+        run: |
+          python -u scripts/analyze_market_news.py
+
+      - name: Validate analysis output
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/market_news/analysis/current.json")
+
+          if not path.exists():
+              raise SystemExit(
+                  "ERROR: analysis/current.json was not created."
+              )
+
+          with path.open("r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          articles = data.get("articles", [])
+
+          print("=" * 60)
+          print("ANALYSIS OUTPUT")
+          print("=" * 60)
+          print(f"Article count: {len(articles)}")
+          print(f"Generated: {data.get('generatedAtSgt')}")
+          print(f"Timezone: {data.get('timezone')}")
+          print("=" * 60)
+
+          if articles:
+              article = articles[0]
+
+              print()
+              print("First analyzed article:")
+              print(article.get("title"))
+              print()
+              print("Geography:")
+              print(
+                  article.get("analysis", {}).get(
+                      "geographicalImpact"
+                  )
+              )
+              print()
+              print("Sector:")
+              print(
+                  article.get("analysis", {}).get(
+                      "sectorImpact"
+                  )
+              )
+              print()
+              print("Direction:")
+              print(
+                  article.get("analysis", {}).get(
+                      "overallImpactDirection"
+                  )
+              )
+              print()
+              print("Severity:")
+              print(
+                  article.get("analysis", {}).get(
+                      "impactSeverity"
+                  )
+              )
+              print()
+              print("Time horizon:")
+              print(
+                  article.get("analysis", {}).get(
+                      "timeHorizon"
+                  )
+              )
+              print()
+              print("Confidence:")
+              print(
+                  article.get("analysis", {}).get(
+                      "aiConfidence"
+                  )
+              )
+
+          print()
+          print("Analysis output validation passed.")
+          PY
+
+      - name: Show changed files
+        run: |
+          echo "Files generated or changed:"
+          git status --short
