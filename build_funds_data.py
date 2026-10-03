@@ -3,111 +3,104 @@
 """
 VGrat FMS - BUILD FUNDS DATA
 
-Merges the outputs of the extraction pipelines into two data files that
-share the SAME layout (same envelope, same per-fund identity block):
+Builds:
 
     data/funds.json
     data/bid_history.json
 
+from the existing Prudential extraction pipelines.
 
-MASTER UNIVERSE
-===============
+============================================================
+MASTER FUND UNIVERSE
+============================================================
 
-Funds Links.xlsm, Column A (Prudential URL) / Column B (PruAccess name).
+Funds Links.xlsm is the controlling universe.
 
-Every populated row in Funds Links.xlsm becomes exactly one record in
-BOTH output files, ordered by Excel row.
+    Column A = Prudential URL
+    Column B = exact PruAccess Fund Name
 
-Funds Links.xlsm is the MASTER UNIVERSE.
+Research Funds.xlsx is NOT a fund universe.
 
-Research Funds.xlsx is an EXISTING RESEARCH INPUT only.
+It is an extraction-only research workbook.
 
-No AI research, web research, Morningstar research, factsheet research,
-or additional classification is performed by this script.
+    Worksheet 1:
+        Fund Research
+        Per-fund Geography / Sector research
 
+    Worksheet 2:
+        Geography master categories
+        AUTHORITATIVE UI Geography filter values
 
-RESEARCH INPUT
-==============
+    Worksheet 3:
+        Sector master categories
+        AUTHORITATIVE UI Sector filter values
 
-Research workbook:
+The master categories are copied into funds.json and are
+NOT dynamically generated from the funds.
 
-    Research Funds.xlsx
+============================================================
+IMPORTANT
+============================================================
 
-Worksheet:
+This script does NOT perform AI research.
 
-    Fund Research
+Research Funds.xlsx is assumed to already contain the
+researched values.
 
-Matching rule:
+Existing holdings and BID pipelines remain the source for:
 
-    Funds Links.xlsm Column B
-        exact match
-    ->
-    Research Funds.xlsx Fund Research
-        fund-name column
+    Top Holdings
+    Historical BID observations
 
-Research fields extracted:
+Dividend fields are taken from the Prudential fund extraction.
 
-    Geographic 1
-    Geographic 2
-    Sector 1
-    Sector 2
+The source field is:
 
-Research data is copied exactly from the research workbook after
-whitespace normalization.
+    dividendRate
+    dividendUnit
 
-The research workbook does NOT determine the master fund universe.
+hasDividend is derived from dividendRate.
 
-A research workbook row cannot create a new fund.
+Therefore:
 
-A missing research match does NOT make the core fund unresolved.
+    dividendRate exists -> hasDividend = true
 
+The upstream hasDividend flag is NOT trusted.
 
-HOLDINGS RESOLUTION
-===================
-
-Stage order:
-
-    baseline -> recovery1 -> recovery2 -> recovery3
-
-- A fund that succeeded in the baseline keeps its baseline result.
-- A fund marked "no_holdings_section" remains as-is.
-- A fund that failed in baseline is replaced by the first recovery
-  stage that resolves it.
-- A fund still unresolved after Recovery 3 is "unresolved".
-
-Nothing is inferred or fabricated.
-
-
-BID HISTORY
-===========
-
-Read from:
-
-    output_pruaccess/funds/<row>_<id>/
-
-Files:
-
-    bid_history.json
-    prudential_fund.json
-
-Observations are copied exactly as extracted.
-
-
-DIVIDEND NORMALIZATION
-======================
-
-If dividendRate exists and is non-empty:
-
-    hasDividend = true
-
-Existing dividendRate and dividendUnits values are not modified.
-
-
+============================================================
 OUTPUT
-======
+============================================================
 
 data/funds.json
+
+    {
+      "schemaVersion": 1,
+      "generatedAt": "...",
+      "research": {
+        "source": "Research Funds.xlsx",
+        "fundResearchWorksheet": "...",
+        "masterCategoryWorksheets": {
+          "geography": "...",
+          "sector": "..."
+        },
+        "masterCategories": {
+          "geography": [...],
+          "sector": [...]
+        }
+      },
+      "summary": {...},
+      "funds": [...]
+    }
+
 data/bid_history.json
+
+    {
+      "schemaVersion": 1,
+      "generatedAt": "...",
+      "funds": [...]
+    }
+
+============================================================
 """
 
 from __future__ import annotations
@@ -116,134 +109,253 @@ import json
 import os
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime
 from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from openpyxl import load_workbook
 
 
-# =============================================================================
+# ============================================================
 # CONFIGURATION
-# =============================================================================
+# ============================================================
 
-MASTER_EXCEL_FILE = Path("Funds Links.xlsm")
+ROOT = Path(__file__).resolve().parent.parent
 
-RESEARCH_EXCEL_FILE = Path("Research Funds.xlsx")
-RESEARCH_SHEET_NAME = "Fund Research"
+MASTER_EXCEL_FILE = ROOT / "Funds Links.xlsm"
+RESEARCH_EXCEL_FILE = ROOT / "Research Funds.xlsx"
 
-BASELINE_FILE = Path("output_holdings/all_holdings.json")
+RESEARCH_FUND_SHEET_NAME = "Fund Research"
 
-RECOVERY_STAGES = [
-    ("recovery1", Path("output_holdings_recovery")),
-    ("recovery2", Path("output_holdings_recovery_2")),
-    ("recovery3", Path("output_holdings_recovery_3")),
+# Worksheet positions are zero-based internally.
+#
+# Worksheet 1 = Fund Research
+# Worksheet 2 = Geography master categories
+# Worksheet 3 = Sector master categories
+#
+# Therefore:
+RESEARCH_GEOGRAPHY_SHEET_INDEX = 1
+RESEARCH_SECTOR_SHEET_INDEX = 2
+
+DATA_DIR = ROOT / "data"
+
+FUNDS_OUTPUT_FILE = DATA_DIR / "funds.json"
+BID_HISTORY_OUTPUT_FILE = DATA_DIR / "bid_history.json"
+
+# Existing holdings pipeline outputs.
+BASELINE_HOLDINGS_FILE = ROOT / "output_holdings" / "all_holdings.json"
+
+RECOVERY_DIRECTORIES = [
+    ROOT / "output_holdings_recovery",
+    ROOT / "output_holdings_recovery_2",
+    ROOT / "output_holdings_recovery_3",
 ]
 
-PRUACCESS_FUNDS_DIR = Path("output_pruaccess/funds")
+# Existing PruAccess production directory.
+PRUACCESS_PRODUCTION_DIR = ROOT / "output_pruaccess" / "production"
 
-DATA_DIR = Path("data")
-
-FUNDS_OUT = DATA_DIR / "funds.json"
-BID_OUT = DATA_DIR / "bid_history.json"
+# Existing fund-level PruAccess directory.
+PRUACCESS_FUNDS_DIR = ROOT / "output_pruaccess" / "funds"
 
 SCHEMA_VERSION = 1
 
 MAX_HOLDINGS = 10
 
-ALLOW_UNRESOLVED = os.environ.get(
-    "ALLOW_UNRESOLVED", ""
-).strip().lower() in {"1", "true", "yes"}
+ALLOW_UNRESOLVED = (
+    os.environ.get("ALLOW_UNRESOLVED", "false").strip().lower()
+    in {"1", "true", "yes", "y"}
+)
 
 
-# =============================================================================
-# HELPERS
-# =============================================================================
+# ============================================================
+# GENERAL HELPERS
+# ============================================================
 
-def clean_text(value) -> str:
+def clean_text(value: Any) -> str:
     """
-    Normalize whitespace without otherwise changing the value.
+    Convert a value to clean text.
+
+    None -> ""
+    Strings are stripped and repeated whitespace collapsed.
     """
     if value is None:
         return ""
 
-    return re.sub(
-        r"\s+",
-        " ",
-        str(value).replace("\xa0", " ")
-    ).strip()
+    if isinstance(value, str):
+        return re.sub(r"\s+", " ", value).strip()
+
+    return str(value).strip()
+
+
+def clean_raw_text(value: Any) -> str:
+    """
+    Convert a value to string while preserving internal content
+    as much as practical.
+
+    Useful for fields such as dividendRate.
+    """
+    if value is None:
+        return ""
+
+    if isinstance(value, str):
+        return value.strip()
+
+    return str(value).strip()
 
 
 def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(
-        microsecond=0
-    ).isoformat()
+    return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
 
-def load_json(path: Path):
-    try:
-        return json.loads(
-            path.read_text(encoding="utf-8")
-        )
-    except Exception as error:
-        raise RuntimeError(
-            f"Could not read {path}: {error}"
-        ) from error
+def load_json(path: Path) -> Any:
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
 
 
-def write_json_atomic(
-    path: Path,
-    data,
-    compact: bool = False,
-) -> None:
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True
-    )
+def write_json_atomic(path: Path, payload: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
 
-    tmp = path.with_suffix(
-        path.suffix + ".tmp"
-    )
+    temporary = path.with_suffix(path.suffix + ".tmp")
 
-    if compact:
-        text = json.dumps(
-            data,
+    with temporary.open("w", encoding="utf-8") as handle:
+        json.dump(
+            payload,
+            handle,
             ensure_ascii=False,
-            separators=(",", ":"),
-        )
-    else:
-        text = json.dumps(
-            data,
             indent=2,
-            ensure_ascii=False,
         )
+        handle.write("\n")
 
-    tmp.write_text(
-        text + "\n",
-        encoding="utf-8"
+    temporary.replace(path)
+
+
+def normalize_match_key(value: Any) -> str:
+    """
+    Normalization used for matching fund names.
+
+    This is deliberately conservative.
+
+    It does NOT remove meaningful punctuation or words.
+    """
+    text = clean_text(value)
+
+    text = text.replace("\u00a0", " ")
+
+    return re.sub(r"\s+", " ", text).strip().casefold()
+
+
+def normalize_category_key(value: Any) -> str:
+    """
+    Normalization used only for category de-duplication.
+    """
+    return normalize_match_key(value)
+
+
+def is_empty_value(value: Any) -> bool:
+    if value is None:
+        return True
+
+    if isinstance(value, str):
+        return not value.strip()
+
+    return False
+
+
+# ============================================================
+# EXCEL HELPERS
+# ============================================================
+
+def open_excel_workbook(path: Path):
+    if not path.exists():
+        raise FileNotFoundError(f"Excel file not found: {path}")
+
+    keep_vba = path.suffix.lower() == ".xlsm"
+
+    return load_workbook(
+        filename=path,
+        data_only=True,
+        read_only=False,
+        keep_vba=keep_vba,
     )
 
-    tmp.replace(path)
 
-
-def normalize_match_key(value) -> str:
+def find_header_row(
+    worksheet,
+    required_headers: Iterable[str],
+    max_scan_rows: int = 10,
+) -> Tuple[int, Dict[str, int]]:
     """
-    Matching normalization.
+    Find a header row by looking for the supplied header names.
 
-    The actual fund name remains unchanged in the output.
+    Returns:
 
-    Matching is case-insensitive and whitespace-normalized so that
-    accidental Excel spacing/case differences do not prevent a match.
+        (row_number, normalized_header -> column_number)
 
-    No fuzzy matching is performed.
+    Raises if the headers cannot be found.
     """
-    return clean_text(value).casefold()
+
+    required = {
+        normalize_match_key(header)
+        for header in required_headers
+    }
+
+    max_row = min(worksheet.max_row, max_scan_rows)
+
+    for row_number in range(1, max_row + 1):
+        mapping: Dict[str, int] = {}
+
+        for cell in worksheet[row_number]:
+            value = normalize_match_key(cell.value)
+
+            if value:
+                mapping[value] = cell.column
+
+        if required.issubset(mapping.keys()):
+            return row_number, mapping
+
+    raise ValueError(
+        f"Could not locate required headers in worksheet "
+        f"'{worksheet.title}': {sorted(required)}"
+    )
 
 
-# =============================================================================
-# MASTER EXCEL UNIVERSE
-# =============================================================================
+def find_optional_column(
+    worksheet,
+    candidate_headers: Iterable[str],
+    max_scan_rows: int = 10,
+) -> Optional[Tuple[int, int]]:
+    """
+    Locate an optional column.
 
-def read_excel_funds() -> dict[int, dict]:
+    Returns:
+
+        (header_row, column_number)
+
+    or None.
+    """
+
+    candidates = {
+        normalize_match_key(value)
+        for value in candidate_headers
+    }
+
+    max_row = min(worksheet.max_row, max_scan_rows)
+
+    for row_number in range(1, max_row + 1):
+        for cell in worksheet[row_number]:
+            value = normalize_match_key(cell.value)
+
+            if value in candidates:
+                return row_number, cell.column
+
+    return None
+
+
+# ============================================================
+# MASTER FUND UNIVERSE
+# ============================================================
+
+def read_master_funds() -> List[Dict[str, Any]]:
     """
     Read Funds Links.xlsm.
 
@@ -251,1424 +363,1938 @@ def read_excel_funds() -> dict[int, dict]:
         Prudential URL
 
     Column B:
-        PruAccess Fund Name
+        Exact PruAccess Fund Name
 
-    Every populated Column A row is part of the master universe.
+    The workbook controls the fund universe.
     """
 
-    if not MASTER_EXCEL_FILE.exists():
-        raise FileNotFoundError(
-            f"Master Excel file not found: {MASTER_EXCEL_FILE}"
-        )
-
-    workbook = load_workbook(
-        MASTER_EXCEL_FILE,
-        read_only=True,
-        keep_vba=True,
-        data_only=True,
-    )
-
-    funds = {}
+    workbook = open_excel_workbook(MASTER_EXCEL_FILE)
 
     try:
         worksheet = workbook.active
 
-        for row in range(
-            2,
-            worksheet.max_row + 1
-        ):
-            url = clean_text(
-                worksheet.cell(
-                    row=row,
-                    column=1
-                ).value
+        funds: List[Dict[str, Any]] = []
+
+        for row_number in range(2, worksheet.max_row + 1):
+            prudential_url = clean_text(
+                worksheet.cell(row=row_number, column=1).value
             )
 
-            name = clean_text(
-                worksheet.cell(
-                    row=row,
-                    column=2
-                ).value
+            pruaccess_name = clean_text(
+                worksheet.cell(row=row_number, column=2).value
             )
 
-            if not url:
+            if not prudential_url and not pruaccess_name:
                 continue
 
-            funds[row] = {
-                "excelRow": row,
-                "prudentialUrl": url,
-                "pruAccessName": name,
-            }
+            if not prudential_url:
+                continue
+
+            funds.append(
+                {
+                    "excelRow": row_number,
+                    "prudentialUrl": prudential_url,
+                    "pruAccessName": pruaccess_name,
+                }
+            )
+
+        return funds
 
     finally:
         workbook.close()
 
-    if not funds:
-        raise RuntimeError(
-            "No populated URLs found in "
-            "Funds Links.xlsm Column A."
-        )
 
-    return funds
+# ============================================================
+# RESEARCH WORKBOOK
+# ============================================================
 
-
-# =============================================================================
-# RESEARCH FUNDS.XLSX
-# =============================================================================
-
-def find_research_headers(
-    worksheet
-) -> dict[str, int]:
+def find_research_headers(worksheet) -> Tuple[int, Dict[str, int]]:
     """
-    Find the required research headers from the first row.
+    Locate the Fund Research headers.
 
     Required:
 
         Fund Name
+
+    Optional:
+
         Geographic 1
         Geographic 2
         Sector 1
         Sector 2
 
-    The fund-name header accepts the explicit research workbook
-    naming variants used by the project, while the four research
-    fields remain exact.
+    Several common header spellings are accepted.
     """
 
-    headers = {}
+    fund_name_candidates = {
+        "fund name",
+        "fund",
+        "name",
+        "pruaccess fund name",
+    }
 
-    for column in range(
-        1,
-        worksheet.max_column + 1
+    geographic_1_candidates = {
+        "geographic 1",
+        "geography 1",
+        "geographical 1",
+        "geographic1",
+        "geography1",
+    }
+
+    geographic_2_candidates = {
+        "geographic 2",
+        "geography 2",
+        "geographical 2",
+        "geographic2",
+        "geography2",
+    }
+
+    sector_1_candidates = {
+        "sector 1",
+        "sector1",
+    }
+
+    sector_2_candidates = {
+        "sector 2",
+        "sector2",
+    }
+
+    max_scan_rows = min(worksheet.max_row, 10)
+
+    for row_number in range(1, max_scan_rows + 1):
+
+        normalized_row: Dict[str, int] = {}
+
+        for cell in worksheet[row_number]:
+            value = normalize_match_key(cell.value)
+
+            if value:
+                normalized_row[value] = cell.column
+
+        fund_column = None
+
+        for candidate in fund_name_candidates:
+            if candidate in normalized_row:
+                fund_column = normalized_row[candidate]
+                break
+
+        if fund_column is None:
+            continue
+
+        result: Dict[str, int] = {
+            "fundName": fund_column,
+        }
+
+        for key, candidates in [
+            ("geographic1", geographic_1_candidates),
+            ("geographic2", geographic_2_candidates),
+            ("sector1", sector_1_candidates),
+            ("sector2", sector_2_candidates),
+        ]:
+            for candidate in candidates:
+                if candidate in normalized_row:
+                    result[key] = normalized_row[candidate]
+                    break
+
+        return row_number, result
+
+    raise ValueError(
+        f"Could not locate Fund Name column in worksheet "
+        f"'{worksheet.title}'."
+    )
+
+
+def read_research_funds(
+    workbook,
+) -> Dict[str, Dict[str, Any]]:
+    """
+    Read worksheet 1 / Fund Research.
+
+    Returns a dictionary keyed by normalized fund name.
+    """
+
+    if RESEARCH_FUND_SHEET_NAME not in workbook.sheetnames:
+        raise ValueError(
+            f"Required research worksheet "
+            f"'{RESEARCH_FUND_SHEET_NAME}' was not found. "
+            f"Available worksheets: {workbook.sheetnames}"
+        )
+
+    worksheet = workbook[RESEARCH_FUND_SHEET_NAME]
+
+    header_row, columns = find_research_headers(worksheet)
+
+    results: Dict[str, Dict[str, Any]] = {}
+
+    for row_number in range(
+        header_row + 1,
+        worksheet.max_row + 1,
     ):
-        value = clean_text(
+        fund_name = clean_text(
             worksheet.cell(
-                row=1,
-                column=column
+                row=row_number,
+                column=columns["fundName"],
             ).value
         )
 
-        if value:
-            headers[
-                normalize_match_key(value)
-            ] = column
+        if not fund_name:
+            continue
 
-    fund_name_candidates = [
-        "fund name",
-        "pruaccess fund name",
-        "fund",
-        "name",
-    ]
+        record = {
+            "fundName": fund_name,
+            "geographic1": "",
+            "geographic2": "",
+            "sector1": "",
+            "sector2": "",
+        }
 
-    fund_name_column = None
-
-    for candidate in fund_name_candidates:
-        column = headers.get(
-            normalize_match_key(candidate)
-        )
-
-        if column is not None:
-            fund_name_column = column
-            break
-
-    if fund_name_column is None:
-        raise RuntimeError(
-            "Research Funds.xlsx / "
-            f"'{RESEARCH_SHEET_NAME}' is missing "
-            "the fund-name column."
-        )
-
-    required_columns = {
-        "Geographic 1": None,
-        "Geographic 2": None,
-        "Sector 1": None,
-        "Sector 2": None,
-    }
-
-    for header in required_columns:
-        column = headers.get(
-            normalize_match_key(header)
-        )
-
-        if column is None:
-            raise RuntimeError(
-                "Research Funds.xlsx / "
-                f"'{RESEARCH_SHEET_NAME}' is missing "
-                f"required column: {header}"
-            )
-
-        required_columns[header] = column
-
-    return {
-        "fundName": fund_name_column,
-        **required_columns,
-    }
-
-
-def read_research_funds() -> dict[str, dict]:
-    """
-    Read the already-researched Research Funds.xlsx workbook.
-
-    Returns:
-
-        normalized PruAccess fund name ->
-        research fields
-
-    No research is performed here.
-    """
-
-    if not RESEARCH_EXCEL_FILE.exists():
-        raise FileNotFoundError(
-            f"Research workbook not found: "
-            f"{RESEARCH_EXCEL_FILE}"
-        )
-
-    workbook = load_workbook(
-        RESEARCH_EXCEL_FILE,
-        read_only=True,
-        data_only=True,
-    )
-
-    research = {}
-
-    try:
-        if RESEARCH_SHEET_NAME not in workbook.sheetnames:
-            raise RuntimeError(
-                f"Research workbook does not contain "
-                f"worksheet '{RESEARCH_SHEET_NAME}'. "
-                f"Available sheets: "
-                f"{', '.join(workbook.sheetnames)}"
-            )
-
-        worksheet = workbook[
-            RESEARCH_SHEET_NAME
-        ]
-
-        columns = find_research_headers(
-            worksheet
-        )
-
-        for row in range(
-            2,
-            worksheet.max_row + 1
+        for field in (
+            "geographic1",
+            "geographic2",
+            "sector1",
+            "sector2",
         ):
-            fund_name = clean_text(
+            column = columns.get(field)
+
+            if column is not None:
+                record[field] = clean_text(
+                    worksheet.cell(
+                        row=row_number,
+                        column=column,
+                    ).value
+                )
+
+        key = normalize_match_key(fund_name)
+
+        # Last occurrence wins if a duplicate exists.
+        results[key] = record
+
+    return results
+
+
+# ============================================================
+# MASTER CATEGORY EXTRACTION
+# ============================================================
+
+GENERIC_CATEGORY_HEADERS = {
+    "category",
+    "categories",
+    "master category",
+    "master categories",
+    "filter",
+    "filters",
+    "filter category",
+    "filter categories",
+    "name",
+    "names",
+    "value",
+    "values",
+}
+
+
+def locate_category_column(
+    worksheet,
+    category_type: str,
+) -> Tuple[int, int]:
+    """
+    Locate the category column in a master-category worksheet.
+
+    We first look for a semantically appropriate header.
+
+    If no specific header is found, we fall back to the first
+    non-empty column in the first few rows.
+
+    This allows the workbook to use slightly different labels
+    without making the category extraction fragile.
+    """
+
+    if category_type == "geography":
+        candidates = {
+            "geography",
+            "geographies",
+            "geographic",
+            "geographical",
+            "geographic category",
+            "geography category",
+            "geography categories",
+            "master geography",
+            "master geographies",
+        }
+    else:
+        candidates = {
+            "sector",
+            "sectors",
+            "sector category",
+            "sector categories",
+            "master sector",
+            "master sectors",
+        }
+
+    candidates = {
+        normalize_match_key(value)
+        for value in candidates
+    }
+
+    max_scan_rows = min(worksheet.max_row, 10)
+
+    # First try explicit semantic headers.
+    for row_number in range(1, max_scan_rows + 1):
+        for cell in worksheet[row_number]:
+            normalized = normalize_match_key(cell.value)
+
+            if normalized in candidates:
+                return row_number, cell.column
+
+    # Then generic category headers.
+    for row_number in range(1, max_scan_rows + 1):
+        for cell in worksheet[row_number]:
+            normalized = normalize_match_key(cell.value)
+
+            if normalized in GENERIC_CATEGORY_HEADERS:
+                return row_number, cell.column
+
+    # Final fallback:
+    # find the first column with actual content.
+    for column_number in range(
+        1,
+        worksheet.max_column + 1,
+    ):
+        for row_number in range(
+            1,
+            min(worksheet.max_row, 10) + 1,
+        ):
+            value = clean_text(
                 worksheet.cell(
-                    row=row,
-                    column=columns["fundName"]
+                    row=row_number,
+                    column=column_number,
                 ).value
             )
 
-            if not fund_name:
-                continue
+            if value:
+                # Treat this first non-empty row as the header
+                # only if it looks like a header.
+                if normalize_match_key(value) in GENERIC_CATEGORY_HEADERS:
+                    return row_number, column_number
 
-            key = normalize_match_key(
-                fund_name
+                # Otherwise treat the first row as data.
+                return 0, column_number
+
+    raise ValueError(
+        f"Could not locate a category column in worksheet "
+        f"'{worksheet.title}'."
+    )
+
+
+def read_master_categories(
+    workbook,
+    sheet_index: int,
+    category_type: str,
+) -> Tuple[str, List[str]]:
+    """
+    Read authoritative master categories from a worksheet.
+
+    Returns:
+
+        worksheet title
+        ordered unique category list
+    """
+
+    if sheet_index >= len(workbook.worksheets):
+        raise ValueError(
+            f"Research Funds.xlsx must contain at least "
+            f"{sheet_index + 1} worksheets. "
+            f"Found {len(workbook.worksheets)}."
+        )
+
+    worksheet = workbook.worksheets[sheet_index]
+
+    header_row, category_column = locate_category_column(
+        worksheet,
+        category_type,
+    )
+
+    start_row = header_row + 1 if header_row > 0 else 1
+
+    categories: List[str] = []
+    seen = set()
+
+    for row_number in range(
+        start_row,
+        worksheet.max_row + 1,
+    ):
+        value = clean_text(
+            worksheet.cell(
+                row=row_number,
+                column=category_column,
+            ).value
+        )
+
+        if not value:
+            continue
+
+        key = normalize_category_key(value)
+
+        if not key:
+            continue
+
+        if key in GENERIC_CATEGORY_HEADERS:
+            continue
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+        categories.append(value)
+
+    if not categories:
+        raise ValueError(
+            f"Worksheet '{worksheet.title}' contains no "
+            f"{category_type} master categories."
+        )
+
+    return worksheet.title, categories
+
+
+def read_all_research_data() -> Dict[str, Any]:
+    """
+    Read all Research Funds.xlsx information.
+
+    Returns:
+
+        {
+          "funds": {...},
+          "geographyWorksheet": "...",
+          "sectorWorksheet": "...",
+          "geographyCategories": [...],
+          "sectorCategories": [...]
+        }
+    """
+
+    workbook = open_excel_workbook(RESEARCH_EXCEL_FILE)
+
+    try:
+        research_funds = read_research_funds(workbook)
+
+        geography_sheet, geography_categories = (
+            read_master_categories(
+                workbook,
+                RESEARCH_GEOGRAPHY_SHEET_INDEX,
+                "geography",
             )
+        )
 
-            record = {
-                "researchFundName": fund_name,
-                "geographic1": clean_text(
-                    worksheet.cell(
-                        row=row,
-                        column=columns["Geographic 1"]
-                    ).value
-                ),
-                "geographic2": clean_text(
-                    worksheet.cell(
-                        row=row,
-                        column=columns["Geographic 2"]
-                    ).value
-                ),
-                "sector1": clean_text(
-                    worksheet.cell(
-                        row=row,
-                        column=columns["Sector 1"]
-                    ).value
-                ),
-                "sector2": clean_text(
-                    worksheet.cell(
-                        row=row,
-                        column=columns["Sector 2"]
-                    ).value
-                ),
-            }
+        sector_sheet, sector_categories = (
+            read_master_categories(
+                workbook,
+                RESEARCH_SECTOR_SHEET_INDEX,
+                "sector",
+            )
+        )
 
-            if key in research:
-                raise RuntimeError(
-                    "Duplicate research fund name found "
-                    f"in Research Funds.xlsx: "
-                    f"{fund_name!r}"
-                )
-
-            research[key] = record
+        return {
+            "funds": research_funds,
+            "geographyWorksheet": geography_sheet,
+            "sectorWorksheet": sector_sheet,
+            "geographyCategories": geography_categories,
+            "sectorCategories": sector_categories,
+        }
 
     finally:
         workbook.close()
 
-    if not research:
-        raise RuntimeError(
-            "No research records found in "
-            f"{RESEARCH_EXCEL_FILE} / "
-            f"{RESEARCH_SHEET_NAME}."
-        )
 
-    return research
+# ============================================================
+# HOLDINGS PIPELINE
+# ============================================================
 
-
-def get_research_for_fund(
-    pru_access_name: str,
-    research: dict[str, dict],
-) -> tuple[dict | None, str]:
+def extract_holdings_list(value: Any) -> List[Dict[str, Any]]:
     """
-    Match the master PruAccess name to Research Funds.xlsx.
+    Normalize a holdings list from the existing holdings pipeline.
 
-    Matching is exact after whitespace/case normalization.
-
-    Returns:
-
-        (research_record, status)
-
-    status:
-
-        matched
-        missing
-        no_master_name
+    The function intentionally does not fabricate holdings.
     """
 
-    master_name = clean_text(
-        pru_access_name
-    )
+    if not isinstance(value, list):
+        return []
 
-    if not master_name:
-        return None, "no_master_name"
+    results: List[Dict[str, Any]] = []
 
-    key = normalize_match_key(
-        master_name
-    )
-
-    record = research.get(key)
-
-    if record is None:
-        return None, "missing"
-
-    return record, "matched"
-
-
-# =============================================================================
-# HOLDINGS
-# =============================================================================
-
-def clean_holdings(
-    holdings,
-    label: str
-) -> list[dict]:
-
-    if (
-        not isinstance(holdings, list)
-        or not holdings
-    ):
-        raise ValueError(
-            f"{label}: holdings list is empty "
-            "or invalid."
-        )
-
-    if len(holdings) > MAX_HOLDINGS:
-        raise ValueError(
-            f"{label}: more than "
-            f"{MAX_HOLDINGS} holdings."
-        )
-
-    cleaned = []
-
-    for position, item in enumerate(
-        holdings,
-        start=1
-    ):
-        if not isinstance(item, dict):
-            raise ValueError(
-                f"{label}: holding {position} "
-                "is not an object."
-            )
+    for holding in value:
+        if not isinstance(holding, dict):
+            continue
 
         name = clean_text(
-            item.get("name")
+            holding.get("name")
+            or holding.get("holdingName")
+            or holding.get("securityName")
         )
-
-        weight = item.get(
-            "weightPercent"
-        )
-
-        if item.get("rank") != position:
-            raise ValueError(
-                f"{label}: rank "
-                f"{item.get('rank')} at "
-                f"position {position}."
-            )
 
         if not name:
-            raise ValueError(
-                f"{label}: holding {position} "
-                "has no name."
-            )
+            continue
 
-        if (
-            isinstance(weight, bool)
-            or not isinstance(
-                weight,
-                (int, float)
-            )
-            or not 0 <= weight <= 100
-        ):
-            raise ValueError(
-                f"{label}: holding {position} "
-                f"has invalid weight "
-                f"{weight!r}."
-            )
-
-        cleaned.append(
-            {
-                "rank": position,
-                "name": name,
-                "weightPercent": weight,
-                "weightText": clean_text(
-                    item.get("weightText")
-                ),
-            }
-        )
-
-    return cleaned
-
-
-def holdings_block(
-    result: dict,
-    stage: str,
-    label: str
-):
-    """
-    Return the topHoldings block.
-
-    Returns None for an unresolved/failure result.
-    """
-
-    status = result.get(
-        "status"
-    )
-
-    common = {
-        "source": stage,
-        "parser": result.get(
-            "holdingsParser"
-        ),
-        "factsheetUrl": result.get(
-            "factsheetUrl"
-        ),
-        "factsheetDocumentDate": result.get(
-            "factsheetDocumentDate"
-        ),
-        "factsheetDataAsAt": result.get(
-            "factsheetDataAsAt"
-        ),
-    }
-
-    if status == "success":
-
-        holdings = clean_holdings(
-            result.get("topHoldings"),
-            label
-        )
-
-        return {
-            "status": "published",
-            **common,
-            "count": len(holdings),
-            "holdings": holdings,
+        record: Dict[str, Any] = {
+            "rank": holding.get("rank"),
+            "name": name,
+            "weightPercent": holding.get("weightPercent"),
+            "weightText": clean_text(
+                holding.get("weightText")
+            ),
         }
 
-    if status == "no_holdings_section":
+        results.append(record)
 
-        return {
-            "status": "no_holdings_section",
-            **common,
-            "count": 0,
-            "holdings": [],
-        }
+        if len(results) >= MAX_HOLDINGS:
+            break
+
+    return results
+
+
+def load_holdings_file(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+
+    try:
+        payload = load_json(path)
+    except Exception:
+        return {}
+
+    if isinstance(payload, dict):
+        return payload
+
+    return {}
+
+
+def find_holdings_records(payload: Any) -> List[Dict[str, Any]]:
+    """
+    Recursively locate likely fund-level holdings records.
+
+    This is deliberately tolerant of the existing holdings
+    pipeline envelope.
+    """
+
+    found: List[Dict[str, Any]] = []
+
+    def walk(value: Any) -> None:
+        if isinstance(value, dict):
+
+            if (
+                "fundIdentifier" in value
+                or "fundCode" in value
+                or "fundName" in value
+            ):
+                if (
+                    "holdings" in value
+                    or "topHoldings" in value
+                    or "count" in value
+                    or "status" in value
+                ):
+                    found.append(value)
+
+            for child in value.values():
+                walk(child)
+
+        elif isinstance(value, list):
+            for child in value:
+                walk(child)
+
+    walk(payload)
+
+    return found
+
+
+def build_holdings_index() -> Dict[str, Dict[str, Any]]:
+    """
+    Load baseline and recovery outputs.
+
+    Priority:
+
+        baseline
+        Recovery 1
+        Recovery 2
+        Recovery 3
+
+    A later recovery result is only used when a fund is not
+    already resolved by an earlier stage.
+
+    No holdings are fabricated.
+    """
+
+    candidates: Dict[str, Dict[str, Any]] = {}
+
+    source_files: List[Tuple[str, Path]] = [
+        ("baseline", BASELINE_HOLDINGS_FILE),
+    ]
+
+    for index, directory in enumerate(RECOVERY_DIRECTORIES, start=1):
+
+        possible_files = [
+            directory / "all_holdings.json",
+            directory / "holdings.json",
+            directory / "recovered_holdings.json",
+        ]
+
+        for path in possible_files:
+            if path.exists():
+                source_files.append(
+                    (f"recovery{index}", path)
+                )
+
+    for source_name, path in source_files:
+
+        payload = load_holdings_file(path)
+
+        if not payload:
+            continue
+
+        records = find_holdings_records(payload)
+
+        for record in records:
+
+            identifiers = [
+                record.get("fundIdentifier"),
+                record.get("fundCode"),
+                record.get("fundName"),
+            ]
+
+            normalized_identifiers = [
+                normalize_match_key(value)
+                for value in identifiers
+                if clean_text(value)
+            ]
+
+            holdings = (
+                record.get("holdings")
+                or record.get("topHoldings")
+                or []
+            )
+
+            normalized_holdings = extract_holdings_list(
+                holdings
+            )
+
+            if not normalized_holdings:
+                continue
+
+            normalized_record = dict(record)
+
+            normalized_record["holdings"] = normalized_holdings
+            normalized_record["_source"] = source_name
+
+            for identifier in normalized_identifiers:
+                if identifier not in candidates:
+                    candidates[identifier] = normalized_record
+
+    return candidates
+
+
+def resolve_holdings(
+    fund_identifier: str,
+    fund_code: str,
+    fund_name: str,
+    holdings_index: Dict[str, Dict[str, Any]],
+) -> Optional[Dict[str, Any]]:
+    """
+    Resolve holdings by the strongest available identity.
+
+    Priority:
+
+        fundIdentifier
+        fundCode
+        fundName
+    """
+
+    keys = [
+        normalize_match_key(fund_identifier),
+        normalize_match_key(fund_code),
+        normalize_match_key(fund_name),
+    ]
+
+    for key in keys:
+        if not key:
+            continue
+
+        record = holdings_index.get(key)
+
+        if record:
+            holdings = record.get("holdings") or []
+
+            if holdings:
+                return record
 
     return None
 
 
-def resolve_holdings(
-    excel_funds: dict[int, dict]
-) -> dict[int, dict]:
+# ============================================================
+# PRUACCESS / FUND DATA
+# ============================================================
 
-    resolved: dict[int, dict] = {}
+def recursively_find_fund_records(
+    payload: Any,
+) -> List[Dict[str, Any]]:
+    """
+    Recursively locate Prudential fund records.
 
-    def accept(
-        result: dict,
-        stage: str
-    ) -> None:
+    The existing extraction JSON can have different envelopes,
+    so this does not assume one fixed top-level structure.
+    """
 
-        if result.get("excelRow") is None:
-            raise RuntimeError(
-                f"{stage}: result without excelRow."
-            )
+    found: List[Dict[str, Any]] = []
 
-        row = int(
-            result["excelRow"]
+    def looks_like_fund(record: Dict[str, Any]) -> bool:
+        return bool(
+            record.get("fundIdentifier")
+            or record.get("fundName")
+            or record.get("fundCode")
         )
 
-        if row not in excel_funds:
-            raise RuntimeError(
-                f"{stage}: row {row} "
-                "is not in master Excel."
-            )
+    def walk(value: Any) -> None:
 
-        if row in resolved:
-            return
+        if isinstance(value, dict):
 
-        result_url = clean_text(
-            result.get(
-                "prudentialUrl"
+            if looks_like_fund(value):
+                found.append(value)
+
+            for child in value.values():
+                walk(child)
+
+        elif isinstance(value, list):
+
+            for child in value:
+                walk(child)
+
+    walk(payload)
+
+    return found
+
+
+def load_prudential_fund_records() -> Dict[str, Dict[str, Any]]:
+    """
+    Load available Prudential fund metadata from existing
+    extraction outputs.
+
+    Searches the known production locations.
+
+    The first record for an identity is retained.
+    """
+
+    files: List[Path] = []
+
+    if PRUACCESS_PRODUCTION_DIR.exists():
+        files.extend(
+            sorted(
+                PRUACCESS_PRODUCTION_DIR.rglob("*.json")
             )
         )
 
-        master_url = excel_funds[
-            row
-        ]["prudentialUrl"]
-
-        if (
-            result_url
-            and result_url != master_url
-        ):
-            raise RuntimeError(
-                f"{stage}: URL mismatch "
-                f"for row {row}."
+    if PRUACCESS_FUNDS_DIR.exists():
+        files.extend(
+            sorted(
+                PRUACCESS_FUNDS_DIR.rglob("*.json")
             )
-
-        block = holdings_block(
-            result,
-            stage,
-            f"{stage} row {row}"
         )
 
-        if block is not None:
+    index: Dict[str, Dict[str, Any]] = {}
 
-            block["fundName"] = (
-                clean_text(
-                    result.get(
-                        "fundName"
-                    )
-                )
-                or None
-            )
+    for path in files:
 
-            resolved[row] = block
-
-    # ------------------------------------------------------------------
-    # Baseline
-    # ------------------------------------------------------------------
-
-    if not BASELINE_FILE.exists():
-        raise FileNotFoundError(
-            f"Baseline output not found: "
-            f"{BASELINE_FILE}"
-        )
-
-    baseline = load_json(
-        BASELINE_FILE
-    )
-
-    for result in baseline.get(
-        "funds",
-        []
-    ):
-        accept(
-            result,
-            "baseline"
-        )
-
-    # ------------------------------------------------------------------
-    # Recovery 1 / 2 / 3
-    # ------------------------------------------------------------------
-
-    for stage, stage_dir in RECOVERY_STAGES:
-
-        funds_dir = (
-            stage_dir / "funds"
-        )
-
-        if not funds_dir.exists():
-            print(
-                f"WARNING: {funds_dir} "
-                f"not found; {stage} skipped."
-            )
+        try:
+            payload = load_json(path)
+        except Exception:
             continue
 
-        for path in sorted(
-            funds_dir.glob(
-                "*/top_holdings.json"
-            )
-        ):
-            accept(
-                load_json(path),
-                stage
-            )
+        records = recursively_find_fund_records(payload)
 
-    return resolved
+        for record in records:
+
+            identifiers = [
+                record.get("fundIdentifier"),
+                record.get("fundCode"),
+                record.get("fundName"),
+            ]
+
+            for identifier in identifiers:
+
+                key = normalize_match_key(identifier)
+
+                if not key:
+                    continue
+
+                if key not in index:
+                    index[key] = record
+
+    return index
 
 
-# =============================================================================
-# PRUACCESS
-# =============================================================================
+def resolve_prudential_fund(
+    fund_identifier: str,
+    fund_code: str,
+    fund_name: str,
+    pruaccess_name: str,
+    prudential_index: Dict[str, Dict[str, Any]],
+) -> Optional[Dict[str, Any]]:
+    """
+    Resolve an upstream Prudential fund record.
 
-def validate_bid_history(
-    history: dict,
-    label: str
-) -> list[dict]:
+    Priority follows the strongest identity available.
+    """
 
-    observations = history.get(
-        "observations"
+    candidates = [
+        fund_identifier,
+        fund_code,
+        fund_name,
+        pruaccess_name,
+    ]
+
+    for candidate in candidates:
+
+        key = normalize_match_key(candidate)
+
+        if not key:
+            continue
+
+        record = prudential_index.get(key)
+
+        if record:
+            return record
+
+    return None
+
+
+# ============================================================
+# FIELD EXTRACTION
+# ============================================================
+
+def first_nonempty(
+    record: Dict[str, Any],
+    *keys: str,
+) -> Any:
+    for key in keys:
+        if key not in record:
+            continue
+
+        value = record.get(key)
+
+        if not is_empty_value(value):
+            return value
+
+    return None
+
+
+def extract_dividend_fields(
+    source: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Extract dividend information.
+
+    IMPORTANT:
+
+        dividendUnit is the actual Prudential source field.
+
+    hasDividend is derived from dividendRate.
+
+    We deliberately do not calculate dividend units.
+    """
+
+    dividend_rate_raw = source.get("dividendRate")
+
+    dividend_rate = clean_raw_text(
+        dividend_rate_raw
     )
 
-    if (
-        not isinstance(
-            observations,
-            list
-        )
-        or not observations
-    ):
-        raise ValueError(
-            f"{label}: no BID observations."
-        )
+    dividend_unit = clean_text(
+        source.get("dividendUnit")
+    )
 
-    if (
-        history.get(
-            "observationCount"
-        )
-        != len(observations)
-    ):
-        raise ValueError(
-            f"{label}: observationCount "
-            "mismatch."
-        )
+    return {
+        "hasDividend": bool(dividend_rate),
+        "dividendRate": dividend_rate or None,
+        "dividendUnit": dividend_unit or None,
+    }
 
-    previous = None
-    seen = set()
 
-    for item in observations:
+def build_fund_metadata(
+    source: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Build the public fund metadata block.
 
-        date = item.get(
-            "date"
-        )
+    Values are passed through from the Prudential extraction.
+    """
 
-        price = item.get(
-            "bidPrice"
-        )
+    dividend = extract_dividend_fields(source)
 
-        if (
-            not isinstance(
-                date,
-                str
+    return {
+        "fundCurrency": clean_text(
+            source.get("fundCurrency")
+        ),
+        "unitCurrency": clean_text(
+            source.get("unitCurrency")
+        ),
+        "assetClass": clean_text(
+            source.get("assetClass")
+        ),
+        "assetSubClass": clean_text(
+            source.get("assetSubClass")
+        ),
+        "riskClassification": clean_text(
+            source.get("riskClassification")
+        ),
+        "bidPrice": clean_text(
+            source.get("bidPrice")
+        ),
+        "offerPrice": clean_text(
+            source.get("offerPrice")
+        ),
+        "valuationDate": clean_text(
+            source.get("valuationDate")
+        ),
+        "inceptionDate": clean_text(
+            source.get("inceptionDate")
+        ),
+
+        "cumulativeYtd": clean_text(
+            source.get("cumulativeYtd")
+        ),
+        "cumulative1m": clean_text(
+            source.get("cumulative1m")
+        ),
+        "cumulative3m": clean_text(
+            source.get("cumulative3m")
+        ),
+        "cumulative6m": clean_text(
+            source.get("cumulative6m")
+        ),
+        "cumulative1y": clean_text(
+            source.get("cumulative1y")
+        ),
+        "cumulative3y": clean_text(
+            source.get("cumulative3y")
+        ),
+        "cumulative5y": clean_text(
+            source.get("cumulative5y")
+        ),
+
+        "annualised3y": clean_text(
+            source.get("annualised3y")
+        ),
+        "annualised5y": clean_text(
+            source.get("annualised5y")
+        ),
+        "annualised10y": clean_text(
+            source.get("annualised10y")
+        ),
+        "annualisedSinceLaunch": clean_text(
+            source.get("annualisedSinceLaunch")
+        ),
+
+        "factsheetUrl": clean_text(
+            source.get("factsheetUrl")
+        ),
+        "prospectusUrl": clean_text(
+            source.get("prospectusUrl")
+        ),
+        "productHighlightSheetUrl": clean_text(
+            source.get("productHighlightSheetUrl")
+        ),
+        "annualReportUrl": clean_text(
+            source.get("annualReportUrl")
+        ),
+
+        "fundObjective": clean_text(
+            source.get("fundObjective")
+        ),
+
+        "investmentManager": clean_text(
+            first_nonempty(
+                source,
+                "investmentManager",
+                "fundManagers",
             )
-            or not date
-        ):
-            raise ValueError(
-                f"{label}: invalid date "
-                f"{date!r}."
+        ),
+
+        # Dividend fields.
+        "hasDividend": dividend["hasDividend"],
+        "dividendRate": dividend["dividendRate"],
+        "dividendUnit": dividend["dividendUnit"],
+    }
+
+
+# ============================================================
+# RESEARCH BLOCK
+# ============================================================
+
+def build_research_block(
+    research_record: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """
+    Build the per-fund research block.
+
+    Empty research remains explicitly empty.
+
+    Research values are never inferred.
+    """
+
+    if not research_record:
+        return {
+            "geographic1": None,
+            "geographic2": None,
+            "sector1": None,
+            "sector2": None,
+        }
+
+    return {
+        "geographic1": (
+            research_record.get("geographic1")
+            or None
+        ),
+        "geographic2": (
+            research_record.get("geographic2")
+            or None
+        ),
+        "sector1": (
+            research_record.get("sector1")
+            or None
+        ),
+        "sector2": (
+            research_record.get("sector2")
+            or None
+        ),
+    }
+
+
+# ============================================================
+# FUND IDENTITY
+# ============================================================
+
+def get_fund_identifier(
+    master_record: Dict[str, Any],
+    source: Optional[Dict[str, Any]],
+) -> str:
+    """
+    Resolve the Prudential fund identifier.
+
+    Source identifier is preferred when available.
+    """
+
+    if source:
+        identifier = clean_text(
+            source.get("fundIdentifier")
+        )
+
+        if identifier:
+            return identifier
+
+    return ""
+
+
+def get_fund_code(
+    source: Optional[Dict[str, Any]],
+) -> str:
+    if not source:
+        return ""
+
+    return clean_text(
+        source.get("fundCode")
+    )
+
+
+def get_fund_name(
+    master_record: Dict[str, Any],
+    source: Optional[Dict[str, Any]],
+) -> str:
+    """
+    Master fund name / Prudential source fund name is preferred.
+
+    If source has a fund name, use it.
+
+    Otherwise fall back to PruAccess name.
+    """
+
+    if source:
+        name = clean_text(
+            source.get("fundName")
+        )
+
+        if name:
+            return name
+
+    return clean_text(
+        master_record.get("pruAccessName")
+    )
+
+
+# ============================================================
+# BID HISTORY
+# ============================================================
+
+def parse_date_value(value: Any) -> Optional[str]:
+    """
+    Normalize common date representations to YYYY-MM-DD.
+
+    Existing historical BID dates are expected to already be
+    clean. This is only a defensive normalizer.
+    """
+
+    if value is None:
+        return None
+
+    if isinstance(value, datetime):
+        return value.date().isoformat()
+
+    if isinstance(value, date):
+        return value.isoformat()
+
+    text = clean_text(value)
+
+    if not text:
+        return None
+
+    # Already ISO.
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):
+        return text
+
+    # Common DD/MM/YYYY.
+    match = re.fullmatch(
+        r"(\d{2})/(\d{2})/(\d{4})",
+        text,
+    )
+
+    if match:
+        day, month, year = match.groups()
+
+        return f"{year}-{month}-{day}"
+
+    return text
+
+
+def parse_bid_value(value: Any) -> Optional[float]:
+    """
+    Convert BID value into a number where possible.
+
+    Currency symbols and commas are removed.
+    """
+
+    if value is None:
+        return None
+
+    if isinstance(value, bool):
+        return None
+
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    text = clean_text(value)
+
+    if not text:
+        return None
+
+    text = text.replace(",", "")
+    text = text.replace("$", "")
+    text = text.replace("SGD", "")
+    text = text.strip()
+
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def recursively_find_bid_observations(
+    payload: Any,
+) -> List[Dict[str, Any]]:
+    """
+    Recursively locate historical BID observation records.
+
+    Accepted common structures include:
+
+        {"date": "...", "bid": "..."}
+        {"valuationDate": "...", "bidPrice": "..."}
+        {"date": "...", "bidPrice": "..."}
+    """
+
+    observations: List[Dict[str, Any]] = []
+
+    def walk(value: Any) -> None:
+
+        if isinstance(value, dict):
+
+            date_value = first_nonempty(
+                value,
+                "date",
+                "valuationDate",
+                "bidDate",
             )
 
-        if (
-            isinstance(price, bool)
-            or not isinstance(
-                price,
-                (int, float)
-            )
-        ):
-            raise ValueError(
-                f"{label}: invalid BID "
-                f"price on {date}."
+            bid_value = first_nonempty(
+                value,
+                "bid",
+                "bidPrice",
+                "value",
+                "price",
             )
 
-        if date in seen:
-            raise ValueError(
-                f"{label}: duplicate date "
-                f"{date}."
-            )
+            if (
+                date_value is not None
+                and bid_value is not None
+            ):
+                parsed_date = parse_date_value(
+                    date_value
+                )
 
-        if (
-            previous is not None
-            and date < previous
-        ):
-            raise ValueError(
-                f"{label}: observations "
-                "not chronological."
-            )
+                parsed_bid = parse_bid_value(
+                    bid_value
+                )
 
-        seen.add(date)
-        previous = date
+                if (
+                    parsed_date is not None
+                    and parsed_bid is not None
+                ):
+                    observations.append(
+                        {
+                            "date": parsed_date,
+                            "bid": parsed_bid,
+                        }
+                    )
+
+            for child in value.values():
+                walk(child)
+
+        elif isinstance(value, list):
+
+            for child in value:
+                walk(child)
+
+    walk(payload)
+
+    return observations
+
+
+def deduplicate_bid_observations(
+    observations: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """
+    Deduplicate by date.
+
+    The raw historical BID dataset should contain only one
+    observation for a given date.
+    """
+
+    by_date: Dict[str, Dict[str, Any]] = {}
+
+    for observation in observations:
+
+        date_value = observation.get("date")
+        bid_value = observation.get("bid")
+
+        if not date_value:
+            continue
+
+        if bid_value is None:
+            continue
+
+        by_date[date_value] = {
+            "date": date_value,
+            "bid": bid_value,
+        }
 
     return [
-        {
-            "date": item["date"],
-            "bidPrice": item["bidPrice"],
-        }
-        for item in observations
+        by_date[key]
+        for key in sorted(by_date.keys())
     ]
 
 
-def load_pruaccess() -> dict[int, dict]:
+def load_bid_history_for_identifier(
+    fund_identifier: str,
+    fund_code: str,
+    fund_name: str,
+) -> List[Dict[str, Any]]:
+    """
+    Search existing PruAccess output for historical BID data.
 
-    result = {}
+    This function does not create or carry forward missing raw
+    observations.
+    """
 
-    if not PRUACCESS_FUNDS_DIR.exists():
+    search_keys = [
+        normalize_match_key(fund_identifier),
+        normalize_match_key(fund_code),
+        normalize_match_key(fund_name),
+    ]
 
-        print(
-            f"WARNING: "
-            f"{PRUACCESS_FUNDS_DIR} "
-            "not found."
-        )
+    search_keys = [
+        key for key in search_keys if key
+    ]
 
-        return result
+    if not search_keys:
+        return []
 
-    for directory in sorted(
-        PRUACCESS_FUNDS_DIR.iterdir()
-    ):
+    directories = [
+        PRUACCESS_PRODUCTION_DIR,
+        PRUACCESS_FUNDS_DIR,
+    ]
 
-        match = re.match(
-            r"^(\d+)_",
-            directory.name
-        )
+    observations: List[Dict[str, Any]] = []
 
-        if (
-            not directory.is_dir()
-            or not match
-        ):
+    for directory in directories:
+
+        if not directory.exists():
             continue
 
-        bid_file = (
-            directory
-            / "bid_history.json"
-        )
+        for path in directory.rglob("*.json"):
 
-        fund_file = (
-            directory
-            / "prudential_fund.json"
-        )
+            # Avoid reading the output files produced by this
+            # build script if they happen to be under data/.
+            if DATA_DIR in path.parents:
+                continue
 
-        if not (
-            bid_file.exists()
-            and fund_file.exists()
-        ):
-            continue
+            try:
+                payload = load_json(path)
+            except Exception:
+                continue
 
-        row = int(
-            match.group(1)
-        )
+            text_blob = ""
 
-        result[row] = {
-            "prudential": load_json(
-                fund_file
-            ),
-            "bidHistory": load_json(
-                bid_file
-            ),
-        }
-
-    return result
-
-
-# =============================================================================
-# FUND RESEARCH MERGE
-# =============================================================================
-
-def build_research_block(
-    pru_access_name: str,
-    research: dict[str, dict],
-) -> tuple[dict, str]:
-
-    record, status = get_research_for_fund(
-        pru_access_name,
-        research
-    )
-
-    if record is None:
-
-        return (
-            {
-                "status": status,
-                "source": str(
-                    RESEARCH_EXCEL_FILE
-                ),
-                "worksheet": (
-                    RESEARCH_SHEET_NAME
-                ),
-                "geographic1": None,
-                "geographic2": None,
-                "sector1": None,
-                "sector2": None,
-            },
-            status,
-        )
-
-    return (
-        {
-            "status": "matched",
-            "source": str(
-                RESEARCH_EXCEL_FILE
-            ),
-            "worksheet": (
-                RESEARCH_SHEET_NAME
-            ),
-            "researchFundName": (
-                record[
-                    "researchFundName"
+            if isinstance(payload, dict):
+                identity_values = [
+                    payload.get("fundIdentifier"),
+                    payload.get("fundCode"),
+                    payload.get("fundName"),
+                    payload.get("pruAccessName"),
                 ]
-            ),
-            "geographic1": (
-                record[
-                    "geographic1"
-                ]
-                or None
-            ),
-            "geographic2": (
-                record[
-                    "geographic2"
-                ]
-                or None
-            ),
-            "sector1": (
-                record[
-                    "sector1"
-                ]
-                or None
-            ),
-            "sector2": (
-                record[
-                    "sector2"
-                ]
-                or None
-            ),
-        },
-        "matched",
+
+                identity_keys = {
+                    normalize_match_key(value)
+                    for value in identity_values
+                    if clean_text(value)
+                }
+
+                if identity_keys.intersection(search_keys):
+                    observations.extend(
+                        recursively_find_bid_observations(
+                            payload
+                        )
+                    )
+
+            elif isinstance(payload, list):
+                records = recursively_find_fund_records(
+                    payload
+                )
+
+                for record in records:
+
+                    identity_values = [
+                        record.get("fundIdentifier"),
+                        record.get("fundCode"),
+                        record.get("fundName"),
+                        record.get("pruAccessName"),
+                    ]
+
+                    identity_keys = {
+                        normalize_match_key(value)
+                        for value in identity_values
+                        if clean_text(value)
+                    }
+
+                    if identity_keys.intersection(
+                        search_keys
+                    ):
+                        observations.extend(
+                            recursively_find_bid_observations(
+                                record
+                            )
+                        )
+
+    return deduplicate_bid_observations(
+        observations
     )
 
 
-# =============================================================================
-# BUILD
-# =============================================================================
+# ============================================================
+# MAIN BUILD
+# ============================================================
 
 def main() -> int:
 
-    print("=" * 72)
-    print(
-        "VGRAT FMS - BUILD FUNDS DATA"
-    )
-    print("=" * 72)
+    print("VGrat FMS - Build Funds Data")
+    print("=" * 60)
 
-    print(
-        f"Master workbook: "
-        f"{MASTER_EXCEL_FILE}"
-    )
+    # --------------------------------------------------------
+    # 1. Read controlling master universe.
+    # --------------------------------------------------------
 
-    print(
-        f"Research workbook: "
-        f"{RESEARCH_EXCEL_FILE}"
-    )
+    print("Reading master fund universe...")
 
-    print(
-        f"Research worksheet: "
-        f"{RESEARCH_SHEET_NAME}"
-    )
+    master_funds = read_master_funds()
 
-    print(
-        f"Allow unresolved: "
-        f"{ALLOW_UNRESOLVED}"
-    )
-
-    # ------------------------------------------------------------------
-    # Load inputs
-    # ------------------------------------------------------------------
-
-    excel_funds = (
-        read_excel_funds()
-    )
-
-    research_funds = (
-        read_research_funds()
-    )
-
-    holdings = (
-        resolve_holdings(
-            excel_funds
+    if not master_funds:
+        raise RuntimeError(
+            "No funds were found in Funds Links.xlsm."
         )
+
+    print(
+        f"Master universe: {len(master_funds)} funds"
     )
 
-    pruaccess = (
-        load_pruaccess()
+    # --------------------------------------------------------
+    # 2. Read Research Funds.xlsx.
+    # --------------------------------------------------------
+
+    print("Reading Research Funds.xlsx...")
+
+    research_data = read_all_research_data()
+
+    research_funds = research_data["funds"]
+
+    geography_categories = research_data[
+        "geographyCategories"
+    ]
+
+    sector_categories = research_data[
+        "sectorCategories"
+    ]
+
+    print(
+        f"Research records: {len(research_funds)}"
     )
 
-    generated_at = (
-        utc_now_iso()
+    print(
+        f"Geography master categories: "
+        f"{len(geography_categories)}"
     )
 
-    # ------------------------------------------------------------------
-    # Counters
-    # ------------------------------------------------------------------
+    print(
+        f"Sector master categories: "
+        f"{len(sector_categories)}"
+    )
 
-    fund_records = []
-    bid_records = []
+    # --------------------------------------------------------
+    # 3. Load holdings.
+    # --------------------------------------------------------
 
-    gaps = []
+    print("Loading holdings pipeline outputs...")
 
-    stage_counts: dict[str, int] = {}
+    holdings_index = build_holdings_index()
 
-    published = 0
-    no_section = 0
-    unresolved_holdings = 0
+    print(
+        f"Holdings identity records: "
+        f"{len(holdings_index)}"
+    )
 
-    bid_ok = 0
-    bid_missing = 0
-    total_observations = 0
+    # --------------------------------------------------------
+    # 4. Load Prudential fund extraction.
+    # --------------------------------------------------------
+
+    print("Loading Prudential fund extraction...")
+
+    prudential_index = (
+        load_prudential_fund_records()
+    )
+
+    print(
+        f"Prudential fund records indexed: "
+        f"{len(prudential_index)}"
+    )
+
+    # --------------------------------------------------------
+    # 5. Build funds.
+    # --------------------------------------------------------
+
+    funds: List[Dict[str, Any]] = []
 
     research_matched = 0
     research_missing = 0
 
-    # ------------------------------------------------------------------
-    # Build each master fund
-    # ------------------------------------------------------------------
+    holdings_matched = 0
+    holdings_missing = 0
 
-    for row in sorted(
-        excel_funds
-    ):
+    prudential_matched = 0
+    prudential_missing = 0
 
-        excel = excel_funds[
-            row
-        ]
+    dividend_count = 0
 
-        pru = pruaccess.get(
-            row
+    unresolved: List[Dict[str, Any]] = []
+
+    for master_record in master_funds:
+
+        prudential_url = clean_text(
+            master_record.get("prudentialUrl")
         )
 
-        prudential = (
-            (pru or {}).get(
-                "prudential"
+        pruaccess_name = clean_text(
+            master_record.get("pruAccessName")
+        )
+
+        # ----------------------------------------------------
+        # Resolve Prudential source.
+        # ----------------------------------------------------
+
+        source = resolve_prudential_fund(
+            fund_identifier="",
+            fund_code="",
+            fund_name="",
+            pruaccess_name=pruaccess_name,
+            prudential_index=prudential_index,
+        )
+
+        if source:
+            prudential_matched += 1
+        else:
+            prudential_missing += 1
+
+        fund_identifier = get_fund_identifier(
+            master_record,
+            source,
+        )
+
+        fund_code = get_fund_code(
+            source,
+        )
+
+        fund_name = get_fund_name(
+            master_record,
+            source,
+        )
+
+        # ----------------------------------------------------
+        # Research lookup.
+        #
+        # Match against the researched fund name.
+        # ----------------------------------------------------
+
+        research_record = research_funds.get(
+            normalize_match_key(fund_name)
+        )
+
+        if research_record is None:
+            research_record = research_funds.get(
+                normalize_match_key(pruaccess_name)
             )
-            or {}
+
+        if research_record:
+            research_matched += 1
+        else:
+            research_missing += 1
+
+        # ----------------------------------------------------
+        # Holdings lookup.
+        # ----------------------------------------------------
+
+        holdings_record = resolve_holdings(
+            fund_identifier=fund_identifier,
+            fund_code=fund_code,
+            fund_name=fund_name,
+            holdings_index=holdings_index,
         )
 
-        block = holdings.get(
-            row
-        )
+        if holdings_record:
+            holdings_matched += 1
+        else:
+            holdings_missing += 1
 
-        # ==============================================================
-        # IDENTITY
-        # ==============================================================
+        # ----------------------------------------------------
+        # Fund metadata.
+        # ----------------------------------------------------
 
-        identity = {
-            "excelRow": row,
+        if source:
+            fund_metadata = build_fund_metadata(
+                source
+            )
+        else:
+            # Keep a stable schema even when the source
+            # extraction cannot be resolved.
+            fund_metadata = {
+                "fundCurrency": "",
+                "unitCurrency": "",
+                "assetClass": "",
+                "assetSubClass": "",
+                "riskClassification": "",
+                "bidPrice": "",
+                "offerPrice": "",
+                "valuationDate": "",
+                "inceptionDate": "",
+                "cumulativeYtd": "",
+                "cumulative1m": "",
+                "cumulative3m": "",
+                "cumulative6m": "",
+                "cumulative1y": "",
+                "cumulative3y": "",
+                "cumulative5y": "",
+                "annualised3y": "",
+                "annualised5y": "",
+                "annualised10y": "",
+                "annualisedSinceLaunch": "",
+                "factsheetUrl": "",
+                "prospectusUrl": "",
+                "productHighlightSheetUrl": "",
+                "annualReportUrl": "",
+                "fundObjective": "",
+                "investmentManager": "",
+                "hasDividend": False,
+                "dividendRate": None,
+                "dividendUnit": None,
+            }
 
-            "fundIdentifier": (
-                clean_text(
-                    prudential.get(
-                        "fundIdentifier"
-                    )
-                )
-                or None
-            ),
+        if fund_metadata.get("hasDividend"):
+            dividend_count += 1
 
-            "fundCode": (
-                clean_text(
-                    prudential.get(
-                        "fundCode"
-                    )
-                )
-                or None
-            ),
+        # ----------------------------------------------------
+        # Top holdings.
+        # ----------------------------------------------------
 
-            "fundName": (
-                clean_text(
-                    prudential.get(
-                        "fundName"
-                    )
-                )
-                or (
-                    block or {}
-                ).get(
-                    "fundName"
-                )
-                or None
-            ),
+        if holdings_record:
 
-            "pruAccessName": (
-                excel[
-                    "pruAccessName"
-                ]
-                or None
-            ),
-
-            "prudentialUrl": (
-                excel[
-                    "prudentialUrl"
-                ]
-            ),
-        }
-
-        # ==============================================================
-        # HOLDINGS
-        # ==============================================================
-
-        if block is None:
-
-            unresolved_holdings += 1
-
-            gaps.append(
-                "Row "
-                f"{row}: holdings "
-                "unresolved after "
-                "Recovery 3."
+            source_holdings = (
+                holdings_record.get("holdings")
+                or []
             )
 
             top_holdings = {
-                "status": "unresolved",
-                "source": None,
+                "status": clean_text(
+                    holdings_record.get("status")
+                ) or "published",
+                "source": clean_text(
+                    holdings_record.get("_source")
+                ),
+                "parser": clean_text(
+                    holdings_record.get("parser")
+                ),
+                "factsheetUrl": clean_text(
+                    holdings_record.get(
+                        "factsheetUrl"
+                    )
+                ),
+                "factsheetDocumentDate": clean_text(
+                    holdings_record.get(
+                        "factsheetDocumentDate"
+                    )
+                ),
+                "factsheetDataAsAt": clean_text(
+                    holdings_record.get(
+                        "factsheetDataAsAt"
+                    )
+                ),
+                "count": len(source_holdings),
+                "holdings": source_holdings,
+            }
+
+        else:
+
+            top_holdings = {
+                "status": "unavailable",
+                "source": "",
+                "parser": "",
+                "factsheetUrl": fund_metadata.get(
+                    "factsheetUrl",
+                    "",
+                ),
+                "factsheetDocumentDate": "",
+                "factsheetDataAsAt": "",
                 "count": 0,
                 "holdings": [],
             }
 
-        else:
+        # ----------------------------------------------------
+        # Research.
+        # ----------------------------------------------------
 
-            top_holdings = {
-                key: value
-                for key, value
-                in block.items()
-                if key != "fundName"
-            }
+        research_block = build_research_block(
+            research_record
+        )
 
-            source = block[
-                "source"
-            ]
+        # ----------------------------------------------------
+        # Final fund record.
+        # ----------------------------------------------------
 
-            stage_counts[
-                source
-            ] = (
-                stage_counts.get(
-                    source,
-                    0
-                )
-                + 1
-            )
+        fund_record = {
+            "excelRow": master_record.get(
+                "excelRow"
+            ),
+            "fundIdentifier": fund_identifier,
+            "fundCode": fund_code,
+            "fundName": fund_name,
+            "pruAccessName": pruaccess_name,
+            "prudentialUrl": prudential_url,
 
-            if (
-                block[
-                    "status"
-                ]
-                == "published"
-            ):
-                published += 1
-            else:
-                no_section += 1
+            "fund": fund_metadata,
 
-        # ==============================================================
-        # FUND INFORMATION
-        # ==============================================================
+            "research": research_block,
 
-        fund_info = None
+            "topHoldings": top_holdings,
+        }
 
-        if prudential:
+        funds.append(fund_record)
 
-            fund_info = {
-                key: value
-                for key, value
-                in prudential.items()
-                if key not in {
-                    "raw",
-                    "fundIdentifier",
-                    "fundCode",
-                    "fundName",
+        # ----------------------------------------------------
+        # Unresolved tracking.
+        # ----------------------------------------------------
+
+        issues = []
+
+        if not source:
+            issues.append("prudential_source_missing")
+
+        if not research_record:
+            issues.append("research_missing")
+
+        if not holdings_record:
+            issues.append("holdings_missing")
+
+        if issues:
+            unresolved.append(
+                {
+                    "excelRow": master_record.get(
+                        "excelRow"
+                    ),
+                    "fundIdentifier": fund_identifier,
+                    "fundCode": fund_code,
+                    "fundName": fund_name,
+                    "pruAccessName": pruaccess_name,
+                    "issues": issues,
                 }
-            }
-
-            # ----------------------------------------------------------
-            # Dividend normalization
-            # ----------------------------------------------------------
-
-            dividend_rate = (
-                fund_info.get(
-                    "dividendRate"
-                )
             )
 
-            if (
-                dividend_rate is not None
-                and clean_text(
-                    dividend_rate
-                )
-            ):
-                fund_info[
-                    "hasDividend"
-                ] = True
+    # --------------------------------------------------------
+    # 6. Build BID history.
+    # --------------------------------------------------------
 
-            else:
-                fund_info[
-                    "hasDividend"
-                ] = False
+    print("Building historical BID data...")
 
-        # ==============================================================
-        # RESEARCH
-        # ==============================================================
+    bid_history_funds: List[Dict[str, Any]] = []
 
-        research_block, research_status = (
-            build_research_block(
-                excel[
-                    "pruAccessName"
+    bid_observation_count = 0
+    bid_funds_with_history = 0
+
+    for fund in funds:
+
+        fund_identifier = clean_text(
+            fund.get("fundIdentifier")
+        )
+
+        fund_code = clean_text(
+            fund.get("fundCode")
+        )
+
+        fund_name = clean_text(
+            fund.get("fundName")
+        )
+
+        observations = load_bid_history_for_identifier(
+            fund_identifier=fund_identifier,
+            fund_code=fund_code,
+            fund_name=fund_name,
+        )
+
+        if observations:
+            bid_funds_with_history += 1
+
+        bid_observation_count += len(
+            observations
+        )
+
+        bid_history_funds.append(
+            {
+                "excelRow": fund.get("excelRow"),
+                "fundIdentifier": fund_identifier,
+                "fundCode": fund_code,
+                "fundName": fund_name,
+                "pruAccessName": clean_text(
+                    fund.get("pruAccessName")
+                ),
+                "observations": observations,
+            }
+        )
+
+    # --------------------------------------------------------
+    # 7. Build funds.json.
+    # --------------------------------------------------------
+
+    generated_at = utc_now_iso()
+
+    funds_payload = {
+        "schemaVersion": SCHEMA_VERSION,
+        "generatedAt": generated_at,
+
+        "research": {
+            "source": RESEARCH_EXCEL_FILE.name,
+
+            "fundResearchWorksheet": (
+                RESEARCH_FUND_SHEET_NAME
+            ),
+
+            "masterCategoryWorksheets": {
+                "geography": research_data[
+                    "geographyWorksheet"
                 ],
-                research_funds,
-            )
-        )
+                "sector": research_data[
+                    "sectorWorksheet"
+                ],
+            },
 
-        if research_status == "matched":
+            # IMPORTANT:
+            # These are authoritative UI filter values.
+            #
+            # They are copied directly from worksheets 2 and 3.
+            #
+            # They are NOT derived from the fund records.
+            "masterCategories": {
+                "geography": geography_categories,
+                "sector": sector_categories,
+            },
+        },
 
-            research_matched += 1
+        "summary": {
+            "fundCount": len(funds),
 
-        elif research_status == "missing":
+            "researchMatched": research_matched,
+            "researchMissing": research_missing,
 
-            research_missing += 1
+            "holdingsMatched": holdings_matched,
+            "holdingsMissing": holdings_missing,
 
-        # ==============================================================
-        # FUNDS.JSON RECORD
-        # ==============================================================
+            "prudentialMatched": prudential_matched,
+            "prudentialMissing": prudential_missing,
 
-        fund_records.append(
-            {
-                **identity,
+            "dividendFunds": dividend_count,
 
-                "fund": fund_info,
+            "unresolvedCount": len(unresolved),
+        },
 
-                "research": research_block,
-
-                "topHoldings": top_holdings,
-            }
-        )
-
-        # ==============================================================
-        # BID HISTORY
-        # ==============================================================
-
-        if pru is None:
-
-            bid_missing += 1
-
-            gaps.append(
-                "Row "
-                f"{row}: BID history "
-                "missing."
-            )
-
-            bid_history = {
-                "status": "unresolved",
-                "priceType": "BID",
-                "observationCount": 0,
-                "observations": [],
-            }
-
-        else:
-
-            history = (
-                pru[
-                    "bidHistory"
-                ]
-            )
-
-            observations = (
-                validate_bid_history(
-                    history,
-                    f"row {row} BID",
-                )
-            )
-
-            bid_ok += 1
-
-            total_observations += (
-                len(
-                    observations
-                )
-            )
-
-            bid_history = {
-                "status": "success",
-                "priceType": "BID",
-
-                "pruAccessFundId": (
-                    history.get(
-                        "fundId"
-                    )
-                ),
-
-                "currency": (
-                    history.get(
-                        "currency"
-                    )
-                ),
-
-                "startDate": (
-                    history.get(
-                        "startDate"
-                    )
-                ),
-
-                "endDate": (
-                    history.get(
-                        "endDate"
-                    )
-                ),
-
-                "observationCount": (
-                    len(
-                        observations
-                    )
-                ),
-
-                "observations": (
-                    observations
-                ),
-            }
-
-        bid_records.append(
-            {
-                **identity,
-                "bidHistory": bid_history,
-            }
-        )
-
-    # ------------------------------------------------------------------
-    # BUILD GATE
-    # ------------------------------------------------------------------
-
-    if gaps:
-
-        print()
-        print(
-            "UNRESOLVED:"
-        )
-
-        for gap in gaps:
-            print(
-                f" - {gap}"
-            )
-
-        if not ALLOW_UNRESOLVED:
-
-            print()
-            print(
-                "BUILD FAILED: "
-                "unresolved core funds "
-                "are present."
-            )
-
-            print(
-                "Nothing was written."
-            )
-
-            print(
-                "Set ALLOW_UNRESOLVED=1 "
-                "to publish unresolved "
-                "funds."
-            )
-
-            return 1
-
-    # ------------------------------------------------------------------
-    # Output envelope
-    # ------------------------------------------------------------------
-
-    envelope = {
-        "schemaVersion": (
-            SCHEMA_VERSION
-        ),
-
-        "generatedAtUtc": (
-            generated_at
-        ),
-
-        "source": (
-            str(
-                MASTER_EXCEL_FILE
-            )
-        ),
-
-        "fundCount": (
-            len(
-                fund_records
-            )
-        ),
+        "funds": funds,
     }
 
-    # ------------------------------------------------------------------
-    # funds.json
-    # ------------------------------------------------------------------
+    # --------------------------------------------------------
+    # 8. Build bid_history.json.
+    # --------------------------------------------------------
 
-    write_json_atomic(
-        FUNDS_OUT,
+    bid_history_payload = {
+        "schemaVersion": SCHEMA_VERSION,
+        "generatedAt": generated_at,
 
-        {
-            **envelope,
-
-            "summary": {
-                "holdingsPublished": (
-                    published
-                ),
-
-                "noHoldingsSection": (
-                    no_section
-                ),
-
-                "holdingsUnresolved": (
-                    unresolved_holdings
-                ),
-
-                "holdingsBySource": (
-                    stage_counts
-                ),
-
-                "researchMatched": (
-                    research_matched
-                ),
-
-                "researchMissing": (
-                    research_missing
-                ),
-
-                "researchWorkbook": (
-                    str(
-                        RESEARCH_EXCEL_FILE
-                    )
-                ),
-
-                "researchWorksheet": (
-                    RESEARCH_SHEET_NAME
-                ),
-            },
-
-            "funds": (
-                fund_records
+        "summary": {
+            "fundCount": len(
+                bid_history_funds
             ),
-        },
-    )
-
-    # ------------------------------------------------------------------
-    # bid_history.json
-    # ------------------------------------------------------------------
-
-    write_json_atomic(
-        BID_OUT,
-
-        {
-            **envelope,
-
-            "summary": {
-                "fundsWithBidHistory": (
-                    bid_ok
-                ),
-
-                "bidHistoryUnresolved": (
-                    bid_missing
-                ),
-
-                "totalObservations": (
-                    total_observations
-                ),
-            },
-
-            "funds": (
-                bid_records
+            "fundsWithHistory": (
+                bid_funds_with_history
+            ),
+            "observationCount": (
+                bid_observation_count
             ),
         },
 
-        compact=True,
+        "funds": bid_history_funds,
+    }
+
+    # --------------------------------------------------------
+    # 9. Write outputs.
+    # --------------------------------------------------------
+
+    print("Writing data/funds.json...")
+
+    write_json_atomic(
+        FUNDS_OUTPUT_FILE,
+        funds_payload,
     )
 
-    # ------------------------------------------------------------------
-    # Final summary
-    # ------------------------------------------------------------------
+    print("Writing data/bid_history.json...")
+
+    write_json_atomic(
+        BID_HISTORY_OUTPUT_FILE,
+        bid_history_payload,
+    )
+
+    # --------------------------------------------------------
+    # 10. Build validation.
+    # --------------------------------------------------------
+
+    if not ALLOW_UNRESOLVED and unresolved:
+        print()
+        print(
+            f"WARNING: {len(unresolved)} funds have "
+            f"unresolved source/research/holdings data."
+        )
+
+        for item in unresolved[:20]:
+            print(
+                f"  - {item['fundName']} "
+                f"({', '.join(item['issues'])})"
+            )
+
+        if len(unresolved) > 20:
+            print(
+                f"  ... and "
+                f"{len(unresolved) - 20} more"
+            )
+
+    # --------------------------------------------------------
+    # 11. Final checks.
+    # --------------------------------------------------------
+
+    if len(funds) != len(master_funds):
+        raise RuntimeError(
+            "Fatal: output fund count does not match "
+            "the controlling Funds Links.xlsm universe."
+        )
+
+    if not geography_categories:
+        raise RuntimeError(
+            "Fatal: Geography master categories are empty."
+        )
+
+    if not sector_categories:
+        raise RuntimeError(
+            "Fatal: Sector master categories are empty."
+        )
 
     print()
+    print("Build complete.")
     print(
-        "BUILD COMPLETE"
+        f"Funds: {len(funds)}"
     )
-
     print(
-        f"Funds:                 "
-        f"{len(fund_records)}"
+        f"Dividend funds: {dividend_count}"
     )
-
     print(
-        f"Holdings published:    "
-        f"{published}"
+        f"Geography filter categories: "
+        f"{len(geography_categories)}"
     )
-
     print(
-        f"No holdings section:   "
-        f"{no_section}"
+        f"Sector filter categories: "
+        f"{len(sector_categories)}"
     )
-
     print(
-        f"Holdings unresolved:   "
-        f"{unresolved_holdings}"
+        f"BID observations: "
+        f"{bid_observation_count}"
     )
-
+    print()
     print(
-        f"Holdings by source:    "
-        f"{stage_counts}"
+        f"Output: {FUNDS_OUTPUT_FILE}"
     )
-
     print(
-        f"BID history funds:     "
-        f"{bid_ok}"
-    )
-
-    print(
-        f"BID observations:      "
-        f"{total_observations}"
-    )
-
-    print(
-        f"Research matched:      "
-        f"{research_matched}"
-    )
-
-    print(
-        f"Research missing:      "
-        f"{research_missing}"
-    )
-
-    print(
-        f"Wrote: {FUNDS_OUT}"
-    )
-
-    print(
-        f"Wrote: {BID_OUT}"
+        f"Output: {BID_HISTORY_OUTPUT_FILE}"
     )
 
     return 0
 
 
-# =============================================================================
+# ============================================================
 # ENTRY POINT
-# =============================================================================
+# ============================================================
 
 if __name__ == "__main__":
-
     try:
-        raise SystemExit(
-            main()
-        )
+        sys.exit(main())
 
-    except Exception as error:
-
+    except KeyboardInterrupt:
         print(
-            f"\nFATAL BUILD ERROR: "
-            f"{error}",
+            "\nBuild cancelled.",
             file=sys.stderr,
         )
+        sys.exit(130)
 
-        raise SystemExit(1)
+    except Exception as exc:
+        print(
+            f"\nERROR: {exc}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
