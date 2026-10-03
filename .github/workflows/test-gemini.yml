@@ -62,6 +62,8 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           MARKET_NEWS_MODEL: gemini-3.8-flash
+          MARKET_NEWS_BATCH_SIZE: "3"
+          MARKET_NEWS_MAX_BATCHES: "1"
           MARKET_NEWS_AI_RETRIES: "3"
           MARKET_NEWS_RETRIEVAL_RETRIES: "2"
           MARKET_NEWS_RETRIEVAL_TIMEOUT: "20"
