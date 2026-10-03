@@ -1,9 +1,89 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-02T23:00:47+00:00",
+  "generatedAtUtc": "2026-10-03T05:04:06+00:00",
   "source": "Funds Links.xlsm",
   "fundCount": 67,
+  "research": {
+    "source": "Research Funds.xlsx",
+    "fundResearchWorksheet": "Fund Research",
+    "masterCategoryWorksheets": {
+      "geography": "Geography Summary",
+      "sector": "Industry Sector Summary"
+    },
+    "masterCategories": {
+      "geography": [
+        "Geographical Location",
+        "Global",
+        "United States",
+        "Canada",
+        "United Kingdom",
+        "Europe",
+        "Eurozone",
+        "Germany",
+        "France",
+        "Switzerland",
+        "Netherlands",
+        "Nordics",
+        "Japan",
+        "Australia",
+        "New Zealand",
+        "Singapore",
+        "Hong Kong",
+        "Taiwan",
+        "South Korea",
+        "Asia-Pacific",
+        "Asia ex-Japan",
+        "Greater China",
+        "China",
+        "India",
+        "Indonesia",
+        "Malaysia",
+        "Thailand",
+        "Philippines",
+        "Vietnam",
+        "ASEAN",
+        "Emerging Markets",
+        "Frontier Markets",
+        "Middle East",
+        "Saudi Arabia",
+        "United Arab Emirates",
+        "Israel",
+        "Africa",
+        "South Africa",
+        "Latin America",
+        "Brazil",
+        "Mexico",
+        "Chile",
+        "Americas",
+        "Developed Markets"
+      ],
+      "sector": [
+        "Industry Sector",
+        "Information Technology",
+        "Communication Services",
+        "Consumer Discretionary",
+        "Consumer Staples",
+        "Energy",
+        "Financials",
+        "Health Care",
+        "Industrials",
+        "Materials",
+        "Real Estate",
+        "Utilities",
+        "Cash & Equivalents",
+        "Government Bonds",
+        "Corporate Bonds",
+        "Inflation-Linked Bonds",
+        "Commodities",
+        "Gold & Precious Metals",
+        "Infrastructure",
+        "Private Equity",
+        "Hedge Strategies"
+      ]
+    }
+  },
   "summary": {
+    "fundCount": 67,
     "holdingsPublished": 61,
     "noHoldingsSection": 6,
     "holdingsUnresolved": 0,
@@ -12,7 +92,16 @@
       "recovery1": 4,
       "recovery2": 3,
       "recovery3": 2
-    }
+    },
+    "researchMatched": 67,
+    "researchMissing": 0,
+    "prudentialMatched": 67,
+    "prudentialMissing": 0,
+    "dividendFunds": 19,
+    "bidHistoryFunds": 67,
+    "bidHistoryUnresolved": 0,
+    "totalBidObservations": 151107,
+    "unresolvedCount": 0
   },
   "funds": [
     {
@@ -50,7 +139,14 @@
         "fundObjective": "The Investment objective is to achieve balanced capital growth by investing in a broad range of underlying funds. The targeted allocation to equities and bonds is in the proportion of approximately 65:35.",
         "investmentManager": "Fullerton Fund Management Company Ltd, FIL Fund Management Limited, J.P. Morgan Investment Management Inc., Eastspring Investments (Singapore) Limited, PIMCO Global Advisors (Ireland) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Global",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -85,7 +181,8 @@
             "weightPercent": 9.5,
             "weightText": "9.5%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -123,7 +220,14 @@
         "fundObjective": "The Investment objective is to provide conservative and stable returns by investing in a broad range of underlying funds. The targeted allocation to equities and bonds is in the proportion of approximately 15:85.",
         "investmentManager": "Fullerton Fund Management Company Ltd, FIL Fund Management Limited, J.P. Morgan Investment Management Inc., Eastspring Investments (Singapore) Limited, PIMCO Global Advisors (Ireland) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Global",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "published",
@@ -146,7 +250,8 @@
             "weightPercent": 14.7,
             "weightText": "14.7%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -184,7 +289,14 @@
         "fundObjective": "The Investment objective is to achieve high growth by investing in a broad range of underlying funds. The targeted allocation to equities and bonds is in the proportion of approximately 85:15.",
         "investmentManager": "Fullerton Fund Management Company Ltd, FIL Fund Management Limited, J.P. Morgan Investment Management Inc., Eastspring Investments (Singapore) Limited, PIMCO Global Advisors (Ireland) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Global",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -219,7 +331,8 @@
             "weightPercent": 14.6,
             "weightText": "14.6%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -257,7 +370,14 @@
         "fundObjective": "The Investment objective is to achieve moderate returns by investing in a broad range of underlying funds. The targeted allocation to equities and bonds is in the proportion of approximately 45:55.",
         "investmentManager": "Fullerton Fund Management Company Ltd, FIL Fund Management Limited, J.P. Morgan Investment Management Inc., Eastspring Investments (Singapore) Limited, PIMCO Global Advisors (Ireland) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Global",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -286,7 +406,8 @@
             "weightPercent": 4.8,
             "weightText": "4.8%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -324,7 +445,14 @@
         "fundObjective": "The PRULink Adapt Fund (the \"Fund\") aims to generate capital growth at a controlled risk level consistent with the investment horizon of the portfolio to accumulate assets and provide wealth for investors at maturity. Beyond the investment horizons which would centre around the 2 maturity periods of 2025 and 2035, the objective is to maintain capital stability in the portfolio.",
         "investmentManager": null,
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Global",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -395,7 +523,8 @@
             "weightPercent": 3.4,
             "weightText": "3.4%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -433,7 +562,14 @@
         "fundObjective": "The investment objective of the PRULink America Fund is to invest principally in US equity securities.",
         "investmentManager": "FIL Fund Management Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Canada",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -504,7 +640,8 @@
             "weightPercent": 2.3,
             "weightText": "2.3%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -542,7 +679,14 @@
         "fundObjective": "The investment objective of the PRULink America Fund is to invest principally in US equity securities.",
         "investmentManager": "FIL Fund Management Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Canada",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -613,7 +757,8 @@
             "weightPercent": 2.3,
             "weightText": "2.3%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -651,7 +796,14 @@
         "fundObjective": "The investment objective of the PRULink Asian American Managed Fund is to maximise total return in the medium to long term by investing in a portfolio comprising equities of companies in the Asian ex-Japan region, and quality corporate bonds and other fixed income securities issued in the United States market. The Manager intends to achieve this investment objective by investing all or substantially all of the assets of the PRULink Asian American Managed Fund into the Eastspring Investments Unit Trusts - Asian Balanced Fund which shares the same investment objective.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "China",
+        "geographic2": "United States",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -722,7 +874,8 @@
             "weightPercent": 1.0,
             "weightText": "1.0%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -760,7 +913,14 @@
         "fundObjective": "The PRULink Asian Equity Fund aims to maximise long-term total return by investing in equity and equity-related securities of companies, which are incorporated, or have their area of primary activity, in Asia ex-Japan. The Asia ex-Japan region includes but is not limited to the following countries: Korea, Taiwan, Hong Kong, Philippines, Thailand, Malaysia, Singapore, Indonesia, People's Republic of China, India and Pakistan. The fund may also invest in depository receipts [including American Depository Receipts (ADRs) and Global Depository Receipts (GDRs)], debt securities convertible into common shares, preference shares and warrants.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "China",
+        "geographic2": "Taiwan",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -831,7 +991,8 @@
             "weightPercent": 2.2,
             "weightText": "2.2%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -869,7 +1030,14 @@
         "fundObjective": "The investment objective of the PRULink Asian Fixed-Income Fund is to maximise long-term return by investing in a diversified portfolio consisting primarily of fixed income/ debt securities issued by Asian entities or their subsidiaries.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "China",
+        "geographic2": "Singapore",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "published",
@@ -940,7 +1108,8 @@
             "weightPercent": 1.7,
             "weightText": "1.7%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -978,7 +1147,14 @@
         "fundObjective": "<p>The investment objective of the PRULink Asian Fixed-Income Fund is to maximise long-term return by investing in a diversified portfolio consisting primarily of fixed income/ debt securities issued by Asian entities or their subsidiaries.</p>",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": true,
-        "dividendRate": "20260930=1.25&20260630=1.25&20260331=1.25&20251231=1.25&20250930=1.25&20250630=1.25&20250401=1.25&20241231=1.12&20240930=1.12&20240628=1.12&20240328=1.12&20231229=0.93&20230929=0.93&20230630=0.93&20230331=0.93&20221230=0.93&20221003=0.93&20220701=0.93&20220331=0.93&20211231=0.93&20211001=0.93&20210701=0.93&20210331=0.93"
+        "dividendRate": "20260930=1.25&20260630=1.25&20260331=1.25&20251231=1.25&20250930=1.25&20250630=1.25&20250401=1.25&20241231=1.12&20240930=1.12&20240628=1.12&20240328=1.12&20231229=0.93&20230929=0.93&20230630=0.93&20230331=0.93&20221230=0.93&20221003=0.93&20220701=0.93&20220331=0.93&20211231=0.93&20211001=0.93&20210701=0.93&20210331=0.93",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "China",
+        "geographic2": "Singapore",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "published",
@@ -1049,7 +1225,8 @@
             "weightPercent": 1.7,
             "weightText": "1.7%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -1087,7 +1264,14 @@
         "fundObjective": "The investment objective of the PRULink Asian Income and Growth Fund is to provide income and capital growth by investing in equities of companies in Asia and investment grade fixed income securities across Asia debt markets.",
         "investmentManager": "Schroder Investment Management (Singapore) Ltd",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "China",
+        "geographic2": "Singapore",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -1158,7 +1342,8 @@
             "weightPercent": 1.3,
             "weightText": "1.3%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings_recovery/funds/13_prulink-asian-income-and-growth-fund-accumulation/top_holdings.json"
       }
     },
     {
@@ -1196,7 +1381,14 @@
         "fundObjective": "<p>The investment objective of the PRULink Asian Income and Growth Fund is to provide income and capital growth by investing in equities of companies in Asia and investment grade fixed income securities across Asia debt markets.</p>",
         "investmentManager": "Schroder Investment Management (Singapore) Ltd",
         "hasDividend": true,
-        "dividendRate": "20260901=2.06&20260302=2.06&20250901=2.18&20250303=2.18&20240902=2&20240301=2&20230915=1.5&20230301=1.5&20220901=1.5&20220304=1.5&20210901=1.5&20210304=1.5&20200901=1.5&20200302=1.5&20190902=1.5&20190304=1.5&20180903=1.5&20180305=1.5&20170904=1.5&20170303=1.5&20160902=1.5&20160303=1.5&20150903=1.5&20150303=1.5&20140902=1.5&20140303=1.5"
+        "dividendRate": "20260901=2.06&20260302=2.06&20250901=2.18&20250303=2.18&20240902=2&20240301=2&20230915=1.5&20230301=1.5&20220901=1.5&20220304=1.5&20210901=1.5&20210304=1.5&20200901=1.5&20200302=1.5&20190902=1.5&20190304=1.5&20180903=1.5&20180305=1.5&20170904=1.5&20170303=1.5&20160902=1.5&20160303=1.5&20150903=1.5&20150303=1.5&20140902=1.5&20140303=1.5",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "China",
+        "geographic2": "Singapore",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -1267,7 +1459,8 @@
             "weightPercent": 1.3,
             "weightText": "1.3%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings_recovery/funds/14_prulink-asian-income-and-growth-fund-distribution/top_holdings.json"
       }
     },
     {
@@ -1305,7 +1498,14 @@
         "fundObjective": "The investment objective of the PRULink Asian Income and Growth Fund is to provide income and capital growth by investing in equities of companies in Asia and investment grade fixed income securities across Asia debt markets.",
         "investmentManager": "Schroder Investment Management (Singapore) Ltd",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "China",
+        "geographic2": "Singapore",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -1376,7 +1576,8 @@
             "weightPercent": 1.3,
             "weightText": "1.3%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings_recovery/funds/15_prulink-asian-income-and-growth-fund-usd-accumulation/top_holdings.json"
       }
     },
     {
@@ -1414,7 +1615,14 @@
         "fundObjective": "<p>The investment objective of the PRULink Asian Income Fund is to maximise income by investing primarily in equity and equity-related securities of companies, which are incorporated, listed in or have their areas of primary activity in Asia Pacific ex-Japan Region. The Fund may also invest in depository receipts including American Depository Receipt (&quot;ADRs&quot;) and Global Depository Receipt (&quot;GDRs&quot;), debt securities convertible into common shares, preference shares and warrants.</p>",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": true,
-        "dividendRate": "20260930=2.50&20260331=2.50&20250930=2&20250401=2&20240930=2&20240328=2&20230928=2&20230331=2&20221003=2&20220331=2&20211001=2&20210405=2&20201001=2&20200401=2.37&20191001=2.37&20190401=2.37&20181001=2.37&20180402=2.37&20171002=2.37&20170403=2.37&20161003=2.37&20160401=2.37&20151001=2.5&20150401=2.5&20141001=2.5&20140401=2.1&20131001=2.1&20130401=2.1&20121001=2.1&20120402=2.1&20111003=2&20110403=2&20101001=2.05&20100401=2&20091001=2"
+        "dividendRate": "20260930=2.50&20260331=2.50&20250930=2&20250401=2&20240930=2&20240328=2&20230928=2&20230331=2&20221003=2&20220331=2&20211001=2&20210405=2&20201001=2&20200401=2.37&20191001=2.37&20190401=2.37&20181001=2.37&20180402=2.37&20171002=2.37&20170403=2.37&20161003=2.37&20160401=2.37&20151001=2.5&20150401=2.5&20141001=2.5&20140401=2.1&20131001=2.1&20130401=2.1&20121001=2.1&20120402=2.1&20111003=2&20110403=2&20101001=2.05&20100401=2&20091001=2",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "China",
+        "geographic2": "Singapore",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "published",
@@ -1485,7 +1693,8 @@
             "weightPercent": 2.0,
             "weightText": "2.0%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -1523,7 +1732,14 @@
         "fundObjective": "The PRULink Asian Low Volatility Equity Fund aims to generate total returns in line with Asia Pacific ex Japan equity markets, via a combination of capital growth and income, but with lower volatility by investing primarily in equities and equity-related securities of companies, which are incorporated, listed in or have their area of primary activity in the Asia Pacific ex Japan Region.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "China",
+        "geographic2": "Taiwan",
+        "sector1": "Financials",
+        "sector2": "Information Technology"
       },
       "topHoldings": {
         "status": "published",
@@ -1594,7 +1810,8 @@
             "weightPercent": 1.6,
             "weightText": "1.6%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings_recovery_2/funds/17_PRULink_Asian_Low_Volatility_Equity_Fund_Accumulation/top_holdings.json"
       }
     },
     {
@@ -1632,7 +1849,14 @@
         "fundObjective": "The investment objective of the PRULink Asian Multi-Asset Income Fund is to generate regular income and long-term capital appreciation for investors by investing in equities, fixed income, cash and other permissible investments.",
         "investmentManager": "Fullerton Fund Management Company Ltd",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "Hong Kong",
+        "geographic2": "United States",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -1703,7 +1927,8 @@
             "weightPercent": 0.3,
             "weightText": "0.3%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -1741,7 +1966,14 @@
         "fundObjective": "<p>The investment objective of the PRULink Asian Multi-Asset Income Fund is to generate regular income and long-term capital appreciation for investors by investing in equities, fixed income, cash and other permissible investments.</p>",
         "investmentManager": "Fullerton Fund Management Company Ltd",
         "hasDividend": true,
-        "dividendRate": "20260930=1.72&20260630=1.72&20260331=1.72&20251231=1.72&20250930=1.72&20250630=1.72&20250401=1.72&20241231=1.72&20240930=1.72&20240628=1.72&20240328=1.72&20231229=1.72&20230929=1.72&20230630=1.72&20230331=1.72&20221230=1.72&20221003=1.72&20220701=1.72&20220331=1.72&20211231=1.72&20211001=1.72&20210701=1.72&20210331=1.72"
+        "dividendRate": "20260930=1.72&20260630=1.72&20260331=1.72&20251231=1.72&20250930=1.72&20250630=1.72&20250401=1.72&20241231=1.72&20240930=1.72&20240628=1.72&20240328=1.72&20231229=1.72&20230929=1.72&20230630=1.72&20230331=1.72&20221230=1.72&20221003=1.72&20220701=1.72&20220331=1.72&20211231=1.72&20211001=1.72&20210701=1.72&20210331=1.72",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "Hong Kong",
+        "geographic2": "United States",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -1812,7 +2044,8 @@
             "weightPercent": 0.3,
             "weightText": "0.3%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -1850,7 +2083,14 @@
         "fundObjective": "<p>The investment objective of the PRULink Asian Multi-Asset Income Fund is to generate regular income and long-term capital appreciation for investors by investing in equities, fixed income, cash and other permissible investments.</p>",
         "investmentManager": "Fullerton Fund Management Company Ltd",
         "hasDividend": true,
-        "dividendRate": "20260930=1.25&20260630=1.25&20260331=1.25&20251231=1.25&20250930=1.25&20250630=1.25&20250401=1.25&20241231=1.25&20240930=1.25&20240628=1.25&20240328=1.25&20231229=1.25&20230929=1.25&20230630=1.25&20230331=1.25&20221230=1.25&20221003=1.25&20220701=1.25&20220331=1.25&20211231=1.25&20211001=1.25&20210701=1.25&20210331=1.25"
+        "dividendRate": "20260930=1.25&20260630=1.25&20260331=1.25&20251231=1.25&20250930=1.25&20250630=1.25&20250401=1.25&20241231=1.25&20240930=1.25&20240628=1.25&20240328=1.25&20231229=1.25&20230929=1.25&20230630=1.25&20230331=1.25&20221230=1.25&20221003=1.25&20220701=1.25&20220331=1.25&20211231=1.25&20211001=1.25&20210701=1.25&20210331=1.25",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "Hong Kong",
+        "geographic2": "United States",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -1921,7 +2161,8 @@
             "weightPercent": 0.3,
             "weightText": "0.3%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -1959,7 +2200,14 @@
         "fundObjective": "The investment objective of the PRULink China-India Fund is to maximise long-term total return by investing primarily in equity and equity-related instruments of corporations, which are incorporated in, or listed in, or operating principally from, or carrying on significant business in, or derive substantial revenue from, or whose subsidiaries, related or associated corporations derive substantial revenue from, the People's Republic of China (PRC) and the Republic of India (India).",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "China",
+        "geographic2": "India",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -2030,7 +2278,8 @@
             "weightPercent": 2.0,
             "weightText": "2.0%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -2068,7 +2317,14 @@
         "fundObjective": "The investment objective of the PRULink Emerging Markets Fund is to provide long-term capital growth by investing primarily in emerging markets companies.",
         "investmentManager": "J.P. Morgan Investment Management Inc.",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "China",
+        "geographic2": "India",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -2139,7 +2395,8 @@
             "weightPercent": 1.7,
             "weightText": "1.7%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -2177,7 +2434,14 @@
         "fundObjective": "The PRULink FlexGrowth Fund (SGD) aims to achieve capital growth in the mid to long term by maintaining exposure to equity and bond markets using a rules-based investment strategy with the objective to participate in the performance of the Systematix BEST 10% RC USD Index.",
         "investmentManager": "Munich Re Investment Partners GmbH",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Global",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -2248,7 +2512,8 @@
             "weightPercent": 5.8,
             "weightText": "5.8%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -2286,7 +2551,14 @@
         "fundObjective": "<p>The PRULink Global Balanced Income and Growth Fund aims to seek maximise total return, consistent with preservation of capital and prudent investment management.</p>",
         "investmentManager": "PIMCO Global Advisors (Ireland) Limited",
         "hasDividend": true,
-        "dividendRate": "20260930=0.30&20260831=0.30&20260731=0.30&20260630=0.30"
+        "dividendRate": "20260930=0.30&20260831=0.30&20260731=0.30&20260630=0.30",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Global",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "no_holdings_section",
@@ -2296,7 +2568,8 @@
         "factsheetDocumentDate": "June 2026",
         "factsheetDataAsAt": null,
         "count": 0,
-        "holdings": []
+        "holdings": [],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -2334,7 +2607,14 @@
         "fundObjective": "PRULink Global Bond Fund aims to maximise total return through investment in a diversified portfolio of debt securities denominated in any currency. While the manager has power to hedge currency risk, the fund will seek to invest primarily in securities so as to give exposure to major developed market currencies.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "published",
@@ -2405,7 +2685,8 @@
             "weightPercent": 1.2,
             "weightText": "1.2%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -2443,7 +2724,14 @@
         "fundObjective": "<p>The PRULink Global Bond Income Fund aims to seek high current income, consistent with prudent investment management. Long-term capital appreciation is a secondary objective.</p>",
         "investmentManager": "PIMCO Global Advisors (Ireland) Limited",
         "hasDividend": true,
-        "dividendRate": "20260930=0.49&20260831=0.49&20260731=0.49&20260630=0.49"
+        "dividendRate": "20260930=0.49&20260831=0.49&20260731=0.49&20260630=0.49",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "no_holdings_section",
@@ -2453,7 +2741,8 @@
         "factsheetDocumentDate": "June 2026",
         "factsheetDataAsAt": null,
         "count": 0,
-        "holdings": []
+        "holdings": [],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -2491,7 +2780,14 @@
         "fundObjective": "The Underlying Fund seeks to generate high total return by investing primarily in equities of companies the Investment Manager believes are positioned to benefit, directly or indirectly, from efforts to curb or mitigate the long term effects of global climate change, to address the environment challenges presented by global climate change, or to improve the efficiency of resource consumption. The Fund's benchmark is the MSCI All Country World Index.",
         "investmentManager": null,
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Industrials",
+        "sector2": "Utilities"
       },
       "topHoldings": {
         "status": "published",
@@ -2562,7 +2858,8 @@
             "weightPercent": 2.5,
             "weightText": "2.5%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -2600,7 +2897,14 @@
         "fundObjective": "The PRULink Global Diversified Income Fund aims to achieve a combination of income and some growth by investing in an actively managed diversified portfolio of transferable securities across a wide range of global asset classes.",
         "investmentManager": "abrdn Investments Limited, abrdn Inc.",
         "hasDividend": true,
-        "dividendRate": "20251001=5"
+        "dividendRate": "20251001=5",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "published",
@@ -2671,7 +2975,8 @@
             "weightPercent": 1.7,
             "weightText": "1.7%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -2709,7 +3014,14 @@
         "fundObjective": "The PRULink Global Dividend Wealth Fund aims to provide income and modest capital growth over the medium to long term through the implementation of an actively managed investment strategy.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": true,
-        "dividendRate": "20260930=0.45&20260831=0.45&20260731=0.45&20260630=0.45&20260529=0.45&20260430=0.45&20260331=0.45&20260227=0.45&20260130=0.45&20251231=0.45&20251031=0.45&20250930=0.45&20250829=0.45&20250731=0.45&20250630=0.45&20250530=0.45&20250430=0.45&20250401=0.45&20250228=0.45&20250131=0.45&20241231=0.43&20241129=0.43&20241030=0.43&20240930=0.43&20240830=0.43&20240731=0.43&20240628=0.43&20240531=0.43&20240430=0.43&20240328=0.43&20240229=0.43&20240131=0.43&20231229=0.40&20231201=0.40&20231101=0.40&20230929=0.40&20230831=0.40&20230801=0.40&20230630=0.40&20230601=0.40&20230502=0.40&20230331=0.40&20230301=0.40&20230201=0.40&20221230=0.38&20221130=0.38&20221031=0.38&20220930=0.38&20220901=0.38&20220801=0.38"
+        "dividendRate": "20260930=0.45&20260831=0.45&20260731=0.45&20260630=0.45&20260529=0.45&20260430=0.45&20260331=0.45&20260227=0.45&20260130=0.45&20251231=0.45&20251031=0.45&20250930=0.45&20250829=0.45&20250731=0.45&20250630=0.45&20250530=0.45&20250430=0.45&20250401=0.45&20250228=0.45&20250131=0.45&20241231=0.43&20241129=0.43&20241030=0.43&20240930=0.43&20240830=0.43&20240731=0.43&20240628=0.43&20240531=0.43&20240430=0.43&20240328=0.43&20240229=0.43&20240131=0.43&20231229=0.40&20231201=0.40&20231101=0.40&20230929=0.40&20230831=0.40&20230801=0.40&20230630=0.40&20230601=0.40&20230502=0.40&20230331=0.40&20230301=0.40&20230201=0.40&20221230=0.38&20221130=0.38&20221031=0.38&20220930=0.38&20220901=0.38&20220801=0.38",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Financials",
+        "sector2": "Health Care"
       },
       "topHoldings": {
         "status": "published",
@@ -2780,7 +3092,8 @@
             "weightPercent": 3.0,
             "weightText": "3.0%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings_recovery/funds/29_prulink-global-dividend-wealth-fund-distribution/top_holdings.json"
       }
     },
     {
@@ -2818,7 +3131,14 @@
         "fundObjective": "The PRULink Global Episode Macro Fund feeds into the M&G (Lux) Episode Macro Fund (the Underlying Fund), which aims to achieve a total return (the combination of capital growth and income) of 4-8% a year above the Secured Overnight Financing Rate (SOFR), over any five-year period.",
         "investmentManager": "M&G Investment Management Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "no_holdings_section",
@@ -2828,7 +3148,8 @@
         "factsheetDocumentDate": "August 2026",
         "factsheetDataAsAt": "31 Jul 2026",
         "count": 0,
-        "holdings": []
+        "holdings": [],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -2866,7 +3187,14 @@
         "fundObjective": "The PRULink Global Equity Fund aims to achieve income and long-term capital growth principally through investments in income producing equity securities globally. The Investment Manager of the Underlying Fund will target investments which it believes offer attractive dividend yields in addition to price appreciation. As the Underlying Fund may invest globally, it may be exposed to countries considered to be emerging markets.",
         "investmentManager": "FIL Fund Management Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "United Kingdom",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -2937,7 +3265,8 @@
             "weightPercent": 2.6,
             "weightText": "2.6%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -2975,7 +3304,14 @@
         "fundObjective": "The PRULink Global Equity Fund aims to achieve income and long-term capital growth principally through investments in income producing equity securities globally. The Investment Manager of the Underlying Fund will target investments which it believes offer attractive dividend yields in addition to price appreciation. As the Underlying Fund may invest globally, it may be exposed to countries considered to be emerging markets.",
         "investmentManager": "FIL Fund Management Limited",
         "hasDividend": true,
-        "dividendRate": "20260930=0.60&20260630=0.60&20260331=0.60&20251231=0.67&20250930=0.67&20250630=0.67&20250401=0.67&20241231=0.73&20240930=0.73&20240628=0.73&20240328=0.73&20231229=0.71&20230929=0.71&20230630=0.71&20230331=0.71&20221230=0.65&20221003=0.65&20220701=0.65&20220331=0.65&20211231=0.77&20211001=0.77&20210701=0.77&20210331=0.77&20201231=0.74&20201001=0.74&20200701=0.74&20200401=0.74&20191231=0.74&20191001=0.74&20190701=0.74&20190401=0.74&20181231=0.74"
+        "dividendRate": "20260930=0.60&20260630=0.60&20260331=0.60&20251231=0.67&20250930=0.67&20250630=0.67&20250401=0.67&20241231=0.73&20240930=0.73&20240628=0.73&20240328=0.73&20231229=0.71&20230929=0.71&20230630=0.71&20230331=0.71&20221230=0.65&20221003=0.65&20220701=0.65&20220331=0.65&20211231=0.77&20211001=0.77&20210701=0.77&20210331=0.77&20201231=0.74&20201001=0.74&20200701=0.74&20200401=0.74&20191231=0.74&20191001=0.74&20190701=0.74&20190401=0.74&20181231=0.74",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "United Kingdom",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -3046,7 +3382,8 @@
             "weightPercent": 2.6,
             "weightText": "2.6%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -3084,7 +3421,14 @@
         "fundObjective": "The PRULink Global Equity Fund aims to achieve income and long-term capital growth principally through investments in income producing equity securities globally. The Investment Manager of the Underlying Fund will target investments which it believes offer attractive dividend yields in addition to price appreciation. As the Underlying Fund may invest globally, it may be exposed to countries considered to be emerging markets.",
         "investmentManager": "FIL Fund Management Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "United Kingdom",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -3155,7 +3499,8 @@
             "weightPercent": 2.6,
             "weightText": "2.6%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -3193,7 +3538,14 @@
         "fundObjective": "The PRULink Global Equity Growth Fund feeds into the Eastspring Investments &ndash; Global Dynamic Growth Equity Fund (the Underlying Fund), which aims to provide superior capital growth by investing primarily in shares of companies with strong growth potential.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Information Technology",
+        "sector2": "Consumer Discretionary"
       },
       "topHoldings": {
         "status": "published",
@@ -3258,7 +3610,8 @@
             "weightPercent": 2.7,
             "weightText": "2.7%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings_recovery_2/funds/34_PRULink_Global_Equity_Growth_SGD_Accumulation/top_holdings.json"
       }
     },
     {
@@ -3296,7 +3649,14 @@
         "fundObjective": "The investment objective of the PRULink Global Fixed-Income Fund is to maximise total return, consistent with preservation of capital and prudent investment management.",
         "investmentManager": "PIMCO Global Advisors (Ireland) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "published",
@@ -3367,7 +3727,8 @@
             "weightPercent": 1.9,
             "weightText": "1.9%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -3405,7 +3766,14 @@
         "fundObjective": "The investment objective of the PRULink Global Fixed-Income Fund is to maximise total return, consistent with preservation of capital and prudent investment management.",
         "investmentManager": "PIMCO Global Advisors (Ireland) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "published",
@@ -3476,7 +3844,8 @@
             "weightPercent": 1.9,
             "weightText": "1.9%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -3514,7 +3883,14 @@
         "fundObjective": "PRULink Global Growth Fund feeds into the United CIO Growth Fund<sup>1</sup> (the Underlying Fund) which seeks to provide investors with capital growth by investing globally. The Underlying Fund aims to achieve its objective by investing primarily in companies which shall be incorporated in, listed in, traded or dealt globally. The Underlying Fund may be exposed to these companies by investing in Underlying Entities such as funds, ETFs or REITs. The Underlying Fund may also invest in equity, equity-related securities, bond or debt instruments of these companies directly. The Underlying Fund will typically allocate 80% of the Underlying Fund's NAV in Equity Underlying Entities and 20% of the Underlying Fund's NAV in Fixed Income Underlying Entities, with a deviation of 20% for each asset class.",
         "investmentManager": "UOB Asset Management Ltd",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Information Technology",
+        "sector2": "Consumer Discretionary"
       },
       "topHoldings": {
         "status": "published",
@@ -3585,7 +3961,8 @@
             "weightPercent": 3.4,
             "weightText": "3.4%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -3623,7 +4000,14 @@
         "fundObjective": "The Underlying Fund seeks to understand the world's social and environmental problems and to identify and invest primarily in the equities of companies that we believe are addressing these needs in a differentiated way through their core products and services. Through the Fund's investments, we seek to improve access to, and the quality of, basic life essentials, reduce inequality and mitigate the effects of climate change. The Fund seeks to deliver long-term total returns in excess of the MSCI All Country World Index.",
         "investmentManager": "Wellington Management Company LLP",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Industrials",
+        "sector2": "Health Care"
       },
       "topHoldings": {
         "status": "published",
@@ -3694,7 +4078,8 @@
             "weightPercent": 2.1,
             "weightText": "2.1%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -3732,7 +4117,14 @@
         "fundObjective": "PRULink Global Income Fund feeds into the United CIO Income Fund<sup>1</sup> (the Underlying Fund) which seeks to provide regular income by investing globally. The Underlying Fund aims to achieve its objective by investing primarily in companies which shall be incorporated in, listed in, traded or dealt globally. The Underlying Fund may be exposed to these companies by investing in Underlying Entities such as funds, ETFs or REITs. The Underlying Fund may also invest in equity, equity-related securities, bond or debt instruments of these companies directly. The Underlying Fund will typically allocate 50% of the Underlying Fund's NAV in Equity Underlying Entities and 50% of the Underlying Fund's NAV in Fixed Income Underlying Entities, with a deviation of 20% for each asset class.",
         "investmentManager": "UOB Asset Management Ltd",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "published",
@@ -3803,7 +4195,8 @@
             "weightPercent": 3.4,
             "weightText": "3.4%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -3841,7 +4234,14 @@
         "fundObjective": "The Underlying Fund seeks long-term capital appreciation. The Investment Manager will actively manage the Fund, seeking to achieve the objective by investing primarily in equity securities issued by companies worldwide, including emerging markets, which the team believe to be drivers of innovation or beneficiaries of innovation. Although the Fund is not constructed relative to a benchmark, the MSCI All Country World Index will serve as a reference benchmark.",
         "investmentManager": "Wellington Management Company LLP",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Information Technology",
+        "sector2": "Health Care"
       },
       "topHoldings": {
         "status": "published",
@@ -3912,7 +4312,8 @@
             "weightPercent": 2.8,
             "weightText": "2.8%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -3950,7 +4351,14 @@
         "fundObjective": "The investment objective of the PRULink Global Managed Fund is to achieve long term capital appreciation through investment directly or indirectly in quoted equities, bonds and other fixed income securities in global markets. The Fund will feed into the Schroder Multi-Asset Revolution, which will invest in multiple asset classes and will be comprised of an actively managed basket of equities, fixed income, property and commodities related securities.",
         "investmentManager": "Schroder Investment Management (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -4021,7 +4429,8 @@
             "weightPercent": 3.4,
             "weightText": "3.4%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -4059,7 +4468,14 @@
         "fundObjective": "<p>The investment objective of the PRULink Global Managed Fund is to achieve long term capital appreciation through investment directly or indirectly in quoted equities, bonds and other fixed income securities in global markets. The Fund will feed into the Schroder Multi-Asset Revolution, which will invest in multiple asset classes and will be comprised of an actively managed basket of equities, fixed income, property and commodities related securities.</p>",
         "investmentManager": "Schroder Investment Management (Singapore) Limited",
         "hasDividend": true,
-        "dividendRate": "20260930=1.25&20260630=1.25&20260331=1.25&20251231=1.25&20250930=1.25&20250630=1.25&20250401=1.25&20241231=1&20240930=1&20240328=1&20231229=1&20230929=1&20230630=1&20230331=1&20221230=1&20221003=1&20220701=1&20220331=1&20211231=1&20211001=1&20210701=1&20210331=1&20201231=1&20201001=1&20200701=1&20200401=0.5&20191231=0.5&20191001=0.5&20190701=0.5&20190401=1&20181231=1"
+        "dividendRate": "20260930=1.25&20260630=1.25&20260331=1.25&20251231=1.25&20250930=1.25&20250630=1.25&20250401=1.25&20241231=1&20240930=1&20240328=1&20231229=1&20230929=1&20230630=1&20230331=1&20221230=1&20221003=1&20220701=1&20220331=1&20211231=1&20211001=1&20210701=1&20210331=1&20201231=1&20201001=1&20200701=1&20200401=0.5&20191231=0.5&20191001=0.5&20190701=0.5&20190401=1&20181231=1",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -4130,7 +4546,8 @@
             "weightPercent": 3.4,
             "weightText": "3.4%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -4168,7 +4585,14 @@
         "fundObjective": "The investment objective of PRULink Global Multi-Asset Income Fund is to provide capital growth and income of ICE BofA 3 Month US Treasury Bill Index + 5% per annum before fees have been deducted over rolling three year periods by investing in a broad range of asset classes worldwide. There is no guarantee that the objective will be attained and your capital is at risk.",
         "investmentManager": "Schroder Investment Management Australia Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -4239,7 +4663,8 @@
             "weightPercent": 0.6,
             "weightText": "0.6%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -4277,7 +4702,14 @@
         "fundObjective": "<p>The investment objective of PRULink Global Multi-Asset Income Fund is to provide capital growth and income of ICE BofA 3 Month US Treasury Bill Index + 5% per annum before fees have been deducted over rolling three year periods by investing in a broad range of asset classes worldwide. There is no guarantee that the objective will be attained and your capital is at risk.</p>",
         "investmentManager": "Schroder Investment Management Australia Limited",
         "hasDividend": true,
-        "dividendRate": "20260930=1.57&20260630=1.57&20260331=1.57&20251231=1.57&20250930=1.57&20250630=1.57&20250401=1.57&20241231=1.57&20240930=1.57&20240628=1.57&20240328=1.57&20231229=1.57&20230929=1.57&20230630=1.57&20230331=1.57&20221230=1.57&20221003=1.57&20220701=1.57&20220331=1.57&20211231=1.57&20211001=1.57&20210701=1.57&20210331=1.57"
+        "dividendRate": "20260930=1.57&20260630=1.57&20260331=1.57&20251231=1.57&20250930=1.57&20250630=1.57&20250401=1.57&20241231=1.57&20240930=1.57&20240628=1.57&20240328=1.57&20231229=1.57&20230929=1.57&20230630=1.57&20230331=1.57&20221230=1.57&20221003=1.57&20220701=1.57&20220331=1.57&20211231=1.57&20211001=1.57&20210701=1.57&20210331=1.57",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -4348,7 +4780,8 @@
             "weightPercent": 0.6,
             "weightText": "0.6%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -4386,7 +4819,14 @@
         "fundObjective": "<p>The investment objective of PRULink Global Multi-Asset Income Fund is to provide capital growth and income of ICE BofA 3 Month US Treasury Bill Index + 5% per annum before fees have been deducted over rolling three year periods by investing in a broad range of asset classes worldwide. There is no guarantee that the objective will be attained and your capital is at risk.</p>",
         "investmentManager": "Schroder Investment Management Australia Limited",
         "hasDividend": true,
-        "dividendRate": "20260930=1.12&20260630=1.12&20260331=1.12&20251231=1.12&20250930=1.12&20250630=1.12&20250401=1.12&20241231=1.12&20240930=1.12&20240628=1.12&20240328=1.12&20231229=1.12&20230929=1.12&20230630=1.12&20230331=1.12&20221230=1.12&20221003=1.12&20220701=1.12&20220331=1.12&20211231=1.12&20211001=1.12&20210701=1.12&20210331=1.12"
+        "dividendRate": "20260930=1.12&20260630=1.12&20260331=1.12&20251231=1.12&20250930=1.12&20250630=1.12&20250401=1.12&20241231=1.12&20240930=1.12&20240628=1.12&20240328=1.12&20231229=1.12&20230929=1.12&20230630=1.12&20230331=1.12&20221230=1.12&20221003=1.12&20220701=1.12&20220331=1.12&20211231=1.12&20211001=1.12&20210701=1.12&20210331=1.12",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -4457,7 +4897,8 @@
             "weightPercent": 0.6,
             "weightText": "0.6%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -4495,7 +4936,14 @@
         "fundObjective": "The investment objective of the PRULink Global Property Securities Fund is to achieve long-term growth through capital appreciation of the underlying equity portfolio. It will achieve this objective by principally investing worldwide across regions, countries and sectors in shares of companies active in the real estate business (property companies).",
         "investmentManager": "LaSalle Investment Management Securities, LLC",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Japan",
+        "sector1": "Real Estate",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -4566,7 +5014,8 @@
             "weightPercent": 2.7,
             "weightText": "2.7%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -4604,7 +5053,14 @@
         "fundObjective": "PRULink Global Signature CIO Balance Fund feeds into Signature CIO Balanced Fund (the Underlying Fund) which seeks to achieve growth through capital appreciation and income accumulation over a mid to long-term investment horizon.",
         "investmentManager": "Amundi Hong Kong Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -4675,7 +5131,8 @@
             "weightPercent": 3.9,
             "weightText": "3.9%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -4713,7 +5170,14 @@
         "fundObjective": "PRULink Global Signature CIO Growth Fund feeds into Signature CIO Growth Fund (the Underlying Fund) which seeks to achieve growth mainly through capital appreciation over a mid to long-term investment horizon.",
         "investmentManager": "Amundi Hong Kong Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Information Technology",
+        "sector2": "Consumer Discretionary"
       },
       "topHoldings": {
         "status": "published",
@@ -4784,7 +5248,8 @@
             "weightPercent": 3.6,
             "weightText": "3.6%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -4822,7 +5287,14 @@
         "fundObjective": "<p>PRULink Global Signature CIO Income Fund feeds into Signature CIO Income Fund (the Underlying Fund) which seeks to generate regular income by investing in a diversified portfolio of income generating securities globally. As a secondary objective, the Underlying Fund aims to generate capital appreciation over a mid-to-long term investment horizon by accessing opportunities across multiple asset classes.</p>",
         "investmentManager": "Amundi Hong Kong Limited",
         "hasDividend": true,
-        "dividendRate": "20260930=0.43&20260831=0.43&20260731=0.43&20260630=0.43&20260529=0.43&20260430=0.43&20260331=0.43&20260227=0.43&20260130=0.43&20251231=0.43&20251031=0.43&20250930=0.43&20250829=0.43&20250731=0.43&20250630=0.43&20250530=0.43&20250430=0.43&20250401=0.47&20250228=0.47&20250131=0.47&20241231=0.48&20241129=0.48&20241030=0.48&20240930=0.48&20240830=0.48&20240731=0.48&20240628=0.48&20240531=0.48&20240430=0.48&20240328=0.48&20240229=0.5&20240131=0.5&20231229=0.5"
+        "dividendRate": "20260930=0.43&20260831=0.43&20260731=0.43&20260630=0.43&20260529=0.43&20260430=0.43&20260331=0.43&20260227=0.43&20260130=0.43&20251231=0.43&20251031=0.43&20250930=0.43&20250829=0.43&20250731=0.43&20250630=0.43&20250530=0.43&20250430=0.43&20250401=0.47&20250228=0.47&20250131=0.47&20241231=0.48&20241129=0.48&20241030=0.48&20240930=0.48&20240830=0.48&20240731=0.48&20240628=0.48&20240531=0.48&20240430=0.48&20240328=0.48&20240229=0.5&20240131=0.5&20231229=0.5",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Financials",
+        "sector2": "Health Care"
       },
       "topHoldings": {
         "status": "published",
@@ -4893,7 +5365,8 @@
             "weightPercent": 3.8,
             "weightText": "3.8%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -4931,7 +5404,14 @@
         "fundObjective": "The investment objective of the PRULink Global Technology Fund (the \"Fund\") is to maximise long-term total returns through investment in equities and equity-related securities of companies around the world with innovative products, processes or services. These investments include, but are not restricted to, those companies whose provision or use of technology give them a strategic advantage in the market.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Taiwan",
+        "sector1": "Information Technology",
+        "sector2": "Communication Services"
       },
       "topHoldings": {
         "status": "published",
@@ -5002,7 +5482,8 @@
             "weightPercent": 2.9,
             "weightText": "2.9%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -5040,7 +5521,14 @@
         "fundObjective": "The investment objective of the PRULink Greater China Fund is to provide capital growth primarily through investment in equity securities of the People's Republic of China, Hong Kong SAR and Taiwan companies.",
         "investmentManager": "Schroder Investment Management (Hong Kong) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "Greater China",
+        "geographic2": "China",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -5111,7 +5599,8 @@
             "weightPercent": 2.1,
             "weightText": "2.1%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -5149,7 +5638,14 @@
         "fundObjective": "The investment objective of the PRULink Greater China Fund is to provide capital growth primarily through investment in equity securities of the People's Republic of China, Hong Kong SAR and Taiwan companies.",
         "investmentManager": "Schroder Investment Management (Hong Kong) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "Greater China",
+        "geographic2": "China",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -5220,7 +5716,8 @@
             "weightPercent": 2.1,
             "weightText": "2.1%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -5258,7 +5755,14 @@
         "fundObjective": "The PRULink India Opportunity Equity Fund aims to achieve capital appreciation by investing in equity securities of companies located in India.",
         "investmentManager": "Templeton Asset Management Ltd",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "India",
+        "geographic2": "—",
+        "sector1": "Financials",
+        "sector2": "Information Technology"
       },
       "topHoldings": {
         "status": "published",
@@ -5329,7 +5833,8 @@
             "weightPercent": 2.7,
             "weightText": "2.7%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings_recovery_2/funds/53_PRULink_India_Opportunity_Equity_Fund_Accumulation/top_holdings.json"
       }
     },
     {
@@ -5367,7 +5872,14 @@
         "fundObjective": "PRULink Islamic Global Equity Index Fund feeds into the HSBC Islamic Global Equity Index Fund (the Underlying Fund), which aims to track as closely as possible the performance of the Dow Jones Islamic Market Titans 100 Index (the Index). The Underlying Fund will only invest in shares of companies that meet Shariah compliance principles as interpreted or approved by the Shariah Committee. The Underlying Fund will be passively managed and will aim to invest in the shares of the companies in generally the same proportion as in the Index. The shares are selected by filtering the Index universe through screens for business activities and financial ratios to remove stocks that are not Shariah compliant. The Index is comprised of the shares of companies in emerging and developed markets that are based anywhere in the world. Any adherence to Shariah requirements are fulfilled on the Underlying Fund and the Index only.",
         "investmentManager": "HSBC Investment Funds (Luxembourg) S.A.",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Saudi Arabia",
+        "sector1": "Information Technology",
+        "sector2": "Health Care"
       },
       "topHoldings": {
         "status": "published",
@@ -5438,7 +5950,8 @@
             "weightPercent": 2.1,
             "weightText": "2.1%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -5476,7 +5989,14 @@
         "fundObjective": "The investment objective of the PRULink Pan European Fund is to maximise long-term total return by investing in equity and equity-related securities, which are incorporated, or have their area of primary activity, in Europe (including United Kingdom). The fund may also invest in depository receipts [including American Depository Receipts (ADRs) and Global Depository Receipts (GDRs)], debt securities convertible into common shares, preference shares and warrants.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "Europe",
+        "geographic2": "France",
+        "sector1": "Industrials",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -5547,7 +6067,8 @@
             "weightPercent": 3.2,
             "weightText": "3.2%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -5585,7 +6106,14 @@
         "fundObjective": "The Fund aims to maximise total return in the medium to long term by investing primarily in equities and equity-related securities of companies which are incorporated, quoted or listed in, or have their area of primary activity in Singapore and other ASEAN markets, and in Singapore-dollar denominated debt securities and foreign currency debt securities.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "Singapore",
+        "geographic2": "ASEAN",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "published",
@@ -5656,7 +6184,8 @@
             "weightPercent": 1.9,
             "weightText": "1.9%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -5694,7 +6223,14 @@
         "fundObjective": "The PRULink Singapore Asian Managed Fund aims to maximise total return in the medium to long term by investing primarily in a portfolio comprising equities and equity-related securities of companies listed or to be listed on the stock exchanges of Singapore and Asia (excluding Japan) markets, and in a diversified portfolio of debt securities. The Fund has a strategic asset allocation mix of 70% equities and 30% fixed income.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "Singapore",
+        "geographic2": "Taiwan",
+        "sector1": "Financials",
+        "sector2": "Information Technology"
       },
       "topHoldings": {
         "status": "published",
@@ -5765,7 +6301,8 @@
             "weightPercent": 1.7,
             "weightText": "1.7%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -5803,7 +6340,14 @@
         "fundObjective": "PRULink Singapore Cash Fund aims to preserve principal value and maintain a high degree of liquidity while providing returns which are higher than those offered by Singapore dollar short term bank deposits, by investing primarily in high quality short-term money market instruments and debt securities. Such investments may include Singapore fixed interest deposits, short-term government and corporate bonds, commercial bills and deposits with financial institutions and similar assets.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "Singapore",
+        "geographic2": "—",
+        "sector1": "Cash & Equivalents",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -5874,7 +6418,8 @@
             "weightPercent": 3.8,
             "weightText": "3.8%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -5912,7 +6457,14 @@
         "fundObjective": "The PRULink Singapore Dynamic Bond Fund (\"the Fund\") aims to maximise total returns over time by investing primarily in Singapore dollar denominated debt securities and foreign currency debt securities which will be hedged back into Singapore dollars.",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "Singapore",
+        "geographic2": "—",
+        "sector1": "Corporate Bonds",
+        "sector2": "Government Bonds"
       },
       "topHoldings": {
         "status": "published",
@@ -5983,7 +6535,8 @@
             "weightPercent": 1.6,
             "weightText": "1.6%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings_recovery_3/funds/59_PRULink_Singapore_Dynamic_Bond_Fund_Accumulation/top_holdings.json"
       }
     },
     {
@@ -6021,7 +6574,14 @@
         "fundObjective": "<p>The PRULink Singapore Dynamic Bond Fund (&quot;the Fund&quot;) aims to maximise total returns over time by investing primarily in Singapore dollar denominated debt securities and foreign currency debt securities which will be hedged back into Singapore dollars.</p>",
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": true,
-        "dividendRate": "20260930=1&20260630=1&20260331=1&20251231=1&20250930=1&20250630=1&20250401=1&20241231=1&20240930=1&20240628=1&20240328=1&20231229=1&20230929=1&20230630=1&20230331=1&20221230=1&20221003=1&20220701=1&20211231=1&20211001=2&20201231=1&20200401=2&20191231=1&20191001=1&20190701=1&20190401=1"
+        "dividendRate": "20260930=1&20260630=1&20260331=1&20251231=1&20250930=1&20250630=1&20250401=1&20241231=1&20240930=1&20240628=1&20240328=1&20231229=1&20230929=1&20230630=1&20230331=1&20221230=1&20221003=1&20220701=1&20211231=1&20211001=2&20201231=1&20200401=2&20191231=1&20191001=1&20190701=1&20190401=1",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "Singapore",
+        "geographic2": "—",
+        "sector1": "Corporate Bonds",
+        "sector2": "Government Bonds"
       },
       "topHoldings": {
         "status": "published",
@@ -6092,7 +6652,8 @@
             "weightPercent": 1.6,
             "weightText": "1.6%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings_recovery_3/funds/60_PRULink_Singapore_Dynamic_Bond_Fund_Distribution/top_holdings.json"
       }
     },
     {
@@ -6130,7 +6691,14 @@
         "fundObjective": "The PRULink Singapore Growth Fund aims to provide holders with medium to long-term capital growth from a portfolio of Singapore equities.",
         "investmentManager": "abrdn Asia Limited",
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "Singapore",
+        "geographic2": "—",
+        "sector1": "Financials",
+        "sector2": "Industrials"
       },
       "topHoldings": {
         "status": "published",
@@ -6201,7 +6769,8 @@
             "weightPercent": 2.6,
             "weightText": "2.6%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -6239,7 +6808,14 @@
         "fundObjective": "<p>The PRULink StrategicInvest Income Fund aims to provide long term capital growth and income by investing in a diversified portfolio of Underlying Funds.</p>",
         "investmentManager": null,
         "hasDividend": true,
-        "dividendRate": "20260915=0.51&20260814=0.51&20260715=0.51&20260615=0.51&20260515=0.51&20260415=0.51&20260316=0.51&20260216=0.51&20260115=0.51&20251215=0.51&20251114=0.51&20251015=0.51&20250915=0.51"
+        "dividendRate": "20260915=0.51&20260814=0.51&20260715=0.51&20260615=0.51&20260515=0.51&20260415=0.51&20260316=0.51&20260216=0.51&20260115=0.51&20251215=0.51&20251114=0.51&20251015=0.51&20250915=0.51",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Corporate Bonds",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -6268,7 +6844,8 @@
             "weightPercent": 10.0,
             "weightText": "10.0%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -6306,7 +6883,14 @@
         "fundObjective": "<p>The PRULink StrategicInvest Income Fund aims to provide long term capital growth and income by investing in a diversified portfolio of Underlying Funds.</p>",
         "investmentManager": null,
         "hasDividend": true,
-        "dividendRate": "20260915=0.55&20260814=0.55&20260715=0.55&20260615=0.55&20260515=0.55&20260415=0.55&20260316=0.55&20260216=0.55&20260115=0.55&20251215=0.55&20251114=0.55&20251015=0.55&20250915=0.55"
+        "dividendRate": "20260915=0.55&20260814=0.55&20260715=0.55&20260615=0.55&20260515=0.55&20260415=0.55&20260316=0.55&20260216=0.55&20260115=0.55&20251215=0.55&20251114=0.55&20251015=0.55&20250915=0.55",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Corporate Bonds",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "published",
@@ -6335,7 +6919,8 @@
             "weightPercent": 10.0,
             "weightText": "10.0%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -6373,7 +6958,14 @@
         "fundObjective": "<p>The PRULink US Dividend Wealth Fund aims to provide long term capital growth and income by investing in corporate Debt Securities and Equities of US and/or Canadian equity and bond markets.</p>",
         "investmentManager": "Voya Investment Management Co. LLC",
         "hasDividend": true,
-        "dividendRate": "20260915=0.51&20260814=0.51&20260715=0.51&20260615=0.51&20260515=0.51&20260415=0.51&20260316=0.51&20260216=0.51&20260115=0.51&20251215=0.51&20251114=0.51&20251015=0.51&20250915=0.51&20250815=0.51&20250715=0.51&20250616=0.51&20250515=0.51&20250414=0.51&20250314=0.51&20250214=0.51&20250115=0.51&20241213=0.51&20241114=0.51&20241015=0.51&20240913=0.55&20240814=0.55&20240715=0.55&20240614=0.55&20240514=0.55&20240415=0.55&20240314=0.55&20240214=0.55&20240115=0.55&20231214=0.55&20231114=0.55&20231016=0.55&20230914=0.55&20230814=0.55&20230714=0.6&20230614=0.6&20230515=0.6&20230414=0.6&20230314=0.6&20230214=0.6&20230113=0.6&20221214=0.6&20221114=0.6&20221014=0.6"
+        "dividendRate": "20260915=0.51&20260814=0.51&20260715=0.51&20260615=0.51&20260515=0.51&20260415=0.51&20260316=0.51&20260216=0.51&20260115=0.51&20251215=0.51&20251114=0.51&20251015=0.51&20250915=0.51&20250815=0.51&20250715=0.51&20250616=0.51&20250515=0.51&20250414=0.51&20250314=0.51&20250214=0.51&20250115=0.51&20241213=0.51&20241114=0.51&20241015=0.51&20240913=0.55&20240814=0.55&20240715=0.55&20240614=0.55&20240514=0.55&20240415=0.55&20240314=0.55&20240214=0.55&20240115=0.55&20231214=0.55&20231114=0.55&20231016=0.55&20230914=0.55&20230814=0.55&20230714=0.6&20230614=0.6&20230515=0.6&20230414=0.6&20230314=0.6&20230214=0.6&20230113=0.6&20221214=0.6&20221114=0.6&20221014=0.6",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "—",
+        "sector1": "Financials",
+        "sector2": "Health Care"
       },
       "topHoldings": {
         "status": "published",
@@ -6444,7 +7036,8 @@
             "weightPercent": 0.8,
             "weightText": "0.8%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -6482,7 +7075,14 @@
         "fundObjective": "<p>The PRULink US Dividend Wealth Fund aims to provide long term capital growth and income by investing in corporate Debt Securities and Equities of US and/or Canadian equity and bond markets.</p>",
         "investmentManager": "Voya Investment Management Co. LLC",
         "hasDividend": true,
-        "dividendRate": "20260915=0.55&20260814=0.55&20260715=0.55&20260615=0.55&20260515=0.55&20260415=0.55&20260316=0.55&20260216=0.55&20260115=0.55&20251215=0.55&20251114=0.55&20251015=0.55&20250915=0.55&20250815=0.55&20250715=0.55&20250616=0.55&20250515=0.55&20250414=0.55&20250314=0.55&20250214=0.55&20250115=0.55&20241213=0.55&20241114=0.55&20241015=0.55&20240913=0.55&20240814=0.55&20240715=0.55&20240614=0.55&20240514=0.55&20240415=0.55&20240314=0.55&20240214=0.55&20240115=0.55&20231214=0.55&20231114=0.55"
+        "dividendRate": "20260915=0.55&20260814=0.55&20260715=0.55&20260615=0.55&20260515=0.55&20260415=0.55&20260316=0.55&20260216=0.55&20260115=0.55&20251215=0.55&20251114=0.55&20251015=0.55&20250915=0.55&20250815=0.55&20250715=0.55&20250616=0.55&20250515=0.55&20250414=0.55&20250314=0.55&20250214=0.55&20250115=0.55&20241213=0.55&20241114=0.55&20241015=0.55&20240913=0.55&20240814=0.55&20240715=0.55&20240614=0.55&20240514=0.55&20240415=0.55&20240314=0.55&20240214=0.55&20240115=0.55&20231214=0.55&20231114=0.55",
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "—",
+        "sector1": "Financials",
+        "sector2": "Health Care"
       },
       "topHoldings": {
         "status": "published",
@@ -6553,7 +7153,8 @@
             "weightPercent": 0.8,
             "weightText": "0.8%"
           }
-        ]
+        ],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -6591,7 +7192,14 @@
         "fundObjective": "The PRUPrime CIO Balanced Fund aims to provide long term total return through a diversified portfolio of Underlying Funds, managed with a focus to balance long-term capital growth and stability.",
         "investmentManager": null,
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Information Technology",
+        "sector2": "Financials"
       },
       "topHoldings": {
         "status": "no_holdings_section",
@@ -6601,7 +7209,8 @@
         "factsheetDocumentDate": "June 2026",
         "factsheetDataAsAt": null,
         "count": 0,
-        "holdings": []
+        "holdings": [],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -6639,7 +7248,14 @@
         "fundObjective": "The PRUPrime CIO Conservative Fund aims to provide long term total return through a diversified portfolio of Underlying Funds, managed with a focus on long-term capital growth with stability and conservative positioning.",
         "investmentManager": null,
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Corporate Bonds",
+        "sector2": "Government Bonds"
       },
       "topHoldings": {
         "status": "no_holdings_section",
@@ -6649,7 +7265,8 @@
         "factsheetDocumentDate": "June 2026",
         "factsheetDataAsAt": null,
         "count": 0,
-        "holdings": []
+        "holdings": [],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     },
     {
@@ -6687,7 +7304,14 @@
         "fundObjective": "The PRUPrime CIO Growth Fund aims to provide long term total return through a diversified portfolio of Underlying Funds, managed with a focus on long-term capital growth.",
         "investmentManager": null,
         "hasDividend": false,
-        "dividendRate": null
+        "dividendRate": null,
+        "dividendUnit": null
+      },
+      "research": {
+        "geographic1": "United States",
+        "geographic2": "Europe",
+        "sector1": "Information Technology",
+        "sector2": "Consumer Discretionary"
       },
       "topHoldings": {
         "status": "no_holdings_section",
@@ -6697,7 +7321,8 @@
         "factsheetDocumentDate": "June 2026",
         "factsheetDataAsAt": null,
         "count": 0,
-        "holdings": []
+        "holdings": [],
+        "sourceFile": "output_holdings/all_holdings.json"
       }
     }
   ]
