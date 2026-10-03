@@ -1,0 +1,60 @@
+name: Test Gemini API
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-gemini:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Gemini SDK
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-genai
+
+      - name: Test Gemini API
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os
+          from google import genai
+
+          api_key = os.environ.get("GEMINI_API_KEY")
+
+          if not api_key:
+              raise RuntimeError("GEMINI_API_KEY is not available.")
+
+          print("GEMINI_API_KEY detected.")
+          print("Testing Gemini API...")
+
+          client = genai.Client(api_key=api_key)
+
+          response = client.models.generate_content(
+              model="gemini-2.5-flash",
+              contents="Reply with exactly: GEMINI_TEST_OK"
+          )
+
+          print("Gemini response:")
+          print(response.text)
+
+          if "GEMINI_TEST_OK" not in response.text:
+              raise RuntimeError(
+                  "Gemini responded, but the expected test text was not returned."
+              )
+
+          print("Gemini API test PASSED.")
+          PY
