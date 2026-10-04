@@ -1,11 +1,24 @@
 name: Market News - AI Analysis
 
 on:
+  # ==========================================================
+  # MANUAL RUN
+  # ==========================================================
+
   workflow_dispatch:
 
-  push:
-    paths:
-      - "data/market_news/current.json"
+  # ==========================================================
+  # AUTOMATIC RUN
+  #
+  # Trigger only after the CNBC collector workflow finishes.
+  # The job itself waits 30 minutes before starting analysis.
+  # ==========================================================
+
+  workflow_run:
+    workflows:
+      - "Market News - CNBC Collector"
+    types:
+      - completed
 
 permissions:
   contents: write
@@ -20,7 +33,20 @@ jobs:
 
     timeout-minutes: 180
 
+    # ==========================================================
+    # AUTOMATIC RUNS:
+    # Only analyze after a successful collector run.
+    #
+    # MANUAL RUNS:
+    # Run immediately without the 30-minute delay.
+    # ==========================================================
+
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
     steps:
+
       # ==========================================================
       # CHECKOUT
       # ==========================================================
@@ -30,6 +56,49 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: true
+          ref: main
+
+      # ==========================================================
+      # WAIT 30 MINUTES AFTER NEWS COLLECTION
+      # ==========================================================
+
+      - name: Wait 30 minutes after news collection
+        if: github.event_name == 'workflow_run'
+        run: |
+          echo "=========================================="
+          echo "NEWS COLLECTION COMPLETED"
+          echo "=========================================="
+          echo ""
+          echo "Collector workflow:"
+          echo "${{ github.event.workflow_run.name }}"
+          echo ""
+          echo "Collector run:"
+          echo "${{ github.event.workflow_run.id }}"
+          echo ""
+          echo "Collector conclusion:"
+          echo "${{ github.event.workflow_run.conclusion }}"
+          echo ""
+          echo "Waiting 30 minutes before AI analysis..."
+          echo ""
+
+          sleep 1800
+
+          echo ""
+          echo "30-minute waiting period completed."
+          echo "Starting market news analysis."
+
+      # ==========================================================
+      # SYNCHRONIZE WITH LATEST MAIN
+      #
+      # Important because the collector may have pushed changes
+      # while this workflow was waiting.
+      # ==========================================================
+
+      - name: Synchronize with latest main
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+          git clean -fd
 
       # ==========================================================
       # PYTHON
@@ -70,45 +139,52 @@ jobs:
 
       - name: Show runtime information
         run: |
+          echo "=========================================="
+          echo "RUNTIME INFORMATION"
+          echo "=========================================="
+
+          echo ""
           echo "Python:"
           python --version
 
-          echo "PyTorch:"
-          python -c "import torch; print(torch.__version__)"
+          echo ""
+          echo "Google GenAI:"
+          python -c "import google.genai; print('google-genai installed')"
 
-          echo "Transformers:"
-          python -c "import transformers; print(transformers.__version__)"
-
+          echo ""
           echo "CPU:"
           nproc
 
+          echo ""
           echo "Memory:"
           free -h
 
+          echo ""
           echo "Disk:"
           df -h
 
       # ==========================================================
-      # SYNCHRONIZE WITH MAIN
-      # ==========================================================
-
-      - name: Synchronize with latest main
-        run: |
-          git fetch origin main
-          git reset --hard origin/main
-          git clean -fd
-
-      # ==========================================================
       # RUN ANALYSIS
+      # ==========================================================
+      #
+      # ONE ARTICLE = ONE GEMINI REQUEST
+      #
+      # Successful article:
+      #   saved permanently to history
+      #
+      # Failed article:
+      #   remains pending
+      #
+      # HTTP 429:
+      #   stops the run immediately
+      #
+      # No same-run Gemini retries.
       # ==========================================================
 
       - name: Run Market News AI Analysis
         env:
-          HF_HUB_DISABLE_TELEMETRY: "1"
-          TOKENIZERS_PARALLELISM: "false"
-          MARKET_NEWS_MODEL: "Qwen/Qwen3-4B-Instruct-2507"
-          MARKET_NEWS_AI_RETRIES: "3"
-          MARKET_NEWS_RETRIEVAL_RETRIES: "2"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: "gemini-3.8-flash"
         run: |
           python -u scripts/analyze_market_news.py
 
@@ -122,14 +198,19 @@ jobs:
           import json
           from pathlib import Path
 
-          path = Path("data/market_news/analysis/current.json")
+          path = Path(
+              "data/market_news/analysis/current.json"
+          )
 
           if not path.exists():
               raise SystemExit(
                   "ERROR: analysis/current.json was not created."
               )
 
-          with path.open("r", encoding="utf-8") as f:
+          with path.open(
+              "r",
+              encoding="utf-8"
+          ) as f:
               data = json.load(f)
 
           if not isinstance(data, dict):
@@ -147,6 +228,12 @@ jobs:
           ids = []
 
           for article in articles:
+
+              if not isinstance(article, dict):
+                  raise SystemExit(
+                      "ERROR: Invalid article record."
+                  )
+
               if not article.get("id"):
                   raise SystemExit(
                       "ERROR: Article without ID."
@@ -174,7 +261,95 @@ jobs:
                       "ERROR: Article missing analysis."
                   )
 
-              ids.append(article["id"])
+              # ------------------------------------------------
+              # Geography validation
+              # ------------------------------------------------
+
+              geography = analysis.get(
+                  "geographyImpact"
+              )
+
+              if not isinstance(
+                  geography,
+                  dict
+              ):
+                  raise SystemExit(
+                      "ERROR: Article missing geographyImpact."
+                  )
+
+              geography_labels = geography.get(
+                  "labels"
+              )
+
+              if not isinstance(
+                  geography_labels,
+                  list
+              ):
+                  raise SystemExit(
+                      "ERROR: geographyImpact.labels "
+                      "is not an array."
+                  )
+
+              if not 1 <= len(geography_labels) <= 3:
+                  raise SystemExit(
+                      "ERROR: Geography must contain "
+                      "1-3 labels."
+                  )
+
+              if not geography.get(
+                  "explanation"
+              ):
+                  raise SystemExit(
+                      "ERROR: Geography explanation missing."
+                  )
+
+              # ------------------------------------------------
+              # Industry sector validation
+              # ------------------------------------------------
+
+              sector = analysis.get(
+                  "industrySectorImpact"
+              )
+
+              if not isinstance(
+                  sector,
+                  dict
+              ):
+                  raise SystemExit(
+                      "ERROR: Article missing "
+                      "industrySectorImpact."
+                  )
+
+              sector_labels = sector.get(
+                  "labels"
+              )
+
+              if not isinstance(
+                  sector_labels,
+                  list
+              ):
+                  raise SystemExit(
+                      "ERROR: industrySectorImpact.labels "
+                      "is not an array."
+                  )
+
+              if not 1 <= len(sector_labels) <= 3:
+                  raise SystemExit(
+                      "ERROR: Industry sector must contain "
+                      "1-3 labels."
+                  )
+
+              if not sector.get(
+                  "explanation"
+              ):
+                  raise SystemExit(
+                      "ERROR: Industry sector "
+                      "explanation missing."
+                  )
+
+              ids.append(
+                  article["id"]
+              )
 
           if len(ids) != len(set(ids)):
               raise SystemExit(
@@ -184,11 +359,19 @@ jobs:
           print(
               f"Validated {len(articles)} analyzed articles."
           )
+
           print(
               f"Generated: {data.get('generatedAtSgt')}"
           )
+
           print(
               f"Model: {data.get('analysisModel')}"
+          )
+
+          print("")
+          print(
+              "Geography and industry-sector analysis "
+              "structure validated."
           )
           PY
 
@@ -212,15 +395,19 @@ jobs:
           print("==========================================")
           print("MARKET NEWS ANALYSIS")
           print("==========================================")
+
           print(
               f"Generated: {data.get('generatedAtSgt')}"
           )
+
           print(
               f"Model: {data.get('analysisModel')}"
           )
+
           print(
               f"Articles: {data.get('articleCount')}"
           )
+
           print("==========================================")
           PY
 
@@ -233,17 +420,47 @@ jobs:
           git status --short
 
       # ==========================================================
-      # COMMIT / PUSH
+      # COMMIT
       # ==========================================================
 
-      - name: Commit and push analysis
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit analysis results
         run: |
           set -e
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/market_news/analysis/current.json
+          git add data/market_news/analysis/history/
+
+          if git diff --cached --quiet
+          then
+            echo "No analysis changes to commit."
+            exit 0
+          fi
+
+          git commit \
+            -m "Update market news analysis"
+
+      # ==========================================================
+      # PUSH
+      # ==========================================================
+      #
+      # IMPORTANT:
+      #
+      # We DO NOT rerun the AI analysis when a push fails.
+      #
+      # The analysis has already been completed and successful
+      # articles have already been written to history.
+      #
+      # We only synchronize Git and retry the push.
+      # ==========================================================
+
+      - name: Push analysis results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
 
           for attempt in 1 2 3 4 5
           do
@@ -251,33 +468,21 @@ jobs:
             echo "Push attempt $attempt / 5"
             echo "=========================================="
 
-            git fetch origin main
-
-            git reset --hard origin/main
-
-            # Re-run analysis after synchronization so that any
-            # analysis committed by another run is preserved.
-            python -u scripts/analyze_market_news.py
-
-            git add data/market_news/analysis/
-
-            if git diff --cached --quiet
-            then
-              echo "No analysis changes to commit."
-              exit 0
-            fi
-
-            git commit \
-              -m "Update market news analysis"
-
             if git push origin HEAD:main
             then
               echo "Analysis pushed successfully."
               exit 0
             fi
 
-            echo "Push rejected. Retrying..."
-            git reset --hard origin/main
+            echo ""
+            echo "Push rejected."
+            echo "Synchronizing with latest main..."
+            echo ""
+
+            git fetch origin main
+
+            git rebase origin/main
+
             sleep 5
           done
 
