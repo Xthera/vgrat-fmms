@@ -1,9 +1,9 @@
 {
-  "generatedAtSgt": "2026-10-04T23:52:21.334798+08:00",
+  "generatedAtSgt": "2026-10-04T23:53:28.773824+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 46,
+  "articleCount": 62,
   "analyses": [
     {
       "articleId": "89a4d9ee0be2e8f2a3f433a9fda45b2c08490c5c193949ceb6821340d92df60b",
@@ -1389,6 +1389,495 @@
       "collectorRelevanceScore": 101,
       "collectorRelevanceReason": "strong_economic_title",
       "collectedAtSgt": "2026-10-02T23:53:12+08:00"
+    },
+    {
+      "articleId": "b47415b24012c7266d330c692e2ddbe177516d4294bceb3dc9307662a14efdee",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Morning briefing highlighting investigations into a Fed insider passing information to a Chinese spy, OpenAI product debuts and IPO discussions, and 30-year Treasury bond yields hitting highs not seen since 2002, which weighed down stocks.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States",
+        "China"
+      ],
+      "sectors": [
+        "Financials",
+        "Technology"
+      ],
+      "investorImpact": "Rising long-term bond yields create downward pressure on equities by increasing borrowing costs, while geopolitical risks surrounding the Federal Reserve and high-profile tech developments impact market sentiment.",
+      "reasoning": "The article covers critical macroeconomic movements, specifically soaring long-term Treasury yields impacting stocks, alongside notable market and geopolitical developments relevant to fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "An inside man at the Fed, OpenAI debuts Dots, an IPO trend and more in Morning Squawk",
+      "publishedAtSgt": "2026-09-30T23:01:15+08:00",
+      "url": "https://www.cnbc.com/2026/09/30/5-things-to-know-before-the-stock-market-opens.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:10:01+08:00"
+    },
+    {
+      "articleId": "00b4678727e70c0653156c1bd9208b74e09210590eba978d7fe2516fb1e89e3c",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Robinhood announced at its HOOD Summit that it is expanding trading hours to include weekends, adding crypto perpetuals, and introducing AI-powered automated trading tools to target active traders and evolve into a more comprehensive platform.",
+      "assetClasses": [
+        "Equities",
+        "Cryptocurrency"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Technology"
+      ],
+      "investorImpact": "The expansion into nonstop trading, crypto derivatives, and AI automation highlights ongoing technological innovation within retail brokerages, potentially increasing engagement and trading volumes for Robinhood while intensifying competition in the sector.",
+      "reasoning": "The article is classified under TECHNOLOGY because it focuses on platform enhancements, AI agents, and product expansions by a major brokerage. It is relevant to fund monitoring as it illustrates competitive shifts and technological trends within fintech and retail brokerage services.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Robinhood unveils weekend hours, AI agents to allow users to trade nonstop",
+      "publishedAtSgt": "2026-09-30T21:56:14+08:00",
+      "url": "https://www.cnbc.com/2026/09/30/robinhood-unveils-weekend-hours-ai-agents-to-allow-users-to-trade-nonstop.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-02T12:10:02+08:00"
+    },
+    {
+      "articleId": "02dafeeefb638245121b0e466e6a7b82ce6fa07b678e0499fefdf642b3fbd3dc",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Bain & Company's annual forecast projects holiday retail sales will top $1 trillion for the first time with a 4.5% growth rate, though most of this growth is driven by rising inflation rather than actual unit volume increases.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Retail",
+        "Consumer Discretionary"
+      ],
+      "investorImpact": "Investors should note that headline retail sales growth may be misleadingly high due to inflation, indicating thinner real volume growth for consumer goods companies despite strong nominal sales figures.",
+      "reasoning": "Classified as ECONOMIC because it deals with macro-level retail sales forecasts and inflation impacts. Sentiment is MIXED as headline nominal growth is strong ($1 trillion milestone), but real unit growth is thin. It is relevant for fund monitoring within the consumer and retail sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Holiday retail sales are expected to top $1 trillion as inflation boosts growth",
+      "publishedAtSgt": "2026-09-30T20:48:46+08:00",
+      "url": "https://www.cnbc.com/2026/09/30/holiday-retail-sales-inflation.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 102,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-02T12:09:46+08:00"
+    },
+    {
+      "articleId": "8f282b831095eccbe524e372fb701f837fe08c0b294e2434d4db109edf6edb5d",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "OpenAI has entered the personal AI agent market with the launch of Dots, following Meta's recent release of its Muse AI agent. The competitive push into AI agents has driven investor enthusiasm, notably sending Meta's stock up 29% in September.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "The article highlights how artificial intelligence product launches, specifically personal agents, can drive significant investor interest and positive stock performance in major tech companies like Meta.",
+      "reasoning": "The article is classified as TECHNOLOGY because it discusses new AI agent releases by OpenAI and Meta. It is relevant for fund monitoring as it touches on market trends and sector performance driven by AI advancements.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "OpenAI follows Meta into the red-hot market for personal agents. But will users pay?",
+      "publishedAtSgt": "2026-09-30T20:04:46+08:00",
+      "url": "https://www.cnbc.com/2026/09/30/openai-follows-meta-into-the-red-hot-market-for-personal-agents.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 52,
+      "collectorRelevanceReason": "supporting_technology_description",
+      "collectedAtSgt": "2026-10-02T12:10:01+08:00"
+    },
+    {
+      "articleId": "841bf24ce028961592ce93977898becc887f08b314e8cf492ab6fb47fecf154b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "China has introduced three new criteria for humanoid robot IPOs, a move that indicates the cooling of a major market sector as global investors evaluate potential AI bubbles. High valuation-to-revenue ratios, particularly for Chinese startups, have raised concerns compared to U.S. counterparts.",
+      "assetClasses": [
+        "Equities",
+        "Private Equity",
+        "Venture Capital"
+      ],
+      "geographies": [
+        "China",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Robotics",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "The tightening of IPO criteria for humanoid robotics and high valuation scrutiny in China may restrict exit opportunities for early-stage investors and signal a broader cooling in AI-related valuations.",
+      "reasoning": "Classified as MARKET due to its focus on IPO criteria, startup valuations, and investor sentiment regarding AI and robotics sectors. Importance is HIGH because regulatory hurdles on IPOs directly impact venture capital exits and sector liquidity.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China has three new criteria for humanoid robot IPOs. Few, if any, meet them",
+      "publishedAtSgt": "2026-09-30T10:50:35+08:00",
+      "url": "https://www.cnbc.com/2026/09/29/china-criteria-humanoid-robot-ipos.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:48+08:00"
+    },
+    {
+      "articleId": "ec5b14fa7fc342f87f9dc2e6e2a72d1ef2279d69391c2f81f5a78a724c14473a",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "The upcoming release of the personal consumption expenditures price index, the Fed's primary inflation gauge, is expected to show increases of 0.3% at both all-items and core levels.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors are closely watching the PCE price index release as it heavily influences Federal Reserve monetary policy and future interest rate decisions.",
+      "reasoning": "The article discusses a key macroeconomic data release that directly impacts central bank policy, making it critical for market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "The Fed's main inflation measure will be released Wednesday. Here's what to expect",
+      "publishedAtSgt": "2026-09-30T04:51:43+08:00",
+      "url": "https://www.cnbc.com/2026/09/29/the-feds-main-inflation-measure-will-be-released-wednesday-heres-what-to-expect.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-02T23:53:12+08:00"
+    },
+    {
+      "articleId": "74cdc859ac4aec7814b82ea243d94ce9f586b5d9b17354d50532603e3d9357e8",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The White House has enacted import bans on approximately $19.9 billion worth of Canadian vehicles, dairy, and alcohol products amid trade tensions, while the Bank of Canada warns of increased uncertainty for economic growth and upside risks to inflation.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Currencies"
+      ],
+      "geographies": [
+        "United States",
+        "Canada"
+      ],
+      "sectors": [
+        "Automotive",
+        "Consumer Goods",
+        "Agriculture"
+      ],
+      "investorImpact": "The trade restrictions create supply chain disruptions and cost pressures for affected sectors such as automotive, dairy, and alcohol, while heightening inflationary pressures and growth uncertainty in Canada.",
+      "reasoning": "Classified as Geopolitical due to trade restrictions and import bans between the U.S. and Canada, with significant economic spillover effects on specific sectors and macroeconomic stability.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "America's Canadian import restrictions come into force. Here are the products barred from entry",
+      "publishedAtSgt": "2026-09-29T23:57:43+08:00",
+      "url": "https://www.cnbc.com/2026/09/29/canada-import-ban-trade-war.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-02T23:53:12+08:00"
+    },
+    {
+      "articleId": "877621d125745e125534f79d8a61be05cff432d9d5a53fde196b47748d95476d",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "President Trump's municipal bond portfolio has reached up to $1 billion, raising potential policy overlap concerns as presidents are exempt from typical conflict-of-interest laws that apply to other officials.",
+      "assetClasses": [
+        "Fixed Income",
+        "Bonds"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Government",
+        "Municipal"
+      ],
+      "investorImpact": "Highlights potential policy overlap and governance considerations for municipal bond investors monitoring political figures' holdings.",
+      "reasoning": "Classified as MARKET due to direct coverage of a substantial municipal bond portfolio and associated policy overlap concerns, relevant for fixed income monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump’s municipal bond portfolio reaches as much as $1 billion as policy overlaps mount",
+      "publishedAtSgt": "2026-09-29T22:37:07+08:00",
+      "url": "https://www.cnbc.com/2026/09/29/trump-municipal-bond-portfolio.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:48+08:00"
+    },
+    {
+      "articleId": "5b3eccb3a0ec6b939179316792f8b84d9055fb4d15b7b1fe61c766e8ea345028",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Nearly half the stocks in the S&P 500 are moving at cross purposes with the broader market, as massive capital spending boosts AI infrastructure beneficiaries while companies outside the AI trade, alongside energy and defensive sectors, struggle or trade lower.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Energy",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors face a bifurcated market where heavy AI infrastructure beneficiaries diverge from struggling non-AI, energy, and defensive equities, complicating sector allocation and index-level performance expectations.",
+      "reasoning": "The article discusses significant divergence within the S&P 500 between AI infrastructure plays and the rest of the market, which is important for portfolio management and sector performance monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Nearly half the stocks in the S&P 500 are at cross purposes with the rest of the market",
+      "publishedAtSgt": "2026-09-29T01:53:31+08:00",
+      "url": "https://www.cnbc.com/2026/09/28/nearly-half-of-the-stocks-in-the-sp-500-are-working-against-it.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:48+08:00"
+    },
+    {
+      "articleId": "fdc37d4078f6164344955f48e262146deed0172c4b7af46bcc4e2ded87da74a3",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "Former Disney CEO Bob Chapek revealed in a new memoir and interview that he raised concerns about then-Executive Chairman Bob Iger to the board weekly during his tenure, shedding light on the internal power dynamics that preceded his firing.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Communication Services",
+        "Entertainment"
+      ],
+      "investorImpact": "The revelations provide retrospective insight into corporate governance and executive leadership dynamics at Disney, but they do not materially impact current financial performance, stock valuation, or near-term investment strategy.",
+      "reasoning": "Classified as MARKET because it relates to corporate governance and executive management at a major publicly traded company. It is of LOW importance and low fund monitoring relevance as it concerns past management conflict rather than new operational data or financial metrics.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Ex-Disney CEO Bob Chapek says he raised concerns with the board 'weekly' during Iger power battle",
+      "publishedAtSgt": "2026-09-29T00:02:17+08:00",
+      "url": "https://www.cnbc.com/2026/09/28/disney-bob-chapek-bob-iger-power-battle-board.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:47+08:00"
+    },
+    {
+      "articleId": "99c129dbe4bdc114b716fe4499b9028db3ea73dda68d5fd705eb90c46dd75b67",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "The U.S. and China are lowering tariffs on $60 billion of goods, with the U.S. lowering tariffs on items like toys and sports equipment, and China lowering tariffs on American agricultural products.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States",
+        "China"
+      ],
+      "sectors": [
+        "Consumer Goods",
+        "Agriculture"
+      ],
+      "investorImpact": "The reduction in tariffs can lower costs for consumer goods and agricultural products, providing a positive boost to trade-sensitive sectors in both the U.S. and China.",
+      "reasoning": "Classified as GEOPOLITICAL because it involves direct trade policy negotiations between the U.S. and China affecting $60 billion of goods. It is important for monitoring bilateral trade relations and sector impacts.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "U.S., China to lower tariffs on $60 billion of goods. Here's what qualifies",
+      "publishedAtSgt": "2026-09-28T16:31:33+08:00",
+      "url": "https://www.cnbc.com/2026/09/28/us-china-lower-tariffs-trump-xi-meeting.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-02T12:09:49+08:00"
+    },
+    {
+      "articleId": "a17db37a1d2faa134e597f9fe260b8b8b887ecd075518e8745733045347840c4",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "China's industrial profit growth slowed to 4.2% in August, marking the weakest expansion of the year. The report reveals a bifurcated economy, with robust growth in high-tech sectors like AI and robotics contrasting with declining profits in consumer-oriented industries such as clothing, autos, and furniture, all weighed down by a persistent property downturn and weak domestic demand.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Consumer Discretionary",
+        "Industrials",
+        "Real Estate"
+      ],
+      "investorImpact": "Investors should note the divergence between China's struggling consumer sectors and its growing high-tech industries. Broad equity and commodity exposure tied to China may face volatility due to weak domestic demand and property sector headwinds.",
+      "reasoning": "Classified as ECONOMIC because it deals with macro industrial profit data and broad economic trends in China. Sentiment is MIXED due to strong high-tech performance counterbalancing weak traditional and consumer sector profits. Importance is HIGH given China's status as the world's second-largest economy and its impact on global supply chains and commodities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China posts weakest industrial profit growth this year, expanding 4.2% in August",
+      "publishedAtSgt": "2026-09-28T12:04:16+08:00",
+      "url": "https://www.cnbc.com/2026/09/28/china-posts-weakest-industrial-profit-growth-this-year-expanding-4point2percent-in-august-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:52+08:00"
+    },
+    {
+      "articleId": "43c8a5c721178fb20abbacad701c08fafd4e62ee1e1418f34c8363ce0801f5b7",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Debt-hungry AI and data center companies face increased financial risk as bond yields spike, with JPMorgan Chase estimating $4.1 trillion in AI-related debt issuance through 2030 to meet capacity demands.",
+      "assetClasses": [
+        "Fixed Income",
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials",
+        "Data Centers"
+      ],
+      "investorImpact": "Rising bond yields increase borrowing costs for capital-intensive AI and data center companies, threatening profit margins and debt sustainability for issuers of the projected $4.1 trillion in AI-related debt.",
+      "reasoning": "Classified under MARKET due to the direct impact of spiking bond yields on corporate debt financing for the AI sector. It is important and fund-monitoring relevant because massive debt issuance intersecting with rising yields presents systemic valuation and credit risks.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Debt-hungry AI companies face increased risk as bond yields spike",
+      "publishedAtSgt": "2026-09-27T23:35:34+08:00",
+      "url": "https://www.cnbc.com/2026/09/27/debt-hungry-data-center-companies-increased-risk-bond-yields-spike.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 93,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:49+08:00"
+    },
+    {
+      "articleId": "1cadc10a62db385691afa73eeba5d2948668694fb713e9b3fdbd013eb4e14a27",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Matthews Asia portfolio manager Andrew Mattock argues that investors aiming to maximize exposure to artificial intelligence should specifically target China, noting that broad emerging market strategies are insufficient because funds like the iShares MSCI Emerging Markets ETF are heavily weighted in South Korea and Taiwan while lacking dedicated Chinese AI exposure.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "China",
+        "Taiwan",
+        "South Korea"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors seeking comprehensive AI exposure may need to look beyond broad emerging market ETFs and consider targeted allocations to Chinese equities to capture potential growth.",
+      "reasoning": "The article provides strategic portfolio management insights regarding artificial intelligence exposure in emerging markets, specifically highlighting China as a key component often missed by standard broad indexes, making it relevant for market strategy and asset allocation monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "This may be the ‘missing piece’ for investors looking to boost AI exposure",
+      "publishedAtSgt": "2026-09-26T23:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/09/26/ai-portfolios-may-need-china-to-grab-the-biggest-gains.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:50+08:00"
+    },
+    {
+      "articleId": "61ea3c09d6cdb4805f262b6d6e2b80b10c1cc83c01f5062afaac8a9c26bc49d9",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The benchmark 10-year Treasury yield surged to its highest level since 2007, climbing above 5% due to factors including sticky inflation, expectations of additional Federal Reserve tightening, and heavy bond issuance.",
+      "assetClasses": [
+        "Fixed Income",
+        "Bonds",
+        "Treasurys"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Government"
+      ],
+      "investorImpact": "Rising Treasury yields increase borrowing costs across the economy, put downward pressure on equity valuations, and signal shifting expectations regarding monetary policy and debt issuance.",
+      "reasoning": "The article discusses a major macroeconomic and market event--the 10-year Treasury yield hitting a nearly two-decade high--which is critical for multi-asset fund monitoring and fixed income strategies.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "The 10-year Treasury yield is at its highest in nearly two decades. How we got here",
+      "publishedAtSgt": "2026-09-26T21:30:06+08:00",
+      "url": "https://www.cnbc.com/2026/09/26/10-year-treasury-yield-is-at-its-highest-in-19-years-how-we-got-here.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:50+08:00"
+    },
+    {
+      "articleId": "4ff36f7a8af21a91101a9114ddae9e22d65b4504a1c7554b159f7bd9e60a9ea8",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "LOW",
+      "summary": "Coca-Cola has hired Rob Gehring, the head of Monster Energy's Americas business, to lead its North American operations as the company aims to sustain growth.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "North America"
+      ],
+      "sectors": [
+        "Consumer Staples",
+        "Food and Beverage"
+      ],
+      "investorImpact": "The executive change highlights leadership adjustments within major beverage companies, though the direct impact on stock performance for Coca-Cola or Monster Energy is limited.",
+      "reasoning": "Classified under MARKET because it concerns corporate leadership changes for publicly traded consumer goods companies, but given the operational nature it is of low overall importance for macroeconomic fund monitoring.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Coca-Cola hires Rob Gehring from Monster Energy to run its North American operations",
+      "publishedAtSgt": "2026-09-26T05:02:20+08:00",
+      "url": "https://www.cnbc.com/2026/09/25/monster-coca-cola-rob-gehring.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-02T12:09:47+08:00"
     }
   ]
 }
