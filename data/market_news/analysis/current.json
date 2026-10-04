@@ -1,9 +1,9 @@
 {
-  "generatedAtSgt": "2026-10-04T23:53:28.773824+08:00",
+  "generatedAtSgt": "2026-10-04T23:54:06.636534+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 62,
+  "articleCount": 72,
   "analyses": [
     {
       "articleId": "89a4d9ee0be2e8f2a3f433a9fda45b2c08490c5c193949ceb6821340d92df60b",
@@ -1878,6 +1878,313 @@
       "collectorRelevanceScore": 71,
       "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
       "collectedAtSgt": "2026-10-02T12:09:47+08:00"
+    },
+    {
+      "articleId": "9db156358285a6994d103097440b2531e75c9261c1f9fc47bbdf3c2982012c07",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Treasury yields are soaring, with the 2-year note climbing past 4.9% as traders price in potential further Federal Reserve rate hikes, directly impacting consumers and overall economic activity.",
+      "assetClasses": [
+        "Fixed Income",
+        "Debt"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Consumer"
+      ],
+      "investorImpact": "Soaring yields increase borrowing costs for consumers and businesses, putting pressure on consumer spending and asset valuations across portfolios.",
+      "reasoning": "Classified as MARKET because it discusses rising Treasury yields and rate expectations affecting debt and consumer spending, which are vital for investment monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Here's what happens to the economy when Treasury yields soar like they are now",
+      "publishedAtSgt": "2026-09-25T21:48:19+08:00",
+      "url": "https://www.cnbc.com/2026/09/23/what-happens-to-the-economy-when-treasury-yields-soar.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:54+08:00"
+    },
+    {
+      "articleId": "e94653b7802622bf689a4df355329ef74914b5e9e3633af24e112eab88371c20",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Treasury yields are surging due to persistent inflation above the Fed's 2% goal, higher energy prices, and massive debt issuance driven by the global hyperscaler financial arms race, creating new challenges for the Federal Reserve and Kevin Warsh.",
+      "assetClasses": [
+        "Fixed Income",
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Energy",
+        "Technology"
+      ],
+      "investorImpact": "Surging Treasury yields increase borrowing costs across the economy, pressure equity valuations, and signal expectations of tighter monetary policy, requiring investors to reassess duration risk and asset allocation.",
+      "reasoning": "The article highlights significant macroeconomic and market shifts impacting fixed income and equity valuations through surging Treasury yields and inflation pressures, making it critical for portfolio and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Surging Treasury yields pose a brand new problem for Kevin Warsh and the Fed",
+      "publishedAtSgt": "2026-09-25T19:08:05+08:00",
+      "url": "https://www.cnbc.com/2026/09/24/surging-treasury-yields-are-posing-a-brand-new-problem-for-kevin-warsh-and-the-fed.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:53+08:00"
+    },
+    {
+      "articleId": "aec0e303f79eef554f78a553bdcc07de19a7bf88d729c2e09f4ed08a54b7a23b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "MGM Resorts shares dropped 11% after Barry Diller's People Inc. (formerly IAC) rescinded its takeover offer, citing the complicated nature of the deal.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Gaming",
+        "Hospitality"
+      ],
+      "investorImpact": "The sudden withdrawal of the acquisition offer removes the takeover premium from MGM Resorts' stock price, causing a sharp 11% sell-off and impacting near-term valuation and sentiment for gaming sector equities.",
+      "reasoning": "Classified as MARKET due to the significant share price movement and M&A activity involving a major public company. Sentiment is NEGATIVE due to the failed takeover and steep stock decline. Importance is HIGH given the magnitude of the market reaction and size of the transaction.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "MGM Resorts shares sink 11% after Barry Diller's People Inc. rescinds takeover offer",
+      "publishedAtSgt": "2026-09-25T04:11:24+08:00",
+      "url": "https://www.cnbc.com/2026/09/24/barry-diller-people-mgm-resorts.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:47+08:00"
+    },
+    {
+      "articleId": "5572d3ae399be347ad259b72d498bad1a4953626dec50d777feb3868883d6be4",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Philadelphia Fed's Anna Paulson stated that modest further rate tightening may be warranted as underlying inflation continues to run around 2.5%-3%, well above the Fed's 2% target.",
+      "assetClasses": [
+        "Fixed Income",
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Expectations of further monetary tightening or prolonged higher interest rates can create headwinds for equity valuations and push bond yields higher.",
+      "reasoning": "The article discusses central bank monetary policy and inflation targets, which directly impacts broader economic conditions and asset pricing, making it relevant for economic analysis and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Philadelphia Fed's Anna Paulson says 'modest' rate moves likely ahead to tame inflation",
+      "publishedAtSgt": "2026-09-25T01:12:04+08:00",
+      "url": "https://www.cnbc.com/2026/09/24/philadelphia-feds-anna-paulson-says-modest-rate-moves-likely-ahead-to-tame-inflation.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-02T12:09:50+08:00"
+    },
+    {
+      "articleId": "0ac4218ac5fe55cb86de1bd69dd543a6858aa841ae1bfa11f771990abe8ab8b4",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "China's Commerce Ministry confirmed that senior trade negotiators held their first AI talks with the U.S. and discussed reducing tariffs and extending trade arrangements agreed upon in Kuala Lumpur.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "China",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Trade"
+      ],
+      "investorImpact": "The opening of official AI talks and potential trade truce extensions between the U.S. and China reduce regulatory and tariff uncertainties, which is broadly positive for global equities, particularly technology and multinational trade sectors.",
+      "reasoning": "The article details a major geopolitical development involving bilateral negotiations on critical technology and trade between the world's two largest economies, making it highly relevant for monitoring global market risks and macroeconomic trends.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China confirms first AI talks with U.S. have taken place, hints at trade truce extension",
+      "publishedAtSgt": "2026-09-24T22:16:27+08:00",
+      "url": "https://www.cnbc.com/2026/09/24/china-confirms-first-ai-talks-with-us-have-taken-place-hints-at-trade-truce-extension.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-02T12:09:50+08:00"
+    },
+    {
+      "articleId": "243f68871f37c3d9ab99f078f53e6addc4f250d4f1a25e10123505a23200f68d",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Switzerland's central bank maintained its key interest rate at 0%, diverging from peers like the Fed, Bank of England, and ECB, which helps curb imported inflation through foreign capital inflows supporting the Swiss franc.",
+      "assetClasses": [
+        "Currencies",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "Switzerland",
+        "Europe",
+        "United States",
+        "United Kingdom"
+      ],
+      "sectors": [
+        "Financials",
+        "Banking"
+      ],
+      "investorImpact": "Investors holding Swiss assets or trading currencies should note the diverging monetary policy stance of the Swiss National Bank compared to other major central banks, affecting currency valuations and inflation dynamics.",
+      "reasoning": "Classified as ECONOMIC because it concerns central bank monetary policy decisions and inflation rates. Significance is MEDIUM as it impacts currency markets and comparative global interest rate strategies.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Switzerland is keeping rates at 0% — for now",
+      "publishedAtSgt": "2026-09-24T19:34:56+08:00",
+      "url": "https://www.cnbc.com/2026/09/24/swiss-national-bank-interest-rates-inflation.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 58,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-02T12:09:53+08:00"
+    },
+    {
+      "articleId": "07028f72c38995842ad7266d96a6d0c1e1ba6afa7701b80de64d22661e101d6d",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "The U.S.-China trade truce has been extended for two months as Chinese President Xi begins a state visit, following discussions and previous agreements between Xi and Trump.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Currencies"
+      ],
+      "geographies": [
+        "United States",
+        "China",
+        "South Korea"
+      ],
+      "sectors": [
+        "International Trade",
+        "General"
+      ],
+      "investorImpact": "The extension of the U.S.-China trade truce reduces near-term geopolitical and trade tensions, providing stability for global equity markets, supply chains, and cross-border commerce.",
+      "reasoning": "Classified as GEOPOLITICAL due to the high-level state visit and trade truce between the U.S. and China. It is highly relevant to market sentiment and fund monitoring as it averts immediate escalation of trade barriers.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "U.S.-China trade truce extended for two months, Bessent says, as Xi begins state visit",
+      "publishedAtSgt": "2026-09-24T12:55:59+08:00",
+      "url": "https://www.cnbc.com/2026/09/24/us-china-trade-truce-bessent-trump-xi.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-02T12:09:51+08:00"
+    },
+    {
+      "articleId": "0980250f2f52a0c38f86c5c5b949dfa8ad54a69b13d7be58244e1b1815438e9f",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "JPMorgan Chase CEO Jamie Dimon projects that artificial intelligence spending across the hyperscaler ecosystem could reach $1 trillion next year, surging from $700 billion this year and $300 billion last year, which he notes boosts economic growth while potentially adding to inflation.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Massive capital expenditure in artificial intelligence by hyperscalers drives growth within the technology sector, but investors must also weigh the macroeconomic risks of inflationary pressures driven by high spending.",
+      "reasoning": "Jamie Dimon's high-profile forecast regarding trillion-dollar AI infrastructure spending provides significant insight into technology sector growth trends and broader economic impacts, making it highly relevant for market and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jamie Dimon says hyperscaler AI spending could hit $1 trillion next year",
+      "publishedAtSgt": "2026-09-22T09:30:01+08:00",
+      "url": "https://www.cnbc.com/2026/09/21/jamie-dimon-jpm-jpmorgan-indiaconference.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-02T12:09:51+08:00"
+    },
+    {
+      "articleId": "ae747e1d354fdf3082a0c3be228831416a00ea92e18fb02b03aec6d206e76862",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "American companies are experiencing severe margin pressure due to a combination of tariffs, soaring fuel costs, and higher interest rates, leading to accelerated price increases and offset tariff refunds.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Retail",
+        "Transportation",
+        "Supply Chain"
+      ],
+      "investorImpact": "The compounding pressures of tariffs, fuel costs, and interest rates indicate margin compression across American corporations, which may negatively impact corporate earnings and equity valuations.",
+      "reasoning": "Classified as ECONOMIC because it highlights broader macroeconomic cost pressures affecting corporate profit margins across multiple sectors. High importance due to its direct impact on corporate earnings and inflation.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "‘It's awful’: How tariffs, soaring fuel costs and higher interest rates are squeezing American companies",
+      "publishedAtSgt": "2026-09-21T23:04:04+08:00",
+      "url": "https://www.cnbc.com/2026/09/20/tariffs-fuel-prices-and-interest-rates-squeeze-us-companies.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:51+08:00"
+    },
+    {
+      "articleId": "bd8494b014237a9b9453750de9a9cfb04e846c0fd6b435767955370a8e6d0967",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Japanese markets reacted in an unusual manner following the central bank's benchmark interest rate hike to a 31-year high, with the currency, bond yields, and stock market moving in the opposite direction of conventional theory.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Currencies"
+      ],
+      "geographies": [
+        "Japan"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors with exposure to Japanese equities, fixed income, and the yen should note the counterintuitive market reaction, which defies traditional macroeconomic correlation models and requires careful reassessment of currency and bond positioning.",
+      "reasoning": "The article is classified under MARKET as it details specific, counterintuitive asset price movements in stocks, bonds, and currency following a major monetary policy shift by the Bank of Japan, making it highly significant for fund monitoring and cross-asset strategy.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Why Japan’s markets flipped the usual script after central bank rate hike",
+      "publishedAtSgt": "2026-09-21T09:02:25+08:00",
+      "url": "https://www.cnbc.com/2026/09/18/japan-rate-hike-stocks-rise-bond-yields-yen-fall.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 93,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-02T12:09:54+08:00"
     }
   ]
 }
