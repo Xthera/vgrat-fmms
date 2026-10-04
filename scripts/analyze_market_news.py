@@ -67,7 +67,7 @@ CURRENT_JSON = ROOT / "data" / "market_news" / "current.json"
 ANALYSIS_DIR = ROOT / "data" / "market_news" / "analysis"
 ANALYSIS_CURRENT = ANALYSIS_DIR / "current.json"
 
-DEFAULT_MODEL = "gemini-3.8-flash"
+DEFAULT_MODEL = "gemini-3.5-flash-lite"
 
 # One article per test.
 MAX_ARTICLES = 1
