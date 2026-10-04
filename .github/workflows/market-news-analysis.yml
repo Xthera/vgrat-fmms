@@ -16,77 +16,65 @@ jobs:
       cancel-in-progress: false
 
     steps:
-
-      # ======================================================
-      # CHECKOUT
-      # ======================================================
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      # ======================================================
-      # PYTHON
-      # ======================================================
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # ======================================================
-      # DEPENDENCIES
-      # ======================================================
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests openpyxl
-
-      # ======================================================
-      # VERIFY INPUTS
-      # ======================================================
+          pip install openpyxl
 
       - name: Verify production inputs
         run: |
+          echo "Repository root:"
+          pwd
+
+          echo ""
+          echo "Checking scripts:"
+          ls -la scripts
+
+          echo ""
+          echo "Checking market news:"
+          ls -la data/market_news
+
+          echo ""
+          echo "Required files:"
+          test -f "scripts/analyze_market_news.py"
           test -f "data/market_news/current.json"
           test -f "Research Funds.xlsx"
 
-          echo "Production current.json:"
-          ls -lh "data/market_news/current.json"
-
-          echo "Research Funds.xlsx:"
-          ls -lh "Research Funds.xlsx"
-
-      # ======================================================
-      # RUN ONE REAL-DATA BATCH
-      # ======================================================
+          echo ""
+          echo "All required files found."
 
       - name: Analyze newest 5 pending articles
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: gemini-3.5-flash
-          GEMINI_TIMEOUT_SECONDS: 180
-          GEMINI_MAX_OUTPUT_TOKENS: 16384
+          GEMINI_MODEL: gemini-3.8-flash
+          GEMINI_TIMEOUT_SECONDS: "180"
+          GEMINI_MAX_OUTPUT_TOKENS: "16384"
         run: |
           python -u scripts/analyze_market_news.py
-
-      # ======================================================
-      # SHOW RESULT
-      # ======================================================
 
       - name: Show analysis result
         if: always()
         run: |
+          echo "=========================================="
+          echo "ANALYSIS RESULT"
+          echo "=========================================="
+
           if [ -f "data/market_news/analysis/current.json" ]; then
-            echo "=========================================="
-            echo "Analysis file created:"
-            echo "=========================================="
             ls -lh "data/market_news/analysis/current.json"
 
             echo ""
-            echo "Batch summary:"
+            echo "Latest batch summary:"
+
             python - <<'PY'
           import json
 
@@ -95,38 +83,64 @@ jobs:
           with open(path, "r", encoding="utf-8") as f:
               data = json.load(f)
 
-          print("Successful batches:",
-                data.get("totalSuccessfulBatches", 0))
+          print(
+              "Successful batches:",
+              data.get("totalSuccessfulBatches", 0)
+          )
 
-          print("Successful articles:",
-                data.get("totalSuccessfulArticles", 0))
+          print(
+              "Successful articles:",
+              data.get("totalSuccessfulArticles", 0)
+          )
 
           batches = data.get("batches", [])
 
           if batches:
               batch = batches[-1]
 
-              print("Latest batch:",
-                    batch.get("batchNumber"))
+              print(
+                  "Latest batch:",
+                  batch.get("batchNumber")
+              )
 
-              request = batch.get("request", {})
+              print(
+                  "Article count:",
+                  batch.get("request", {}).get(
+                      "articleCount"
+                  )
+              )
 
-              print("Articles in batch:",
-                    request.get("articleCount"))
+              print(
+                  "Response seconds:",
+                  batch.get("request", {}).get(
+                      "responseSeconds"
+                  )
+              )
 
-              print("Response seconds:",
-                    request.get("responseSeconds"))
+              print(
+                  "Model:",
+                  batch.get("model")
+              )
 
-              print("Model:",
-                    batch.get("model"))
+              print(
+                  "Validation:",
+                  batch.get("validation", {}).get(
+                      "passed"
+                  )
+              )
+
+              print("")
+              print("Article IDs:")
+
+              for article_id in batch.get(
+                  "articleIds",
+                  []
+              ):
+                  print("-", article_id)
           PY
           else
-            echo "No analysis/current.json was created."
+            echo "No analysis/current.json exists."
           fi
-
-      # ======================================================
-      # COMMIT SUCCESSFUL ANALYSIS
-      # ======================================================
 
       - name: Commit successful analysis
         if: success()
@@ -147,5 +161,4 @@ jobs:
           fi
 
           git commit -m "Analyze market news batch"
-
           git push
