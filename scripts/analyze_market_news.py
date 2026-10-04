@@ -82,7 +82,7 @@ CURRENT_JSON = (
 # Keep the current model for the diagnostic.
 GEMINI_MODEL = os.getenv(
     "GEMINI_MODEL",
-    "gemini-3.8-flash",
+    "gemini-3.5-flash",
 ).strip()
 
 GEMINI_API_KEY = os.getenv(
