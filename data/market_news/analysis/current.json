@@ -1,10 +1,40 @@
 {
-  "generatedAtSgt": "2026-10-05T01:23:05.167215+08:00",
+  "generatedAtSgt": "2026-10-05T05:42:14.702001+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 76,
+  "articleCount": 75,
   "analyses": [
+    {
+      "articleId": "2e98323f01b596216c6a46a9d8ec89ab3a81f366c83cc1eb6ba2f4f6394fa623",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Trump announced one-time $90 payments to 20.8 million Medicare beneficiaries and reiterated a pledge for $5,000 checks ahead of the midterm elections, though details on funding and authorization remain lacking.",
+      "assetClasses": [
+        "Equities",
+        "Government Debt"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Healthcare",
+        "Consumer Discretionary"
+      ],
+      "investorImpact": "Direct cash transfers and stimulus promises impact consumer sentiment and inflationary expectations, though the lack of funding details limits immediate market-moving implications.",
+      "reasoning": "Classified as economic policy and political maneuvering heading into midterms, relevant for fiscal policy monitoring and potential impacts on consumer behavior.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump reiterates pledge to send $5,000 checks, and hands out smaller payments, as midterm elections loom",
+      "publishedAtSgt": "2026-10-05T04:28:47+08:00",
+      "url": "https://www.cnbc.com/2026/10/04/trump-5000-checks-cash-payments-midterms.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-05T05:26:43+08:00"
+    },
     {
       "articleId": "1062414f59ff578e98df8787ce1310e124e20018d65d1abeded5ee92df90ca56",
       "relevant": true,
@@ -2247,67 +2277,6 @@
       "collectorRelevanceScore": 81,
       "collectorRelevanceReason": "technology_business_or_infrastructure",
       "collectedAtSgt": "2026-10-02T12:09:51+08:00"
-    },
-    {
-      "articleId": "ae747e1d354fdf3082a0c3be228831416a00ea92e18fb02b03aec6d206e76862",
-      "relevant": true,
-      "category": "ECONOMIC",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "American companies are experiencing severe margin pressure due to a combination of tariffs, soaring fuel costs, and higher interest rates, leading to accelerated price increases and offset tariff refunds.",
-      "assetClasses": [
-        "Equities",
-        "Commodities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Retail",
-        "Transportation",
-        "Supply Chain"
-      ],
-      "investorImpact": "The compounding pressures of tariffs, fuel costs, and interest rates indicate margin compression across American corporations, which may negatively impact corporate earnings and equity valuations.",
-      "reasoning": "Classified as ECONOMIC because it highlights broader macroeconomic cost pressures affecting corporate profit margins across multiple sectors. High importance due to its direct impact on corporate earnings and inflation.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "‘It's awful’: How tariffs, soaring fuel costs and higher interest rates are squeezing American companies",
-      "publishedAtSgt": "2026-09-21T23:04:04+08:00",
-      "url": "https://www.cnbc.com/2026/09/20/tariffs-fuel-prices-and-interest-rates-squeeze-us-companies.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-02T12:09:51+08:00"
-    },
-    {
-      "articleId": "bd8494b014237a9b9453750de9a9cfb04e846c0fd6b435767955370a8e6d0967",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "HIGH",
-      "summary": "Japanese markets reacted in an unusual manner following the central bank's benchmark interest rate hike to a 31-year high, with the currency, bond yields, and stock market moving in the opposite direction of conventional theory.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income",
-        "Currencies"
-      ],
-      "geographies": [
-        "Japan"
-      ],
-      "sectors": [
-        "Financials"
-      ],
-      "investorImpact": "Investors with exposure to Japanese equities, fixed income, and the yen should note the counterintuitive market reaction, which defies traditional macroeconomic correlation models and requires careful reassessment of currency and bond positioning.",
-      "reasoning": "The article is classified under MARKET as it details specific, counterintuitive asset price movements in stocks, bonds, and currency following a major monetary policy shift by the Bank of Japan, making it highly significant for fund monitoring and cross-asset strategy.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Why Japan’s markets flipped the usual script after central bank rate hike",
-      "publishedAtSgt": "2026-09-21T09:02:25+08:00",
-      "url": "https://www.cnbc.com/2026/09/18/japan-rate-hike-stocks-rise-bond-yields-yen-fall.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 93,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-02T12:09:54+08:00"
     }
   ]
 }
