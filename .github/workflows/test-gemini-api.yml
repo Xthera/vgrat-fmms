@@ -35,7 +35,7 @@ jobs:
       # ==========================================================
       # NO PIP / NO EXTERNAL DEPENDENCIES
       #
-      # test_gemini_request.py uses Python standard library only.
+      # test_gemini_api.py uses Python standard library only.
       # ==========================================================
 
       - name: Verify diagnostic inputs
@@ -65,4 +65,4 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_DIAGNOSTIC_TIMEOUT_SECONDS: "120"
         run: |
-          python -u scripts/test_gemini_request.py
+          python -u scripts/test_gemini_api.py
