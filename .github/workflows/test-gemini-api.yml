@@ -40,11 +40,11 @@ jobs:
 
       - name: Verify diagnostic inputs
         run: |
-          test -f "scripts/test_gemini_request.py"
+          test -f "scripts/test_gemini_api.py"
           test -f "data/market_news/current.json"
 
           echo "Diagnostic script:"
-          ls -lh "scripts/test_gemini_request.py"
+          ls -lh "scripts/test_gemini_api.py"
 
           echo ""
           echo "Production current.json:"
