@@ -16,7 +16,7 @@ on:
   # 18:00 SGT = 10:00 UTC
   # 21:00 SGT = 13:00 UTC
   schedule:
-    - cron: "0 16,19,22,1,4,7,10,13 * * *"
+    - cron: "20 16,19,22,1,4,7,10,13 * * *"
 
 permissions:
   contents: write
