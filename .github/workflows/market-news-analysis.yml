@@ -56,7 +56,7 @@ jobs:
       - name: Analyze newest 5 pending articles
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: gemini-3.8-flash
+          GEMINI_MODEL: gemini-3.5-flash-lite
           GEMINI_TIMEOUT_SECONDS: "180"
           GEMINI_MAX_OUTPUT_TOKENS: "16384"
         run: |
