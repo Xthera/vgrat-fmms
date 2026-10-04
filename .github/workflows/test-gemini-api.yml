@@ -1,4 +1,4 @@
-name: Test Gemini API
+name: Test Gemini Request
 
 on:
   workflow_dispatch:
@@ -7,12 +7,12 @@ permissions:
   contents: read
 
 jobs:
-  test-gemini-api:
-    name: Diagnose Gemini API Access
+  test-gemini-request:
+    name: Diagnose Gemini Request Configuration
     runs-on: ubuntu-latest
 
     concurrency:
-      group: test-gemini-api
+      group: test-gemini-request
       cancel-in-progress: false
 
     steps:
@@ -33,41 +33,36 @@ jobs:
           python-version: "3.11"
 
       # ==========================================================
-      # DEPENDENCIES
+      # NO PIP / NO EXTERNAL DEPENDENCIES
+      #
+      # test_gemini_request.py uses Python standard library only.
       # ==========================================================
 
-      - name: Install dependencies
+      - name: Verify diagnostic inputs
         run: |
-          python -m pip install --upgrade pip
-          pip install requests
+          test -f "scripts/test_gemini_request.py"
+          test -f "data/market_news/current.json"
+
+          echo "Diagnostic script:"
+          ls -lh "scripts/test_gemini_request.py"
+
+          echo ""
+          echo "Production current.json:"
+          ls -lh "data/market_news/current.json"
 
       # ==========================================================
-      # VERIFY SCRIPT
-      # ==========================================================
-
-      - name: Verify diagnostic script
-        run: |
-          test -f "scripts/test_gemini_api.py"
-          echo "Diagnostic script found:"
-          ls -lh "scripts/test_gemini_api.py"
-
-      # ==========================================================
-      # GEMINI DIAGNOSTIC
+      # GEMINI REQUEST DIAGNOSTIC
       #
-      # Do NOT set a specific model here.
+      # IMPORTANT:
+      # No GEMINI_MODEL is specified here.
       #
-      # The Python script will:
-      #   1. list all models available to the API key
-      #   2. identify generateContent-capable models
-      #   3. select an available model
-      #   4. perform one minimal generation request
-      #
-      # This prevents us from guessing model names.
+      # The default is gemini-3.8-flash, which your previous
+      # API diagnostic successfully generated against with HTTP 200.
       # ==========================================================
 
-      - name: Run Gemini API diagnostic
+      - name: Run Gemini request diagnostic
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_DIAGNOSTIC_TIMEOUT_SECONDS: "60"
+          GEMINI_DIAGNOSTIC_TIMEOUT_SECONDS: "120"
         run: |
-          python -u scripts/test_gemini_api.py
+          python -u scripts/test_gemini_request.py
