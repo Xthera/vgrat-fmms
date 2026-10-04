@@ -80,7 +80,7 @@ ONLY successful analysis is written to:
 
 BATCH
 -----
-BATCH_SIZE = 2
+BATCH_SIZE = 1
 
 This is intentionally kept at 2 because previous 5-article requests
 experienced Gemini HTTP 503 responses while 2-article requests
@@ -139,7 +139,7 @@ ANALYSIS_CURRENT = ANALYSIS_DIR / "current.json"
 # CONFIGURATION
 # ============================================================
 
-BATCH_SIZE = 2
+BATCH_SIZE = 1
 MAX_BATCHES = 1
 PROCESS_NEWEST_FIRST = True
 
