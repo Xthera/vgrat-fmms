@@ -1,122 +1,62 @@
 #!/usr/bin/env python3
 
 """
-VGrat FMS - MARKET NEWS ANALYZER
-================================
+VGrat FMS - MARKET NEWS AI ANALYZER
+===================================
 
-Purpose
--------
-Analyze articles collected by the CNBC Market News Collector.
+FIRST REAL-DATA BATCH TEST
 
-PRIMARY INPUT
--------------
-data/market_news/current.json
+This version intentionally processes ONE batch of exactly 5 articles.
 
-TAXONOMY INPUT
---------------
-Research Funds.xlsx
-
-    Sheet 1: Fund Research
-    Sheet 2: Geography master categories
-    Sheet 3: Sector master categories
+INPUTS - READ ONLY
+------------------
+    data/market_news/current.json
+    Research Funds.xlsx
 
 OUTPUT
 ------
-data/market_news/analysis/
-    current.json
+    data/market_news/analysis/current.json
 
-    history/
-        YYYY/
-            MM/
-                YYYY-MM-DD.json
+BEHAVIOUR
+---------
+1. Load the real production current.json.
+2. Load Research Funds.xlsx as read-only research context.
+3. Identify articles already successfully stored in analysis/current.json.
+4. Select the newest 5 pending articles.
+5. Send all 5 articles in ONE Gemini request.
+6. Validate that Gemini returned exactly one analysis per article.
+7. Only after complete validation, write the successful batch.
+8. Preserve all previously successful batches.
+9. If the Gemini request fails or validation fails, nothing is written.
+10. Production current.json is never modified.
 
-IMPORTANT PROCESSING RULE
--------------------------
-ONE ARTICLE = ONE GEMINI REQUEST
-
-An article is considered successfully analyzed ONLY after its
-analysis record has been successfully written to the historical
-publication-date file.
-
-Once an article exists successfully in history, it is permanently
-considered analyzed and will NEVER be sent to Gemini again.
-
-The rolling current.json is NOT the completion baseline.
-
-PROCESSING ORDER
-----------------
-Pending articles are processed oldest publication date first.
-
-SUCCESS
--------
-1. Gemini returns valid analysis.
-2. Analysis passes validation.
-3. Article is written successfully to history.
-4. Only then is the article marked as completed in memory.
-
-RATE LIMIT
-----------
-If Gemini returns HTTP 429 / quota exhaustion:
-    - stop immediately
-    - do not process further articles
-    - leave remaining articles pending for the next run
-
-OTHER FAILURES
---------------
-For non-429 article failures:
-    - do not retry Gemini in the same run
-    - leave article pending
-    - continue with the next pending article
-
-TAXONOMY
---------
-Geography and sector labels MUST come from Research Funds.xlsx.
-
-The AI is instructed to:
-    - use only exact taxonomy labels
-    - select 1-3 geography labels
-    - select 1-3 sector labels
-    - explain why each selected geography/sector is impacted
-
-NO FUND RECOMMENDATIONS
------------------------
-This module does not:
-    - recommend Prudential funds
-    - predict individual fund returns
-    - analyse individual Prudential funds
-    - provide investment advice
-
-TIME
-----
-All publication-date grouping uses Singapore time.
-
-MODEL
------
-Default:
-    gemini-3.8-flash
-
-API
----
-Google Gemini Interactions API.
-
-Environment variable:
-    GEMINI_API_KEY
+Each successful batch stores:
+    - batch number
+    - article IDs
+    - model
+    - prompt
+    - request timestamp
+    - response timestamp
+    - response duration
+    - input article count
+    - output article count
+    - validation status
+    - Gemini response
+    - individual article analyses
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
-import re
 import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import requests
-import trafilatura
-from google import genai
 from openpyxl import load_workbook
 
 
@@ -126,61 +66,71 @@ from openpyxl import load_workbook
 
 ROOT = Path(__file__).resolve().parent.parent
 
-NEWS_CURRENT_PATH = (
-    ROOT / "data" / "market_news" / "current.json"
+CURRENT_JSON = (
+    ROOT
+    / "data"
+    / "market_news"
+    / "current.json"
 )
 
-ANALYSIS_ROOT = (
-    ROOT / "data" / "market_news" / "analysis"
+RESEARCH_FUNDS = ROOT / "Research Funds.xlsx"
+
+ANALYSIS_DIR = (
+    ROOT
+    / "data"
+    / "market_news"
+    / "analysis"
 )
 
-ANALYSIS_CURRENT_PATH = (
-    ANALYSIS_ROOT / "current.json"
-)
-
-ANALYSIS_HISTORY_ROOT = (
-    ANALYSIS_ROOT / "history"
-)
-
-RESEARCH_FUNDS_PATH = (
-    ROOT / "Research Funds.xlsx"
+ANALYSIS_CURRENT = (
+    ANALYSIS_DIR
+    / "current.json"
 )
 
 
 # ============================================================
-# CONFIGURATION
+# TEST CONFIGURATION
 # ============================================================
 
-MODEL_NAME = os.getenv(
+# FIRST TEST IS FIXED TO ONE BATCH OF FIVE.
+BATCH_SIZE = 5
+MAX_BATCHES = 1
+
+PROCESS_NEWEST_FIRST = True
+
+
+# ============================================================
+# GEMINI CONFIGURATION
+# ============================================================
+
+GEMINI_API_KEY = os.getenv(
+    "GEMINI_API_KEY",
+    "",
+).strip()
+
+GEMINI_MODEL = os.getenv(
     "GEMINI_MODEL",
-    "gemini-3.8-flash",
+    "gemini-2.5-flash",
+).strip()
+
+GEMINI_URL = (
+    "https://generativelanguage.googleapis.com/"
+    "v1beta/models/"
+    f"{GEMINI_MODEL}:generateContent"
 )
 
-MAX_ARTICLES = int(
-    os.getenv("MAX_ARTICLES", "100")
+GEMINI_TIMEOUT = int(
+    os.getenv(
+        "GEMINI_TIMEOUT_SECONDS",
+        "180",
+    )
 )
 
-CURRENT_DAYS = int(
-    os.getenv("CURRENT_DAYS", "14")
-)
-
-ARTICLE_RETRIEVAL_RETRIES = int(
-    os.getenv("ARTICLE_RETRIEVAL_RETRIES", "2")
-)
-
-ARTICLE_RETRIEVAL_TIMEOUT = int(
-    os.getenv("ARTICLE_RETRIEVAL_TIMEOUT", "20")
-)
-
-USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/154.0.0.0 Safari/537.36"
-)
-
-SINGAPORE_TZ = timezone(
-    timedelta(hours=8),
-    name="Asia/Singapore",
+MAX_OUTPUT_TOKENS = int(
+    os.getenv(
+        "GEMINI_MAX_OUTPUT_TOKENS",
+        "16384",
+    )
 )
 
 
@@ -188,115 +138,49 @@ SINGAPORE_TZ = timezone(
 # LOGGING
 # ============================================================
 
+PROGRAM_START = time.perf_counter()
+
+
 def log(message: str) -> None:
+    elapsed = time.perf_counter() - PROGRAM_START
+
+    now = datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
     print(
-        f"[{datetime.now(SINGAPORE_TZ).strftime('%Y-%m-%d %H:%M:%S')}] "
+        f"[{now}] "
+        f"[+{elapsed:.2f}s] "
         f"{message}",
         flush=True,
     )
 
 
 # ============================================================
-# BASIC HELPERS
+# TIME
 # ============================================================
 
-def now_sgt() -> datetime:
-    return datetime.now(SINGAPORE_TZ)
+def utc_now() -> str:
+    return datetime.now(
+        timezone.utc
+    ).isoformat()
 
 
-def now_sgt_iso() -> str:
-    return now_sgt().isoformat()
-
-
-def safe_string(value: Any) -> str:
-    if value is None:
-        return ""
-
-    return str(value).strip()
-
-
-def normalise_label(value: Any) -> str:
-    """
-    Normalise whitespace only.
-
-    Taxonomy labels otherwise remain unchanged.
-    """
-    return re.sub(r"\s+", " ", safe_string(value)).strip()
-
-
-# ============================================================
-# DATE HANDLING
-# ============================================================
-
-def parse_sgt_datetime(value: Any) -> Optional[datetime]:
-    """
-    Parse publishedAtSgt into Singapore-aware datetime.
-    """
-
-    if not value:
-        return None
-
-    text = safe_string(value)
-
-    try:
-        dt = datetime.fromisoformat(
-            text.replace("Z", "+00:00")
+def singapore_now() -> datetime:
+    return datetime.now(
+        timezone.utc
+    ).astimezone(
+        timezone(
+            timedelta(hours=8)
         )
-
-        if dt.tzinfo is None:
-            dt = dt.replace(
-                tzinfo=SINGAPORE_TZ
-            )
-
-        return dt.astimezone(SINGAPORE_TZ)
-
-    except Exception:
-        pass
-
-    formats = [
-        "%Y-%m-%dT%H:%M:%S%z",
-        "%Y-%m-%d %H:%M:%S%z",
-        "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%d %H:%M:%S",
-        "%Y-%m-%d",
-    ]
-
-    for fmt in formats:
-        try:
-            dt = datetime.strptime(text, fmt)
-
-            if dt.tzinfo is None:
-                dt = dt.replace(
-                    tzinfo=SINGAPORE_TZ
-                )
-
-            return dt.astimezone(SINGAPORE_TZ)
-
-        except Exception:
-            continue
-
-    return None
-
-
-def publication_date_sgt(article: Dict[str, Any]) -> Optional[str]:
-    dt = parse_sgt_datetime(
-        article.get("publishedAtSgt")
     )
 
-    if dt is None:
-        return None
-
-    return dt.strftime("%Y-%m-%d")
-
 
 # ============================================================
-# JSON LOADING
+# JSON
 # ============================================================
 
-def load_json(path: Path, default: Any = None) -> Any:
-    if not path.exists():
-        return default
-
+def load_json(path: Path) -> Any:
     with path.open(
         "r",
         encoding="utf-8",
@@ -304,17 +188,20 @@ def load_json(path: Path, default: Any = None) -> Any:
         return json.load(f)
 
 
-def save_json(path: Path, data: Any) -> None:
+def write_json_atomic(
+    path: Path,
+    data: Any,
+) -> None:
     path.parent.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    temporary = path.with_suffix(
+    temp_path = path.with_suffix(
         path.suffix + ".tmp"
     )
 
-    with temporary.open(
+    with temp_path.open(
         "w",
         encoding="utf-8",
     ) as f:
@@ -326,1604 +213,1107 @@ def save_json(path: Path, data: Any) -> None:
         )
         f.write("\n")
 
-    temporary.replace(path)
+    temp_path.replace(path)
 
 
 # ============================================================
-# NEWS INPUT
+# GENERAL HELPERS
 # ============================================================
 
-def load_current_news() -> List[Dict[str, Any]]:
-    log(
-        f"Loading news: {NEWS_CURRENT_PATH}"
-    )
+def text(value: Any) -> str:
+    if value is None:
+        return ""
 
-    data = load_json(
-        NEWS_CURRENT_PATH,
-        default={},
-    )
+    if isinstance(value, str):
+        return value.strip()
 
-    if isinstance(data, list):
-        articles = data
-
-    elif isinstance(data, dict):
-        articles = data.get(
-            "articles",
-            [],
-        )
-
-    else:
-        raise ValueError(
-            "current.json must contain either "
-            "a list or an object containing 'articles'."
-        )
-
-    if not isinstance(articles, list):
-        raise ValueError(
-            "current.json 'articles' must be a list."
-        )
-
-    valid_articles: List[Dict[str, Any]] = []
-
-    for article in articles:
-        if not isinstance(article, dict):
-            continue
-
-        article_id = safe_string(
-            article.get("id")
-        )
-
-        if not article_id:
-            continue
-
-        valid_articles.append(article)
-
-    log(
-        f"Loaded {len(valid_articles)} valid news articles."
-    )
-
-    return valid_articles
+    return str(value).strip()
 
 
-# ============================================================
-# RESEARCH FUNDS TAXONOMY
-# ============================================================
+def first_value(
+    obj: Dict[str, Any],
+    keys: List[str],
+) -> Any:
+    for key in keys:
+        if key in obj:
+            value = obj[key]
 
-def extract_values_from_sheet(
-    ws,
-) -> List[str]:
-    """
-    Extract non-empty cell values from a worksheet.
-
-    The function intentionally does not assume a specific
-    column because the master workbook may have headers or
-    formatting variations.
-    """
-
-    values: List[str] = []
-
-    for row in ws.iter_rows():
-        for cell in row:
-            value = normalise_label(
-                cell.value
-            )
-
-            if not value:
+            if value is None:
                 continue
 
-            values.append(value)
+            if isinstance(value, str):
+                if value.strip():
+                    return value.strip()
+            else:
+                return value
 
-    return values
-
-
-def deduplicate_preserve_order(
-    values: List[str],
-) -> List[str]:
-
-    seen = set()
-    output = []
-
-    for value in values:
-        key = value.casefold()
-
-        if key in seen:
-            continue
-
-        seen.add(key)
-        output.append(value)
-
-    return output
+    return ""
 
 
-def load_taxonomy() -> Tuple[
-    List[str],
-    List[str],
-]:
-    """
-    Load geography and sector master categories.
+def sha256_text(value: str) -> str:
+    return hashlib.sha256(
+        value.encode("utf-8")
+    ).hexdigest()
 
-    Expected workbook:
-        Sheet 2 = Geography master categories
-        Sheet 3 = Sector master categories
-    """
 
-    if not RESEARCH_FUNDS_PATH.exists():
-        raise FileNotFoundError(
-            f"Research workbook not found: "
-            f"{RESEARCH_FUNDS_PATH}"
+# ============================================================
+# ARTICLE EXTRACTION
+# ============================================================
+
+def extract_articles(
+    payload: Any,
+) -> List[Dict[str, Any]]:
+    if isinstance(payload, list):
+        return [
+            x for x in payload
+            if isinstance(x, dict)
+        ]
+
+    if not isinstance(payload, dict):
+        raise ValueError(
+            "current.json must contain an object or array."
         )
 
-    log(
-        f"Loading taxonomy from: "
-        f"{RESEARCH_FUNDS_PATH.name}"
+    preferred_keys = [
+        "articles",
+        "news",
+        "items",
+        "data",
+        "results",
+    ]
+
+    for key in preferred_keys:
+        value = payload.get(key)
+
+        if isinstance(value, list):
+            return [
+                x for x in value
+                if isinstance(x, dict)
+            ]
+
+    raise ValueError(
+        "Could not find an article array in current.json."
     )
 
-    wb = load_workbook(
-        RESEARCH_FUNDS_PATH,
+
+def article_id(
+    article: Dict[str, Any],
+) -> str:
+    value = first_value(
+        article,
+        [
+            "id",
+            "articleId",
+            "article_id",
+            "newsId",
+            "news_id",
+        ],
+    )
+
+    if value:
+        return text(value)
+
+    url = first_value(
+        article,
+        [
+            "url",
+            "link",
+            "articleUrl",
+            "article_url",
+        ],
+    )
+
+    if url:
+        return sha256_text(
+            text(url)
+        )[:24]
+
+    # Deterministic fallback.
+    canonical = json.dumps(
+        article,
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+
+    return sha256_text(
+        canonical
+    )[:24]
+
+
+def article_title(
+    article: Dict[str, Any],
+) -> str:
+    return text(
+        first_value(
+            article,
+            [
+                "title",
+                "headline",
+                "name",
+            ],
+        )
+    )
+
+
+def article_summary(
+    article: Dict[str, Any],
+) -> str:
+    return text(
+        first_value(
+            article,
+            [
+                "summary",
+                "description",
+                "excerpt",
+                "shortDescription",
+            ],
+        )
+    )
+
+
+def article_content(
+    article: Dict[str, Any],
+) -> str:
+    return text(
+        first_value(
+            article,
+            [
+                "content",
+                "body",
+                "text",
+                "articleText",
+                "article_text",
+            ],
+        )
+    )
+
+
+def article_url(
+    article: Dict[str, Any],
+) -> str:
+    return text(
+        first_value(
+            article,
+            [
+                "url",
+                "link",
+                "articleUrl",
+                "article_url",
+            ],
+        )
+    )
+
+
+def article_published(
+    article: Dict[str, Any],
+) -> str:
+    return text(
+        first_value(
+            article,
+            [
+                "publishedAt",
+                "published_at",
+                "publishedDate",
+                "publishDate",
+                "date",
+                "timestamp",
+            ],
+        )
+    )
+
+
+def article_source(
+    article: Dict[str, Any],
+) -> str:
+    return text(
+        first_value(
+            article,
+            [
+                "source",
+                "publisher",
+                "provider",
+                "site",
+            ],
+        )
+    )
+
+
+# ============================================================
+# PUBLISHED SORT
+# ============================================================
+
+def sort_key(
+    article: Dict[str, Any],
+) -> str:
+    """
+    CNBC collector timestamps are expected to be sortable.
+    The original published value is preserved.
+    """
+
+    return article_published(article)
+
+
+# ============================================================
+# RESEARCH FUNDS
+# ============================================================
+
+def load_research_funds() -> Dict[str, Any]:
+    """
+    Read Research Funds.xlsx only.
+
+    No research is performed here.
+    The workbook is treated as already-researched input.
+    """
+
+    if not RESEARCH_FUNDS.exists():
+        log(
+            "Research Funds.xlsx not found."
+        )
+
+        return {
+            "available": False,
+            "rows": [],
+            "masterCategories": {},
+        }
+
+    log(
+        f"Loading {RESEARCH_FUNDS.name}..."
+    )
+
+    workbook = load_workbook(
+        RESEARCH_FUNDS,
         read_only=True,
         data_only=True,
     )
 
+    result: Dict[str, Any] = {
+        "available": True,
+        "rows": [],
+        "masterCategories": {},
+    }
+
     try:
-        sheet_names = wb.sheetnames
+        # ----------------------------------------------------
+        # Fund Research
+        # ----------------------------------------------------
 
-        if len(sheet_names) < 3:
-            raise ValueError(
-                "Research Funds.xlsx must contain at least "
-                "three worksheets."
-            )
+        if "Fund Research" in workbook.sheetnames:
+            sheet = workbook[
+                "Fund Research"
+            ]
+        else:
+            sheet = workbook[
+                workbook.sheetnames[0]
+            ]
 
-        geography_ws = wb.worksheets[1]
-        sector_ws = wb.worksheets[2]
-
-        geography = deduplicate_preserve_order(
-            extract_values_from_sheet(
-                geography_ws
-            )
+        rows = sheet.iter_rows(
+            values_only=True
         )
 
-        sectors = deduplicate_preserve_order(
-            extract_values_from_sheet(
-                sector_ws
+        try:
+            headers = next(rows)
+        except StopIteration:
+            headers = []
+
+        headers = [
+            text(value)
+            for value in headers
+        ]
+
+        for row in rows:
+            record = {}
+
+            for index, value in enumerate(row):
+                if index >= len(headers):
+                    continue
+
+                header = headers[index]
+
+                if not header:
+                    continue
+
+                if value is not None:
+                    record[header] = value
+
+            if record:
+                result["rows"].append(
+                    record
+                )
+
+        # ----------------------------------------------------
+        # Master categories
+        #
+        # Existing project convention:
+        # worksheet index 1 = Geography
+        # worksheet index 2 = Sector
+        # ----------------------------------------------------
+
+        if len(workbook.worksheets) > 1:
+            result[
+                "masterCategories"
+            ]["geography"] = (
+                sheet_to_values(
+                    workbook.worksheets[1]
+                )
             )
-        )
+
+        if len(workbook.worksheets) > 2:
+            result[
+                "masterCategories"
+            ]["sector"] = (
+                sheet_to_values(
+                    workbook.worksheets[2]
+                )
+            )
 
     finally:
-        wb.close()
-
-    if not geography:
-        raise ValueError(
-            "No geography categories found in "
-            "Research Funds.xlsx."
-        )
-
-    if not sectors:
-        raise ValueError(
-            "No sector categories found in "
-            "Research Funds.xlsx."
-        )
+        workbook.close()
 
     log(
-        f"Geography taxonomy: {len(geography)} categories."
+        "Research Funds rows loaded: "
+        f"{len(result['rows'])}"
     )
 
-    log(
-        f"Sector taxonomy: {len(sectors)} categories."
-    )
+    return result
 
-    return geography, sectors
+
+def sheet_to_values(
+    sheet,
+) -> List[List[Any]]:
+    output = []
+
+    for row in sheet.iter_rows(
+        values_only=True
+    ):
+        values = [
+            value
+            for value in row
+            if value is not None
+            and text(value)
+        ]
+
+        if values:
+            output.append(values)
+
+    return output
 
 
 # ============================================================
-# HISTORY
+# ANALYSIS CURRENT FILE
 # ============================================================
 
-def iter_history_files():
-    if not ANALYSIS_HISTORY_ROOT.exists():
-        return
+def load_analysis_file() -> Dict[str, Any]:
+    """
+    Create an empty analysis/current.json structure if needed.
 
-    yield from ANALYSIS_HISTORY_ROOT.rglob(
-        "*.json"
+    Existing file is preserved.
+    """
+
+    if not ANALYSIS_CURRENT.exists():
+        return {
+            "version": 1,
+            "createdAt": utc_now(),
+            "updatedAt": utc_now(),
+            "totalSuccessfulBatches": 0,
+            "totalSuccessfulArticles": 0,
+            "batches": [],
+        }
+
+    payload = load_json(
+        ANALYSIS_CURRENT
     )
 
+    if not isinstance(payload, dict):
+        raise ValueError(
+            "analysis/current.json must contain a JSON object."
+        )
 
-def extract_history_records(
-    data: Any,
-) -> List[Dict[str, Any]]:
-    """
-    Extract article records from a historical JSON file.
-
-    Supports:
-        {"articles": [...]}
-        {"results": [...]}
-        [...]
-        {"id": ..., "analysis": {...}}
-    """
-
-    if isinstance(data, list):
-        return [
-            item
-            for item in data
-            if isinstance(item, dict)
-        ]
-
-    if not isinstance(data, dict):
-        return []
-
-    if (
-        isinstance(data.get("articles"), list)
-    ):
-        return [
-            item
-            for item in data["articles"]
-            if isinstance(item, dict)
-        ]
-
-    if (
-        isinstance(data.get("results"), list)
-    ):
-        return [
-            item
-            for item in data["results"]
-            if isinstance(item, dict)
-        ]
-
-    if data.get("id") is not None:
-        return [data]
-
-    return []
-
-
-def is_successful_analysis_record(
-    record: Dict[str, Any],
-) -> bool:
-    """
-    History is the permanent completion baseline.
-
-    A record counts as successfully analysed when:
-        - it has an article ID
-        - it contains a non-empty analysis object
-    """
-
-    article_id = safe_string(
-        record.get("id")
+    payload.setdefault(
+        "version",
+        1,
     )
 
-    analysis = record.get(
-        "analysis"
+    payload.setdefault(
+        "createdAt",
+        utc_now(),
     )
 
-    if not article_id:
-        return False
-
-    if not isinstance(
-        analysis,
-        dict,
-    ):
-        return False
-
-    return bool(analysis)
-
-
-def load_existing_analysis() -> Dict[
-    str,
-    Dict[str, Any],
-]:
-    """
-    Scan ALL historical files.
-
-    This is deliberately not limited to the current
-    14-day window.
-
-    Once an article has a successful history record,
-    it stays completed permanently.
-    """
-
-    existing: Dict[
-        str,
-        Dict[str, Any],
-    ] = {}
-
-    files = list(
-        iter_history_files()
-        or []
+    payload.setdefault(
+        "updatedAt",
+        utc_now(),
     )
 
-    log(
-        f"Scanning {len(files)} historical analysis files."
-    )
-
-    for path in files:
-
-        try:
-            data = load_json(
-                path,
-                default=None,
+    payload.setdefault(
+        "totalSuccessfulBatches",
+        len(
+            payload.get(
+                "batches",
+                [],
             )
+        ),
+    )
 
-        except Exception as exc:
-            log(
-                f"WARNING: Could not read history "
-                f"{path}: {exc}"
-            )
+    payload.setdefault(
+        "totalSuccessfulArticles",
+        0,
+    )
+
+    payload.setdefault(
+        "batches",
+        [],
+    )
+
+    return payload
+
+
+def get_completed_article_ids(
+    analysis: Dict[str, Any],
+) -> set:
+    completed = set()
+
+    for batch in analysis.get(
+        "batches",
+        [],
+    ):
+        if not isinstance(batch, dict):
             continue
 
-        records = extract_history_records(
-            data
-        )
+        # Preferred explicit article IDs.
+        for article_id_value in batch.get(
+            "articleIds",
+            [],
+        ):
+            if article_id_value:
+                completed.add(
+                    text(article_id_value)
+                )
 
-        for record in records:
-
-            if not is_successful_analysis_record(
-                record
-            ):
+        # Also inspect individual analyses.
+        for item in batch.get(
+            "analyses",
+            [],
+        ):
+            if not isinstance(item, dict):
                 continue
 
-            article_id = safe_string(
-                record.get("id")
+            value = item.get(
+                "articleId"
             )
 
-            existing[article_id] = record
+            if value:
+                completed.add(
+                    text(value)
+                )
 
-    log(
-        f"Found {len(existing)} successfully analysed "
-        f"articles in history."
+    return completed
+
+
+def next_batch_number(
+    analysis: Dict[str, Any],
+) -> int:
+    batches = analysis.get(
+        "batches",
+        [],
     )
 
-    return existing
+    numbers = []
 
-
-# ============================================================
-# ORIGINAL ARTICLE RETRIEVAL
-# ============================================================
-
-def retrieve_original_article(
-    article: Dict[str, Any],
-) -> Dict[str, Any]:
-    """
-    Retrieve original article text where possible.
-
-    If retrieval fails, current.json content is used as
-    the fallback source.
-    """
-
-    url = safe_string(
-        article.get("url")
-    )
-
-    fallback = {
-        "source": "collector_current_json",
-        "title": safe_string(
-            article.get("title")
-        ),
-        "text": safe_string(
-            article.get("summary")
-        ),
-    }
-
-    if not url:
-        return fallback
-
-    headers = {
-        "User-Agent": USER_AGENT,
-        "Accept": (
-            "text/html,application/xhtml+xml,"
-            "application/xml;q=0.9,*/*;q=0.8"
-        ),
-    }
-
-    for attempt in range(
-        1,
-        ARTICLE_RETRIEVAL_RETRIES + 2,
-    ):
-
-        try:
-            log(
-                f"Retrieving original article "
-                f"(attempt {attempt}): {url}"
+    for batch in batches:
+        if isinstance(batch, dict):
+            value = batch.get(
+                "batchNumber"
             )
 
-            response = requests.get(
-                url,
-                headers=headers,
-                timeout=ARTICLE_RETRIEVAL_TIMEOUT,
-            )
+            if isinstance(value, int):
+                numbers.append(value)
 
-            response.raise_for_status()
+    if not numbers:
+        return 1
 
-            downloaded = trafilatura.extract(
-                response.text,
-                include_comments=False,
-                include_tables=True,
-                include_links=True,
-            )
-
-            if downloaded:
-                return {
-                    "source": "original_article",
-                    "title": safe_string(
-                        article.get("title")
-                    ),
-                    "text": downloaded,
-                }
-
-            log(
-                "Original page retrieved but "
-                "no usable article text was extracted."
-            )
-
-        except Exception as exc:
-            log(
-                f"Original article retrieval failed: {exc}"
-            )
-
-        if attempt <= ARTICLE_RETRIEVAL_RETRIES:
-            time.sleep(1)
-
-    log(
-        "Using current.json article data as fallback."
-    )
-
-    return fallback
+    return max(numbers) + 1
 
 
 # ============================================================
 # GEMINI PROMPT
 # ============================================================
 
-def build_prompt(
+def make_article_payload(
     article: Dict[str, Any],
-    article_content: Dict[str, Any],
-    geography_categories: List[str],
-    sector_categories: List[str],
+) -> Dict[str, Any]:
+    return {
+        "articleId": article_id(article),
+        "title": article_title(article),
+        "publishedAt": article_published(article),
+        "source": article_source(article),
+        "url": article_url(article),
+        "summary": article_summary(article),
+        "content": article_content(article),
+    }
+
+
+def build_prompt(
+    articles: List[Dict[str, Any]],
+    research: Dict[str, Any],
 ) -> str:
-
-    article_id = safe_string(
-        article.get("id")
-    )
-
-    title = safe_string(
-        article.get("title")
-    )
-
-    source = safe_string(
-        article.get("source")
-    )
-
-    url = safe_string(
-        article.get("url")
-    )
-
-    published_at = safe_string(
-        article.get("publishedAtSgt")
-    )
-
-    collector_category = safe_string(
-        article.get("category")
-    )
-
-    relevance_score = article.get(
-        "relevanceScore"
-    )
-
-    relevance_reason = safe_string(
-        article.get("relevanceReason")
-    )
-
-    original_text = safe_string(
-        article_content.get("text")
-    )
-
-    # Keep prompts reasonably sized while preserving a large
-    # amount of article context.
-    max_text_chars = 30000
-
-    if len(original_text) > max_text_chars:
-        original_text = (
-            original_text[:max_text_chars]
-            + "\n\n[Article text truncated for analysis.]"
-        )
-
-    geography_text = "\n".join(
-        f"- {label}"
-        for label in geography_categories
-    )
-
-    sector_text = "\n".join(
-        f"- {label}"
-        for label in sector_categories
-    )
-
-    return f"""
-You are the market-news analysis engine for VGrat FMS.
-
-Analyze ONE financial/economic/business news article.
-
-Your job is to explain the article objectively and identify
-the geographical and industry-sector areas that are materially
-affected.
-
-This is NOT investment advice.
-
-Do NOT recommend securities, funds, stocks, ETFs, insurance
-products, or individual Prudential funds.
-
-Do NOT predict the future return of any individual investment
-fund.
-
-============================================================
-ARTICLE IDENTITY
-============================================================
-
-Article ID:
-{article_id}
-
-Title:
-{title}
-
-Source:
-{source}
-
-URL:
-{url}
-
-Published Singapore Time:
-{published_at}
-
-Collector Category:
-{collector_category}
-
-Collector Relevance Score:
-{relevance_score}
-
-Collector Relevance Reason:
-{relevance_reason}
-
-============================================================
-ARTICLE CONTENT
-============================================================
-
-{original_text}
-
-============================================================
-GEOGRAPHY MASTER TAXONOMY
-============================================================
-
-You MUST select geography labels ONLY from this exact list.
-
-{geography_text}
-
-Rules:
-- Select 1 to 3 labels.
-- Do not invent labels.
-- Do not rename labels.
-- Do not combine labels.
-- Do not output synonyms.
-- Use "Global" only when the article genuinely has broad
-  global implications.
-- Select the most materially affected geographic areas.
-
-============================================================
-SECTOR MASTER TAXONOMY
-============================================================
-
-You MUST select sector labels ONLY from this exact list.
-
-{sector_text}
-
-Rules:
-- Select 1 to 3 labels.
-- Do not invent labels.
-- Do not rename labels.
-- Do not combine labels.
-- Do not output synonyms.
-- Select sectors that are materially affected by the
-  developments in the article.
-
-============================================================
-REQUIRED ANALYSIS
-============================================================
-
-Return EXACTLY ONE JSON OBJECT.
-
-The JSON structure MUST be:
-
-{{
-  "id": "{article_id}",
-  "analysis": {{
-    "quickRead": {{
-      "whatHappened": "...",
-      "whyItMatters": "...",
-      "keyImpact": "..."
-    }},
-
-    "geographyImpact": {{
-      "labels": [
-        "EXACT TAXONOMY LABEL"
-      ],
-      "explanation": "Explain why the selected geographies are affected."
-    }},
-
-    "industrySectorImpact": {{
-      "labels": [
-        "EXACT TAXONOMY LABEL"
-      ],
-      "explanation": "Explain why the selected industry sectors are affected."
-    }},
-
-    "overallImpactDirection": "Positive | Negative | Mixed | Neutral",
-
-    "impactSeverity": "Low | Moderate | High | Critical",
-
-    "timeHorizon": "Immediate | Short-term | Medium-term | Long-term",
-
-    "aiConfidence": "High | Medium | Low",
-
-    "detailedAnalysis": {{
-      "background": "...",
-      "keyDevelopments": "...",
-      "marketImplications": "...",
-      "geographicalImpactExplanation": "...",
-      "industrySectorImpactExplanation": "...",
-      "timeHorizonExplanation": "...",
-      "overallAssessment": "..."
-    }}
-  }}
-}}
-
-============================================================
-ANALYSIS RULES
-============================================================
-
-1. whatHappened
-   State the central factual development.
-
-2. whyItMatters
-   Explain why the development matters for markets, economies,
-   businesses, investors or policy.
-
-3. keyImpact
-   Summarise the most important market/economic consequence.
-
-4. Geography
-   Select 1-3 exact geography taxonomy labels.
-
-5. Geography explanation
-   Explain the actual transmission mechanism:
-   trade, supply chains, monetary policy, fiscal policy,
-   currency, commodities, regulation, investment flows,
-   growth, inflation, employment, etc., where relevant.
-
-6. Industry sectors
-   Select 1-3 exact sector taxonomy labels.
-
-7. Industry-sector explanation
-   Explain how the article could affect the selected sectors.
-   Discuss demand, costs, revenues, margins, regulation,
-   investment, financing, supply chains or other relevant
-   mechanisms where appropriate.
-
-8. Overall Impact Direction
-   This is the combined market/economic direction:
-       Positive
-       Negative
-       Mixed
-       Neutral
-
-   It is NOT a prediction of asset prices.
-
-9. Impact Severity
-   This measures significance, NOT certainty:
-       Low
-       Moderate
-       High
-       Critical
-
-10. Time Horizon
-       Immediate
-       Short-term
-       Medium-term
-       Long-term
-
-11. AI Confidence
-   This measures confidence in the quality of the analysis
-   and classification, NOT confidence that the predicted
-   outcome will happen.
-
-12. Detailed Analysis
-   Provide meaningful analysis in every required section.
-
-13. Political or geopolitical stories
-   Remain factual and neutral.
-   Do not advocate, campaign, rank political actors, or make
-   unsupported predictions about political outcomes.
-
-14. Do not fabricate facts that are not supported by the
-   article or reliable context contained in it.
-
-15. If the article contains uncertainty, clearly state the
-   uncertainty.
-
-16. Return valid JSON only.
-   No markdown.
-   No code fence.
-   No commentary before or after the JSON.
-
-17. The returned "id" MUST exactly equal:
-   {article_id}
-"""
-
-
-# ============================================================
-# GEMINI RESPONSE PARSING
-# ============================================================
-
-def extract_json_object(
-    text: str,
-) -> Optional[Dict[str, Any]]:
-    """
-    Robustly extract a JSON object from Gemini output.
-
-    Handles:
-        - pure JSON
-        - ```json ... ```
-        - surrounding commentary
-        - multiple candidate '{' positions
-    """
-
-    if not text:
-        return None
-
-    cleaned = text.strip()
-
-    # --------------------------------------------------------
-    # Direct JSON
-    # --------------------------------------------------------
-
-    try:
-        value = json.loads(cleaned)
-
-        if isinstance(value, dict):
-            return value
-
-    except Exception:
-        pass
-
-    # --------------------------------------------------------
-    # Markdown fenced JSON
-    # --------------------------------------------------------
-
-    fenced = re.search(
-        r"```(?:json)?\s*(.*?)\s*```",
-        cleaned,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-
-    if fenced:
-        candidate = fenced.group(1).strip()
-
-        try:
-            value = json.loads(candidate)
-
-            if isinstance(value, dict):
-                return value
-
-        except Exception:
-            pass
-
-    # --------------------------------------------------------
-    # Raw decoder search
-    # --------------------------------------------------------
-
-    decoder = json.JSONDecoder()
-
-    for index, character in enumerate(
-        cleaned
-    ):
-        if character != "{":
-            continue
-
-        candidate = cleaned[index:]
-
-        try:
-            value, _ = decoder.raw_decode(
-                candidate
-            )
-
-            if isinstance(value, dict):
-                return value
-
-        except Exception:
-            continue
-
-    return None
-
-
-# ============================================================
-# GEMINI ERROR CLASSIFICATION
-# ============================================================
-
-def is_rate_limit_error(
-    exc: Exception,
-) -> bool:
-
-    text = str(exc).lower()
-
-    indicators = [
-        "429",
-        "too_many_requests",
-        "resource_exhausted",
-        "rate limit",
-        "quota",
-        "quota exceeded",
-        "daily limit",
+    article_payloads = [
+        make_article_payload(article)
+        for article in articles
     ]
 
-    return any(
-        indicator in text
-        for indicator in indicators
+    # Research Funds is already researched production input.
+    # We provide it as context only.
+    fund_rows = research.get(
+        "rows",
+        [],
     )
 
+    prompt = f"""
+You are the VGrat FMS Market News Analyst.
+
+Analyze every article supplied below.
+
+IMPORTANT BATCH RULES
+=====================
+- There are exactly {len(articles)} articles.
+- Return exactly {len(articles)} analysis results.
+- Each result MUST use the exact articleId supplied.
+- Do not omit an article.
+- Do not combine articles.
+- Do not invent article IDs.
+- Do not return duplicate article IDs.
+- Do not browse the internet.
+- Use only the supplied article information and Research Funds context.
+- If information is unavailable, say so rather than inventing it.
+
+PURPOSE
+=======
+Determine the investment relevance of each CNBC market-news article
+for VGrat FMS monitoring.
+
+CLASSIFICATION
+==============
+Use one of:
+
+MARKET
+ECONOMIC
+TECHNOLOGY
+GEOPOLITICAL
+REJECT
+
+For every article provide:
+
+- articleId
+- relevant
+- category
+- sentiment
+- importance
+- assetClasses
+- geographies
+- sectors
+- investorImpact
+- reasoning
+- fundMonitoringRelevant
+
+SENTIMENT
+=========
+Use:
+- positive
+- negative
+- neutral
+- mixed
+
+IMPORTANCE
+==========
+Use:
+- high
+- medium
+- low
+
+The final response MUST be valid JSON matching the requested schema.
+
+RESEARCH FUNDS CONTEXT
+======================
+The following information comes from Research Funds.xlsx.
+It is already researched input. Do not perform additional research.
+
+{json.dumps(
+    fund_rows,
+    ensure_ascii=False,
+)}
+
+ARTICLES
+========
+{json.dumps(
+    article_payloads,
+    ensure_ascii=False,
+)}
+""".strip()
+
+    return prompt
+
+
+def response_schema() -> Dict[str, Any]:
+    return {
+        "type": "object",
+        "properties": {
+            "articles": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "articleId": {
+                            "type": "string",
+                        },
+                        "relevant": {
+                            "type": "boolean",
+                        },
+                        "category": {
+                            "type": "string",
+                            "enum": [
+                                "MARKET",
+                                "ECONOMIC",
+                                "TECHNOLOGY",
+                                "GEOPOLITICAL",
+                                "REJECT",
+                            ],
+                        },
+                        "sentiment": {
+                            "type": "string",
+                            "enum": [
+                                "positive",
+                                "negative",
+                                "neutral",
+                                "mixed",
+                            ],
+                        },
+                        "importance": {
+                            "type": "string",
+                            "enum": [
+                                "high",
+                                "medium",
+                                "low",
+                            ],
+                        },
+                        "assetClasses": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                            },
+                        },
+                        "geographies": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                            },
+                        },
+                        "sectors": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                            },
+                        },
+                        "investorImpact": {
+                            "type": "string",
+                        },
+                        "reasoning": {
+                            "type": "string",
+                        },
+                        "fundMonitoringRelevant": {
+                            "type": "boolean",
+                        },
+                    },
+                    "required": [
+                        "articleId",
+                        "relevant",
+                        "category",
+                        "sentiment",
+                        "importance",
+                        "assetClasses",
+                        "geographies",
+                        "sectors",
+                        "investorImpact",
+                        "reasoning",
+                        "fundMonitoringRelevant",
+                    ],
+                },
+            },
+        },
+        "required": [
+            "articles",
+        ],
+    }
+
 
 # ============================================================
-# GEMINI ANALYSIS
+# GEMINI API
 # ============================================================
 
-def analyse_one_article(
-    client: genai.Client,
-    article: Dict[str, Any],
-    geography_categories: List[str],
-    sector_categories: List[str],
+def call_gemini(
+    prompt: str,
 ) -> Tuple[
-    Optional[Dict[str, Any]],
-    Optional[str],
+    Dict[str, Any],
+    float,
+    Dict[str, Any],
 ]:
-    """
-    Perform exactly ONE Gemini request for this article.
+    if not GEMINI_API_KEY:
+        raise RuntimeError(
+            "GEMINI_API_KEY is not configured."
+        )
 
-    Returns:
-        (analysis_record, error_type)
+    body = {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [
+                    {
+                        "text": prompt,
+                    }
+                ],
+            }
+        ],
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "responseSchema": response_schema(),
+            "maxOutputTokens": MAX_OUTPUT_TOKENS,
+        },
+    }
 
-    error_type:
-        None
-        "rate_limit"
-        "request_error"
-        "invalid_json"
-        "validation_error"
-    """
+    started = time.perf_counter()
 
-    article_id = safe_string(
-        article.get("id")
+    response = requests.post(
+        GEMINI_URL,
+        headers={
+            "Content-Type": "application/json",
+            "x-goog-api-key": GEMINI_API_KEY,
+        },
+        json=body,
+        timeout=GEMINI_TIMEOUT,
     )
 
-    log(
-        f"Sending article to Gemini: "
-        f"{article_id}"
+    duration = (
+        time.perf_counter()
+        - started
     )
 
-    article_content = retrieve_original_article(
-        article
+    if response.status_code >= 400:
+        raise RuntimeError(
+            "Gemini API error "
+            f"{response.status_code}: "
+            f"{response.text[:4000]}"
+        )
+
+    payload = response.json()
+
+    generated_text = extract_response_text(
+        payload
     )
 
-    prompt = build_prompt(
-        article,
-        article_content,
-        geography_categories,
-        sector_categories,
-    )
+    if not generated_text:
+        raise RuntimeError(
+            "Gemini returned no generated text."
+        )
 
     try:
-        interaction = client.interactions.create(
-            model=MODEL_NAME,
-            input=prompt,
+        parsed = json.loads(
+            generated_text
         )
-
-    except Exception as exc:
-
-        if is_rate_limit_error(exc):
-            log(
-                f"RATE LIMIT / QUOTA STOP: {article_id}: {exc}"
-            )
-
-            return None, "rate_limit"
-
-        log(
-            f"Gemini request failed for {article_id}: "
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            "Gemini returned invalid JSON: "
             f"{exc}"
-        )
+        ) from exc
 
-        return None, "request_error"
-
-    output_text = safe_string(
-        getattr(
-            interaction,
-            "output_text",
-            "",
-        )
-    )
-
-    if not output_text:
-        log(
-            f"Gemini returned empty output: {article_id}"
-        )
-
-        return None, "invalid_json"
-
-    parsed = extract_json_object(
-        output_text
-    )
-
-    if parsed is None:
-        log(
-            f"Could not parse Gemini JSON for {article_id}."
-        )
-
-        log(
-            "Gemini response preview:"
-        )
-
-        log(
-            output_text[:4000]
-        )
-
-        return None, "invalid_json"
-
-    valid, error = validate_analysis(
+    return (
         parsed,
-        article,
-        geography_categories,
-        sector_categories,
+        duration,
+        payload,
     )
 
-    if not valid:
-        log(
-            f"Analysis validation failed for "
-            f"{article_id}: {error}"
+
+def extract_response_text(
+    payload: Dict[str, Any],
+) -> str:
+    candidates = payload.get(
+        "candidates",
+        [],
+    )
+
+    if not candidates:
+        return ""
+
+    candidate = candidates[0]
+
+    content = candidate.get(
+        "content",
+        {},
+    )
+
+    parts = content.get(
+        "parts",
+        [],
+    )
+
+    result = []
+
+    for part in parts:
+        if not isinstance(part, dict):
+            continue
+
+        value = part.get(
+            "text"
         )
 
-        return None, "validation_error"
+        if isinstance(value, str):
+            result.append(value)
 
-    return parsed, None
+    return "".join(result).strip()
 
 
 # ============================================================
 # VALIDATION
 # ============================================================
 
-ALLOWED_DIRECTION = {
-    "Positive",
-    "Negative",
-    "Mixed",
-    "Neutral",
-}
-
-ALLOWED_SEVERITY = {
-    "Low",
-    "Moderate",
-    "High",
-    "Critical",
-}
-
-ALLOWED_HORIZON = {
-    "Immediate",
-    "Short-term",
-    "Medium-term",
-    "Long-term",
-}
-
-ALLOWED_CONFIDENCE = {
-    "High",
-    "Medium",
-    "Low",
-}
-
-
-def validate_string(
-    value: Any,
-) -> bool:
-
-    return (
-        isinstance(value, str)
-        and bool(value.strip())
-    )
-
-
-def validate_label_list(
-    value: Any,
-    allowed: List[str],
+def validate_response(
+    articles: List[Dict[str, Any]],
+    response: Dict[str, Any],
 ) -> Tuple[
     bool,
-    str,
+    List[Dict[str, Any]],
+    List[str],
 ]:
+    errors: List[str] = []
 
-    if not isinstance(value, list):
-        return (
-            False,
-            "labels must be a list",
-        )
-
-    if not 1 <= len(value) <= 3:
-        return (
-            False,
-            "labels must contain 1-3 values",
-        )
-
-    allowed_set = set(allowed)
-
-    for label in value:
-
-        if not isinstance(
-            label,
-            str,
-        ):
-            return (
-                False,
-                "taxonomy label must be a string",
-            )
-
-        if label not in allowed_set:
-            return (
-                False,
-                f"invalid taxonomy label: {label}",
-            )
-
-    if len(set(value)) != len(value):
-        return (
-            False,
-            "duplicate taxonomy labels",
-        )
-
-    return True, ""
-
-
-def validate_analysis(
-    result: Dict[str, Any],
-    article: Dict[str, Any],
-    geography_categories: List[str],
-    sector_categories: List[str],
-) -> Tuple[
-    bool,
-    str,
-]:
-
-    expected_id = safe_string(
-        article.get("id")
-    )
-
-    returned_id = safe_string(
-        result.get("id")
-    )
-
-    if returned_id != expected_id:
-        return (
-            False,
-            (
-                "returned id does not match article id "
-                f"(expected={expected_id}, "
-                f"returned={returned_id})"
-            ),
-        )
-
-    analysis = result.get(
-        "analysis"
-    )
-
-    if not isinstance(
-        analysis,
-        dict,
-    ):
-        return (
-            False,
-            "analysis must be an object",
-        )
-
-    # --------------------------------------------------------
-    # Quick Read
-    # --------------------------------------------------------
-
-    quick_read = analysis.get(
-        "quickRead"
-    )
-
-    if not isinstance(
-        quick_read,
-        dict,
-    ):
-        return (
-            False,
-            "quickRead must be an object",
-        )
-
-    for field in (
-        "whatHappened",
-        "whyItMatters",
-        "keyImpact",
-    ):
-        if not validate_string(
-            quick_read.get(field)
-        ):
-            return (
-                False,
-                f"quickRead.{field} missing or invalid",
-            )
-
-    # --------------------------------------------------------
-    # Geography
-    # --------------------------------------------------------
-
-    geography = analysis.get(
-        "geographyImpact"
-    )
-
-    if not isinstance(
-        geography,
-        dict,
-    ):
-        return (
-            False,
-            "geographyImpact must be an object",
-        )
-
-    valid, error = validate_label_list(
-        geography.get("labels"),
-        geography_categories,
-    )
-
-    if not valid:
-        return (
-            False,
-            f"geographyImpact: {error}",
-        )
-
-    if not validate_string(
-        geography.get("explanation")
-    ):
-        return (
-            False,
-            "geographyImpact.explanation missing",
-        )
-
-    # --------------------------------------------------------
-    # Industry Sector
-    # --------------------------------------------------------
-
-    sector = analysis.get(
-        "industrySectorImpact"
-    )
-
-    if not isinstance(
-        sector,
-        dict,
-    ):
-        return (
-            False,
-            "industrySectorImpact must be an object",
-        )
-
-    valid, error = validate_label_list(
-        sector.get("labels"),
-        sector_categories,
-    )
-
-    if not valid:
-        return (
-            False,
-            f"industrySectorImpact: {error}",
-        )
-
-    if not validate_string(
-        sector.get("explanation")
-    ):
-        return (
-            False,
-            "industrySectorImpact.explanation missing",
-        )
-
-    # --------------------------------------------------------
-    # Classification fields
-    # --------------------------------------------------------
-
-    direction = analysis.get(
-        "overallImpactDirection"
-    )
-
-    if direction not in ALLOWED_DIRECTION:
-        return (
-            False,
-            "invalid overallImpactDirection",
-        )
-
-    severity = analysis.get(
-        "impactSeverity"
-    )
-
-    if severity not in ALLOWED_SEVERITY:
-        return (
-            False,
-            "invalid impactSeverity",
-        )
-
-    horizon = analysis.get(
-        "timeHorizon"
-    )
-
-    if horizon not in ALLOWED_HORIZON:
-        return (
-            False,
-            "invalid timeHorizon",
-        )
-
-    confidence = analysis.get(
-        "aiConfidence"
-    )
-
-    if confidence not in ALLOWED_CONFIDENCE:
-        return (
-            False,
-            "invalid aiConfidence",
-        )
-
-    # --------------------------------------------------------
-    # Detailed Analysis
-    # --------------------------------------------------------
-
-    detailed = analysis.get(
-        "detailedAnalysis"
-    )
-
-    if not isinstance(
-        detailed,
-        dict,
-    ):
-        return (
-            False,
-            "detailedAnalysis must be an object",
-        )
-
-    required_detailed_fields = [
-        "background",
-        "keyDevelopments",
-        "marketImplications",
-        "geographicalImpactExplanation",
-        "industrySectorImpactExplanation",
-        "timeHorizonExplanation",
-        "overallAssessment",
+    expected_ids = [
+        article_id(article)
+        for article in articles
     ]
 
-    for field in required_detailed_fields:
-
-        if not validate_string(
-            detailed.get(field)
-        ):
-            return (
-                False,
-                f"detailedAnalysis.{field} missing or invalid",
-            )
-
-    return True, ""
-
-
-# ============================================================
-# HISTORY FILE OPERATIONS
-# ============================================================
-
-def history_path_for_article(
-    article: Dict[str, Any],
-) -> Optional[Path]:
-
-    publication_date = publication_date_sgt(
-        article
+    expected_set = set(
+        expected_ids
     )
 
-    if not publication_date:
-        return None
-
-    year, month, day = publication_date.split(
-        "-"
+    results = response.get(
+        "articles"
     )
 
-    return (
-        ANALYSIS_HISTORY_ROOT
-        / year
-        / month
-        / f"{publication_date}.json"
-    )
-
-
-def load_history_file(
-    path: Path,
-) -> Dict[str, Any]:
-
-    if not path.exists():
-        return {
-            "date": path.stem,
-            "timezone": "Asia/Singapore",
-            "articles": [],
-        }
-
-    data = load_json(
-        path,
-        default={},
-    )
-
-    if isinstance(data, list):
-        return {
-            "date": path.stem,
-            "timezone": "Asia/Singapore",
-            "articles": data,
-        }
-
-    if not isinstance(data, dict):
-        return {
-            "date": path.stem,
-            "timezone": "Asia/Singapore",
-            "articles": [],
-        }
-
-    if not isinstance(
-        data.get("articles"),
-        list,
-    ):
-        data["articles"] = []
-
-    return data
-
-
-def upsert_history_article(
-    article: Dict[str, Any],
-    analysis_result: Dict[str, Any],
-) -> Path:
-
-    path = history_path_for_article(
-        article
-    )
-
-    if path is None:
-        raise ValueError(
-            "Cannot save article to history because "
-            "publishedAtSgt is missing or invalid."
+    if not isinstance(results, list):
+        return (
+            False,
+            [],
+            [
+                "Response does not contain articles array."
+            ],
         )
 
-    history = load_history_file(
-        path
-    )
+    if len(results) != len(articles):
+        errors.append(
+            "Expected "
+            f"{len(articles)} results but received "
+            f"{len(results)}."
+        )
 
-    articles = history.setdefault(
-        "articles",
-        [],
-    )
+    seen = set()
 
-    article_id = safe_string(
-        article.get("id")
-    )
-
-    # --------------------------------------------------------
-    # Preserve original article identity.
-    # --------------------------------------------------------
-
-    record = dict(article)
-
-    record["analysis"] = (
-        analysis_result.get("analysis")
-    )
-
-    record["analysisMetadata"] = {
-        "model": MODEL_NAME,
-        "analysedAtSgt": now_sgt_iso(),
-        "contentSource": (
-            "original_article_or_current_json_fallback"
-        ),
-    }
-
-    replaced = False
-
-    for index, existing_record in enumerate(
-        articles
+    for index, result in enumerate(
+        results
     ):
-
         if not isinstance(
-            existing_record,
+            result,
+            dict,
+        ):
+            errors.append(
+                f"Result {index + 1} is not an object."
+            )
+            continue
+
+        value = text(
+            result.get(
+                "articleId"
+            )
+        )
+
+        if not value:
+            errors.append(
+                f"Result {index + 1} has no articleId."
+            )
+            continue
+
+        if value in seen:
+            errors.append(
+                f"Duplicate articleId: {value}"
+            )
+
+        seen.add(value)
+
+    actual_set = set(seen)
+
+    missing = (
+        expected_set
+        - actual_set
+    )
+
+    unexpected = (
+        actual_set
+        - expected_set
+    )
+
+    if missing:
+        errors.append(
+            "Missing article IDs: "
+            + ", ".join(
+                sorted(missing)
+            )
+        )
+
+    if unexpected:
+        errors.append(
+            "Unexpected article IDs: "
+            + ", ".join(
+                sorted(unexpected)
+            )
+        )
+
+    required = [
+        "articleId",
+        "relevant",
+        "category",
+        "sentiment",
+        "importance",
+        "assetClasses",
+        "geographies",
+        "sectors",
+        "investorImpact",
+        "reasoning",
+        "fundMonitoringRelevant",
+    ]
+
+    for result in results:
+        if not isinstance(
+            result,
             dict,
         ):
             continue
 
-        if safe_string(
-            existing_record.get("id")
-        ) != article_id:
-            continue
-
-        articles[index] = record
-        replaced = True
-        break
-
-    if not replaced:
-        articles.append(
-            record
+        result_id = text(
+            result.get(
+                "articleId"
+            )
         )
 
-    # Keep historical file deterministic by publication date.
-    articles.sort(
-        key=lambda item: (
-            safe_string(
-                item.get("publishedAtSgt")
-            ),
-            safe_string(
-                item.get("id")
-            ),
-        )
+        for field in required:
+            if field not in result:
+                errors.append(
+                    f"{result_id}: missing {field}"
+                )
+
+    return (
+        len(errors) == 0,
+        results,
+        errors,
     )
-
-    # --------------------------------------------------------
-    # CRITICAL:
-    # The function does not return until the file has been
-    # successfully written.
-    #
-    # The caller only treats the article as completed after
-    # this function returns successfully.
-    # --------------------------------------------------------
-
-    save_json(
-        path,
-        history,
-    )
-
-    log(
-        f"HISTORY WRITE SUCCESS: {article_id} -> {path}"
-    )
-
-    return path
 
 
 # ============================================================
-# CURRENT ROLLING ANALYSIS
+# SUCCESSFUL BATCH STORAGE
 # ============================================================
 
-def rebuild_analysis_current(
-    news_articles: List[Dict[str, Any]],
-    existing_analysis: Dict[str, Dict[str, Any]],
-) -> None:
+def append_successful_batch(
+    analysis: Dict[str, Any],
+    batch_number: int,
+    articles: List[Dict[str, Any]],
+    prompt: str,
+    response: Dict[str, Any],
+    raw_gemini_response: Dict[str, Any],
+    response_seconds: float,
+    request_started_at: str,
+    request_finished_at: str,
+    validation_errors: List[str],
+) -> Dict[str, Any]:
 
-    cutoff = (
-        now_sgt()
-        - timedelta(
-            days=CURRENT_DAYS
-        )
-    )
-
-    output_articles: List[
-        Dict[str, Any]
-    ] = []
-
-    for article in news_articles:
-
-        article_id = safe_string(
-            article.get("id")
-        )
-
-        if not article_id:
-            continue
-
-        dt = parse_sgt_datetime(
-            article.get("publishedAtSgt")
-        )
-
-        if dt is None:
-            continue
-
-        if dt < cutoff:
-            continue
-
-        analysed = existing_analysis.get(
-            article_id
-        )
-
-        if not analysed:
-            continue
-
-        output_articles.append(
-            analysed
-        )
-
-    output_articles.sort(
-        key=lambda item: (
-            safe_string(
-                item.get("publishedAtSgt")
-            ),
-            safe_string(
-                item.get("id")
-            ),
-        ),
-        reverse=True,
-    )
-
-    output_articles = output_articles[
-        :MAX_ARTICLES
+    article_ids = [
+        article_id(article)
+        for article in articles
     ]
 
-    output = {
-        "generatedAtSgt": now_sgt_iso(),
-        "windowDays": CURRENT_DAYS,
-        "articleCount": len(
-            output_articles
+    batch_record = {
+        "batchNumber": batch_number,
+
+        "storedAt": utc_now(),
+
+        "model": GEMINI_MODEL,
+
+        "request": {
+            "startedAt": request_started_at,
+            "finishedAt": request_finished_at,
+            "responseSeconds": round(
+                response_seconds,
+                4,
+            ),
+            "articleCount": len(articles),
+            "articleIds": article_ids,
+        },
+
+        "validation": {
+            "success": True,
+            "errors": validation_errors,
+        },
+
+        # Store the exact prompt used.
+        "prompt": prompt,
+
+        # Store parsed response.
+        "response": response,
+
+        # Store individual results for easy future access.
+        "analyses": response.get(
+            "articles",
+            [],
         ),
-        "articles": output_articles,
+
+        # Keep raw API response for debugging/performance
+        # investigation.
+        "rawGeminiResponse": raw_gemini_response,
+
+        # Keep original article metadata alongside the result.
+        "inputArticles": [
+            make_article_payload(article)
+            for article in articles
+        ],
     }
 
-    save_json(
-        ANALYSIS_CURRENT_PATH,
-        output,
+    analysis.setdefault(
+        "batches",
+        [],
     )
 
-    log(
-        f"Rebuilt analysis/current.json "
-        f"with {len(output_articles)} articles."
+    analysis["batches"].append(
+        batch_record
     )
 
+    analysis[
+        "totalSuccessfulBatches"
+    ] = len(
+        analysis["batches"]
+    )
 
-# ============================================================
-# PENDING QUEUE
-# ============================================================
-
-def build_pending_queue(
-    news_articles: List[Dict[str, Any]],
-    existing_analysis: Dict[str, Dict[str, Any]],
-) -> List[Dict[str, Any]]:
-
-    pending: List[
-        Tuple[datetime, Dict[str, Any]]
-    ] = []
-
-    for article in news_articles:
-
-        article_id = safe_string(
-            article.get("id")
-        )
-
-        if not article_id:
-            continue
-
-        # ----------------------------------------------------
-        # Permanent success check.
-        #
-        # This checks ALL history, not current.json.
-        # ----------------------------------------------------
-
-        if article_id in existing_analysis:
-            continue
-
-        dt = parse_sgt_datetime(
-            article.get("publishedAtSgt")
-        )
-
-        if dt is None:
-            log(
-                f"WARNING: Cannot parse publishedAtSgt "
-                f"for pending article {article_id}; "
-                f"skipping this run."
-            )
-            continue
-
-        pending.append(
-            (
-                dt,
-                article,
+    analysis[
+        "totalSuccessfulArticles"
+    ] = sum(
+        len(
+            batch.get(
+                "articleIds",
+                [],
             )
         )
-
-    # Oldest article first.
-    pending.sort(
-        key=lambda item: (
-            item[0],
-            safe_string(
-                item[1].get("id")
-            ),
-        )
+        for batch in analysis["batches"]
+        if isinstance(batch, dict)
     )
 
-    return [
-        article
-        for _, article in pending
-    ]
+    analysis[
+        "updatedAt"
+    ] = utc_now()
+
+    return analysis
 
 
 # ============================================================
@@ -1932,374 +1322,365 @@ def build_pending_queue(
 
 def main() -> int:
 
+    log("=" * 72)
+    log("VGrat FMS - MARKET NEWS AI ANALYZER")
+    log("=" * 72)
+
     log(
-        "============================================================"
+        "TEST MODE: exactly ONE batch of FIVE articles."
     )
+
     log(
-        "VGrat FMS - MARKET NEWS ANALYZER"
+        f"Gemini model: {GEMINI_MODEL}"
     )
+
     log(
-        "============================================================"
+        f"Input: {CURRENT_JSON}"
+    )
+
+    log(
+        f"Output: {ANALYSIS_CURRENT}"
     )
 
     # --------------------------------------------------------
-    # Environment
+    # Validate inputs
     # --------------------------------------------------------
 
-    api_key = os.getenv(
-        "GEMINI_API_KEY"
-    )
-
-    if not api_key:
+    if not CURRENT_JSON.exists():
         log(
-            "ERROR: GEMINI_API_KEY is not set."
+            "ERROR: current.json does not exist."
+        )
+        return 1
+
+    if not GEMINI_API_KEY:
+        log(
+            "ERROR: GEMINI_API_KEY is not configured."
         )
         return 1
 
     # --------------------------------------------------------
-    # Inputs
+    # Load current.json
     # --------------------------------------------------------
 
-    try:
-        news_articles = load_current_news()
+    log(
+        "Loading production current.json..."
+    )
 
-        geography_categories, sector_categories = (
-            load_taxonomy()
+    try:
+        payload = load_json(
+            CURRENT_JSON
         )
 
-        existing_analysis = (
-            load_existing_analysis()
+        all_articles = extract_articles(
+            payload
         )
 
     except Exception as exc:
-
         log(
-            f"FATAL INPUT ERROR: {exc}"
+            f"ERROR loading current.json: {exc}"
         )
+        return 1
 
+    log(
+        f"Articles found: {len(all_articles)}"
+    )
+
+    # --------------------------------------------------------
+    # Load Research Funds
+    # --------------------------------------------------------
+
+    try:
+        research = load_research_funds()
+
+    except Exception as exc:
+        log(
+            f"ERROR loading Research Funds.xlsx: {exc}"
+        )
         return 1
 
     # --------------------------------------------------------
-    # Queue
+    # Load test analysis file
     # --------------------------------------------------------
 
-    pending = build_pending_queue(
-        news_articles,
-        existing_analysis,
-    )
+    try:
+        analysis = load_analysis_file()
 
-    already_analysed = (
-        len(news_articles)
-        - len(pending)
+    except Exception as exc:
+        log(
+            f"ERROR loading analysis/current.json: {exc}"
+        )
+        return 1
+
+    completed_ids = (
+        get_completed_article_ids(
+            analysis
+        )
     )
 
     log(
-        f"Total news articles: {len(news_articles)}"
+        "Previously successful articles in test analysis: "
+        f"{len(completed_ids)}"
     )
 
-    log(
-        f"Already successfully analysed: "
-        f"{already_analysed}"
-    )
+    # --------------------------------------------------------
+    # Determine pending articles
+    # --------------------------------------------------------
+
+    pending = []
+
+    for article in all_articles:
+        current_id = article_id(
+            article
+        )
+
+        if current_id in completed_ids:
+            continue
+
+        pending.append(article)
 
     log(
         f"Pending articles: {len(pending)}"
     )
 
-    if pending:
-
-        oldest = pending[0]
-
+    if not pending:
         log(
-            "Oldest pending article: "
-            f"{safe_string(oldest.get('publishedAtSgt'))} | "
-            f"{safe_string(oldest.get('title'))}"
+            "No pending articles remain."
         )
-
-    else:
-
-        log(
-            "No pending articles."
-        )
+        return 0
 
     # --------------------------------------------------------
-    # Gemini client
+    # Newest first
     # --------------------------------------------------------
 
-    client = genai.Client(
-        api_key=api_key
+    pending.sort(
+        key=sort_key,
+        reverse=PROCESS_NEWEST_FIRST,
     )
 
-    successful_this_run = 0
-    failed_this_run = 0
-    requests_attempted = 0
-    quota_stopped = False
+    batch = pending[
+        :BATCH_SIZE
+    ]
 
-    # --------------------------------------------------------
-    # Process ONE article at a time.
-    # --------------------------------------------------------
-
-    for article in pending:
-
-        article_id = safe_string(
-            article.get("id")
-        )
-
-        title = safe_string(
-            article.get("title")
-        )
-
+    if len(batch) < BATCH_SIZE:
         log(
-            "------------------------------------------------------------"
+            "WARNING: fewer than 5 pending articles "
+            f"available. Found {len(batch)}."
         )
 
+    log("")
+    log(
+        "Selected batch:"
+    )
+
+    for index, article in enumerate(
+        batch,
+        start=1,
+    ):
         log(
-            f"Processing article: {article_id}"
-        )
-
-        log(
-            f"Published: "
-            f"{safe_string(article.get('publishedAtSgt'))}"
-        )
-
-        log(
-            f"Title: {title}"
-        )
-
-        requests_attempted += 1
-
-        result, error_type = analyse_one_article(
-            client,
-            article,
-            geography_categories,
-            sector_categories,
-        )
-
-        # ----------------------------------------------------
-        # RATE LIMIT
-        # ----------------------------------------------------
-
-        if error_type == "rate_limit":
-
-            quota_stopped = True
-
-            log(
-                "Gemini quota/rate limit reached."
-            )
-
-            log(
-                "Stopping immediately."
-            )
-
-            log(
-                "Remaining articles remain pending "
-                "for the next scheduled run."
-            )
-
-            break
-
-        # ----------------------------------------------------
-        # ARTICLE FAILURE
-        # ----------------------------------------------------
-
-        if result is None:
-
-            failed_this_run += 1
-
-            log(
-                f"Article NOT completed: {article_id}"
-            )
-
-            log(
-                "No same-run Gemini retry will be attempted."
-            )
-
-            log(
-                "Article remains pending for a future run."
-            )
-
-            continue
-
-        # ----------------------------------------------------
-        # HISTORY WRITE
-        # ----------------------------------------------------
-
-        try:
-
-            history_path = upsert_history_article(
-                article,
-                result,
-            )
-
-        except Exception as exc:
-
-            log(
-                f"FATAL HISTORY WRITE ERROR for "
-                f"{article_id}: {exc}"
-            )
-
-            log(
-                "Article has NOT been marked as completed."
-            )
-
-            log(
-                "Stopping to avoid wasting further "
-                "Gemini requests."
-            )
-
-            # Do not add to existing_analysis.
-            # Therefore it remains pending next run.
-
-            failed_this_run += 1
-
-            break
-
-        # ----------------------------------------------------
-        # CRITICAL SUCCESS POINT
-        #
-        # Only now does the article become permanently
-        # completed in this process.
-        # ----------------------------------------------------
-
-        existing_analysis[
-            article_id
-        ] = dict(article)
-
-        existing_analysis[
-            article_id
-        ]["analysis"] = result.get(
-            "analysis"
-        )
-
-        existing_analysis[
-            article_id
-        ]["analysisMetadata"] = {
-            "model": MODEL_NAME,
-            "analysedAtSgt": now_sgt_iso(),
-            "contentSource": (
-                "original_article_or_current_json_fallback"
-            ),
-            "historyPath": str(
-                history_path.relative_to(ROOT)
-            ),
-        }
-
-        successful_this_run += 1
-
-        log(
-            f"ARTICLE SUCCESSFULLY COMPLETED: "
-            f"{article_id}"
-        )
-
-        log(
-            "This article will not be analysed again."
+            f"  {index}. "
+            f"{article_id(article)} | "
+            f"{article_published(article)} | "
+            f"{article_title(article)}"
         )
 
     # --------------------------------------------------------
-    # Rebuild rolling current analysis.
+    # Batch number
+    # --------------------------------------------------------
+
+    batch_number = next_batch_number(
+        analysis
+    )
+
+    # --------------------------------------------------------
+    # Build prompt
+    # --------------------------------------------------------
+
+    prompt = build_prompt(
+        batch,
+        research,
+    )
+
+    log("")
+    log(
+        f"Preparing ONE Gemini request for "
+        f"{len(batch)} articles..."
+    )
+
+    request_started_at = utc_now()
+
+    # --------------------------------------------------------
+    # Gemini
     # --------------------------------------------------------
 
     try:
 
-        rebuild_analysis_current(
-            news_articles,
-            existing_analysis,
+        response, response_seconds, raw_response = (
+            call_gemini(
+                prompt
+            )
+        )
+
+    except Exception as exc:
+
+        log("")
+        log(
+            "GEMINI REQUEST FAILED"
+        )
+
+        log(
+            str(exc)
+        )
+
+        log(
+            "Nothing was written to analysis/current.json."
+        )
+
+        return 1
+
+    request_finished_at = utc_now()
+
+    log("")
+    log(
+        "Gemini request succeeded."
+    )
+
+    log(
+        f"Response time: "
+        f"{response_seconds:.4f} seconds"
+    )
+
+    # --------------------------------------------------------
+    # Validate
+    # --------------------------------------------------------
+
+    log(
+        "Validating batch response..."
+    )
+
+    valid, results, validation_errors = (
+        validate_response(
+            batch,
+            response,
+        )
+    )
+
+    if not valid:
+
+        log(
+            "BATCH VALIDATION FAILED."
+        )
+
+        for error in validation_errors:
+            log(
+                f"  - {error}"
+            )
+
+        log(
+            "Nothing was written to analysis/current.json."
+        )
+
+        return 1
+
+    log(
+        "Batch validation successful."
+    )
+
+    log(
+        f"Validated {len(results)} / "
+        f"{len(batch)} articles."
+    )
+
+    # --------------------------------------------------------
+    # ONLY NOW WRITE SUCCESSFUL BATCH
+    # --------------------------------------------------------
+
+    try:
+
+        analysis = append_successful_batch(
+            analysis=analysis,
+            batch_number=batch_number,
+            articles=batch,
+            prompt=prompt,
+            response=response,
+            raw_gemini_response=raw_response,
+            response_seconds=response_seconds,
+            request_started_at=request_started_at,
+            request_finished_at=request_finished_at,
+            validation_errors=validation_errors,
+        )
+
+        # Atomic write.
+        write_json_atomic(
+            ANALYSIS_CURRENT,
+            analysis,
         )
 
     except Exception as exc:
 
         log(
-            f"ERROR rebuilding analysis/current.json: "
-            f"{exc}"
+            "ERROR writing analysis/current.json:"
         )
 
-        # History records already saved successfully should
-        # remain valid even if current.json rebuilding fails.
+        log(
+            str(exc)
+        )
+
         return 1
 
     # --------------------------------------------------------
     # Final statistics
     # --------------------------------------------------------
 
-    remaining_pending = build_pending_queue(
-        news_articles,
-        existing_analysis,
+    total_execution = (
+        time.perf_counter()
+        - PROGRAM_START
+    )
+
+    log("")
+    log("=" * 72)
+    log("BATCH SUCCESS")
+    log("=" * 72)
+
+    log(
+        f"Batch number:       {batch_number}"
     )
 
     log(
-        "============================================================"
+        f"Articles processed: {len(batch)}"
     )
 
     log(
-        "RUN SUMMARY"
+        f"Gemini requests:    1"
     )
 
     log(
-        f"Total news articles: {len(news_articles)}"
+        f"API response time:  {response_seconds:.4f}s"
     )
 
     log(
-        f"Already analysed before run: "
-        f"{already_analysed}"
+        f"Avg/article:        "
+        f"{response_seconds / len(batch):.4f}s"
     )
 
     log(
-        f"Pending at run start: "
-        f"{len(pending)}"
+        f"Execution time:     {total_execution:.4f}s"
     )
 
     log(
-        f"Gemini requests attempted: "
-        f"{requests_attempted}"
+        f"Total test batches: "
+        f"{analysis['totalSuccessfulBatches']}"
     )
 
     log(
-        f"Successfully analysed this run: "
-        f"{successful_this_run}"
+        f"Total test articles: "
+        f"{analysis['totalSuccessfulArticles']}"
     )
 
     log(
-        f"Failed this run: "
-        f"{failed_this_run}"
+        f"Saved to: {ANALYSIS_CURRENT}"
     )
 
-    log(
-        f"Quota stopped: "
-        f"{str(quota_stopped).lower()}"
-    )
-
-    log(
-        f"Still pending: "
-        f"{len(remaining_pending)}"
-    )
-
-    if remaining_pending:
-
-        next_article = remaining_pending[0]
-
-        log(
-            "Next article in queue: "
-            f"{safe_string(next_article.get('publishedAtSgt'))} | "
-            f"{safe_string(next_article.get('title'))}"
-        )
-
-    else:
-
-        log(
-            "No remaining pending articles."
-        )
-
-    log(
-        "============================================================"
-    )
-
-    # --------------------------------------------------------
-    # Important:
-    #
-    # Partial processing is still a successful workflow run.
-    # GitHub Actions must be allowed to commit the successfully
-    # saved history records.
-    # --------------------------------------------------------
+    log("=" * 72)
 
     return 0
 
