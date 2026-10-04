@@ -73,7 +73,7 @@ REQUEST_TIMEOUT = 180
 MAX_OUTPUT_TOKENS = 8192
 
 # Keep this at 1 for the first-stage test.
-MAX_BATCHES = 1
+MAX_BATCHES =3
 
 
 # ============================================================
@@ -955,7 +955,7 @@ def build_output(
         },
 
         "batch": {
-            "batchNumber": 1,
+            "batchNumber": 3,
             "articleCount": len(articles),
             "articleIds": [
                 article_id(article)
