@@ -59,7 +59,7 @@ Recovery:
 Environment:
     GEMINI_API_KEY       required
     MARKET_NEWS_MODEL    optional
-                         default: gemini-3.5-flash-lite
+                         default: 
 
 Python:
     Standard library only
