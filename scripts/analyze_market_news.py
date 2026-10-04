@@ -4,32 +4,59 @@
 VGrat FMS - MARKET NEWS AI ANALYZER
 ===================================
 
-Purpose
+PURPOSE
 -------
 Analyze pending market-news articles using Gemini.
 
-IMPORTANT DATA RULE
--------------------
-Research Funds.xlsx is the authoritative vocabulary for:
+AUTHORITATIVE RESEARCH INPUT
+----------------------------
+Research Funds.xlsx is the authoritative source for:
 
     Geography
     Sector
 
-Gemini may initially return a value that does not exactly match the
-Excel master. In that case, the script enters CORRECTION MODE and asks
-Gemini to remap invalid values to the closest valid Excel values.
+Gemini must use exact values from those Excel masters.
 
-Python performs the final validation.
+If Gemini initially returns an invalid Geography or Sector value,
+the script enters correction mode and asks Gemini to remap it.
 
-Nothing is written to analysis/current.json unless:
+SUMMARY
+-------
+Every article must contain a "summary" field.
 
-    1. Gemini analysis succeeds
-    2. Every article has exactly one analysis
-    3. Every article ID matches the requested batch
-    4. Every geography exactly exists in the Excel Geography Master
-    5. Every sector exactly exists in the Excel Sector Master
-    6. Required fields are present
-    7. Corrected output passes the same validation
+Rules:
+
+    - Factual summary of the article
+    - Less than 10 sentences
+    - Maximum 9 sentences
+    - No minimum sentence count
+    - Should not replace investorImpact
+    - Should not contain unnecessary investment interpretation
+
+INVESTOR IMPACT
+---------------
+Investor impact must explicitly consider the Geography and Sector
+classifications selected from Research Funds.xlsx.
+
+It should explain potential investment implications across the
+identified geographical markets and industry sectors.
+
+It must NOT be a generic statement such as:
+
+    "This could affect investors."
+
+Instead it should connect the news to:
+
+    Geography
+    Sector
+    Market conditions
+    Earnings
+    Valuations
+    Demand
+    Costs
+    Regulation
+    Competition
+    Other relevant investment factors
 
 INPUTS
 ------
@@ -40,51 +67,44 @@ OUTPUT
 ------
     data/market_news/analysis/current.json
 
-The production input files are READ ONLY.
+PRODUCTION INPUTS ARE READ ONLY
+--------------------------------
+The script never modifies:
 
-MODEL
------
-    Gemini
+    data/market_news/current.json
+    Research Funds.xlsx
 
-DEFAULT MODEL:
-    gemini-3.8-flash
+ONLY successful analysis is written to:
+
+    data/market_news/analysis/current.json
 
 BATCH
 -----
-    BATCH_SIZE = 2
+BATCH_SIZE = 2
 
-This is intentionally kept at 2 because the 5-article batch previously
-experienced HTTP 503 responses while 2-article batches succeeded.
+This is intentionally kept at 2 because previous 5-article requests
+experienced Gemini HTTP 503 responses while 2-article requests
+succeeded.
 
 PROCESSING
 ----------
-    Newest pending articles first.
+Newest pending articles first.
 
 CORRECTION MODE
 ---------------
-    Initial Gemini response is validated.
+Initial Gemini analysis
+        ↓
+Python validation
+        ↓
+Invalid Geography / Sector / Summary > 9 sentences
+        ↓
+Gemini correction
+        ↓
+Python validation again
+        ↓
+Accept only if fully valid
 
-    If Geography or Sector contains invalid values:
-
-        Initial response
-              ↓
-        Identify invalid values
-              ↓
-        Gemini correction request
-              ↓
-        Validate corrected response
-              ↓
-        Accept only if everything is valid
-
-The original response and correction response are both stored.
-
-FAILURE SAFETY
---------------
-    If analysis or correction fails validation:
-
-        analysis/current.json is NOT modified.
-
-Only a completely successful batch is appended and written atomically.
+If correction fails, nothing is written.
 """
 
 from __future__ import annotations
@@ -92,6 +112,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -126,12 +147,13 @@ DEFAULT_MODEL = "gemini-3.8-flash"
 DEFAULT_TIMEOUT = 180
 DEFAULT_MAX_OUTPUT_TOKENS = 16384
 
+MAX_CORRECTION_ATTEMPTS = 2
+
+MAX_SUMMARY_SENTENCES = 9
+
 GEMINI_API_BASE = (
     "https://generativelanguage.googleapis.com/v1beta/models"
 )
-
-# Maximum number of correction attempts for one batch.
-MAX_CORRECTION_ATTEMPTS = 2
 
 
 # ============================================================
@@ -139,8 +161,13 @@ MAX_CORRECTION_ATTEMPTS = 2
 # ============================================================
 
 def log(message: str) -> None:
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[{timestamp} UTC] {message}", flush=True)
+    timestamp = datetime.now(timezone.utc).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+    print(
+        f"[{timestamp} UTC] {message}",
+        flush=True,
+    )
 
 
 # ============================================================
@@ -156,22 +183,34 @@ def utc_now_iso() -> str:
 # ============================================================
 
 def load_json(path: Path) -> Any:
-    with path.open("r", encoding="utf-8") as f:
+    with path.open(
+        "r",
+        encoding="utf-8",
+    ) as f:
         return json.load(f)
 
 
-def save_json_atomic(path: Path, data: Any) -> None:
+def save_json_atomic(
+    path: Path,
+    data: Any,
+) -> None:
     """
     Atomically replace a JSON file.
-
-    The existing file is untouched if serialization or writing fails.
     """
 
-    path.parent.mkdir(parents=True, exist_ok=True)
+    path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
-    temp_path = path.with_suffix(path.suffix + ".tmp")
+    temp_path = path.with_suffix(
+        path.suffix + ".tmp"
+    )
 
-    with temp_path.open("w", encoding="utf-8") as f:
+    with temp_path.open(
+        "w",
+        encoding="utf-8",
+    ) as f:
         json.dump(
             data,
             f,
@@ -187,16 +226,24 @@ def save_json_atomic(path: Path, data: Any) -> None:
 # ARTICLE EXTRACTION
 # ============================================================
 
-def extract_articles(data: Any) -> list[dict[str, Any]]:
+def extract_articles(
+    data: Any,
+) -> list[dict[str, Any]]:
     """
-    Support several possible wrappers used by the market-news collector.
+    Support the common wrappers used by the market-news collector.
     """
 
     if isinstance(data, list):
-        return [x for x in data if isinstance(x, dict)]
+        return [
+            item
+            for item in data
+            if isinstance(item, dict)
+        ]
 
     if not isinstance(data, dict):
-        raise ValueError("current.json must contain a JSON object or array.")
+        raise ValueError(
+            "current.json must contain a JSON object or array."
+        )
 
     for key in (
         "articles",
@@ -208,7 +255,11 @@ def extract_articles(data: Any) -> list[dict[str, Any]]:
         value = data.get(key)
 
         if isinstance(value, list):
-            return [x for x in value if isinstance(x, dict)]
+            return [
+                item
+                for item in value
+                if isinstance(item, dict)
+            ]
 
     raise ValueError(
         "Could not find article list in current.json. "
@@ -220,11 +271,16 @@ def extract_articles(data: Any) -> list[dict[str, Any]]:
 # ARTICLE ID
 # ============================================================
 
-def article_id(article: dict[str, Any]) -> str:
+def article_id(
+    article: dict[str, Any],
+) -> str:
     """
-    Prefer the collector's existing ID.
+    Prefer the ID already generated by the collector.
 
-    Fall back to URL hash, then canonical article hash.
+    Fallback:
+        URL SHA256
+        ↓
+        canonical article SHA256
     """
 
     for key in (
@@ -262,7 +318,10 @@ def article_id(article: dict[str, Any]) -> str:
 # ARTICLE NORMALIZATION
 # ============================================================
 
-def normalize_article(article: dict[str, Any]) -> dict[str, Any]:
+def normalize_article(
+    article: dict[str, Any],
+) -> dict[str, Any]:
+
     return {
         "articleId": article_id(article),
         "title": article.get("title"),
@@ -274,90 +333,120 @@ def normalize_article(article: dict[str, Any]) -> dict[str, Any]:
 
 
 # ============================================================
-# DATE SORTING
+# PUBLICATION SORTING
 # ============================================================
 
-def publication_sort_key(article: dict[str, Any]) -> tuple[int, str]:
+def publication_sort_key(
+    article: dict[str, Any],
+) -> tuple[int, str]:
+
     value = article.get("published")
 
     if value is None:
-        return (0, "")
+        return (
+            0,
+            "",
+        )
 
-    text_value = str(value).strip()
+    value = str(value).strip()
 
-    if not text_value:
-        return (0, "")
+    if not value:
+        return (
+            0,
+            "",
+        )
 
-    return (1, text_value)
+    return (
+        1,
+        value,
+    )
 
 
 # ============================================================
-# RESEARCH FUNDS MASTER LOADING
+# EXCEL MASTER LOADING
 # ============================================================
 
-def clean_excel_value(value: Any) -> str | None:
+def clean_excel_value(
+    value: Any,
+) -> str | None:
+
     if value is None:
         return None
 
-    text_value = str(value).strip()
+    value = str(value).strip()
 
-    if not text_value:
+    if not value:
         return None
 
-    return text_value
+    return value
 
 
-def load_master_values(ws) -> list[str]:
+def load_master_values(
+    worksheet: Any,
+) -> list[str]:
     """
-    Extract all non-empty cell values from a worksheet.
+    Read all non-empty cells from a master worksheet.
 
-    Duplicate values are removed while preserving their original order.
+    Duplicate values are removed while preserving order.
     """
 
     values: list[str] = []
     seen: set[str] = set()
 
-    for row in ws.iter_rows():
+    for row in worksheet.iter_rows():
+
         for cell in row:
-            value = clean_excel_value(cell.value)
+
+            value = clean_excel_value(
+                cell.value
+            )
 
             if value is None:
                 continue
 
-            if value not in seen:
-                seen.add(value)
-                values.append(value)
+            if value in seen:
+                continue
+
+            seen.add(value)
+            values.append(value)
 
     return values
 
 
-def load_research_masters() -> tuple[list[str], list[str]]:
+def load_research_masters() -> tuple[
+    list[str],
+    list[str],
+]:
     """
     Research Funds.xlsx structure:
 
-        Sheet 0:
+        Worksheet 0:
             Fund Research
 
-        Sheet 1:
+        Worksheet 1:
             Geography master
 
-        Sheet 2:
+        Worksheet 2:
             Sector master
     """
 
     if not RESEARCH_FUNDS.exists():
         raise FileNotFoundError(
-            f"Research Funds.xlsx not found: {RESEARCH_FUNDS}"
+            f"Research Funds.xlsx not found: "
+            f"{RESEARCH_FUNDS}"
         )
 
     try:
         from openpyxl import load_workbook
     except ImportError as exc:
         raise RuntimeError(
-            "openpyxl is required. Install it with: pip install openpyxl"
+            "openpyxl is required."
         ) from exc
 
-    log(f"Loading Excel masters: {RESEARCH_FUNDS}")
+    log(
+        f"Loading research masters from: "
+        f"{RESEARCH_FUNDS}"
+    )
 
     workbook = load_workbook(
         RESEARCH_FUNDS,
@@ -366,39 +455,50 @@ def load_research_masters() -> tuple[list[str], list[str]]:
     )
 
     try:
+
         worksheets = workbook.worksheets
 
         if len(worksheets) < 3:
             raise ValueError(
-                "Research Funds.xlsx must contain at least 3 worksheets: "
-                "Fund Research, Geography master, Sector master."
+                "Research Funds.xlsx must contain at least "
+                "3 worksheets."
             )
 
-        geography_values = load_master_values(worksheets[1])
-        sector_values = load_master_values(worksheets[2])
+        geography_master = load_master_values(
+            worksheets[1]
+        )
+
+        sector_master = load_master_values(
+            worksheets[2]
+        )
 
     finally:
         workbook.close()
 
-    if not geography_values:
+    if not geography_master:
         raise ValueError(
-            "Geography master in Research Funds.xlsx is empty."
+            "Geography master is empty."
         )
 
-    if not sector_values:
+    if not sector_master:
         raise ValueError(
-            "Sector master in Research Funds.xlsx is empty."
+            "Sector master is empty."
         )
 
     log(
-        f"Geography master values: {len(geography_values)}"
+        f"Geography master: "
+        f"{len(geography_master)} values"
     )
 
     log(
-        f"Sector master values: {len(sector_values)}"
+        f"Sector master: "
+        f"{len(sector_master)} values"
     )
 
-    return geography_values, sector_values
+    return (
+        geography_master,
+        sector_master,
+    )
 
 
 # ============================================================
@@ -406,6 +506,7 @@ def load_research_masters() -> tuple[list[str], list[str]]:
 # ============================================================
 
 def new_analysis_document() -> dict[str, Any]:
+
     now = utc_now_iso()
 
     return {
@@ -419,31 +520,61 @@ def new_analysis_document() -> dict[str, Any]:
 
 
 def load_existing_analysis() -> dict[str, Any]:
+
     if not ANALYSIS_CURRENT.exists():
-        log("analysis/current.json does not exist. A new file will be created.")
+
+        log(
+            "analysis/current.json does not exist. "
+            "Creating a new analysis file."
+        )
+
         return new_analysis_document()
 
-    data = load_json(ANALYSIS_CURRENT)
+    data = load_json(
+        ANALYSIS_CURRENT
+    )
 
     if not isinstance(data, dict):
         raise ValueError(
-            "analysis/current.json must contain a JSON object."
+            "analysis/current.json must contain an object."
         )
 
-    if "batches" not in data or not isinstance(data["batches"], list):
-        data["batches"] = []
+    data.setdefault(
+        "version",
+        1,
+    )
 
-    data.setdefault("version", 1)
-    data.setdefault("createdAt", utc_now_iso())
-    data.setdefault("updatedAt", utc_now_iso())
-    data.setdefault("totalSuccessfulBatches", len(data["batches"]))
-    data.setdefault("totalSuccessfulArticles", 0)
+    data.setdefault(
+        "createdAt",
+        utc_now_iso(),
+    )
+
+    data.setdefault(
+        "updatedAt",
+        utc_now_iso(),
+    )
+
+    data.setdefault(
+        "totalSuccessfulBatches",
+        0,
+    )
+
+    data.setdefault(
+        "totalSuccessfulArticles",
+        0,
+    )
+
+    if not isinstance(
+        data.get("batches"),
+        list,
+    ):
+        data["batches"] = []
 
     return data
 
 
 # ============================================================
-# COMPLETED ARTICLE IDS
+# COMPLETED IDS
 # ============================================================
 
 def completed_article_ids(
@@ -452,31 +583,56 @@ def completed_article_ids(
 
     completed: set[str] = set()
 
-    for batch in analysis.get("batches", []):
-        if not isinstance(batch, dict):
+    for batch in analysis.get(
+        "batches",
+        [],
+    ):
+
+        if not isinstance(
+            batch,
+            dict,
+        ):
             continue
 
-        for value in batch.get("articleIds", []):
-            if value is not None:
-                completed.add(str(value))
+        for value in batch.get(
+            "articleIds",
+            [],
+        ):
 
-        for item in batch.get("analyses", []):
-            if not isinstance(item, dict):
+            if value is not None:
+                completed.add(
+                    str(value)
+                )
+
+        for item in batch.get(
+            "analyses",
+            [],
+        ):
+
+            if not isinstance(
+                item,
+                dict,
+            ):
                 continue
 
-            value = item.get("articleId")
+            value = item.get(
+                "articleId"
+            )
 
             if value is not None:
-                completed.add(str(value))
+                completed.add(
+                    str(value)
+                )
 
     return completed
 
 
 # ============================================================
-# GEMINI API
+# GEMINI CONFIG
 # ============================================================
 
 def gemini_model() -> str:
+
     return os.environ.get(
         "GEMINI_MODEL",
         DEFAULT_MODEL,
@@ -484,6 +640,7 @@ def gemini_model() -> str:
 
 
 def gemini_timeout() -> int:
+
     raw = os.environ.get(
         "GEMINI_TIMEOUT_SECONDS",
         str(DEFAULT_TIMEOUT),
@@ -496,6 +653,7 @@ def gemini_timeout() -> int:
 
 
 def gemini_max_output_tokens() -> int:
+
     raw = os.environ.get(
         "GEMINI_MAX_OUTPUT_TOKENS",
         str(DEFAULT_MAX_OUTPUT_TOKENS),
@@ -506,6 +664,10 @@ def gemini_max_output_tokens() -> int:
     except ValueError:
         return DEFAULT_MAX_OUTPUT_TOKENS
 
+
+# ============================================================
+# GEMINI API
+# ============================================================
 
 def call_gemini(
     *,
@@ -554,14 +716,16 @@ def call_gemini(
     started = time.monotonic()
 
     try:
+
         with urllib.request.urlopen(
             request,
             timeout=gemini_timeout(),
         ) as response:
 
-            response_seconds = time.monotonic() - started
-
-            status = response.status
+            response_seconds = (
+                time.monotonic()
+                - started
+            )
 
             raw_bytes = response.read()
 
@@ -570,11 +734,13 @@ def call_gemini(
                 errors="replace",
             )
 
-            parsed = json.loads(raw_text)
+            parsed = json.loads(
+                raw_text
+            )
 
             return {
                 "ok": True,
-                "httpStatus": status,
+                "httpStatus": response.status,
                 "responseSeconds": round(
                     response_seconds,
                     3,
@@ -585,18 +751,26 @@ def call_gemini(
 
     except urllib.error.HTTPError as exc:
 
-        response_seconds = time.monotonic() - started
+        response_seconds = (
+            time.monotonic()
+            - started
+        )
 
         try:
-            error_body = exc.read().decode(
-                "utf-8",
-                errors="replace",
+            error_body = (
+                exc.read()
+                .decode(
+                    "utf-8",
+                    errors="replace",
+                )
             )
         except Exception:
             error_body = ""
 
         try:
-            error_json = json.loads(error_body)
+            error_json = json.loads(
+                error_body
+            )
         except Exception:
             error_json = error_body
 
@@ -613,7 +787,10 @@ def call_gemini(
 
     except Exception as exc:
 
-        response_seconds = time.monotonic() - started
+        response_seconds = (
+            time.monotonic()
+            - started
+        )
 
         return {
             "ok": False,
@@ -628,134 +805,590 @@ def call_gemini(
 
 
 # ============================================================
-# GEMINI RESPONSE EXTRACTION
+# GEMINI RESPONSE PARSING
 # ============================================================
 
-def extract_response_text(response: dict[str, Any]) -> str:
-    raw = response.get("raw")
+def extract_response_text(
+    response: dict[str, Any],
+) -> str:
 
-    if not isinstance(raw, dict):
-        raise ValueError("Gemini response is not a JSON object.")
+    raw = response.get(
+        "raw"
+    )
 
-    candidates = raw.get("candidates")
-
-    if not isinstance(candidates, list) or not candidates:
+    if not isinstance(
+        raw,
+        dict,
+    ):
         raise ValueError(
-            "Gemini response contains no candidates."
+            "Gemini response is not an object."
+        )
+
+    candidates = raw.get(
+        "candidates"
+    )
+
+    if not isinstance(
+        candidates,
+        list,
+    ) or not candidates:
+        raise ValueError(
+            "Gemini returned no candidates."
         )
 
     candidate = candidates[0]
 
-    if not isinstance(candidate, dict):
-        raise ValueError("Gemini candidate is invalid.")
-
-    content = candidate.get("content")
-
-    if not isinstance(content, dict):
+    if not isinstance(
+        candidate,
+        dict,
+    ):
         raise ValueError(
-            "Gemini candidate contains no content."
+            "Gemini candidate is invalid."
         )
 
-    parts = content.get("parts")
+    content = candidate.get(
+        "content"
+    )
 
-    if not isinstance(parts, list):
+    if not isinstance(
+        content,
+        dict,
+    ):
         raise ValueError(
-            "Gemini content contains no parts."
+            "Gemini candidate has no content."
+        )
+
+    parts = content.get(
+        "parts"
+    )
+
+    if not isinstance(
+        parts,
+        list,
+    ):
+        raise ValueError(
+            "Gemini content has no parts."
         )
 
     texts: list[str] = []
 
     for part in parts:
-        if not isinstance(part, dict):
+
+        if not isinstance(
+            part,
+            dict,
+        ):
             continue
 
-        text_value = part.get("text")
+        value = part.get(
+            "text"
+        )
 
-        if isinstance(text_value, str):
-            texts.append(text_value)
+        if isinstance(
+            value,
+            str,
+        ):
+            texts.append(value)
 
     if not texts:
         raise ValueError(
-            "Gemini response contains no text."
+            "Gemini returned no text."
         )
 
-    return "".join(texts).strip()
+    return "".join(
+        texts
+    ).strip()
 
 
-def parse_generated_json(text_value: str) -> Any:
-    """
-    Parse JSON.
-
-    Also handles accidental markdown fences.
-    """
+def parse_generated_json(
+    text_value: str,
+) -> Any:
 
     cleaned = text_value.strip()
 
     if cleaned.startswith("```"):
+
         lines = cleaned.splitlines()
 
-        if lines and lines[0].startswith("```"):
+        if (
+            lines
+            and lines[0].startswith("```")
+        ):
             lines = lines[1:]
 
-        if lines and lines[-1].strip() == "```":
+        if (
+            lines
+            and lines[-1].strip() == "```"
+        ):
             lines = lines[:-1]
 
-        cleaned = "\n".join(lines).strip()
+        cleaned = "\n".join(
+            lines
+        ).strip()
 
-        if cleaned.lower().startswith("json"):
+        if cleaned.lower().startswith(
+            "json"
+        ):
             cleaned = cleaned[4:].strip()
 
-    return json.loads(cleaned)
+    return json.loads(
+        cleaned
+    )
 
 
-def normalize_analysis_list(value: Any) -> list[dict[str, Any]]:
-    """
-    Accept:
+def normalize_analysis_list(
+    value: Any,
+) -> list[dict[str, Any]]:
 
-        [...]
-        {"analyses": [...]}
-        {"results": [...]}
-        {single analysis object}
-    """
-
-    if isinstance(value, list):
+    if isinstance(
+        value,
+        list,
+    ):
         return [
             item
             for item in value
-            if isinstance(item, dict)
+            if isinstance(
+                item,
+                dict,
+            )
         ]
 
-    if isinstance(value, dict):
+    if isinstance(
+        value,
+        dict,
+    ):
 
         for key in (
             "analyses",
             "results",
         ):
-            nested = value.get(key)
 
-            if isinstance(nested, list):
+            nested = value.get(
+                key
+            )
+
+            if isinstance(
+                nested,
+                list,
+            ):
                 return [
                     item
                     for item in nested
-                    if isinstance(item, dict)
+                    if isinstance(
+                        item,
+                        dict,
+                    )
                 ]
 
-        if value.get("articleId") is not None:
+        if value.get(
+            "articleId"
+        ) is not None:
             return [value]
 
     raise ValueError(
-        "Generated JSON does not contain a valid analysis list."
+        "Generated JSON does not contain "
+        "a valid analysis list."
     )
 
 
 # ============================================================
-# PROMPT HELPERS
+# SENTENCE COUNTING
 # ============================================================
 
-def numbered_values(values: list[str]) -> str:
+def count_sentences(
+    text_value: Any,
+) -> int:
+
+    if not isinstance(
+        text_value,
+        str,
+    ):
+        return 0
+
+    text_value = text_value.strip()
+
+    if not text_value:
+        return 0
+
+    """
+    This deliberately uses a practical sentence-boundary heuristic
+    rather than requiring a specific punctuation style.
+
+    It recognizes:
+        .
+        !
+        ?
+
+    It also handles common abbreviations reasonably by requiring
+    whitespace or end-of-string after punctuation.
+    """
+
+    matches = re.findall(
+        r"[.!?](?=\s|$)",
+        text_value,
+    )
+
+    return len(matches)
+
+
+# ============================================================
+# VALIDATION
+# ============================================================
+
+REQUIRED_ANALYSIS_FIELDS = {
+    "articleId",
+    "relevant",
+    "category",
+    "sentiment",
+    "importance",
+    "summary",
+    "assetClasses",
+    "geographies",
+    "sectors",
+    "investorImpact",
+    "reasoning",
+    "fundMonitoringRelevant",
+}
+
+
+def validate_analysis(
+    analyses: list[dict[str, Any]],
+    articles: list[dict[str, Any]],
+    geography_master: set[str],
+    sector_master: set[str],
+) -> dict[str, Any]:
+
+    expected_ids = [
+        str(article["articleId"])
+        for article in articles
+    ]
+
+    expected_set = set(
+        expected_ids
+    )
+
+    received_ids = [
+        str(
+            item.get(
+                "articleId"
+            )
+        )
+        for item in analyses
+    ]
+
+    received_set = set(
+        received_ids
+    )
+
+    errors: list[str] = []
+
+    invalid_geographies: dict[
+        str,
+        list[str],
+    ] = {}
+
+    invalid_sectors: dict[
+        str,
+        list[str],
+    ] = {}
+
+    summary_sentence_counts: dict[
+        str,
+        int,
+    ] = {}
+
+    # --------------------------------------------------------
+    # Count
+    # --------------------------------------------------------
+
+    if len(analyses) != len(articles):
+
+        errors.append(
+            f"Expected {len(articles)} analyses, "
+            f"received {len(analyses)}."
+        )
+
+    # --------------------------------------------------------
+    # Duplicate IDs
+    # --------------------------------------------------------
+
+    if len(received_ids) != len(
+        received_set
+    ):
+
+        errors.append(
+            "Duplicate article IDs detected."
+        )
+
+    # --------------------------------------------------------
+    # Exact article coverage
+    # --------------------------------------------------------
+
+    missing_ids = sorted(
+        expected_set - received_set
+    )
+
+    unexpected_ids = sorted(
+        received_set - expected_set
+    )
+
+    if missing_ids:
+
+        errors.append(
+            "Missing article IDs: "
+            + ", ".join(
+                missing_ids
+            )
+        )
+
+    if unexpected_ids:
+
+        errors.append(
+            "Unexpected article IDs: "
+            + ", ".join(
+                unexpected_ids
+            )
+        )
+
+    # --------------------------------------------------------
+    # Per-analysis validation
+    # --------------------------------------------------------
+
+    for item in analyses:
+
+        current_id = str(
+            item.get(
+                "articleId"
+            )
+        )
+
+        # ----------------------------------------------------
+        # Required fields
+        # ----------------------------------------------------
+
+        missing_fields = sorted(
+            REQUIRED_ANALYSIS_FIELDS
+            - set(item.keys())
+        )
+
+        if missing_fields:
+
+            errors.append(
+                f"{current_id}: missing fields: "
+                + ", ".join(
+                    missing_fields
+                )
+            )
+
+        # ----------------------------------------------------
+        # Boolean fields
+        # ----------------------------------------------------
+
+        if not isinstance(
+            item.get("relevant"),
+            bool,
+        ):
+
+            errors.append(
+                f"{current_id}: relevant must be boolean."
+            )
+
+        if not isinstance(
+            item.get(
+                "fundMonitoringRelevant"
+            ),
+            bool,
+        ):
+
+            errors.append(
+                f"{current_id}: "
+                "fundMonitoringRelevant must be boolean."
+            )
+
+        # ----------------------------------------------------
+        # Summary
+        # ----------------------------------------------------
+
+        summary = item.get(
+            "summary"
+        )
+
+        if not isinstance(
+            summary,
+            str,
+        ):
+
+            errors.append(
+                f"{current_id}: summary must be a string."
+            )
+
+        else:
+
+            summary = summary.strip()
+
+            if not summary:
+
+                errors.append(
+                    f"{current_id}: summary cannot be empty."
+                )
+
+            sentence_count = count_sentences(
+                summary
+            )
+
+            summary_sentence_counts[
+                current_id
+            ] = sentence_count
+
+            if sentence_count > MAX_SUMMARY_SENTENCES:
+
+                errors.append(
+                    f"{current_id}: summary contains "
+                    f"{sentence_count} sentences; "
+                    f"maximum is "
+                    f"{MAX_SUMMARY_SENTENCES}."
+                )
+
+        # ----------------------------------------------------
+        # Arrays
+        # ----------------------------------------------------
+
+        for field in (
+            "assetClasses",
+            "geographies",
+            "sectors",
+        ):
+
+            value = item.get(
+                field
+            )
+
+            if not isinstance(
+                value,
+                list,
+            ):
+
+                errors.append(
+                    f"{current_id}: {field} "
+                    "must be an array."
+                )
+
+                continue
+
+            if not all(
+                isinstance(
+                    x,
+                    str,
+                )
+                for x in value
+            ):
+
+                errors.append(
+                    f"{current_id}: {field} "
+                    "must contain only strings."
+                )
+
+        # ----------------------------------------------------
+        # Geography master
+        # ----------------------------------------------------
+
+        geographies = item.get(
+            "geographies"
+        )
+
+        if isinstance(
+            geographies,
+            list,
+        ):
+
+            invalid = [
+                str(value)
+                for value in geographies
+                if str(value)
+                not in geography_master
+            ]
+
+            if invalid:
+
+                invalid_geographies[
+                    current_id
+                ] = invalid
+
+                errors.append(
+                    f"{current_id}: invalid Geography "
+                    "values: "
+                    + ", ".join(
+                        invalid
+                    )
+                )
+
+        # ----------------------------------------------------
+        # Sector master
+        # ----------------------------------------------------
+
+        sectors = item.get(
+            "sectors"
+        )
+
+        if isinstance(
+            sectors,
+            list,
+        ):
+
+            invalid = [
+                str(value)
+                for value in sectors
+                if str(value)
+                not in sector_master
+            ]
+
+            if invalid:
+
+                invalid_sectors[
+                    current_id
+                ] = invalid
+
+                errors.append(
+                    f"{current_id}: invalid Sector "
+                    "values: "
+                    + ", ".join(
+                        invalid
+                    )
+                )
+
+    return {
+        "passed": not errors,
+        "errors": errors,
+        "expectedArticleCount": len(
+            articles
+        ),
+        "receivedArticleCount": len(
+            analyses
+        ),
+        "expectedArticleIds": expected_ids,
+        "receivedArticleIds": received_ids,
+        "invalidGeographies": invalid_geographies,
+        "invalidSectors": invalid_sectors,
+        "summarySentenceCounts": (
+            summary_sentence_counts
+        ),
+    }
+
+
+# ============================================================
+# INITIAL ANALYSIS PROMPT
+# ============================================================
+
+def numbered_values(
+    values: list[str],
+) -> str:
+
     return "\n".join(
         f"{index}. {value}"
-        for index, value in enumerate(values, start=1)
+        for index, value in enumerate(
+            values,
+            start=1,
+        )
     )
 
 
@@ -770,11 +1403,8 @@ def article_prompt_json(
     )
 
 
-# ============================================================
-# INITIAL ANALYSIS PROMPT
-# ============================================================
-
 def build_analysis_prompt(
+    *,
     articles: list[dict[str, Any]],
     geography_master: list[str],
     sector_master: list[str],
@@ -797,83 +1427,177 @@ You are the market-news intelligence analyst for VGrat FMS.
 
 Analyze EVERY article supplied below.
 
-IMPORTANT
-=========
-You must return exactly ONE analysis object for every article.
+============================================================
+ARTICLE COVERAGE
+============================================================
+
+Return exactly ONE analysis object for EVERY article.
 
 Do not omit articles.
-
-Do not create articles.
 
 Do not merge articles.
 
 Do not duplicate articles.
 
-ARTICLE ID
-==========
+Do not create additional article IDs.
+
 The articleId supplied in the input is authoritative.
 
-Return exactly the same articleId.
+Return the exact same articleId.
 
+============================================================
+SUMMARY
+============================================================
+
+Every article MUST have a "summary".
+
+The summary must:
+
+- Explain what happened in the article.
+- Be factual and concise.
+- Be based only on the supplied article.
+- Contain LESS THAN 10 sentences.
+- Therefore contain a maximum of 9 sentences.
+- Have no minimum sentence count.
+- Avoid unnecessary investment interpretation.
+- Do not use the summary as a replacement for investorImpact.
+
+============================================================
 GEOGRAPHY MASTER
-================
-The following list comes directly from Research Funds.xlsx.
+============================================================
+
+The following values come directly from
+Research Funds.xlsx.
 
 These are the ONLY valid Geography values.
 
-You MUST select geography values EXACTLY as written below.
+Every Geography value MUST be copied EXACTLY from this list.
 
-Do not create synonyms.
+Do not:
 
-Do not abbreviate.
+- invent values
+- abbreviate values
+- create synonyms
+- create alternative names
+- change capitalization
+- change spelling
 
-Do not invent alternative names.
+For example:
 
-Do not use "US" if the master contains "United States".
-
-Do not use "USA" if the master contains "United States".
-
-Do not use "Americas" unless it is actually present below.
+If "United States" is in the master, do not return "US"
+unless "US" is also explicitly present in the master.
 
 VALID GEOGRAPHY VALUES:
 
 {geography_text}
 
+============================================================
 SECTOR MASTER
-=============
-The following list comes directly from Research Funds.xlsx.
+============================================================
+
+The following values come directly from
+Research Funds.xlsx.
 
 These are the ONLY valid Sector values.
 
-You MUST select sector values EXACTLY as written below.
+Every Sector value MUST be copied EXACTLY from this list.
 
-Do not create synonyms.
+Do not:
 
-Do not abbreviate.
+- invent values
+- abbreviate values
+- create synonyms
+- create alternative names
+- change capitalization
+- change spelling
 
-Do not invent alternative names.
+For example:
 
-For example, if the master contains "Information Technology",
-do not return "Technology" unless "Technology" itself appears in
-the master.
+If "Information Technology" is in the master,
+do not return "Technology" unless "Technology" is also
+explicitly present in the master.
 
 VALID SECTOR VALUES:
 
 {sector_text}
 
+============================================================
 ASSET CLASSES
-=============
-Asset classes are NOT restricted by the Geography or Sector masters.
+============================================================
 
-Use sensible asset-class descriptions.
+Asset Classes are not restricted by the Geography or Sector
+masters.
 
+Use appropriate investment asset-class descriptions.
+
+============================================================
+INVESTOR IMPACT
+============================================================
+
+This is an important requirement.
+
+The "investorImpact" field MUST specifically consider the
+Geography and Sector classifications selected from the
+Research Funds.xlsx masters.
+
+Do NOT provide a generic investment statement.
+
+You must connect the article to the relevant:
+
+- geographical markets
+- industry sectors
+- market conditions
+- demand
+- earnings
+- valuations
+- costs
+- regulation
+- competition
+- capital expenditure
+- supply chains
+- other relevant investment factors
+
+Where appropriate, explain how the news could affect investors
+with exposure to the identified Geography + Sector combinations.
+
+For example, if:
+
+geographies:
+["United States", "North America"]
+
+sectors:
+["Information Technology"]
+
+then investorImpact should discuss implications for the US /
+North American Information Technology sector.
+
+If multiple geographies and sectors are relevant, consider the
+relationships between them.
+
+Do not simply repeat the geography and sector names.
+
+Do not assume that every identified geography or sector will
+experience the same impact.
+
+If the effect is uncertain, explain the uncertainty.
+
+============================================================
+FUND MONITORING
+============================================================
+
+"fundMonitoringRelevant" should indicate whether the article
+could reasonably matter when monitoring funds with exposure to
+the identified asset classes, geographies or sectors.
+
+============================================================
 OUTPUT SCHEMA
-=============
+============================================================
+
 Return JSON only.
 
 Return a JSON array.
 
-Each object MUST contain exactly these fields:
+Each object MUST contain:
 
 {{
   "articleId": "string",
@@ -881,291 +1605,86 @@ Each object MUST contain exactly these fields:
   "category": "MARKET",
   "sentiment": "positive",
   "importance": "medium",
+  "summary": "Concise factual article summary.",
   "assetClasses": ["Equities"],
   "geographies": ["United States"],
   "sectors": ["Information Technology"],
-  "investorImpact": "string",
-  "reasoning": "string",
+  "investorImpact": "Geography- and sector-specific investment impact.",
+  "reasoning": "Why the article was classified this way.",
   "fundMonitoringRelevant": true
 }}
 
+============================================================
 FIELD RULES
-===========
-relevant:
-    boolean
+============================================================
 
-category:
-    one of:
-    MARKET
-    ECONOMIC
-    TECHNOLOGY
-    GEOPOLITICAL
-    REJECT
+category must be one of:
 
-sentiment:
-    positive
-    negative
-    mixed
-    neutral
+MARKET
+ECONOMIC
+TECHNOLOGY
+GEOPOLITICAL
+REJECT
 
-importance:
-    low
-    medium
-    high
+sentiment must be one of:
+
+positive
+negative
+mixed
+neutral
+
+importance must be one of:
+
+low
+medium
+high
 
 assetClasses:
-    JSON array of strings
+    JSON array of strings.
 
 geographies:
-    JSON array of strings
-    EVERY VALUE MUST EXACTLY MATCH THE GEOGRAPHY MASTER
+    JSON array of strings.
+    EVERY value must exactly match the Geography Master.
 
 sectors:
-    JSON array of strings
-    EVERY VALUE MUST EXACTLY MATCH THE SECTOR MASTER
+    JSON array of strings.
+    EVERY value must exactly match the Sector Master.
+
+summary:
+    Required.
+    Maximum 9 sentences.
 
 investorImpact:
-    concise explanation of the investment implications
+    Required.
+    Must explicitly consider the selected Geography and Sector.
 
 reasoning:
-    concise explanation of why the article was classified this way
+    Required.
 
 fundMonitoringRelevant:
-    boolean
+    Required boolean.
 
-IMPORTANT FINAL CHECK
-=====================
-Before returning your answer, compare every geography and sector
-against the supplied master lists.
+============================================================
+FINAL SELF-CHECK
+============================================================
 
-Every value must be an EXACT string match.
+Before returning the JSON:
 
-Return JSON only.
+1. Confirm there is exactly one result per input article.
+2. Confirm every articleId exactly matches the input.
+3. Confirm every Geography exactly matches the Geography Master.
+4. Confirm every Sector exactly matches the Sector Master.
+5. Confirm every summary has fewer than 10 sentences.
+6. Confirm investorImpact specifically discusses the relevant
+   Geography and Sector implications.
+7. Return JSON only.
 
+============================================================
 ARTICLES
-========
+============================================================
 
 {articles_text}
 """.strip()
-
-
-# ============================================================
-# INITIAL VALIDATION
-# ============================================================
-
-REQUIRED_ANALYSIS_FIELDS = {
-    "articleId",
-    "relevant",
-    "category",
-    "sentiment",
-    "importance",
-    "assetClasses",
-    "geographies",
-    "sectors",
-    "investorImpact",
-    "reasoning",
-    "fundMonitoringRelevant",
-}
-
-
-def validate_analysis(
-    analyses: list[dict[str, Any]],
-    articles: list[dict[str, Any]],
-    geography_master: set[str],
-    sector_master: set[str],
-) -> dict[str, Any]:
-
-    expected_ids = [
-        str(article["articleId"])
-        for article in articles
-    ]
-
-    expected_set = set(expected_ids)
-
-    received_ids = [
-        str(item.get("articleId"))
-        for item in analyses
-    ]
-
-    received_set = set(received_ids)
-
-    errors: list[str] = []
-
-    # --------------------------------------------------------
-    # Count
-    # --------------------------------------------------------
-
-    if len(analyses) != len(articles):
-        errors.append(
-            f"Expected {len(articles)} analyses, "
-            f"received {len(analyses)}."
-        )
-
-    # --------------------------------------------------------
-    # Duplicate IDs
-    # --------------------------------------------------------
-
-    if len(received_ids) != len(received_set):
-        errors.append(
-            "Duplicate article IDs detected."
-        )
-
-    # --------------------------------------------------------
-    # Exact article coverage
-    # --------------------------------------------------------
-
-    missing_ids = sorted(
-        expected_set - received_set
-    )
-
-    unexpected_ids = sorted(
-        received_set - expected_set
-    )
-
-    if missing_ids:
-        errors.append(
-            "Missing article IDs: "
-            + ", ".join(missing_ids)
-        )
-
-    if unexpected_ids:
-        errors.append(
-            "Unexpected article IDs: "
-            + ", ".join(unexpected_ids)
-        )
-
-    invalid_geographies: dict[str, list[str]] = {}
-    invalid_sectors: dict[str, list[str]] = {}
-
-    # --------------------------------------------------------
-    # Per-analysis validation
-    # --------------------------------------------------------
-
-    for item in analyses:
-
-        current_id = str(
-            item.get("articleId")
-        )
-
-        missing_fields = sorted(
-            REQUIRED_ANALYSIS_FIELDS
-            - set(item.keys())
-        )
-
-        if missing_fields:
-            errors.append(
-                f"{current_id}: missing fields: "
-                + ", ".join(missing_fields)
-            )
-
-        # ----------------------------------------------------
-        # Basic types
-        # ----------------------------------------------------
-
-        if not isinstance(
-            item.get("relevant"),
-            bool,
-        ):
-            errors.append(
-                f"{current_id}: relevant must be boolean."
-            )
-
-        if not isinstance(
-            item.get("fundMonitoringRelevant"),
-            bool,
-        ):
-            errors.append(
-                f"{current_id}: fundMonitoringRelevant "
-                "must be boolean."
-            )
-
-        # ----------------------------------------------------
-        # Arrays
-        # ----------------------------------------------------
-
-        for field in (
-            "assetClasses",
-            "geographies",
-            "sectors",
-        ):
-
-            value = item.get(field)
-
-            if not isinstance(value, list):
-                errors.append(
-                    f"{current_id}: {field} must be a JSON array."
-                )
-                continue
-
-            if not all(
-                isinstance(x, str)
-                for x in value
-            ):
-                errors.append(
-                    f"{current_id}: {field} must contain "
-                    "only strings."
-                )
-
-        # ----------------------------------------------------
-        # Geography master validation
-        # ----------------------------------------------------
-
-        geographies = item.get(
-            "geographies"
-        )
-
-        if isinstance(geographies, list):
-
-            invalid = [
-                str(value)
-                for value in geographies
-                if str(value) not in geography_master
-            ]
-
-            if invalid:
-                invalid_geographies[
-                    current_id
-                ] = invalid
-
-                errors.append(
-                    f"{current_id}: invalid geography values: "
-                    + ", ".join(invalid)
-                )
-
-        # ----------------------------------------------------
-        # Sector master validation
-        # ----------------------------------------------------
-
-        sectors = item.get("sectors")
-
-        if isinstance(sectors, list):
-
-            invalid = [
-                str(value)
-                for value in sectors
-                if str(value) not in sector_master
-            ]
-
-            if invalid:
-                invalid_sectors[
-                    current_id
-                ] = invalid
-
-                errors.append(
-                    f"{current_id}: invalid sector values: "
-                    + ", ".join(invalid)
-                )
-
-    return {
-        "passed": not errors,
-        "errors": errors,
-        "expectedArticleCount": len(articles),
-        "receivedArticleCount": len(analyses),
-        "expectedArticleIds": expected_ids,
-        "receivedArticleIds": received_ids,
-        "invalidGeographies": invalid_geographies,
-        "invalidSectors": invalid_sectors,
-    }
 
 
 # ============================================================
@@ -1189,68 +1708,126 @@ def build_correction_prompt(
         sector_master
     )
 
-    invalid_geographies = (
-        validation.get("invalidGeographies", {})
-    )
-
-    invalid_sectors = (
-        validation.get("invalidSectors", {})
-    )
-
-    invalid_summary = {
-        "invalidGeographies": invalid_geographies,
-        "invalidSectors": invalid_sectors,
+    problems = {
+        "invalidGeographies": validation.get(
+            "invalidGeographies",
+            {},
+        ),
+        "invalidSectors": validation.get(
+            "invalidSectors",
+            {},
+        ),
+        "summarySentenceCounts": validation.get(
+            "summarySentenceCounts",
+            {},
+        ),
+        "validationErrors": validation.get(
+            "errors",
+            [],
+        ),
     }
 
     return f"""
-You are correcting a market-news classification produced by another
-AI analyst.
+You are correcting a market-news analysis produced by another
+AI analyst for VGrat FMS.
 
-The original analysis is mostly complete, but some Geography and/or
-Sector values are INVALID.
+The original analysis contains one or more validation problems.
 
-Your job is to correct ONLY the invalid classification values while
-preserving the rest of the analysis.
+Your job is to produce a fully corrected analysis.
 
-AUTHORITATIVE RULE
-==================
-Research Funds.xlsx is the source of truth.
+============================================================
+AUTHORITATIVE SOURCE
+============================================================
 
-A Geography is valid ONLY if it exactly matches one of the values in
-the Geography Master below.
+Research Funds.xlsx is the authoritative source for Geography
+and Sector.
 
-A Sector is valid ONLY if it exactly matches one of the values in the
-Sector Master below.
+A Geography is valid ONLY when it exactly matches a value in the
+Geography Master.
 
-Do NOT invent values.
+A Sector is valid ONLY when it exactly matches a value in the
+Sector Master.
 
-Do NOT use synonyms.
+Do not invent values.
 
-Do NOT abbreviate.
+Do not abbreviate values.
 
-Do NOT return values that are not present in the masters.
+Do not use synonyms.
 
+Do not use alternative spellings.
+
+============================================================
 GEOGRAPHY MASTER
-================
+============================================================
 
 {geography_text}
 
+============================================================
 SECTOR MASTER
-=============
+============================================================
 
 {sector_text}
 
-INVALID VALUES FOUND
-====================
+============================================================
+VALIDATION PROBLEMS
+============================================================
 
 {json.dumps(
-    invalid_summary,
+    problems,
     ensure_ascii=False,
     indent=2,
 )}
 
-ORIGINAL ARTICLES
-=================
+============================================================
+SUMMARY CORRECTION
+============================================================
+
+Every summary must contain fewer than 10 sentences.
+
+Maximum:
+
+9 sentences.
+
+If a summary contains more than 9 sentences, rewrite it into
+9 or fewer sentences while preserving the important factual
+information.
+
+There is no minimum sentence count.
+
+============================================================
+INVESTOR IMPACT
+============================================================
+
+The investorImpact field must explicitly consider the Geography
+and Sector values selected from the Excel masters.
+
+It must explain the potential investment implications for the
+identified geographical markets and industry sectors.
+
+Do not replace this with a generic statement.
+
+If you correct a Geography or Sector, make sure investorImpact
+remains consistent with the corrected classification.
+
+============================================================
+PRESERVATION RULE
+============================================================
+
+Preserve the original analysis wherever it is already valid.
+
+Do not unnecessarily rewrite valid fields.
+
+Do not change the articleId.
+
+Do not change the article coverage.
+
+Do not create additional articles.
+
+Do not omit articles.
+
+============================================================
+ARTICLES
+============================================================
 
 {json.dumps(
     articles,
@@ -1258,8 +1835,9 @@ ORIGINAL ARTICLES
     indent=2,
 )}
 
+============================================================
 ORIGINAL ANALYSES
-=================
+============================================================
 
 {json.dumps(
     analyses,
@@ -1267,40 +1845,15 @@ ORIGINAL ANALYSES
     indent=2,
 )}
 
-CORRECTION RULES
-================
-
-1. Return exactly one analysis per article.
-
-2. Preserve every articleId exactly.
-
-3. Preserve the meaning of the original analysis.
-
-4. Correct invalid Geography values by selecting the most appropriate
-   EXACT value from the Geography Master.
-
-5. Correct invalid Sector values by selecting the most appropriate
-   EXACT value from the Sector Master.
-
-6. Do not modify valid Geography values unless necessary to make the
-   classification internally consistent.
-
-7. Do not modify valid Sector values unless necessary to make the
-   classification internally consistent.
-
-8. Do not modify unrelated fields.
-
-9. If a value has no valid match, select the closest applicable
-   authoritative master value.
-
-10. Never return a value outside the supplied masters.
-
+============================================================
 OUTPUT
-======
+============================================================
 
 Return JSON only.
 
-Return a JSON array using this schema:
+Return exactly one analysis object per article.
+
+Each object MUST contain:
 
 {{
   "articleId": "string",
@@ -1308,13 +1861,24 @@ Return a JSON array using this schema:
   "category": "MARKET",
   "sentiment": "positive",
   "importance": "medium",
+  "summary": "Factual summary of fewer than 10 sentences.",
   "assetClasses": ["Equities"],
   "geographies": ["United States"],
   "sectors": ["Information Technology"],
-  "investorImpact": "string",
-  "reasoning": "string",
+  "investorImpact": "Specific impact across the selected Geography and Sector.",
+  "reasoning": "Classification reasoning.",
   "fundMonitoringRelevant": true
 }}
+
+FINAL CHECK:
+
+- Exactly one result per article.
+- Exact articleId.
+- Every Geography exists exactly in the master.
+- Every Sector exists exactly in the master.
+- Every summary contains no more than 9 sentences.
+- InvestorImpact is geographically and sector-specific.
+- JSON only.
 """.strip()
 
 
@@ -1331,19 +1895,19 @@ def analyze_batch(
     model: str,
 ) -> dict[str, Any]:
 
-    log(
-        f"Starting Gemini analysis for "
-        f"{len(articles)} article(s)."
-    )
+    # --------------------------------------------------------
+    # Initial analysis
+    # --------------------------------------------------------
 
     prompt = build_analysis_prompt(
-        articles,
-        geography_master,
-        sector_master,
+        articles=articles,
+        geography_master=geography_master,
+        sector_master=sector_master,
     )
 
     log(
-        f"Initial prompt characters: {len(prompt)}"
+        f"Initial prompt characters: "
+        f"{len(prompt)}"
     )
 
     initial_response = call_gemini(
@@ -1353,9 +1917,10 @@ def analyze_batch(
     )
 
     if not initial_response["ok"]:
+
         return {
             "success": False,
-            "stage": "initial_analysis",
+            "stage": "initial_api",
             "prompt": prompt,
             "response": initial_response,
             "error": (
@@ -1364,6 +1929,7 @@ def analyze_batch(
         }
 
     try:
+
         raw_text = extract_response_text(
             initial_response
         )
@@ -1387,21 +1953,24 @@ def analyze_batch(
         }
 
     validation = validate_analysis(
-        analyses,
-        articles,
-        set(geography_master),
-        set(sector_master),
+        analyses=analyses,
+        articles=articles,
+        geography_master=set(
+            geography_master
+        ),
+        sector_master=set(
+            sector_master
+        ),
     )
 
     # --------------------------------------------------------
-    # Initial validation passed
+    # Initial success
     # --------------------------------------------------------
 
     if validation["passed"]:
 
         log(
-            "Initial analysis passed validation. "
-            "No correction required."
+            "Initial analysis passed validation."
         )
 
         return {
@@ -1421,52 +1990,34 @@ def analyze_batch(
     # --------------------------------------------------------
 
     log(
-        "Initial analysis failed validation."
+        "Initial analysis requires correction."
     )
 
-    log(
-        "Invalid Geography values: "
-        + json.dumps(
-            validation.get(
-                "invalidGeographies",
-                {},
-            ),
-            ensure_ascii=False,
-        )
-    )
-
-    log(
-        "Invalid Sector values: "
-        + json.dumps(
-            validation.get(
-                "invalidSectors",
-                {},
-            ),
-            ensure_ascii=False,
-        )
-    )
-
-    correction_attempts: list[dict[str, Any]] = []
+    correction_attempts: list[
+        dict[str, Any]
+    ] = []
 
     current_analyses = analyses
     current_validation = validation
 
-    for attempt_number in range(
+    for attempt in range(
         1,
         MAX_CORRECTION_ATTEMPTS + 1,
     ):
 
         log(
-            f"Starting correction attempt "
-            f"{attempt_number}/{MAX_CORRECTION_ATTEMPTS}."
+            f"Correction attempt "
+            f"{attempt}/{MAX_CORRECTION_ATTEMPTS}"
         )
 
-        correction_prompt = build_correction_prompt(
-            articles=articles,
-            analyses=current_analyses,
-            validation=current_validation,
-            geography_master=geography_master,
-            sector_master=sector_master,
+        correction_prompt = (
+            build_correction_prompt(
+                articles=articles,
+                analyses=current_analyses,
+                validation=current_validation,
+                geography_master=geography_master,
+                sector_master=sector_master,
+            )
         )
 
         correction_response = call_gemini(
@@ -1475,16 +2026,24 @@ def analyze_batch(
             prompt=correction_prompt,
         )
 
-        correction_record: dict[str, Any] = {
-            "attempt": attempt_number,
+        correction_record: dict[
+            str,
+            Any,
+        ] = {
+            "attempt": attempt,
             "prompt": correction_prompt,
             "response": correction_response,
         }
 
         if not correction_response["ok"]:
 
-            correction_record["success"] = False
-            correction_record["error"] = (
+            correction_record[
+                "success"
+            ] = False
+
+            correction_record[
+                "error"
+            ] = (
                 "Correction Gemini request failed."
             )
 
@@ -1492,48 +2051,55 @@ def analyze_batch(
                 correction_record
             )
 
-            log(
-                f"Correction attempt {attempt_number} "
-                "failed at API level."
-            )
-
             continue
 
         try:
 
-            correction_raw_text = extract_response_text(
-                correction_response
+            correction_raw_text = (
+                extract_response_text(
+                    correction_response
+                )
             )
 
-            correction_parsed = parse_generated_json(
-                correction_raw_text
+            correction_parsed = (
+                parse_generated_json(
+                    correction_raw_text
+                )
             )
 
-            corrected_analyses = normalize_analysis_list(
-                correction_parsed
+            corrected_analyses = (
+                normalize_analysis_list(
+                    correction_parsed
+                )
             )
 
         except Exception as exc:
 
-            correction_record["success"] = False
-            correction_record["error"] = str(exc)
+            correction_record[
+                "success"
+            ] = False
+
+            correction_record[
+                "error"
+            ] = str(exc)
 
             correction_attempts.append(
                 correction_record
             )
 
-            log(
-                f"Correction attempt {attempt_number} "
-                f"failed during parsing: {exc}"
-            )
-
             continue
 
-        corrected_validation = validate_analysis(
-            corrected_analyses,
-            articles,
-            set(geography_master),
-            set(sector_master),
+        corrected_validation = (
+            validate_analysis(
+                analyses=corrected_analyses,
+                articles=articles,
+                geography_master=set(
+                    geography_master
+                ),
+                sector_master=set(
+                    sector_master
+                ),
+            )
         )
 
         correction_record.update(
@@ -1542,7 +2108,9 @@ def analyze_batch(
                 "parsedResponse": correction_parsed,
                 "analyses": corrected_analyses,
                 "validation": corrected_validation,
-                "success": corrected_validation["passed"],
+                "success": corrected_validation[
+                    "passed"
+                ],
             }
         )
 
@@ -1550,10 +2118,12 @@ def analyze_batch(
             correction_record
         )
 
-        if corrected_validation["passed"]:
+        if corrected_validation[
+            "passed"
+        ]:
 
             log(
-                f"Correction attempt {attempt_number} "
+                f"Correction attempt {attempt} "
                 "passed validation."
             )
 
@@ -1571,12 +2141,12 @@ def analyze_batch(
                 "correctionAttempts": correction_attempts,
             }
 
-        current_analyses = corrected_analyses
-        current_validation = corrected_validation
+        current_analyses = (
+            corrected_analyses
+        )
 
-        log(
-            f"Correction attempt {attempt_number} "
-            "still contains invalid values."
+        current_validation = (
+            corrected_validation
         )
 
     # --------------------------------------------------------
@@ -1594,9 +2164,8 @@ def analyze_batch(
         "validation": validation,
         "correctionAttempts": correction_attempts,
         "error": (
-            "Initial analysis contained invalid Geography/Sector "
-            "values and correction did not produce a fully valid "
-            "result."
+            "Correction failed to produce a fully "
+            "valid analysis."
         ),
     }
 
@@ -1612,11 +2181,6 @@ def create_batch_record(
     result: dict[str, Any],
     model: str,
 ) -> dict[str, Any]:
-
-    analyses = result.get(
-        "analyses",
-        [],
-    )
 
     initial_response = result.get(
         "response",
@@ -1634,7 +2198,10 @@ def create_batch_record(
             "raw"
         )
 
-        if isinstance(raw, dict):
+        if isinstance(
+            raw,
+            dict,
+        ):
 
             usage_metadata = raw.get(
                 "usageMetadata"
@@ -1646,29 +2213,6 @@ def create_batch_record(
             ):
                 usage = usage_metadata
 
-    request_data = {
-        "articleCount": len(articles),
-        "articleIds": [
-            article["articleId"]
-            for article in articles
-        ],
-        "promptCharacters": len(
-            result.get("prompt", "")
-        ),
-        "responseSeconds": initial_response.get(
-            "responseSeconds"
-        ),
-        "maxOutputTokens": gemini_max_output_tokens(),
-        "responseMimeType": "application/json",
-        "correctionMode": True,
-        "correctionAttempts": len(
-            result.get(
-                "correctionAttempts",
-                [],
-            )
-        ),
-    }
-
     record = {
         "batchNumber": batch_number,
         "storedAt": utc_now_iso(),
@@ -1677,13 +2221,41 @@ def create_batch_record(
             article["articleId"]
             for article in articles
         ],
-        "request": request_data,
+        "request": {
+            "articleCount": len(
+                articles
+            ),
+            "promptCharacters": len(
+                result.get(
+                    "prompt",
+                    "",
+                )
+            ),
+            "responseSeconds": (
+                initial_response.get(
+                    "responseSeconds"
+                )
+            ),
+            "maxOutputTokens": (
+                gemini_max_output_tokens()
+            ),
+            "responseMimeType": (
+                "application/json"
+            ),
+            "correctionMode": True,
+            "correctionAttempts": len(
+                result.get(
+                    "correctionAttempts",
+                    [],
+                )
+            ),
+        },
+        "analysisMode": result.get(
+            "mode"
+        ),
         "validation": result.get(
             "validation",
             {},
-        ),
-        "analysisMode": result.get(
-            "mode"
         ),
         "prompt": result.get(
             "prompt"
@@ -1694,7 +2266,10 @@ def create_batch_record(
         "parsedResponse": result.get(
             "parsedResponse"
         ),
-        "analyses": analyses,
+        "analyses": result.get(
+            "analyses",
+            [],
+        ),
         "rawGeminiResponse": initial_response.get(
             "raw"
         ),
@@ -1703,20 +2278,28 @@ def create_batch_record(
     }
 
     # --------------------------------------------------------
-    # Preserve initial response when corrected
+    # Preserve correction history
     # --------------------------------------------------------
 
-    if result.get("mode") == "corrected":
+    if result.get(
+        "mode"
+    ) == "corrected":
 
-        record["initialValidation"] = result.get(
+        record[
+            "initialValidation"
+        ] = result.get(
             "initialValidation"
         )
 
-        record["initialAnalyses"] = result.get(
+        record[
+            "initialAnalyses"
+        ] = result.get(
             "initialAnalyses"
         )
 
-        record["correctionAttempts"] = result.get(
+        record[
+            "correctionAttempts"
+        ] = result.get(
             "correctionAttempts"
         )
 
@@ -1730,11 +2313,13 @@ def create_batch_record(
 def main() -> int:
 
     log("=" * 70)
-    log("VGrat FMS - MARKET NEWS AI ANALYZER")
+    log(
+        "VGrat FMS - MARKET NEWS AI ANALYZER"
+    )
     log("=" * 70)
 
     # --------------------------------------------------------
-    # API KEY
+    # API key
     # --------------------------------------------------------
 
     api_key = os.environ.get(
@@ -1742,19 +2327,30 @@ def main() -> int:
     )
 
     if not api_key:
+
         log(
-            "ERROR: GEMINI_API_KEY environment variable is missing."
+            "ERROR: GEMINI_API_KEY is missing."
         )
+
         return 1
 
     model = gemini_model()
 
-    log(f"Gemini model: {model}")
-    log(f"Batch size: {BATCH_SIZE}")
-    log(f"Max batches: {MAX_BATCHES}")
     log(
-        f"Max correction attempts: "
-        f"{MAX_CORRECTION_ATTEMPTS}"
+        f"Gemini model: {model}"
+    )
+
+    log(
+        f"Batch size: {BATCH_SIZE}"
+    )
+
+    log(
+        f"Max batches: {MAX_BATCHES}"
+    )
+
+    log(
+        f"Summary maximum: "
+        f"{MAX_SUMMARY_SENTENCES} sentences"
     )
 
     # --------------------------------------------------------
@@ -1762,24 +2358,29 @@ def main() -> int:
     # --------------------------------------------------------
 
     if not CURRENT_JSON.exists():
+
         log(
-            f"ERROR: Missing market news file: {CURRENT_JSON}"
+            f"ERROR: Missing "
+            f"{CURRENT_JSON}"
         )
+
         return 1
 
     if not RESEARCH_FUNDS.exists():
+
         log(
-            f"ERROR: Missing Research Funds.xlsx: "
+            f"ERROR: Missing "
             f"{RESEARCH_FUNDS}"
         )
+
         return 1
 
     # --------------------------------------------------------
-    # Load current news
+    # Load production news
     # --------------------------------------------------------
 
     log(
-        f"Loading production market news: "
+        f"Loading market news: "
         f"{CURRENT_JSON}"
     )
 
@@ -1792,12 +2393,14 @@ def main() -> int:
     )
 
     log(
-        f"Articles found in current.json: "
+        f"Articles found: "
         f"{len(raw_articles)}"
     )
 
     normalized_articles = [
-        normalize_article(article)
+        normalize_article(
+            article
+        )
         for article in raw_articles
     ]
 
@@ -1805,35 +2408,32 @@ def main() -> int:
     # Load Excel masters
     # --------------------------------------------------------
 
-    geography_master, sector_master = (
-        load_research_masters()
-    )
-
-    geography_set = set(
-        geography_master
-    )
-
-    sector_set = set(
-        sector_master
-    )
+    (
+        geography_master,
+        sector_master,
+    ) = load_research_masters()
 
     # --------------------------------------------------------
     # Load existing analysis
     # --------------------------------------------------------
 
-    analysis = load_existing_analysis()
+    analysis = (
+        load_existing_analysis()
+    )
 
-    completed_ids = completed_article_ids(
-        analysis
+    completed_ids = (
+        completed_article_ids(
+            analysis
+        )
     )
 
     log(
-        f"Previously analyzed article IDs: "
+        f"Previously analyzed articles: "
         f"{len(completed_ids)}"
     )
 
     # --------------------------------------------------------
-    # Pending articles
+    # Find pending
     # --------------------------------------------------------
 
     pending = [
@@ -1844,19 +2444,23 @@ def main() -> int:
     ]
 
     if PROCESS_NEWEST_FIRST:
+
         pending.sort(
             key=publication_sort_key,
             reverse=True,
         )
 
     log(
-        f"Pending articles: {len(pending)}"
+        f"Pending articles: "
+        f"{len(pending)}"
     )
 
     if not pending:
+
         log(
-            "No pending articles. Nothing to do."
+            "No pending articles."
         )
+
         return 0
 
     # --------------------------------------------------------
@@ -1869,8 +2473,15 @@ def main() -> int:
         MAX_BATCHES
     ):
 
-        start = batch_index * BATCH_SIZE
-        end = start + BATCH_SIZE
+        start = (
+            batch_index
+            * BATCH_SIZE
+        )
+
+        end = (
+            start
+            + BATCH_SIZE
+        )
 
         batch_articles = pending[
             start:end
@@ -1880,7 +2491,12 @@ def main() -> int:
             break
 
         batch_number = (
-            len(analysis.get("batches", []))
+            len(
+                analysis.get(
+                    "batches",
+                    [],
+                )
+            )
             + 1
         )
 
@@ -1891,15 +2507,11 @@ def main() -> int:
         )
         log("=" * 70)
 
-        log(
-            f"Articles in batch: "
-            f"{len(batch_articles)}"
-        )
-
         for index, article in enumerate(
             batch_articles,
             start=1,
         ):
+
             log(
                 f"{index}. "
                 f"{article['articleId']} | "
@@ -1907,7 +2519,7 @@ def main() -> int:
             )
 
         # ----------------------------------------------------
-        # Analyze
+        # Gemini
         # ----------------------------------------------------
 
         result = analyze_batch(
@@ -1922,11 +2534,15 @@ def main() -> int:
         # Failure
         # ----------------------------------------------------
 
-        if not result["success"]:
+        if not result[
+            "success"
+        ]:
 
             log("")
             log("=" * 70)
-            log("BATCH FAILED")
+            log(
+                "BATCH FAILED"
+            )
             log("=" * 70)
 
             log(
@@ -1943,6 +2559,7 @@ def main() -> int:
             )
 
             if validation:
+
                 log(
                     "Validation errors:"
                 )
@@ -1951,40 +2568,46 @@ def main() -> int:
                     "errors",
                     [],
                 ):
+
                     log(
                         f"  - {error}"
                     )
 
             log(
-                "No changes were written to "
-                "analysis/current.json."
+                "NO CHANGES WRITTEN."
             )
 
             return 1
 
         # ----------------------------------------------------
-        # Create record
+        # Create batch record
         # ----------------------------------------------------
 
-        batch_record = create_batch_record(
-            batch_number=batch_number,
-            articles=batch_articles,
-            result=result,
-            model=model,
+        batch_record = (
+            create_batch_record(
+                batch_number=batch_number,
+                articles=batch_articles,
+                result=result,
+                model=model,
+            )
         )
 
         # ----------------------------------------------------
         # Update in memory
         # ----------------------------------------------------
 
-        analysis["batches"].append(
+        analysis[
+            "batches"
+        ].append(
             batch_record
         )
 
         analysis[
             "totalSuccessfulBatches"
         ] = len(
-            analysis["batches"]
+            analysis[
+                "batches"
+            ]
         )
 
         analysis[
@@ -1996,7 +2619,9 @@ def main() -> int:
                     [],
                 )
             )
-            for batch in analysis["batches"]
+            for batch in analysis[
+                "batches"
+            ]
         )
 
         analysis[
@@ -2005,13 +2630,22 @@ def main() -> int:
 
         successful_batches += 1
 
+        # ----------------------------------------------------
+        # Write ONLY after successful validation
+        # ----------------------------------------------------
+
+        save_json_atomic(
+            ANALYSIS_CURRENT,
+            analysis,
+        )
+
         log("")
         log(
             f"BATCH {batch_number} SUCCESS"
         )
 
         log(
-            f"Mode: "
+            f"Analysis mode: "
             f"{result.get('mode')}"
         )
 
@@ -2025,26 +2659,20 @@ def main() -> int:
             f"{len(result.get('correctionAttempts', []))}"
         )
 
-        # ----------------------------------------------------
-        # Only now write to disk
-        # ----------------------------------------------------
-
-        save_json_atomic(
-            ANALYSIS_CURRENT,
-            analysis,
-        )
-
         log(
-            f"Written: {ANALYSIS_CURRENT}"
+            f"Written: "
+            f"{ANALYSIS_CURRENT}"
         )
 
     # --------------------------------------------------------
-    # Summary
+    # Final summary
     # --------------------------------------------------------
 
     log("")
     log("=" * 70)
-    log("ANALYSIS COMPLETE")
+    log(
+        "ANALYSIS COMPLETE"
+    )
     log("=" * 70)
 
     log(
@@ -2063,7 +2691,8 @@ def main() -> int:
     )
 
     log(
-        f"Output: {ANALYSIS_CURRENT}"
+        f"Output: "
+        f"{ANALYSIS_CURRENT}"
     )
 
     return 0
