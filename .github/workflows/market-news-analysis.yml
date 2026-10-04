@@ -6,20 +6,19 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: market-news-analysis
+  cancel-in-progress: false
+
 jobs:
   analyze-market-news:
-    name: Analyze 1 Newest Market News Article
+    name: Analyze Market News
     runs-on: ubuntu-latest
-
-    concurrency:
-      group: market-news-ai-analysis
-      cancel-in-progress: false
 
     steps:
       # ==========================================================
       # CHECKOUT
       # ==========================================================
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -28,129 +27,49 @@ jobs:
       # ==========================================================
       # PYTHON
       # ==========================================================
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # ==========================================================
-      # VERIFY INPUTS
+      # RUN ANALYZER
+      #
+      # The Python script intentionally stops at the first error.
+      # Successful articles are already saved individually.
       # ==========================================================
-
-      - name: Verify production inputs
-        run: |
-          echo "Repository root:"
-          pwd
-
-          echo ""
-          echo "Checking scripts:"
-          ls -la scripts
-
-          echo ""
-          echo "Checking market news:"
-          ls -la data/market_news
-
-          echo ""
-          echo "Required files:"
-          test -f "scripts/analyze_market_news.py"
-          test -f "data/market_news/current.json"
-
-          echo ""
-          echo "All required files found."
-
-      # ==========================================================
-      # GEMINI ANALYSIS
-      # ==========================================================
-
-      - name: Analyze newest 1 article
+      - name: Analyze market news
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: gemini-3.5-flash-lite
-          GEMINI_TIMEOUT_SECONDS: "180"
-          GEMINI_MAX_OUTPUT_TOKENS: "8192"
+          MARKET_NEWS_MODEL: gemini-3.8-flash
         run: |
           python -u scripts/analyze_market_news.py
 
       # ==========================================================
-      # SHOW RESULT
+      # COMMIT PARTIAL SUCCESS
+      #
+      # IMPORTANT:
+      # This MUST run even when the analyzer fails.
+      #
+      # Example:
+      #   Article 1-12 = successful and saved
+      #   Article 13   = HTTP 429
+      #
+      # The job becomes failed, but this step still commits
+      # Articles 1-12.
       # ==========================================================
-
-      - name: Show analysis result
+      - name: Commit successful analyses
         if: always()
+        shell: bash
         run: |
-          echo "=========================================="
-          echo "ANALYSIS RESULT"
-          echo "=========================================="
-
-          if [ -f "data/market_news/analysis/current.json" ]; then
-            ls -lh "data/market_news/analysis/current.json"
-
-            echo ""
-            echo "Latest analysis summary:"
-
-            python - <<'PY'
-          import json
-
-          path = "data/market_news/analysis/current.json"
-
-          with open(path, "r", encoding="utf-8") as f:
-              data = json.load(f)
-
-          print("Model:", data.get("configuration", {}).get("model"))
-          print("Generated:", data.get("generatedAt"))
-
-          source = data.get("source", {})
-          print("Source article count:", source.get("articleCount"))
-
-          batch = data.get("batch", {})
-          print("Batch number:", batch.get("batchNumber"))
-          print("Articles analyzed:", batch.get("articleCount"))
-
-          request = data.get("request", {})
-          print("Attempts used:", request.get("attemptsUsed"))
-          print("Response seconds:", request.get("responseSeconds"))
-
-          validation = data.get("validation", {})
-          print("Validation:", validation.get("passed"))
-
-          print("")
-          print("Article IDs:")
-
-          for article_id in batch.get("articleIds", []):
-              print("-", article_id)
-
-          print("")
-          print("Retry history:")
-
-          for attempt in request.get("retryHistory", []):
-              print("-", attempt)
-          PY
-          else
-            echo "No analysis/current.json exists."
-          fi
-
-      # ==========================================================
-      # COMMIT SUCCESSFUL ANALYSIS
-      # ==========================================================
-
-      - name: Commit successful analysis
-        if: success()
-        run: |
-          if [ ! -f "data/market_news/analysis/current.json" ]; then
-            echo "No analysis file to commit."
-            exit 0
-          fi
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add "data/market_news/analysis/current.json"
+          git add data/market_news/analysis/
 
           if git diff --cached --quiet; then
-            echo "No changes to commit."
-            exit 0
+            echo "No analysis changes to commit."
+          else
+            git commit -m "Update market news AI analysis"
+            git push
           fi
-
-          git commit -m "Analyze 1 market news article"
-          git push
