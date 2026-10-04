@@ -1,55 +1,24 @@
 #!/usr/bin/env python3
 
 """
-VGrat FMS - GEMINI ONE-ARTICLE DIAGNOSTIC
-=========================================
+VGrat FMS - MARKET NEWS AI ANALYZER
+===================================
 
-PURPOSE
-=======
-
-This is a temporary diagnostic script.
-
-It selects exactly ONE newest article from:
-
-    data/market_news/current.json
-
-and sends exactly ONE Gemini request.
-
-It does NOT:
-
-- modify current.json
-- modify Research Funds.xlsx
-- create analysis/current.json
-- create analysis history
-- commit anything
-- process multiple articles
-- retry the request
-
-The purpose is to determine whether the Gemini API/model itself
-can successfully process a minimal request.
-
-SUCCESS
-=======
-
-If Gemini succeeds, the script prints:
-
-- HTTP status
-- response time
-- model
-- article ID
-- parsed JSON response
-
-FAILURE
-=======
-
-If Gemini returns 503, 429, 404, 400, etc., the script prints
-the exact API response and exits with code 1.
-
-No files are written by this script.
+First production-data batch test:
+- Reads data/market_news/current.json as READ-ONLY
+- Reads Research Funds.xlsx as READ-ONLY
+- Selects newest 5 pending articles
+- Sends all 5 articles in ONE Gemini request
+- Validates exactly 5 analysis results
+- Writes only after the entire batch succeeds
+- Creates data/market_news/analysis/current.json if needed
+- Stores every successful prompt/request/response
+- No retries in this first batch test
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
@@ -57,63 +26,52 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
-import requests
+try:
+    from openpyxl import load_workbook
+except ImportError:
+    print("ERROR: openpyxl is required.")
+    sys.exit(1)
 
 
-# ============================================================================
+# ============================================================
 # PATHS
-# ============================================================================
+# ============================================================
 
 ROOT = Path(__file__).resolve().parent.parent
 
-CURRENT_JSON = (
-    ROOT
-    / "data"
-    / "market_news"
-    / "current.json"
-)
+CURRENT_JSON = ROOT / "data" / "market_news" / "current.json"
+RESEARCH_FUNDS = ROOT / "Research Funds.xlsx"
+
+ANALYSIS_DIR = ROOT / "data" / "market_news" / "analysis"
+ANALYSIS_CURRENT = ANALYSIS_DIR / "current.json"
 
 
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
+# ============================================================
+# TEST CONFIGURATION
+# ============================================================
 
-# Keep the current model for the diagnostic.
-GEMINI_MODEL = os.getenv(
-    "GEMINI_MODEL",
-    "gemini-3.5-flash",
-).strip()
+BATCH_SIZE = 5
+MAX_BATCHES = 1
+PROCESS_NEWEST_FIRST = True
 
-GEMINI_API_KEY = os.getenv(
-    "GEMINI_API_KEY",
-    "",
-).strip()
-
-GEMINI_TIMEOUT_SECONDS = int(
-    os.getenv(
-        "GEMINI_TIMEOUT_SECONDS",
-        "120",
-    )
-)
+DEFAULT_MODEL = "gemini-3.8-flash"
+DEFAULT_TIMEOUT = 180
+DEFAULT_MAX_OUTPUT_TOKENS = 16384
 
 
-# ============================================================================
+# ============================================================
 # LOGGING
-# ============================================================================
+# ============================================================
 
-SCRIPT_START = time.monotonic()
+START_TIME = time.monotonic()
 
 
 def log(message: str = "") -> None:
-    elapsed = (
-        time.monotonic()
-        - SCRIPT_START
-    )
-
-    timestamp = datetime.now().strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+    elapsed = time.monotonic() - START_TIME
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     print(
         f"[{timestamp}] [+{elapsed:.2f}s] {message}",
@@ -121,67 +79,45 @@ def log(message: str = "") -> None:
     )
 
 
-# ============================================================================
+# ============================================================
 # HELPERS
-# ============================================================================
+# ============================================================
 
-def first_nonempty(
-    obj: dict[str, Any],
-    keys: list[str],
-    default: Any = "",
-) -> Any:
+def now_utc() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
+
+def canonical_json(value: Any) -> str:
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def make_hash(value: Any) -> str:
+    return hashlib.sha256(
+        canonical_json(value).encode("utf-8")
+    ).hexdigest()
+
+
+def first_value(obj: dict[str, Any], keys: list[str]) -> Any:
     for key in keys:
         value = obj.get(key)
 
         if value is not None and value != "":
             return value
 
-    return default
+    return None
 
 
-def extract_articles(
-    payload: Any,
-) -> list[dict[str, Any]]:
+# ============================================================
+# ARTICLE NORMALIZATION
+# ============================================================
 
-    if isinstance(payload, list):
-        return [
-            item
-            for item in payload
-            if isinstance(item, dict)
-        ]
-
-    if not isinstance(payload, dict):
-        raise ValueError(
-            "current.json must contain an object or array."
-        )
-
-    for key in (
-        "articles",
-        "news",
-        "items",
-        "data",
-        "results",
-    ):
-        value = payload.get(key)
-
-        if isinstance(value, list):
-            return [
-                item
-                for item in value
-                if isinstance(item, dict)
-            ]
-
-    raise ValueError(
-        "Could not find an article list in current.json."
-    )
-
-
-def make_article_id(
-    article: dict[str, Any],
-) -> str:
-
-    existing_id = first_nonempty(
+def article_id(article: dict[str, Any]) -> str:
+    existing = first_value(
         article,
         [
             "id",
@@ -190,886 +126,1120 @@ def make_article_id(
             "newsId",
             "news_id",
         ],
-        "",
     )
 
-    if existing_id:
-        return str(existing_id)
+    if existing is not None:
+        return str(existing)
 
-    url = first_nonempty(
+    url = first_value(
         article,
         [
             "url",
             "link",
             "articleUrl",
-            "article_url",
         ],
-        "",
     )
 
     if url:
-        import hashlib
-
         return hashlib.sha256(
             str(url).encode("utf-8")
         ).hexdigest()
 
-    canonical = json.dumps(
-        article,
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
+    return make_hash(article)
+
+
+def normalize_article(article: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "articleId": article_id(article),
+        "title": first_value(
+            article,
+            ["title", "headline", "name"],
+        ),
+        "description": first_value(
+            article,
+            ["description", "summary", "snippet", "text"],
+        ),
+        "url": first_value(
+            article,
+            ["url", "link", "articleUrl"],
+        ),
+        "published": first_value(
+            article,
+            [
+                "published",
+                "publishedAt",
+                "published_at",
+                "date",
+                "datetime",
+                "timestamp",
+            ],
+        ),
+        "source": first_value(
+            article,
+            ["source", "publisher", "site"],
+        ),
+    }
+
+
+# ============================================================
+# LOAD CURRENT NEWS
+# ============================================================
+
+def find_article_list(data: Any) -> list[dict[str, Any]]:
+    if isinstance(data, list):
+        return [
+            x for x in data
+            if isinstance(x, dict)
+        ]
+
+    if not isinstance(data, dict):
+        return []
+
+    for key in [
+        "articles",
+        "news",
+        "items",
+        "data",
+        "results",
+    ]:
+        value = data.get(key)
+
+        if isinstance(value, list):
+            return [
+                x for x in value
+                if isinstance(x, dict)
+            ]
+
+    return []
+
+
+def load_current_articles() -> list[dict[str, Any]]:
+    log("=" * 72)
+    log("LOADING PRODUCTION CURRENT NEWS")
+    log("=" * 72)
+
+    if not CURRENT_JSON.exists():
+        raise FileNotFoundError(
+            f"Missing production input: {CURRENT_JSON}"
+        )
+
+    log(f"Input: {CURRENT_JSON}")
+
+    with CURRENT_JSON.open(
+        "r",
+        encoding="utf-8",
+    ) as f:
+        data = json.load(f)
+
+    raw_articles = find_article_list(data)
+
+    articles = [
+        normalize_article(article)
+        for article in raw_articles
+    ]
+
+    log(f"Articles discovered: {len(articles)}")
+
+    return articles
+
+
+# ============================================================
+# DATE SORTING
+# ============================================================
+
+def sort_key(article: dict[str, Any]) -> str:
+    value = article.get("published")
+
+    if value is None:
+        return ""
+
+    return str(value)
+
+
+# ============================================================
+# LOAD RESEARCH FUNDS
+# ============================================================
+
+def load_research_context() -> dict[str, Any]:
+    """
+    Research Funds.xlsx is treated as READ-ONLY.
+
+    It is already post-research. No AI/web research is performed here.
+    """
+
+    log("=" * 72)
+    log("LOADING RESEARCH FUNDS CONTEXT")
+    log("=" * 72)
+
+    if not RESEARCH_FUNDS.exists():
+        raise FileNotFoundError(
+            f"Missing production input: {RESEARCH_FUNDS}"
+        )
+
+    log(f"Input: {RESEARCH_FUNDS}")
+
+    workbook = load_workbook(
+        RESEARCH_FUNDS,
+        read_only=True,
+        data_only=True,
     )
 
-    import hashlib
-
-    return hashlib.sha256(
-        canonical.encode("utf-8")
-    ).hexdigest()
-
-
-def normalise_article(
-    article: dict[str, Any],
-) -> dict[str, Any]:
-
-    return {
-        "articleId": make_article_id(article),
-
-        "title": str(
-            first_nonempty(
-                article,
-                [
-                    "title",
-                    "headline",
-                    "name",
-                ],
-                "",
-            )
-        ),
-
-        "summary": str(
-            first_nonempty(
-                article,
-                [
-                    "summary",
-                    "description",
-                    "dek",
-                    "excerpt",
-                ],
-                "",
-            )
-        ),
-
-        "content": str(
-            first_nonempty(
-                article,
-                [
-                    "content",
-                    "body",
-                    "text",
-                    "article",
-                ],
-                "",
-            )
-        ),
-
-        "url": str(
-            first_nonempty(
-                article,
-                [
-                    "url",
-                    "link",
-                    "articleUrl",
-                    "article_url",
-                ],
-                "",
-            )
-        ),
-
-        "publishedAt": str(
-            first_nonempty(
-                article,
-                [
-                    "publishedAt",
-                    "published_at",
-                    "published",
-                    "pubDate",
-                    "pub_date",
-                    "date",
-                    "timestamp",
-                ],
-                "",
-            )
-        ),
-
-        "source": str(
-            first_nonempty(
-                article,
-                [
-                    "source",
-                    "publisher",
-                    "provider",
-                ],
-                "",
-            )
-        ),
+    context: dict[str, Any] = {
+        "fundResearch": [],
+        "geographyMaster": [],
+        "sectorMaster": [],
     }
 
+    try:
+        # ----------------------------------------------------
+        # Fund Research
+        # ----------------------------------------------------
 
-# ============================================================================
-# GEMINI SCHEMA
-# ============================================================================
+        if "Fund Research" in workbook.sheetnames:
+            ws = workbook["Fund Research"]
 
-def build_response_schema() -> dict[str, Any]:
+            rows = list(
+                ws.iter_rows(
+                    values_only=True
+                )
+            )
 
-    return {
-        "type": "OBJECT",
-        "properties": {
-            "articleId": {
-                "type": "STRING",
-            },
-            "relevant": {
-                "type": "BOOLEAN",
-            },
-            "category": {
-                "type": "STRING",
-                "enum": [
-                    "MARKET",
-                    "ECONOMIC",
-                    "TECHNOLOGY",
-                    "GEOPOLITICAL",
-                    "REJECT",
-                ],
-            },
-            "sentiment": {
-                "type": "STRING",
-                "enum": [
-                    "positive",
-                    "negative",
-                    "neutral",
-                    "mixed",
-                ],
-            },
-            "importance": {
-                "type": "STRING",
-                "enum": [
-                    "high",
-                    "medium",
-                    "low",
-                ],
-            },
-            "reasoning": {
-                "type": "STRING",
-            },
-        },
-        "required": [
-            "articleId",
-            "relevant",
-            "category",
-            "sentiment",
-            "importance",
-            "reasoning",
-        ],
-    }
+            if rows:
+                headers = [
+                    str(x).strip()
+                    if x is not None
+                    else ""
+                    for x in rows[0]
+                ]
+
+                for row in rows[1:]:
+                    item = {}
+
+                    for index, header in enumerate(headers):
+                        if not header:
+                            continue
+
+                        value = (
+                            row[index]
+                            if index < len(row)
+                            else None
+                        )
+
+                        if value is not None:
+                            item[header] = value
+
+                    if item:
+                        context["fundResearch"].append(item)
+
+        # ----------------------------------------------------
+        # Geography master = worksheet index 1
+        # ----------------------------------------------------
+
+        if len(workbook.worksheets) > 1:
+            ws = workbook.worksheets[1]
+
+            for row in ws.iter_rows(values_only=True):
+                values = [
+                    value
+                    for value in row
+                    if value is not None
+                    and str(value).strip()
+                ]
+
+                if values:
+                    context["geographyMaster"].append(
+                        values
+                    )
+
+        # ----------------------------------------------------
+        # Sector master = worksheet index 2
+        # ----------------------------------------------------
+
+        if len(workbook.worksheets) > 2:
+            ws = workbook.worksheets[2]
+
+            for row in ws.iter_rows(values_only=True):
+                values = [
+                    value
+                    for value in row
+                    if value is not None
+                    and str(value).strip()
+                ]
+
+                if values:
+                    context["sectorMaster"].append(
+                        values
+                    )
+
+    finally:
+        workbook.close()
+
+    log(
+        "Fund Research rows: "
+        f"{len(context['fundResearch'])}"
+    )
+
+    log(
+        "Geography master rows: "
+        f"{len(context['geographyMaster'])}"
+    )
+
+    log(
+        "Sector master rows: "
+        f"{len(context['sectorMaster'])}"
+    )
+
+    return context
 
 
-# ============================================================================
+# ============================================================
+# LOAD EXISTING ANALYSIS
+# ============================================================
+
+def load_existing_analysis() -> dict[str, Any]:
+    if not ANALYSIS_CURRENT.exists():
+        return {
+            "version": 1,
+            "createdAt": now_utc(),
+            "updatedAt": now_utc(),
+            "totalSuccessfulBatches": 0,
+            "totalSuccessfulArticles": 0,
+            "batches": [],
+        }
+
+    with ANALYSIS_CURRENT.open(
+        "r",
+        encoding="utf-8",
+    ) as f:
+        data = json.load(f)
+
+    if not isinstance(data, dict):
+        raise ValueError(
+            "analysis/current.json must contain a JSON object."
+        )
+
+    data.setdefault("version", 1)
+    data.setdefault("createdAt", now_utc())
+    data.setdefault("updatedAt", now_utc())
+    data.setdefault("totalSuccessfulBatches", 0)
+    data.setdefault("totalSuccessfulArticles", 0)
+    data.setdefault("batches", [])
+
+    return data
+
+
+def completed_article_ids(
+    analysis: dict[str, Any],
+) -> set[str]:
+
+    completed: set[str] = set()
+
+    for batch in analysis.get("batches", []):
+        if not isinstance(batch, dict):
+            continue
+
+        for value in batch.get("articleIds", []):
+            completed.add(str(value))
+
+        for item in batch.get("analyses", []):
+            if not isinstance(item, dict):
+                continue
+
+            value = item.get("articleId")
+
+            if value is not None:
+                completed.add(str(value))
+
+    return completed
+
+
+# ============================================================
 # PROMPT
-# ============================================================================
+# ============================================================
 
 def build_prompt(
-    article: dict[str, Any],
+    articles: list[dict[str, Any]],
+    research_context: dict[str, Any],
 ) -> str:
 
-    article_json = json.dumps(
-        article,
+    geography_master = research_context.get(
+        "geographyMaster",
+        [],
+    )
+
+    sector_master = research_context.get(
+        "sectorMaster",
+        [],
+    )
+
+    article_payload = json.dumps(
+        articles,
+        ensure_ascii=False,
+        indent=2,
+    )
+
+    geography_payload = json.dumps(
+        geography_master,
+        ensure_ascii=False,
+        indent=2,
+    )
+
+    sector_payload = json.dumps(
+        sector_master,
         ensure_ascii=False,
         indent=2,
     )
 
     return f"""
-You are a financial market-news classifier.
+You are the market-news analysis engine for VGrat FMS.
 
-Analyse the ONE article below.
+Analyze every supplied article independently.
 
-Return exactly ONE JSON object.
+IMPORTANT:
+- Return EXACTLY ONE analysis object for EVERY supplied article.
+- Do not omit any article.
+- Preserve every articleId exactly.
+- Do not invent article IDs.
+- Return valid JSON only.
+- Do not return markdown.
+- Do not add commentary outside the JSON.
+- The result must be a JSON array.
 
-Do not return markdown.
-Do not return explanations outside JSON.
-Do not invent information.
+For each article return:
 
-Classification:
+{{
+  "articleId": "exact supplied articleId",
+  "relevant": true,
+  "category": "MARKET | ECONOMIC | TECHNOLOGY | GEOPOLITICAL | REJECT",
+  "sentiment": "positive | neutral | negative | mixed",
+  "importance": "low | medium | high | critical",
+  "assetClasses": [],
+  "geographies": [],
+  "sectors": [],
+  "investorImpact": "",
+  "reasoning": "",
+  "fundMonitoringRelevant": true
+}}
 
-MARKET:
-Financial markets, securities, companies, stocks, bonds,
-commodities, currencies, interest rates, valuations or
-investment activity.
+Rules:
 
-ECONOMIC:
-Inflation, employment, GDP, central banks, monetary policy,
-fiscal policy, economic indicators, consumer conditions,
-trade or other macroeconomic developments.
+1. category must be one of:
+   MARKET
+   ECONOMIC
+   TECHNOLOGY
+   GEOPOLITICAL
+   REJECT
 
-TECHNOLOGY:
-Technology companies, AI, semiconductors, data centres,
-cloud, software, cybersecurity or technology developments
-with meaningful investment relevance.
+2. assetClasses should identify affected investment asset classes.
 
-GEOPOLITICAL:
-Wars, conflicts, sanctions, elections, international
-relations, tariffs, trade restrictions or geopolitical
-developments affecting markets or economies.
+3. geographies should use the supplied research geography master where appropriate.
 
-REJECT:
-Not materially relevant to financial markets, investment,
-economics, technology investment or geopolitics.
+4. sectors should use the supplied research sector master where appropriate.
 
-Sentiment must be:
-positive
-negative
-neutral
-mixed
+5. relevant means materially useful for investment/fund monitoring.
 
-Importance must be:
-high
-medium
-low
+6. REJECT should be used when the article is not meaningfully relevant
+   to investment, economic, market, technology, or geopolitical monitoring.
 
-Article:
+7. investorImpact should explain the practical investment implication,
+   not merely repeat the headline.
 
-{article_json}
+8. reasoning should briefly explain why the article received its
+   classification.
+
+9. fundMonitoringRelevant should indicate whether this article could
+   reasonably matter when monitoring investment funds.
+
+RESEARCH GEOGRAPHY MASTER:
+{geography_payload}
+
+RESEARCH SECTOR MASTER:
+{sector_payload}
+
+ARTICLES:
+{article_payload}
 """.strip()
 
 
-# ============================================================================
+# ============================================================
 # GEMINI REQUEST
-# ============================================================================
+# ============================================================
 
-def send_gemini_request(
+def call_gemini(
     prompt: str,
-) -> tuple[dict[str, Any], float]:
-
-    if not GEMINI_API_KEY:
-        raise RuntimeError(
-            "GEMINI_API_KEY is not set."
-        )
+    model: str,
+    api_key: str,
+    timeout: int,
+    max_output_tokens: int,
+) -> tuple[int, float, str]:
 
     endpoint = (
-        "https://generativelanguage.googleapis.com/"
-        f"v1beta/models/{GEMINI_MODEL}:generateContent"
+        "https://generativelanguage.googleapis.com"
+        f"/v1beta/models/{model}:generateContent"
+        f"?key={api_key}"
     )
 
-    params = {
-        "key": GEMINI_API_KEY,
-    }
-
-    request_body = {
+    body = {
         "contents": [
             {
                 "role": "user",
                 "parts": [
                     {
-                        "text": prompt,
+                        "text": prompt
                     }
                 ],
             }
         ],
         "generationConfig": {
-            "maxOutputTokens": 2048,
+            "temperature": 0,
+            "maxOutputTokens": max_output_tokens,
             "responseMimeType": "application/json",
-            "responseSchema": build_response_schema(),
         },
     }
 
-    log(
-        "Sending ONE Gemini request..."
-    )
+    payload = json.dumps(
+        body,
+        ensure_ascii=False,
+    ).encode("utf-8")
 
-    log(
-        f"Endpoint model: {GEMINI_MODEL}"
+    request = Request(
+        endpoint,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+        },
+        method="POST",
     )
 
     started = time.monotonic()
 
     try:
+        with urlopen(
+            request,
+            timeout=timeout,
+        ) as response:
 
-        response = requests.post(
-            endpoint,
-            params=params,
-            json=request_body,
-            timeout=GEMINI_TIMEOUT_SECONDS,
+            response_body = response.read().decode(
+                "utf-8",
+                errors="replace",
+            )
+
+            elapsed = time.monotonic() - started
+
+            return (
+                response.status,
+                elapsed,
+                response_body,
+            )
+
+    except HTTPError as exc:
+
+        elapsed = time.monotonic() - started
+
+        try:
+            response_body = exc.read().decode(
+                "utf-8",
+                errors="replace",
+            )
+        except Exception:
+            response_body = str(exc)
+
+        return (
+            exc.code,
+            elapsed,
+            response_body,
         )
 
-    except requests.RequestException as exc:
+    except URLError as exc:
 
-        elapsed = (
-            time.monotonic()
-            - started
+        elapsed = time.monotonic() - started
+
+        return (
+            0,
+            elapsed,
+            f"URL ERROR: {exc}",
         )
 
-        log(
-            f"Network error after {elapsed:.2f}s."
+    except Exception as exc:
+
+        elapsed = time.monotonic() - started
+
+        return (
+            0,
+            elapsed,
+            f"REQUEST ERROR: {type(exc).__name__}: {exc}",
         )
 
-        raise RuntimeError(
-            f"Gemini network request failed: {exc}"
-        ) from exc
 
-    elapsed = (
-        time.monotonic()
-        - started
+# ============================================================
+# PARSE GEMINI RESPONSE
+# ============================================================
+
+def extract_text(response_data: dict[str, Any]) -> str:
+
+    candidates = response_data.get(
+        "candidates",
+        [],
     )
 
-    log(
-        f"Gemini HTTP status: "
-        f"{response.status_code}"
-    )
-
-    log(
-        f"Gemini response time: "
-        f"{elapsed:.2f}s"
-    )
-
-    if not response.ok:
-
-        log()
-        log(
-            "GEMINI REQUEST FAILED"
-        )
-
-        log(
-            f"HTTP {response.status_code}"
-        )
-
-        log(
-            "Response:"
-        )
-
-        log(response.text)
-
-        raise RuntimeError(
-            f"Gemini API returned HTTP "
-            f"{response.status_code}."
-        )
-
-    try:
-        response_json = response.json()
-
-    except ValueError as exc:
-
-        log(
-            "Gemini returned non-JSON HTTP response."
-        )
-
-        log(response.text)
-
-        raise RuntimeError(
-            "Gemini returned invalid HTTP JSON."
-        ) from exc
-
-    return response_json, elapsed
-
-
-# ============================================================================
-# RESPONSE EXTRACTION
-# ============================================================================
-
-def extract_text(
-    response_json: dict[str, Any],
-) -> str:
-
-    candidates = response_json.get(
-        "candidates"
-    )
-
-    if not isinstance(
-        candidates,
-        list,
-    ) or not candidates:
-
+    if not candidates:
         raise ValueError(
-            "Gemini response has no candidates."
+            "Gemini response contains no candidates."
         )
 
     candidate = candidates[0]
 
-    if not isinstance(
-        candidate,
-        dict,
-    ):
-
-        raise ValueError(
-            "Gemini candidate is not an object."
-        )
-
     content = candidate.get(
-        "content"
+        "content",
+        {},
     )
-
-    if not isinstance(
-        content,
-        dict,
-    ):
-
-        raise ValueError(
-            "Gemini candidate has no content."
-        )
 
     parts = content.get(
-        "parts"
+        "parts",
+        [],
     )
 
-    if not isinstance(
-        parts,
-        list,
-    ):
-
-        raise ValueError(
-            "Gemini content has no parts."
-        )
-
-    text_parts = []
+    texts = []
 
     for part in parts:
+        if isinstance(part, dict):
+            text_value = part.get("text")
 
-        if not isinstance(
-            part,
-            dict,
-        ):
-            continue
+            if text_value:
+                texts.append(str(text_value))
 
-        text_value = part.get(
-            "text"
-        )
-
-        if isinstance(
-            text_value,
-            str,
-        ):
-            text_parts.append(
-                text_value
-            )
-
-    if not text_parts:
-
+    if not texts:
         raise ValueError(
-            "Gemini returned no text."
+            "Gemini response contains no text output."
         )
 
-    return "".join(
-        text_parts
-    ).strip()
+    return "".join(texts)
 
 
-# ============================================================================
-# MAIN
-# ============================================================================
-
-def main() -> None:
-
-    log("=" * 72)
-    log(
-        "VGrat FMS - GEMINI ONE-ARTICLE DIAGNOSTIC"
-    )
-    log("=" * 72)
-
-    log(
-        "TEST: exactly ONE article."
-    )
-
-    log(
-        f"Gemini model: {GEMINI_MODEL}"
-    )
-
-    log(
-        f"Input: {CURRENT_JSON}"
-    )
-
-    log(
-        "Output: NONE - diagnostic only."
-    )
-
-    log()
-
-    # ========================================================================
-    # CHECK API KEY
-    # ========================================================================
-
-    if not GEMINI_API_KEY:
-
-        log(
-            "ERROR: GEMINI_API_KEY is not configured."
-        )
-
-        sys.exit(1)
-
-    # ========================================================================
-    # LOAD CURRENT.JSON
-    # ========================================================================
-
-    if not CURRENT_JSON.exists():
-
-        log(
-            f"ERROR: current.json not found: "
-            f"{CURRENT_JSON}"
-        )
-
-        sys.exit(1)
-
-    log(
-        "Loading production current.json..."
-    )
+def parse_analysis(
+    response_body: str,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
 
     try:
-
-        with CURRENT_JSON.open(
-            "r",
-            encoding="utf-8",
-        ) as f:
-
-            payload = json.load(f)
-
-    except Exception as exc:
-
-        log(
-            f"ERROR loading current.json: {exc}"
+        response_data = json.loads(response_body)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            f"Gemini HTTP response is not valid JSON: {exc}"
         )
 
-        sys.exit(1)
-
-    # ========================================================================
-    # EXTRACT ARTICLES
-    # ========================================================================
+    generated_text = extract_text(response_data)
 
     try:
-
-        raw_articles = extract_articles(
-            payload
+        parsed = json.loads(generated_text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            "Gemini generated text is not valid JSON: "
+            f"{exc}\nGenerated text:\n{generated_text}"
         )
 
-    except Exception as exc:
+    if isinstance(parsed, list):
+        analyses = parsed
 
-        log(
-            f"ERROR extracting articles: {exc}"
+    elif isinstance(parsed, dict):
+        if isinstance(parsed.get("analyses"), list):
+            analyses = parsed["analyses"]
+        elif isinstance(parsed.get("results"), list):
+            analyses = parsed["results"]
+        else:
+            analyses = [parsed]
+
+    else:
+        raise ValueError(
+            "Gemini output must be a JSON array or object."
         )
 
-        sys.exit(1)
-
-    log(
-        f"Articles found: {len(raw_articles)}"
-    )
-
-    if not raw_articles:
-
-        log(
-            "ERROR: No articles found."
+    if not all(
+        isinstance(item, dict)
+        for item in analyses
+    ):
+        raise ValueError(
+            "Every analysis result must be a JSON object."
         )
 
-        sys.exit(1)
+    return response_data, analyses
 
-    # ========================================================================
-    # NORMALISE ARTICLES
-    # ========================================================================
 
-    articles = [
-        normalise_article(article)
-        for article in raw_articles
+# ============================================================
+# VALIDATION
+# ============================================================
+
+def validate_results(
+    articles: list[dict[str, Any]],
+    analyses: list[dict[str, Any]],
+) -> None:
+
+    expected_ids = [
+        str(article["articleId"])
+        for article in articles
     ]
 
-    # ========================================================================
-    # NEWEST FIRST
-    #
-    # current.json is already produced by the collector in current order.
-    # For this diagnostic, use the FIRST article exactly as it appears.
-    #
-    # This avoids introducing any additional date parsing variable into
-    # the Gemini availability test.
-    # ========================================================================
+    actual_ids = [
+        str(item.get("articleId"))
+        for item in analyses
+    ]
 
-    article = articles[0]
+    if len(analyses) != len(articles):
+        raise ValueError(
+            "Result count mismatch: "
+            f"expected {len(articles)}, "
+            f"received {len(analyses)}."
+        )
 
-    # ========================================================================
-    # DISPLAY ARTICLE
-    # ========================================================================
+    if len(set(actual_ids)) != len(actual_ids):
+        raise ValueError(
+            "Duplicate articleId detected in Gemini response."
+        )
 
-    log()
+    if set(actual_ids) != set(expected_ids):
+        missing = sorted(
+            set(expected_ids) - set(actual_ids)
+        )
 
-    log(
-        "Selected ONE article:"
+        unexpected = sorted(
+            set(actual_ids) - set(expected_ids)
+        )
+
+        raise ValueError(
+            "Article ID validation failed.\n"
+            f"Missing: {missing}\n"
+            f"Unexpected: {unexpected}"
+        )
+
+    required_fields = {
+        "articleId",
+        "relevant",
+        "category",
+        "sentiment",
+        "importance",
+        "assetClasses",
+        "geographies",
+        "sectors",
+        "investorImpact",
+        "reasoning",
+        "fundMonitoringRelevant",
+    }
+
+    for index, item in enumerate(analyses, start=1):
+
+        missing_fields = sorted(
+            required_fields - set(item.keys())
+        )
+
+        if missing_fields:
+            raise ValueError(
+                f"Article {index} is missing fields: "
+                f"{missing_fields}"
+            )
+
+        if not isinstance(
+            item["assetClasses"],
+            list,
+        ):
+            raise ValueError(
+                f"Article {index}: assetClasses must be a list."
+            )
+
+        if not isinstance(
+            item["geographies"],
+            list,
+        ):
+            raise ValueError(
+                f"Article {index}: geographies must be a list."
+            )
+
+        if not isinstance(
+            item["sectors"],
+            list,
+        ):
+            raise ValueError(
+                f"Article {index}: sectors must be a list."
+            )
+
+    log("Validation passed.")
+    log(f"Expected article results: {len(expected_ids)}")
+    log(f"Received article results: {len(actual_ids)}")
+
+
+# ============================================================
+# ATOMIC WRITE
+# ============================================================
+
+def atomic_write_json(
+    path: Path,
+    data: dict[str, Any],
+) -> None:
+
+    path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    temporary = path.with_suffix(
+        path.suffix + ".tmp"
+    )
+
+    with temporary.open(
+        "w",
+        encoding="utf-8",
+    ) as f:
+
+        json.dump(
+            data,
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
+
+        f.write("\n")
+
+    temporary.replace(path)
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
+def main() -> int:
+
+    log("=" * 72)
+    log("VGrat FMS - MARKET NEWS AI ANALYZER")
+    log("=" * 72)
+
+    api_key = os.environ.get(
+        "GEMINI_API_KEY"
+    )
+
+    if not api_key:
+        log("ERROR: GEMINI_API_KEY is not set.")
+        return 1
+
+    model = os.environ.get(
+        "GEMINI_MODEL",
+        DEFAULT_MODEL,
+    )
+
+    timeout = int(
+        os.environ.get(
+            "GEMINI_TIMEOUT_SECONDS",
+            str(DEFAULT_TIMEOUT),
+        )
+    )
+
+    max_output_tokens = int(
+        os.environ.get(
+            "GEMINI_MAX_OUTPUT_TOKENS",
+            str(DEFAULT_MAX_OUTPUT_TOKENS),
+        )
+    )
+
+    log(f"Model: {model}")
+    log(f"Batch size: {BATCH_SIZE}")
+    log(f"Maximum batches: {MAX_BATCHES}")
+    log("Processing newest first.")
+    log("No retries.")
+    log("Production current.json: READ-ONLY")
+    log("Research Funds.xlsx: READ-ONLY")
+
+    # --------------------------------------------------------
+    # Load inputs
+    # --------------------------------------------------------
+
+    articles = load_current_articles()
+
+    research_context = load_research_context()
+
+    existing_analysis = load_existing_analysis()
+
+    completed = completed_article_ids(
+        existing_analysis
+    )
+
+    log("=" * 72)
+    log("SELECTING PENDING ARTICLES")
+    log("=" * 72)
+
+    pending = [
+        article
+        for article in articles
+        if str(article["articleId"]) not in completed
+    ]
+
+    pending.sort(
+        key=sort_key,
+        reverse=PROCESS_NEWEST_FIRST,
     )
 
     log(
-        f"Article ID: {article['articleId']}"
+        f"Completed article IDs: {len(completed)}"
     )
 
     log(
-        f"Published: {article['publishedAt']}"
+        f"Pending articles: {len(pending)}"
     )
+
+    if not pending:
+        log("No pending articles.")
+        return 0
+
+    batch = pending[:BATCH_SIZE]
 
     log(
-        f"Source: {article['source']}"
+        f"Selected batch size: {len(batch)}"
     )
 
-    log(
-        f"Title: {article['title']}"
-    )
+    for index, article in enumerate(
+        batch,
+        start=1,
+    ):
 
-    log(
-        f"URL: {article['url']}"
-    )
+        log(
+            f"{index}. "
+            f"{article['articleId']} | "
+            f"{article.get('title')}"
+        )
 
-    log()
+    if len(batch) != BATCH_SIZE:
+        log(
+            "WARNING: Fewer than 5 pending articles are available."
+        )
 
-    # ========================================================================
-    # BUILD PROMPT
-    # ========================================================================
+    # --------------------------------------------------------
+    # Build prompt
+    # --------------------------------------------------------
 
     prompt = build_prompt(
-        article
+        batch,
+        research_context,
     )
 
-    log(
-        "Prompt prepared."
-    )
+    log("=" * 72)
+    log("PROMPT PREPARED")
+    log("=" * 72)
 
     log(
         f"Prompt characters: {len(prompt)}"
     )
 
-    log()
+    # --------------------------------------------------------
+    # ONE Gemini request
+    # --------------------------------------------------------
 
-    # ========================================================================
-    # SEND EXACTLY ONE REQUEST
-    # ========================================================================
+    log("=" * 72)
+    log("SENDING ONE GEMINI REQUEST")
+    log("=" * 72)
+
+    request_started = now_utc()
+
+    status, response_seconds, response_body = call_gemini(
+        prompt=prompt,
+        model=model,
+        api_key=api_key,
+        timeout=timeout,
+        max_output_tokens=max_output_tokens,
+    )
+
+    request_finished = now_utc()
+
+    log(
+        f"Gemini HTTP status: {status}"
+    )
+
+    log(
+        f"Gemini response time: "
+        f"{response_seconds:.2f}s"
+    )
+
+    if status != 200:
+
+        log("=" * 72)
+        log("GEMINI REQUEST FAILED")
+        log("=" * 72)
+
+        log(response_body)
+
+        log("NO FILES WERE WRITTEN.")
+
+        return 1
+
+    # --------------------------------------------------------
+    # Parse
+    # --------------------------------------------------------
+
+    log("=" * 72)
+    log("PARSING GEMINI RESPONSE")
+    log("=" * 72)
 
     try:
 
-        response_json, elapsed = (
-            send_gemini_request(
-                prompt
+        response_data, analyses = parse_analysis(
+            response_body
+        )
+
+        log(
+            f"Parsed analysis results: "
+            f"{len(analyses)}"
+        )
+
+    except Exception as exc:
+
+        log(
+            f"ERROR parsing Gemini response: {exc}"
+        )
+
+        log("NO FILES WERE WRITTEN.")
+
+        return 1
+
+    # --------------------------------------------------------
+    # Validate
+    # --------------------------------------------------------
+
+    log("=" * 72)
+    log("VALIDATING BATCH")
+    log("=" * 72)
+
+    try:
+
+        validate_results(
+            batch,
+            analyses,
+        )
+
+    except Exception as exc:
+
+        log(
+            f"VALIDATION FAILED: {exc}"
+        )
+
+        log("NO FILES WERE WRITTEN.")
+
+        return 1
+
+    # --------------------------------------------------------
+    # Store successful batch
+    # --------------------------------------------------------
+
+    log("=" * 72)
+    log("STORING SUCCESSFUL BATCH")
+    log("=" * 72)
+
+    existing_analysis = load_existing_analysis()
+
+    existing_batches = existing_analysis.get(
+        "batches",
+        [],
+    )
+
+    next_batch_number = (
+        len(existing_batches) + 1
+    )
+
+    batch_record = {
+        "batchNumber": next_batch_number,
+        "storedAt": now_utc(),
+        "model": model,
+
+        "articleIds": [
+            article["articleId"]
+            for article in batch
+        ],
+
+        "request": {
+            "startedAt": request_started,
+            "finishedAt": request_finished,
+            "responseSeconds": round(
+                response_seconds,
+                3,
+            ),
+            "articleCount": len(batch),
+            "promptCharacters": len(prompt),
+            "maxOutputTokens": max_output_tokens,
+            "responseMimeType": "application/json",
+        },
+
+        "validation": {
+            "passed": True,
+            "expectedArticleCount": len(batch),
+            "receivedArticleCount": len(analyses),
+        },
+
+        "prompt": prompt,
+
+        "requestBody": {
+            "generationConfig": {
+                "temperature": 0,
+                "maxOutputTokens": max_output_tokens,
+                "responseMimeType": "application/json",
+            },
+        },
+
+        "parsedResponse": response_data,
+
+        "analyses": analyses,
+
+        "rawGeminiResponse": response_body,
+
+        "inputArticles": batch,
+    }
+
+    existing_batches.append(
+        batch_record
+    )
+
+    existing_analysis["batches"] = existing_batches
+
+    existing_analysis[
+        "totalSuccessfulBatches"
+    ] = len(existing_batches)
+
+    existing_analysis[
+        "totalSuccessfulArticles"
+    ] = sum(
+        len(
+            batch_item.get(
+                "articleIds",
+                [],
             )
         )
+        for batch_item in existing_batches
+        if isinstance(batch_item, dict)
+    )
 
-    except Exception as exc:
+    existing_analysis[
+        "updatedAt"
+    ] = now_utc()
 
-        log()
-        log(
-            "DIAGNOSTIC RESULT: FAILED"
-        )
-
-        log(
-            str(exc)
-        )
-
-        log()
-        log(
-            "No files were modified."
-        )
-
-        sys.exit(1)
-
-    # ========================================================================
-    # EXTRACT TEXT
-    # ========================================================================
-
-    log()
-    log(
-        "Gemini request succeeded."
+    atomic_write_json(
+        ANALYSIS_CURRENT,
+        existing_analysis,
     )
 
     log(
-        "Extracting response..."
+        f"Analysis file written: "
+        f"{ANALYSIS_CURRENT}"
     )
-
-    try:
-
-        text_output = extract_text(
-            response_json
-        )
-
-    except Exception as exc:
-
-        log()
-        log(
-            "DIAGNOSTIC RESULT: HTTP SUCCESS "
-            "BUT RESPONSE PARSING FAILED"
-        )
-
-        log(
-            str(exc)
-        )
-
-        log()
-        log(
-            "Raw Gemini response:"
-        )
-
-        print(
-            json.dumps(
-                response_json,
-                ensure_ascii=False,
-                indent=2,
-            ),
-            flush=True,
-        )
-
-        sys.exit(1)
-
-    # ========================================================================
-    # PARSE JSON
-    # ========================================================================
 
     log(
-        "Parsing structured JSON..."
+        f"Successful batch: "
+        f"{next_batch_number}"
     )
 
-    try:
-
-        parsed = json.loads(
-            text_output
-        )
-
-    except json.JSONDecodeError as exc:
-
-        log()
-        log(
-            "DIAGNOSTIC RESULT: GEMINI WORKED "
-            "BUT RETURNED INVALID JSON"
-        )
-
-        log(
-            str(exc)
-        )
-
-        log()
-        log(
-            "Raw model output:"
-        )
-
-        print(
-            text_output,
-            flush=True,
-        )
-
-        sys.exit(1)
-
-    # ========================================================================
-    # VALIDATE ARTICLE ID
-    # ========================================================================
-
-    if not isinstance(
-        parsed,
-        dict,
-    ):
-
-        log(
-            "DIAGNOSTIC RESULT: INVALID JSON TYPE"
-        )
-
-        log(
-            "Expected one JSON object."
-        )
-
-        log(
-            f"Received: {type(parsed).__name__}"
-        )
-
-        sys.exit(1)
-
-    returned_article_id = str(
-        parsed.get(
-            "articleId",
-            ""
-        )
+    log(
+        f"Successful articles: "
+        f"{len(analyses)}"
     )
 
-    if returned_article_id != article[
-        "articleId"
-    ]:
-
-        log()
-        log(
-            "DIAGNOSTIC RESULT: ARTICLE ID MISMATCH"
-        )
-
-        log(
-            f"Expected: {article['articleId']}"
-        )
-
-        log(
-            f"Received: {returned_article_id}"
-        )
-
-        log()
-        log(
-            "Model response:"
-        )
-
-        print(
-            json.dumps(
-                parsed,
-                ensure_ascii=False,
-                indent=2,
-            ),
-            flush=True,
-        )
-
-        sys.exit(1)
-
-    # ========================================================================
-    # SUCCESS
-    # ========================================================================
-
-    log()
     log("=" * 72)
-    log(
-        "DIAGNOSTIC RESULT: SUCCESS"
-    )
+    log("BATCH TEST SUCCESSFUL")
     log("=" * 72)
 
-    log(
-        f"Model: {GEMINI_MODEL}"
-    )
+    return 0
 
-    log(
-        f"HTTP request time: {elapsed:.2f}s"
-    )
-
-    log(
-        f"Article ID: {article['articleId']}"
-    )
-
-    log(
-        "Gemini returned valid structured JSON."
-    )
-
-    log()
-    log(
-        "MODEL RESPONSE:"
-    )
-
-    print(
-        json.dumps(
-            parsed,
-            ensure_ascii=False,
-            indent=2,
-        ),
-        flush=True,
-    )
-
-    log()
-    log(
-        "No files were modified."
-    )
-
-    log(
-        "ONE-ARTICLE DIAGNOSTIC COMPLETED."
-    )
-
-
-# ============================================================================
-# ENTRY POINT
-# ============================================================================
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
