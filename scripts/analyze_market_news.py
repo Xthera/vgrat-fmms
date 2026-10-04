@@ -4,45 +4,52 @@
 VGrat FMS - MARKET NEWS AI ANALYZER
 ===================================
 
-FIRST REAL-DATA BATCH TEST
+TEST MODE
+=========
 
-This version intentionally processes ONE batch of exactly 5 articles.
+Processes exactly ONE batch of FIVE newest pending market-news articles.
 
-INPUTS - READ ONLY
-------------------
+Production inputs are READ-ONLY:
     data/market_news/current.json
     Research Funds.xlsx
 
-OUTPUT
-------
+Test output:
     data/market_news/analysis/current.json
 
-BEHAVIOUR
----------
-1. Load the real production current.json.
-2. Load Research Funds.xlsx as read-only research context.
-3. Identify articles already successfully stored in analysis/current.json.
-4. Select the newest 5 pending articles.
-5. Send all 5 articles in ONE Gemini request.
-6. Validate that Gemini returned exactly one analysis per article.
-7. Only after complete validation, write the successful batch.
-8. Preserve all previously successful batches.
-9. If the Gemini request fails or validation fails, nothing is written.
-10. Production current.json is never modified.
+IMPORTANT
+=========
 
-Each successful batch stores:
-    - batch number
-    - article IDs
-    - model
-    - prompt
-    - request timestamp
-    - response timestamp
-    - response duration
-    - input article count
-    - output article count
-    - validation status
-    - Gemini response
-    - individual article analyses
+The production market-news files are never modified.
+
+A batch is written to analysis/current.json ONLY when:
+
+1. Gemini request succeeds.
+2. Gemini response contains valid JSON.
+3. Exactly one analysis is returned for every article.
+4. Every returned articleId matches an article in the batch.
+
+Transient Gemini errors such as HTTP 503 are retried with bounded
+exponential backoff:
+
+    Initial request
+        ↓
+    503 / 429 / 500 / 502 / 504
+        ↓
+    wait 10 seconds
+        ↓
+    retry
+        ↓
+    wait 30 seconds
+        ↓
+    retry
+        ↓
+    wait 60 seconds
+        ↓
+    retry
+        ↓
+    success OR fail safely
+
+No partial result is written.
 """
 
 from __future__ import annotations
@@ -52,150 +59,111 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import requests
 from openpyxl import load_workbook
 
 
-# ============================================================
+# ============================================================================
 # PATHS
-# ============================================================
+# ============================================================================
 
 ROOT = Path(__file__).resolve().parent.parent
 
-CURRENT_JSON = (
-    ROOT
-    / "data"
-    / "market_news"
-    / "current.json"
-)
-
+CURRENT_JSON = ROOT / "data" / "market_news" / "current.json"
 RESEARCH_FUNDS = ROOT / "Research Funds.xlsx"
 
-ANALYSIS_DIR = (
-    ROOT
-    / "data"
-    / "market_news"
-    / "analysis"
-)
-
-ANALYSIS_CURRENT = (
-    ANALYSIS_DIR
-    / "current.json"
-)
+ANALYSIS_DIR = ROOT / "data" / "market_news" / "analysis"
+ANALYSIS_CURRENT = ANALYSIS_DIR / "current.json"
 
 
-# ============================================================
+# ============================================================================
 # TEST CONFIGURATION
-# ============================================================
+# ============================================================================
 
-# FIRST TEST IS FIXED TO ONE BATCH OF FIVE.
 BATCH_SIZE = 5
 MAX_BATCHES = 1
-
 PROCESS_NEWEST_FIRST = True
 
 
-# ============================================================
+# ============================================================================
 # GEMINI CONFIGURATION
-# ============================================================
+# ============================================================================
 
-GEMINI_API_KEY = os.getenv(
-    "GEMINI_API_KEY",
-    "",
-).strip()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 
 GEMINI_MODEL = os.getenv(
     "GEMINI_MODEL",
     "gemini-3.8-flash",
 ).strip()
 
-GEMINI_URL = (
-    "https://generativelanguage.googleapis.com/"
-    "v1beta/models/"
-    f"{GEMINI_MODEL}:generateContent"
+GEMINI_TIMEOUT_SECONDS = int(
+    os.getenv("GEMINI_TIMEOUT_SECONDS", "180")
 )
 
-GEMINI_TIMEOUT = int(
-    os.getenv(
-        "GEMINI_TIMEOUT_SECONDS",
-        "180",
-    )
-)
-
-MAX_OUTPUT_TOKENS = int(
-    os.getenv(
-        "GEMINI_MAX_OUTPUT_TOKENS",
-        "16384",
-    )
+GEMINI_MAX_OUTPUT_TOKENS = int(
+    os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "16384")
 )
 
 
-# ============================================================
+# Number of retries AFTER the initial request.
+MAX_RETRIES = int(
+    os.getenv("GEMINI_MAX_RETRIES", "3")
+)
+
+# Retry delays in seconds.
+RETRY_DELAYS = [10, 30, 60]
+
+# HTTP errors which may be temporary.
+RETRYABLE_STATUS_CODES = {
+    429,
+    500,
+    502,
+    503,
+    504,
+}
+
+
+# ============================================================================
 # LOGGING
-# ============================================================
+# ============================================================================
 
-PROGRAM_START = time.perf_counter()
+SCRIPT_START = time.monotonic()
 
 
-def log(message: str) -> None:
-    elapsed = time.perf_counter() - PROGRAM_START
-
-    now = datetime.now().strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+def log(message: str = "") -> None:
+    elapsed = time.monotonic() - SCRIPT_START
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     print(
-        f"[{now}] "
-        f"[+{elapsed:.2f}s] "
-        f"{message}",
+        f"[{timestamp}] [+{elapsed:.2f}s] {message}",
         flush=True,
     )
 
 
-# ============================================================
-# TIME
-# ============================================================
+def fail(message: str) -> None:
+    log(message)
+    sys.exit(1)
+
+
+# ============================================================================
+# GENERAL HELPERS
+# ============================================================================
 
 def utc_now() -> str:
-    return datetime.now(
-        timezone.utc
-    ).isoformat()
-
-
-def singapore_now() -> datetime:
-    return datetime.now(
-        timezone.utc
-    ).astimezone(
-        timezone(
-            timedelta(hours=8)
-        )
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
     )
 
 
-# ============================================================
-# JSON
-# ============================================================
-
-def load_json(path: Path) -> Any:
-    with path.open(
-        "r",
-        encoding="utf-8",
-    ) as f:
-        return json.load(f)
-
-
-def write_json_atomic(
-    path: Path,
-    data: Any,
-) -> None:
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+def atomic_write_json(path: Path, data: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
 
     temp_path = path.with_suffix(
         path.suffix + ".tmp"
@@ -216,90 +184,80 @@ def write_json_atomic(
     temp_path.replace(path)
 
 
-# ============================================================
-# GENERAL HELPERS
-# ============================================================
-
-def text(value: Any) -> str:
-    if value is None:
-        return ""
-
-    if isinstance(value, str):
-        return value.strip()
-
-    return str(value).strip()
+def load_json(path: Path) -> Any:
+    with path.open(
+        "r",
+        encoding="utf-8",
+    ) as f:
+        return json.load(f)
 
 
-def first_value(
-    obj: Dict[str, Any],
-    keys: List[str],
+def first_nonempty(
+    obj: dict[str, Any],
+    keys: list[str],
+    default: Any = "",
 ) -> Any:
     for key in keys:
-        if key in obj:
-            value = obj[key]
+        value = obj.get(key)
 
-            if value is None:
-                continue
+        if value is not None and value != "":
+            return value
 
-            if isinstance(value, str):
-                if value.strip():
-                    return value.strip()
-            else:
-                return value
-
-    return ""
+    return default
 
 
-def sha256_text(value: str) -> str:
-    return hashlib.sha256(
-        value.encode("utf-8")
-    ).hexdigest()
+# ============================================================================
+# ARTICLE NORMALISATION
+# ============================================================================
 
+def extract_articles(payload: Any) -> list[dict[str, Any]]:
+    """
+    Handles common market-news JSON envelopes.
+    """
 
-# ============================================================
-# ARTICLE EXTRACTION
-# ============================================================
-
-def extract_articles(
-    payload: Any,
-) -> List[Dict[str, Any]]:
     if isinstance(payload, list):
         return [
-            x for x in payload
-            if isinstance(x, dict)
+            item
+            for item in payload
+            if isinstance(item, dict)
         ]
 
     if not isinstance(payload, dict):
         raise ValueError(
-            "current.json must contain an object or array."
+            "current.json must contain either an object or array."
         )
 
-    preferred_keys = [
+    for key in (
         "articles",
         "news",
         "items",
         "data",
         "results",
-    ]
-
-    for key in preferred_keys:
+    ):
         value = payload.get(key)
 
         if isinstance(value, list):
             return [
-                x for x in value
-                if isinstance(x, dict)
+                item
+                for item in value
+                if isinstance(item, dict)
             ]
 
     raise ValueError(
-        "Could not find an article array in current.json."
+        "Could not find article list in current.json."
     )
 
 
-def article_id(
-    article: Dict[str, Any],
-) -> str:
-    value = first_value(
+def make_article_id(article: dict[str, Any]) -> str:
+    """
+    Prefer an existing source ID.
+
+    Otherwise hash the article URL.
+
+    As a final fallback, hash the canonical JSON representation.
+    """
+
+    existing_id = first_nonempty(
         article,
         [
             "id",
@@ -308,12 +266,13 @@ def article_id(
             "newsId",
             "news_id",
         ],
+        "",
     )
 
-    if value:
-        return text(value)
+    if existing_id:
+        return str(existing_id)
 
-    url = first_value(
+    url = first_nonempty(
         article,
         [
             "url",
@@ -321,164 +280,177 @@ def article_id(
             "articleUrl",
             "article_url",
         ],
+        "",
     )
 
     if url:
-        return sha256_text(
-            text(url)
-        )[:24]
+        return hashlib.sha256(
+            str(url).encode("utf-8")
+        ).hexdigest()
 
-    # Deterministic fallback.
     canonical = json.dumps(
         article,
         ensure_ascii=False,
         sort_keys=True,
+        separators=(",", ":"),
     )
 
-    return sha256_text(
-        canonical
-    )[:24]
+    return hashlib.sha256(
+        canonical.encode("utf-8")
+    ).hexdigest()
 
 
-def article_title(
-    article: Dict[str, Any],
-) -> str:
-    return text(
-        first_value(
-            article,
-            [
-                "title",
-                "headline",
-                "name",
-            ],
-        )
+def normalise_article(
+    article: dict[str, Any],
+) -> dict[str, Any]:
+
+    article_id = make_article_id(article)
+
+    title = first_nonempty(
+        article,
+        [
+            "title",
+            "headline",
+            "name",
+        ],
+        "",
     )
 
-
-def article_summary(
-    article: Dict[str, Any],
-) -> str:
-    return text(
-        first_value(
-            article,
-            [
-                "summary",
-                "description",
-                "excerpt",
-                "shortDescription",
-            ],
-        )
+    summary = first_nonempty(
+        article,
+        [
+            "summary",
+            "description",
+            "dek",
+            "excerpt",
+        ],
+        "",
     )
 
-
-def article_content(
-    article: Dict[str, Any],
-) -> str:
-    return text(
-        first_value(
-            article,
-            [
-                "content",
-                "body",
-                "text",
-                "articleText",
-                "article_text",
-            ],
-        )
+    content = first_nonempty(
+        article,
+        [
+            "content",
+            "body",
+            "text",
+            "article",
+        ],
+        "",
     )
 
-
-def article_url(
-    article: Dict[str, Any],
-) -> str:
-    return text(
-        first_value(
-            article,
-            [
-                "url",
-                "link",
-                "articleUrl",
-                "article_url",
-            ],
-        )
+    url = first_nonempty(
+        article,
+        [
+            "url",
+            "link",
+            "articleUrl",
+            "article_url",
+        ],
+        "",
     )
 
-
-def article_published(
-    article: Dict[str, Any],
-) -> str:
-    return text(
-        first_value(
-            article,
-            [
-                "publishedAt",
-                "published_at",
-                "publishedDate",
-                "publishDate",
-                "date",
-                "timestamp",
-            ],
-        )
+    published_at = first_nonempty(
+        article,
+        [
+            "publishedAt",
+            "published_at",
+            "published",
+            "pubDate",
+            "pub_date",
+            "date",
+            "timestamp",
+        ],
+        "",
     )
 
-
-def article_source(
-    article: Dict[str, Any],
-) -> str:
-    return text(
-        first_value(
-            article,
-            [
-                "source",
-                "publisher",
-                "provider",
-                "site",
-            ],
-        )
+    source = first_nonempty(
+        article,
+        [
+            "source",
+            "publisher",
+            "provider",
+        ],
+        "",
     )
 
+    return {
+        "articleId": article_id,
+        "title": str(title),
+        "summary": str(summary),
+        "content": str(content),
+        "url": str(url),
+        "publishedAt": str(published_at),
+        "source": str(source),
+        "original": article,
+    }
 
-# ============================================================
-# PUBLISHED SORT
-# ============================================================
 
-def sort_key(
-    article: Dict[str, Any],
-) -> str:
+# ============================================================================
+# DATE SORTING
+# ============================================================================
+
+def parse_date_for_sort(value: Any) -> float:
     """
-    CNBC collector timestamps are expected to be sortable.
-    The original published value is preserved.
+    Convert common ISO timestamps to a sortable timestamp.
+
+    Unknown / missing dates return 0.
+
+    This preserves the existing behaviour where an article without a
+    recognised publication field does not crash the pipeline.
     """
 
-    return article_published(article)
+    if value is None:
+        return 0.0
+
+    value = str(value).strip()
+
+    if not value:
+        return 0.0
+
+    candidates = [
+        value,
+        value.replace("Z", "+00:00"),
+    ]
+
+    for candidate in candidates:
+        try:
+            dt = datetime.fromisoformat(candidate)
+
+            if dt.tzinfo is None:
+                dt = dt.replace(
+                    tzinfo=timezone.utc
+                )
+
+            return dt.timestamp()
+
+        except ValueError:
+            pass
+
+    return 0.0
 
 
-# ============================================================
+# ============================================================================
 # RESEARCH FUNDS
-# ============================================================
+# ============================================================================
 
-def load_research_funds() -> Dict[str, Any]:
+def load_research_funds() -> dict[str, Any]:
     """
-    Read Research Funds.xlsx only.
+    Loads Research Funds.xlsx as READ-ONLY reference data.
 
-    No research is performed here.
-    The workbook is treated as already-researched input.
+    Worksheet preference:
+        - Fund Research
+        - worksheet index 1 = Geography master
+        - worksheet index 2 = Sector master
+
+    No AI or web research is performed here.
     """
+
+    log("Loading Research Funds.xlsx...")
 
     if not RESEARCH_FUNDS.exists():
-        log(
-            "Research Funds.xlsx not found."
+        raise FileNotFoundError(
+            f"Research Funds.xlsx not found: {RESEARCH_FUNDS}"
         )
-
-        return {
-            "available": False,
-            "rows": [],
-            "masterCategories": {},
-        }
-
-    log(
-        f"Loading {RESEARCH_FUNDS.name}..."
-    )
 
     workbook = load_workbook(
         RESEARCH_FUNDS,
@@ -486,246 +458,254 @@ def load_research_funds() -> Dict[str, Any]:
         data_only=True,
     )
 
-    result: Dict[str, Any] = {
-        "available": True,
-        "rows": [],
-        "masterCategories": {},
-    }
-
     try:
-        # ----------------------------------------------------
+        sheet_names = workbook.sheetnames
+
+        # ------------------------------------------------------------
         # Fund Research
-        # ----------------------------------------------------
+        # ------------------------------------------------------------
 
-        if "Fund Research" in workbook.sheetnames:
-            sheet = workbook[
-                "Fund Research"
-            ]
+        if "Fund Research" in sheet_names:
+            ws_funds = workbook["Fund Research"]
+        elif len(sheet_names) >= 1:
+            ws_funds = workbook[sheet_names[0]]
         else:
-            sheet = workbook[
-                workbook.sheetnames[0]
-            ]
+            raise ValueError(
+                "Research Funds.xlsx contains no worksheets."
+            )
 
-        rows = sheet.iter_rows(
-            values_only=True
+        rows = list(
+            ws_funds.iter_rows(
+                values_only=True
+            )
         )
 
-        try:
-            headers = next(rows)
-        except StopIteration:
-            headers = []
+        if not rows:
+            fund_rows = []
+        else:
+            headers = [
+                str(value).strip()
+                if value is not None
+                else ""
+                for value in rows[0]
+            ]
 
-        headers = [
-            text(value)
-            for value in headers
-        ]
+            fund_rows = []
 
-        for row in rows:
-            record = {}
+            for row in rows[1:]:
+                record = {}
 
-            for index, value in enumerate(row):
-                if index >= len(headers):
-                    continue
+                for index, header in enumerate(headers):
+                    if not header:
+                        continue
 
-                header = headers[index]
+                    value = (
+                        row[index]
+                        if index < len(row)
+                        else None
+                    )
 
-                if not header:
-                    continue
-
-                if value is not None:
                     record[header] = value
 
-            if record:
-                result["rows"].append(
-                    record
-                )
+                # Ignore completely empty rows.
+                if any(
+                    value not in (None, "")
+                    for value in record.values()
+                ):
+                    fund_rows.append(record)
 
-        # ----------------------------------------------------
-        # Master categories
-        #
-        # Existing project convention:
-        # worksheet index 1 = Geography
-        # worksheet index 2 = Sector
-        # ----------------------------------------------------
+        # ------------------------------------------------------------
+        # Geography master
+        # ------------------------------------------------------------
 
-        if len(workbook.worksheets) > 1:
-            result[
-                "masterCategories"
-            ]["geography"] = (
-                sheet_to_values(
-                    workbook.worksheets[1]
-                )
-            )
+        geography_master = []
 
-        if len(workbook.worksheets) > 2:
-            result[
-                "masterCategories"
-            ]["sector"] = (
-                sheet_to_values(
-                    workbook.worksheets[2]
-                )
-            )
+        if len(sheet_names) > 1:
+            ws_geo = workbook.worksheets[1]
+
+            for row in ws_geo.iter_rows(
+                values_only=True
+            ):
+                values = [
+                    value
+                    for value in row
+                    if value not in (None, "")
+                ]
+
+                if values:
+                    geography_master.append(values)
+
+        # ------------------------------------------------------------
+        # Sector master
+        # ------------------------------------------------------------
+
+        sector_master = []
+
+        if len(sheet_names) > 2:
+            ws_sector = workbook.worksheets[2]
+
+            for row in ws_sector.iter_rows(
+                values_only=True
+            ):
+                values = [
+                    value
+                    for value in row
+                    if value not in (None, "")
+                ]
+
+                if values:
+                    sector_master.append(values)
 
     finally:
         workbook.close()
 
     log(
-        "Research Funds rows loaded: "
-        f"{len(result['rows'])}"
+        f"Research Funds rows loaded: {len(fund_rows)}"
     )
 
-    return result
+    return {
+        "fundResearch": fund_rows,
+        "masterCategories": {
+            "geography": geography_master,
+            "sector": sector_master,
+        },
+    }
 
 
-def sheet_to_values(
-    sheet,
-) -> List[List[Any]]:
-    output = []
+# ============================================================================
+# ANALYSIS FILE
+# ============================================================================
 
-    for row in sheet.iter_rows(
-        values_only=True
-    ):
-        values = [
-            value
-            for value in row
-            if value is not None
-            and text(value)
-        ]
+def empty_analysis_file() -> dict[str, Any]:
+    now = utc_now()
 
-        if values:
-            output.append(values)
-
-    return output
+    return {
+        "version": 1,
+        "createdAt": now,
+        "updatedAt": now,
+        "totalSuccessfulBatches": 0,
+        "totalSuccessfulArticles": 0,
+        "batches": [],
+    }
 
 
-# ============================================================
-# ANALYSIS CURRENT FILE
-# ============================================================
-
-def load_analysis_file() -> Dict[str, Any]:
-    """
-    Create an empty analysis/current.json structure if needed.
-
-    Existing file is preserved.
-    """
-
+def load_analysis_file() -> dict[str, Any]:
     if not ANALYSIS_CURRENT.exists():
-        return {
-            "version": 1,
-            "createdAt": utc_now(),
-            "updatedAt": utc_now(),
-            "totalSuccessfulBatches": 0,
-            "totalSuccessfulArticles": 0,
-            "batches": [],
-        }
+        return empty_analysis_file()
 
-    payload = load_json(
-        ANALYSIS_CURRENT
+    log(
+        "Loading existing analysis/current.json..."
     )
 
-    if not isinstance(payload, dict):
+    data = load_json(ANALYSIS_CURRENT)
+
+    if not isinstance(data, dict):
         raise ValueError(
             "analysis/current.json must contain a JSON object."
         )
 
-    payload.setdefault(
-        "version",
-        1,
-    )
-
-    payload.setdefault(
-        "createdAt",
-        utc_now(),
-    )
-
-    payload.setdefault(
-        "updatedAt",
-        utc_now(),
-    )
-
-    payload.setdefault(
+    data.setdefault("version", 1)
+    data.setdefault("createdAt", utc_now())
+    data.setdefault("updatedAt", utc_now())
+    data.setdefault(
         "totalSuccessfulBatches",
-        len(
-            payload.get(
-                "batches",
-                [],
-            )
-        ),
+        0,
     )
-
-    payload.setdefault(
+    data.setdefault(
         "totalSuccessfulArticles",
         0,
     )
+    data.setdefault("batches", [])
 
-    payload.setdefault(
-        "batches",
-        [],
-    )
+    if not isinstance(
+        data["batches"],
+        list,
+    ):
+        raise ValueError(
+            "analysis/current.json 'batches' must be a list."
+        )
 
-    return payload
+    return data
 
 
 def get_completed_article_ids(
-    analysis: Dict[str, Any],
-) -> set:
-    completed = set()
+    analysis_data: dict[str, Any],
+) -> set[str]:
 
-    for batch in analysis.get(
+    completed: set[str] = set()
+
+    for batch in analysis_data.get(
         "batches",
         [],
     ):
+
         if not isinstance(batch, dict):
             continue
 
-        # Preferred explicit article IDs.
-        for article_id_value in batch.get(
+        article_ids = batch.get(
             "articleIds",
             [],
-        ):
-            if article_id_value:
-                completed.add(
-                    text(article_id_value)
-                )
+        )
 
-        # Also inspect individual analyses.
-        for item in batch.get(
+        if isinstance(article_ids, list):
+            for article_id in article_ids:
+                if article_id:
+                    completed.add(
+                        str(article_id)
+                    )
+
+        analyses = batch.get(
             "analyses",
             [],
-        ):
-            if not isinstance(item, dict):
-                continue
+        )
 
-            value = item.get(
-                "articleId"
-            )
+        if isinstance(analyses, list):
+            for analysis in analyses:
+                if not isinstance(
+                    analysis,
+                    dict,
+                ):
+                    continue
 
-            if value:
-                completed.add(
-                    text(value)
+                article_id = analysis.get(
+                    "articleId"
                 )
+
+                if article_id:
+                    completed.add(
+                        str(article_id)
+                    )
 
     return completed
 
 
 def next_batch_number(
-    analysis: Dict[str, Any],
+    analysis_data: dict[str, Any],
 ) -> int:
-    batches = analysis.get(
+
+    batches = analysis_data.get(
         "batches",
         [],
     )
 
+    if not batches:
+        return 1
+
     numbers = []
 
     for batch in batches:
-        if isinstance(batch, dict):
-            value = batch.get(
-                "batchNumber"
-            )
+        if not isinstance(batch, dict):
+            continue
 
-            if isinstance(value, int):
-                numbers.append(value)
+        value = batch.get("batchNumber")
+
+        try:
+            numbers.append(int(value))
+        except (
+            TypeError,
+            ValueError,
+        ):
+            pass
 
     if not numbers:
         return 1
@@ -733,89 +713,93 @@ def next_batch_number(
     return max(numbers) + 1
 
 
-# ============================================================
+# ============================================================================
 # GEMINI PROMPT
-# ============================================================
-
-def make_article_payload(
-    article: Dict[str, Any],
-) -> Dict[str, Any]:
-    return {
-        "articleId": article_id(article),
-        "title": article_title(article),
-        "publishedAt": article_published(article),
-        "source": article_source(article),
-        "url": article_url(article),
-        "summary": article_summary(article),
-        "content": article_content(article),
-    }
-
+# ============================================================================
 
 def build_prompt(
-    articles: List[Dict[str, Any]],
-    research: Dict[str, Any],
+    articles: list[dict[str, Any]],
+    research_funds: dict[str, Any],
 ) -> str:
-    article_payloads = [
-        make_article_payload(article)
-        for article in articles
-    ]
 
-    # Research Funds is already researched production input.
-    # We provide it as context only.
-    fund_rows = research.get(
-        "rows",
-        [],
-    )
+    article_payload = []
+
+    for article in articles:
+        article_payload.append(
+            {
+                "articleId": article["articleId"],
+                "title": article["title"],
+                "summary": article["summary"],
+                "content": article["content"],
+                "url": article["url"],
+                "publishedAt": article["publishedAt"],
+                "source": article["source"],
+            }
+        )
+
+    research_payload = {
+        "fundResearch": research_funds.get(
+            "fundResearch",
+            [],
+        ),
+        "masterCategories": research_funds.get(
+            "masterCategories",
+            {},
+        ),
+    }
 
     prompt = f"""
-You are the VGrat FMS Market News Analyst.
+You are the market-news intelligence analyst for VGrat FMS.
 
-Analyze every article supplied below.
+Your task is to analyse EVERY article provided below.
 
-IMPORTANT BATCH RULES
-=====================
-- There are exactly {len(articles)} articles.
-- Return exactly {len(articles)} analysis results.
-- Each result MUST use the exact articleId supplied.
-- Do not omit an article.
-- Do not combine articles.
-- Do not invent article IDs.
-- Do not return duplicate article IDs.
-- Do not browse the internet.
-- Use only the supplied article information and Research Funds context.
-- If information is unavailable, say so rather than inventing it.
+IMPORTANT RULES
+===============
 
-PURPOSE
-=======
-Determine the investment relevance of each CNBC market-news article
-for VGrat FMS monitoring.
+1. Return EXACTLY ONE analysis object for every article.
+2. Do not omit any article.
+3. Use the exact articleId supplied for each article.
+4. Do not invent article IDs.
+5. Do not merge multiple articles into one result.
+6. Do not create extra results.
+7. Base the analysis on the supplied article information.
+8. If an article is not materially relevant to financial markets,
+   classify it as REJECT.
+9. Do not treat the Research Funds workbook as an instruction to
+   perform new research. It is reference data only.
+10. Use the Research Funds information to determine whether an article
+    may be relevant to monitoring Prudential fund exposures.
 
-CLASSIFICATION
-==============
-Use one of:
+CATEGORY DEFINITIONS
+====================
 
 MARKET
+Directly concerns financial markets, securities, companies,
+commodities, currencies, interest rates, bonds, equities,
+market movements, valuations, or investment activity.
+
 ECONOMIC
+Concerns macroeconomic conditions, inflation, employment,
+GDP, monetary policy, fiscal policy, central banks, economic
+indicators, consumer conditions, trade, or similar factors.
+
 TECHNOLOGY
+Concerns technology companies, AI, semiconductors, cloud,
+data centres, software, cybersecurity, or technological
+developments with potential investment or economic relevance.
+
 GEOPOLITICAL
+Concerns wars, conflicts, sanctions, elections, international
+relations, political developments, tariffs, trade restrictions,
+or geopolitical developments that may affect markets/economies.
+
 REJECT
-
-For every article provide:
-
-- articleId
-- relevant
-- category
-- sentiment
-- importance
-- assetClasses
-- geographies
-- sectors
-- investorImpact
-- reasoning
-- fundMonitoringRelevant
+Not materially relevant to financial markets, investment,
+economic conditions, technology investment, or geopolitics.
 
 SENTIMENT
 =========
+
 Use:
 - positive
 - negative
@@ -824,141 +808,206 @@ Use:
 
 IMPORTANCE
 ==========
-Use:
-- high
-- medium
-- low
 
-The final response MUST be valid JSON matching the requested schema.
+high:
+Potentially significant market, economic, geopolitical,
+sector, or investment implications.
 
-RESEARCH FUNDS CONTEXT
-======================
-The following information comes from Research Funds.xlsx.
-It is already researched input. Do not perform additional research.
+medium:
+Meaningful but more limited implications.
+
+low:
+Limited market/investment significance.
+
+ASSET CLASSES
+=============
+
+Use relevant values such as:
+- Equities
+- Fixed Income
+- Cash
+- Alternatives
+- Commodities
+- Real Estate
+- Multi Asset
+- Currency
+
+GEOGRAPHIES
+===========
+
+Use concise geographic labels such as:
+- United States
+- China
+- Europe
+- Japan
+- Singapore
+- Global
+- Asia Pacific
+
+SECTORS
+=======
+
+Use concise sector labels such as:
+- Technology
+- Financials
+- Healthcare
+- Industrials
+- Consumer
+- Energy
+- Real Estate
+- Utilities
+- Materials
+- Communication Services
+
+INVESTOR IMPACT
+===============
+
+Explain briefly what the article could mean for investors.
+
+REASONING
+=========
+
+Explain the classification and importance in concise terms.
+Do not repeat the entire article.
+
+FUND MONITORING RELEVANT
+========================
+
+Set true if the article could reasonably warrant monitoring
+fund exposure based on the supplied Research Funds reference data.
+
+Set false when it has no meaningful connection.
+
+RESEARCH FUNDS REFERENCE
+========================
 
 {json.dumps(
-    fund_rows,
+    research_payload,
     ensure_ascii=False,
+    indent=2,
 )}
 
-ARTICLES
-========
+ARTICLES TO ANALYSE
+===================
+
 {json.dumps(
-    article_payloads,
+    article_payload,
     ensure_ascii=False,
+    indent=2,
 )}
+
+Return JSON only.
 """.strip()
 
     return prompt
 
 
-def response_schema() -> Dict[str, Any]:
+# ============================================================================
+# GEMINI REQUEST
+# ============================================================================
+
+def build_response_schema() -> dict[str, Any]:
+
     return {
-        "type": "object",
-        "properties": {
-            "articles": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "articleId": {
-                            "type": "string",
-                        },
-                        "relevant": {
-                            "type": "boolean",
-                        },
-                        "category": {
-                            "type": "string",
-                            "enum": [
-                                "MARKET",
-                                "ECONOMIC",
-                                "TECHNOLOGY",
-                                "GEOPOLITICAL",
-                                "REJECT",
-                            ],
-                        },
-                        "sentiment": {
-                            "type": "string",
-                            "enum": [
-                                "positive",
-                                "negative",
-                                "neutral",
-                                "mixed",
-                            ],
-                        },
-                        "importance": {
-                            "type": "string",
-                            "enum": [
-                                "high",
-                                "medium",
-                                "low",
-                            ],
-                        },
-                        "assetClasses": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                            },
-                        },
-                        "geographies": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                            },
-                        },
-                        "sectors": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                            },
-                        },
-                        "investorImpact": {
-                            "type": "string",
-                        },
-                        "reasoning": {
-                            "type": "string",
-                        },
-                        "fundMonitoringRelevant": {
-                            "type": "boolean",
-                        },
-                    },
-                    "required": [
-                        "articleId",
-                        "relevant",
-                        "category",
-                        "sentiment",
-                        "importance",
-                        "assetClasses",
-                        "geographies",
-                        "sectors",
-                        "investorImpact",
-                        "reasoning",
-                        "fundMonitoringRelevant",
+        "type": "ARRAY",
+        "items": {
+            "type": "OBJECT",
+            "properties": {
+                "articleId": {
+                    "type": "STRING",
+                },
+                "relevant": {
+                    "type": "BOOLEAN",
+                },
+                "category": {
+                    "type": "STRING",
+                    "enum": [
+                        "MARKET",
+                        "ECONOMIC",
+                        "TECHNOLOGY",
+                        "GEOPOLITICAL",
+                        "REJECT",
                     ],
                 },
+                "sentiment": {
+                    "type": "STRING",
+                    "enum": [
+                        "positive",
+                        "negative",
+                        "neutral",
+                        "mixed",
+                    ],
+                },
+                "importance": {
+                    "type": "STRING",
+                    "enum": [
+                        "high",
+                        "medium",
+                        "low",
+                    ],
+                },
+                "assetClasses": {
+                    "type": "ARRAY",
+                    "items": {
+                        "type": "STRING",
+                    },
+                },
+                "geographies": {
+                    "type": "ARRAY",
+                    "items": {
+                        "type": "STRING",
+                    },
+                },
+                "sectors": {
+                    "type": "ARRAY",
+                    "items": {
+                        "type": "STRING",
+                    },
+                },
+                "investorImpact": {
+                    "type": "STRING",
+                },
+                "reasoning": {
+                    "type": "STRING",
+                },
+                "fundMonitoringRelevant": {
+                    "type": "BOOLEAN",
+                },
             },
+            "required": [
+                "articleId",
+                "relevant",
+                "category",
+                "sentiment",
+                "importance",
+                "assetClasses",
+                "geographies",
+                "sectors",
+                "investorImpact",
+                "reasoning",
+                "fundMonitoringRelevant",
+            ],
         },
-        "required": [
-            "articles",
-        ],
     }
 
 
-# ============================================================
-# GEMINI API
-# ============================================================
-
-def call_gemini(
+def make_gemini_request(
     prompt: str,
-) -> Tuple[
-    Dict[str, Any],
-    float,
-    Dict[str, Any],
-]:
+) -> tuple[Any, dict[str, Any], float, int]:
+
     if not GEMINI_API_KEY:
         raise RuntimeError(
-            "GEMINI_API_KEY is not configured."
+            "GEMINI_API_KEY environment variable is not set."
         )
+
+    endpoint = (
+        "https://generativelanguage.googleapis.com/v1beta/"
+        f"models/{GEMINI_MODEL}:generateContent"
+    )
+
+    params = {
+        "key": GEMINI_API_KEY,
+    }
 
     body = {
         "contents": [
@@ -972,449 +1021,476 @@ def call_gemini(
             }
         ],
         "generationConfig": {
+            "temperature": 0.1,
+            "maxOutputTokens": GEMINI_MAX_OUTPUT_TOKENS,
             "responseMimeType": "application/json",
-            "responseSchema": response_schema(),
-            "maxOutputTokens": MAX_OUTPUT_TOKENS,
+            "responseSchema": build_response_schema(),
         },
     }
 
-    started = time.perf_counter()
+    total_attempts = MAX_RETRIES + 1
 
-    response = requests.post(
-        GEMINI_URL,
-        headers={
-            "Content-Type": "application/json",
-            "x-goog-api-key": GEMINI_API_KEY,
-        },
-        json=body,
-        timeout=GEMINI_TIMEOUT,
-    )
+    last_response = None
+    last_exception = None
 
-    duration = (
-        time.perf_counter()
-        - started
-    )
+    for attempt in range(1, total_attempts + 1):
 
-    if response.status_code >= 400:
-        raise RuntimeError(
-            "Gemini API error "
-            f"{response.status_code}: "
-            f"{response.text[:4000]}"
+        request_started = time.monotonic()
+
+        log(
+            f"Sending Gemini request "
+            f"(attempt {attempt}/{total_attempts})..."
         )
 
-    payload = response.json()
+        try:
 
-    generated_text = extract_response_text(
-        payload
-    )
+            response = requests.post(
+                endpoint,
+                params=params,
+                json=body,
+                timeout=GEMINI_TIMEOUT_SECONDS,
+            )
 
-    if not generated_text:
+            request_seconds = (
+                time.monotonic()
+                - request_started
+            )
+
+            last_response = response
+
+            # --------------------------------------------------------
+            # SUCCESS
+            # --------------------------------------------------------
+
+            if response.ok:
+
+                log(
+                    f"Gemini HTTP {response.status_code} "
+                    f"after {request_seconds:.2f}s."
+                )
+
+                try:
+                    response_json = response.json()
+                except ValueError as exc:
+                    raise RuntimeError(
+                        "Gemini returned a non-JSON HTTP response."
+                    ) from exc
+
+                return (
+                    response_json,
+                    body,
+                    request_seconds,
+                    attempt,
+                )
+
+            # --------------------------------------------------------
+            # RETRYABLE ERROR
+            # --------------------------------------------------------
+
+            if (
+                response.status_code
+                in RETRYABLE_STATUS_CODES
+            ):
+
+                log(
+                    f"Gemini HTTP {response.status_code} "
+                    f"on attempt {attempt}/{total_attempts}."
+                )
+
+                if attempt < total_attempts:
+
+                    delay_index = min(
+                        attempt - 1,
+                        len(RETRY_DELAYS) - 1,
+                    )
+
+                    delay = RETRY_DELAYS[
+                        delay_index
+                    ]
+
+                    log(
+                        f"Transient Gemini error. "
+                        f"Waiting {delay}s before retry..."
+                    )
+
+                    time.sleep(delay)
+
+                    continue
+
+                # All retries exhausted.
+                log(
+                    "Gemini transient-error retries exhausted."
+                )
+
+                raise RuntimeError(
+                    f"Gemini API error "
+                    f"{response.status_code}: "
+                    f"{response.text}"
+                )
+
+            # --------------------------------------------------------
+            # NON-RETRYABLE ERROR
+            # --------------------------------------------------------
+
+            raise RuntimeError(
+                f"Gemini API error "
+                f"{response.status_code}: "
+                f"{response.text}"
+            )
+
+        except requests.RequestException as exc:
+
+            last_exception = exc
+
+            request_seconds = (
+                time.monotonic()
+                - request_started
+            )
+
+            log(
+                f"Gemini network error on attempt "
+                f"{attempt}/{total_attempts}: "
+                f"{exc}"
+            )
+
+            if attempt < total_attempts:
+
+                delay_index = min(
+                    attempt - 1,
+                    len(RETRY_DELAYS) - 1,
+                )
+
+                delay = RETRY_DELAYS[
+                    delay_index
+                ]
+
+                log(
+                    f"Waiting {delay}s before retry..."
+                )
+
+                time.sleep(delay)
+
+                continue
+
+            raise RuntimeError(
+                "Gemini request failed after "
+                f"{total_attempts} attempts: "
+                f"{exc}"
+            ) from exc
+
+    if last_exception:
         raise RuntimeError(
-            "Gemini returned no generated text."
+            f"Gemini request failed: {last_exception}"
         )
 
-    try:
-        parsed = json.loads(
-            generated_text
-        )
-    except json.JSONDecodeError as exc:
+    if last_response is not None:
         raise RuntimeError(
-            "Gemini returned invalid JSON: "
-            f"{exc}"
-        ) from exc
+            f"Gemini request failed with "
+            f"HTTP {last_response.status_code}: "
+            f"{last_response.text}"
+        )
 
-    return (
-        parsed,
-        duration,
-        payload,
+    raise RuntimeError(
+        "Gemini request failed for an unknown reason."
     )
 
 
-def extract_response_text(
-    payload: Dict[str, Any],
+# ============================================================================
+# GEMINI RESPONSE EXTRACTION
+# ============================================================================
+
+def extract_gemini_text(
+    response_json: dict[str, Any],
 ) -> str:
-    candidates = payload.get(
-        "candidates",
-        [],
+
+    candidates = []
+
+    candidates.append(
+        response_json.get("candidates")
     )
+
+    if not isinstance(
+        response_json.get("candidates"),
+        list,
+    ):
+        raise ValueError(
+            "Gemini response contains no candidates."
+        )
+
+    candidates = response_json["candidates"]
 
     if not candidates:
-        return ""
+        raise ValueError(
+            "Gemini response contains an empty candidates array."
+        )
 
     candidate = candidates[0]
 
-    content = candidate.get(
-        "content",
-        {},
-    )
+    if not isinstance(candidate, dict):
+        raise ValueError(
+            "Gemini candidate is not an object."
+        )
 
-    parts = content.get(
-        "parts",
-        [],
-    )
+    content = candidate.get("content")
 
-    result = []
+    if not isinstance(content, dict):
+        raise ValueError(
+            "Gemini candidate contains no content object."
+        )
+
+    parts = content.get("parts")
+
+    if not isinstance(parts, list):
+        raise ValueError(
+            "Gemini candidate contains no parts array."
+        )
+
+    texts = []
 
     for part in parts:
+
         if not isinstance(part, dict):
             continue
 
-        value = part.get(
-            "text"
+        text_value = part.get("text")
+
+        if isinstance(
+            text_value,
+            str,
+        ):
+            texts.append(text_value)
+
+    if not texts:
+        raise ValueError(
+            "Gemini response contained no text output."
         )
 
-        if isinstance(value, str):
-            result.append(value)
-
-    return "".join(result).strip()
+    return "".join(texts).strip()
 
 
-# ============================================================
-# VALIDATION
-# ============================================================
+def parse_gemini_json(
+    response_json: dict[str, Any],
+) -> Any:
 
-def validate_response(
-    articles: List[Dict[str, Any]],
-    response: Dict[str, Any],
-) -> Tuple[
-    bool,
-    List[Dict[str, Any]],
-    List[str],
-]:
-    errors: List[str] = []
+    text_output = extract_gemini_text(
+        response_json
+    )
+
+    try:
+        return json.loads(text_output)
+
+    except json.JSONDecodeError as exc:
+
+        # Some models may occasionally wrap JSON in markdown
+        # despite responseMimeType.
+        cleaned = text_output.strip()
+
+        if cleaned.startswith("```"):
+            lines = cleaned.splitlines()
+
+            if lines:
+                lines = lines[1:]
+
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+
+            cleaned = "\n".join(lines).strip()
+
+        try:
+            return json.loads(cleaned)
+
+        except json.JSONDecodeError:
+            raise ValueError(
+                "Gemini returned invalid JSON.\n"
+                f"Raw output:\n{text_output}"
+            ) from exc
+
+
+# ============================================================================
+# RESPONSE VALIDATION
+# ============================================================================
+
+def validate_analysis(
+    parsed: Any,
+    articles: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+
+    if not isinstance(parsed, list):
+        raise ValueError(
+            "Gemini output must be a JSON array."
+        )
 
     expected_ids = [
-        article_id(article)
+        article["articleId"]
         for article in articles
     ]
 
-    expected_set = set(
-        expected_ids
-    )
+    expected_id_set = set(expected_ids)
 
-    results = response.get(
-        "articles"
-    )
-
-    if not isinstance(results, list):
-        return (
-            False,
-            [],
-            [
-                "Response does not contain articles array."
-            ],
+    if len(parsed) != len(articles):
+        raise ValueError(
+            "Gemini returned "
+            f"{len(parsed)} analyses for "
+            f"{len(articles)} articles."
         )
 
-    if len(results) != len(articles):
-        errors.append(
-            "Expected "
-            f"{len(articles)} results but received "
-            f"{len(results)}."
-        )
+    analyses = []
 
-    seen = set()
+    for index, item in enumerate(parsed):
 
-    for index, result in enumerate(
-        results
-    ):
-        if not isinstance(
-            result,
-            dict,
-        ):
-            errors.append(
-                f"Result {index + 1} is not an object."
-            )
-            continue
-
-        value = text(
-            result.get(
-                "articleId"
-            )
-        )
-
-        if not value:
-            errors.append(
-                f"Result {index + 1} has no articleId."
-            )
-            continue
-
-        if value in seen:
-            errors.append(
-                f"Duplicate articleId: {value}"
+        if not isinstance(item, dict):
+            raise ValueError(
+                f"Analysis #{index + 1} is not an object."
             )
 
-        seen.add(value)
+        article_id = item.get("articleId")
 
-    actual_set = set(seen)
-
-    missing = (
-        expected_set
-        - actual_set
-    )
-
-    unexpected = (
-        actual_set
-        - expected_set
-    )
-
-    if missing:
-        errors.append(
-            "Missing article IDs: "
-            + ", ".join(
-                sorted(missing)
+        if not article_id:
+            raise ValueError(
+                f"Analysis #{index + 1} has no articleId."
             )
-        )
 
-    if unexpected:
-        errors.append(
-            "Unexpected article IDs: "
-            + ", ".join(
-                sorted(unexpected)
+        article_id = str(article_id)
+
+        if article_id not in expected_id_set:
+            raise ValueError(
+                "Gemini returned an unknown articleId: "
+                f"{article_id}"
             )
-        )
 
-    required = [
-        "articleId",
-        "relevant",
-        "category",
-        "sentiment",
-        "importance",
-        "assetClasses",
-        "geographies",
-        "sectors",
-        "investorImpact",
-        "reasoning",
-        "fundMonitoringRelevant",
+        analyses.append(item)
+
+    returned_ids = [
+        str(item["articleId"])
+        for item in analyses
     ]
 
-    for result in results:
-        if not isinstance(
-            result,
-            dict,
-        ):
-            continue
-
-        result_id = text(
-            result.get(
-                "articleId"
-            )
+    if len(set(returned_ids)) != len(returned_ids):
+        raise ValueError(
+            "Gemini returned duplicate articleIds."
         )
 
-        for field in required:
-            if field not in result:
-                errors.append(
-                    f"{result_id}: missing {field}"
-                )
+    returned_id_set = set(returned_ids)
 
-    return (
-        len(errors) == 0,
-        results,
-        errors,
-    )
+    if returned_id_set != expected_id_set:
 
+        missing = sorted(
+            expected_id_set - returned_id_set
+        )
 
-# ============================================================
-# SUCCESSFUL BATCH STORAGE
-# ============================================================
+        extra = sorted(
+            returned_id_set - expected_id_set
+        )
 
-def append_successful_batch(
-    analysis: Dict[str, Any],
-    batch_number: int,
-    articles: List[Dict[str, Any]],
-    prompt: str,
-    response: Dict[str, Any],
-    raw_gemini_response: Dict[str, Any],
-    response_seconds: float,
-    request_started_at: str,
-    request_finished_at: str,
-    validation_errors: List[str],
-) -> Dict[str, Any]:
+        raise ValueError(
+            "Article ID mismatch. "
+            f"Missing={missing}, Extra={extra}"
+        )
 
-    article_ids = [
-        article_id(article)
-        for article in articles
-    ]
-
-    batch_record = {
-        "batchNumber": batch_number,
-
-        "storedAt": utc_now(),
-
-        "model": GEMINI_MODEL,
-
-        "request": {
-            "startedAt": request_started_at,
-            "finishedAt": request_finished_at,
-            "responseSeconds": round(
-                response_seconds,
-                4,
-            ),
-            "articleCount": len(articles),
-            "articleIds": article_ids,
-        },
-
-        "validation": {
-            "success": True,
-            "errors": validation_errors,
-        },
-
-        # Store the exact prompt used.
-        "prompt": prompt,
-
-        # Store parsed response.
-        "response": response,
-
-        # Store individual results for easy future access.
-        "analyses": response.get(
-            "articles",
-            [],
-        ),
-
-        # Keep raw API response for debugging/performance
-        # investigation.
-        "rawGeminiResponse": raw_gemini_response,
-
-        # Keep original article metadata alongside the result.
-        "inputArticles": [
-            make_article_payload(article)
-            for article in articles
-        ],
+    # Return analyses in the SAME order as the input batch.
+    by_id = {
+        str(item["articleId"]): item
+        for item in analyses
     }
 
-    analysis.setdefault(
-        "batches",
-        [],
-    )
+    ordered = [
+        by_id[article_id]
+        for article_id in expected_ids
+    ]
 
-    analysis["batches"].append(
-        batch_record
-    )
-
-    analysis[
-        "totalSuccessfulBatches"
-    ] = len(
-        analysis["batches"]
-    )
-
-    analysis[
-        "totalSuccessfulArticles"
-    ] = sum(
-        len(
-            batch.get(
-                "articleIds",
-                [],
-            )
-        )
-        for batch in analysis["batches"]
-        if isinstance(batch, dict)
-    )
-
-    analysis[
-        "updatedAt"
-    ] = utc_now()
-
-    return analysis
+    return ordered
 
 
-# ============================================================
+# ============================================================================
 # MAIN
-# ============================================================
+# ============================================================================
 
-def main() -> int:
+def main() -> None:
 
     log("=" * 72)
     log("VGrat FMS - MARKET NEWS AI ANALYZER")
     log("=" * 72)
-
     log(
         "TEST MODE: exactly ONE batch of FIVE articles."
     )
-
     log(
         f"Gemini model: {GEMINI_MODEL}"
     )
-
+    log(
+        f"Gemini max retries after initial request: "
+        f"{MAX_RETRIES}"
+    )
+    log(
+        f"Retry delays: {RETRY_DELAYS[:MAX_RETRIES]}"
+    )
     log(
         f"Input: {CURRENT_JSON}"
     )
-
     log(
         f"Output: {ANALYSIS_CURRENT}"
     )
+    log()
 
-    # --------------------------------------------------------
-    # Validate inputs
-    # --------------------------------------------------------
+    # ========================================================================
+    # INPUT CHECKS
+    # ========================================================================
 
     if not CURRENT_JSON.exists():
-        log(
-            "ERROR: current.json does not exist."
+        fail(
+            f"Production current.json not found: "
+            f"{CURRENT_JSON}"
         )
-        return 1
+
+    if not RESEARCH_FUNDS.exists():
+        fail(
+            f"Research Funds.xlsx not found: "
+            f"{RESEARCH_FUNDS}"
+        )
 
     if not GEMINI_API_KEY:
-        log(
-            "ERROR: GEMINI_API_KEY is not configured."
+        fail(
+            "GEMINI_API_KEY is not configured."
         )
-        return 1
 
-    # --------------------------------------------------------
-    # Load current.json
-    # --------------------------------------------------------
+    # ========================================================================
+    # LOAD CURRENT NEWS
+    # ========================================================================
 
     log(
         "Loading production current.json..."
     )
 
-    try:
-        payload = load_json(
-            CURRENT_JSON
-        )
-
-        all_articles = extract_articles(
-            payload
-        )
-
-    except Exception as exc:
-        log(
-            f"ERROR loading current.json: {exc}"
-        )
-        return 1
-
-    log(
-        f"Articles found: {len(all_articles)}"
+    current_payload = load_json(
+        CURRENT_JSON
     )
 
-    # --------------------------------------------------------
-    # Load Research Funds
-    # --------------------------------------------------------
+    raw_articles = extract_articles(
+        current_payload
+    )
 
-    try:
-        research = load_research_funds()
+    log(
+        f"Articles found: {len(raw_articles)}"
+    )
 
-    except Exception as exc:
-        log(
-            f"ERROR loading Research Funds.xlsx: {exc}"
-        )
-        return 1
+    articles = [
+        normalise_article(article)
+        for article in raw_articles
+    ]
 
-    # --------------------------------------------------------
-    # Load test analysis file
-    # --------------------------------------------------------
+    # ========================================================================
+    # LOAD RESEARCH FUNDS
+    # ========================================================================
 
-    try:
-        analysis = load_analysis_file()
+    research_funds = load_research_funds()
 
-    except Exception as exc:
-        log(
-            f"ERROR loading analysis/current.json: {exc}"
-        )
-        return 1
+    # ========================================================================
+    # LOAD EXISTING TEST ANALYSIS
+    # ========================================================================
 
-    completed_ids = (
-        get_completed_article_ids(
-            analysis
-        )
+    analysis_data = load_analysis_file()
+
+    completed_ids = get_completed_article_ids(
+        analysis_data
     )
 
     log(
@@ -1422,270 +1498,345 @@ def main() -> int:
         f"{len(completed_ids)}"
     )
 
-    # --------------------------------------------------------
-    # Determine pending articles
-    # --------------------------------------------------------
+    # ========================================================================
+    # FIND PENDING ARTICLES
+    # ========================================================================
 
-    pending = []
+    pending_articles = [
+        article
+        for article in articles
+        if article["articleId"]
+        not in completed_ids
+    ]
 
-    for article in all_articles:
-        current_id = article_id(
-            article
+    if PROCESS_NEWEST_FIRST:
+        pending_articles.sort(
+            key=lambda article: parse_date_for_sort(
+                article["publishedAt"]
+            ),
+            reverse=True,
         )
 
-        if current_id in completed_ids:
-            continue
-
-        pending.append(article)
-
     log(
-        f"Pending articles: {len(pending)}"
+        f"Pending articles: {len(pending_articles)}"
     )
+    log()
 
-    if not pending:
+    if not pending_articles:
         log(
             "No pending articles remain."
         )
-        return 0
+        log(
+            "Nothing to analyse."
+        )
+        return
 
-    # --------------------------------------------------------
-    # Newest first
-    # --------------------------------------------------------
+    # ========================================================================
+    # SELECT EXACTLY ONE BATCH
+    # ========================================================================
 
-    pending.sort(
-        key=sort_key,
-        reverse=PROCESS_NEWEST_FIRST,
-    )
-
-    batch = pending[
+    batch_articles = pending_articles[
         :BATCH_SIZE
     ]
 
-    if len(batch) < BATCH_SIZE:
+    if len(batch_articles) < BATCH_SIZE:
         log(
-            "WARNING: fewer than 5 pending articles "
-            f"available. Found {len(batch)}."
+            f"Only {len(batch_articles)} pending "
+            f"article(s) available."
         )
 
-    log("")
+        # In test mode we want exactly five.
+        # Do not make a smaller test batch.
+        if len(batch_articles) != BATCH_SIZE:
+            fail(
+                "TEST MODE requires exactly "
+                f"{BATCH_SIZE} pending articles."
+            )
+
     log(
         "Selected batch:"
     )
 
     for index, article in enumerate(
-        batch,
+        batch_articles,
         start=1,
     ):
+
         log(
             f"  {index}. "
-            f"{article_id(article)} | "
-            f"{article_published(article)} | "
-            f"{article_title(article)}"
+            f"{article['articleId']} | "
+            f"{article['publishedAt']} | "
+            f"{article['title']}"
         )
 
-    # --------------------------------------------------------
-    # Batch number
-    # --------------------------------------------------------
+    log()
 
-    batch_number = next_batch_number(
-        analysis
-    )
-
-    # --------------------------------------------------------
-    # Build prompt
-    # --------------------------------------------------------
+    # ========================================================================
+    # BUILD PROMPT
+    # ========================================================================
 
     prompt = build_prompt(
-        batch,
-        research,
+        batch_articles,
+        research_funds,
     )
 
-    log("")
     log(
-        f"Preparing ONE Gemini request for "
-        f"{len(batch)} articles..."
+        "Preparing ONE Gemini request for "
+        f"{len(batch_articles)} articles..."
     )
 
     request_started_at = utc_now()
+    request_timer = time.monotonic()
 
-    # --------------------------------------------------------
-    # Gemini
-    # --------------------------------------------------------
+    # ========================================================================
+    # GEMINI REQUEST WITH RETRIES
+    # ========================================================================
 
     try:
 
-        response, response_seconds, raw_response = (
-            call_gemini(
-                prompt
-            )
+        (
+            gemini_response,
+            gemini_request_body,
+            request_seconds,
+            attempts_used,
+        ) = make_gemini_request(prompt)
+
+    except Exception as exc:
+
+        log()
+        log("GEMINI REQUEST FAILED")
+        log(str(exc))
+        log()
+        log(
+            "Nothing was written to "
+            "analysis/current.json."
+        )
+
+        sys.exit(1)
+
+    request_finished_at = utc_now()
+
+    # Ensure timing includes all retry attempts.
+    total_elapsed_seconds = (
+        time.monotonic()
+        - request_timer
+    )
+
+    log(
+        f"Gemini request completed in "
+        f"{total_elapsed_seconds:.2f}s."
+    )
+
+    log(
+        f"Gemini attempts used: {attempts_used}"
+    )
+
+    # ========================================================================
+    # PARSE RESPONSE
+    # ========================================================================
+
+    log(
+        "Parsing Gemini response..."
+    )
+
+    try:
+
+        parsed_response = parse_gemini_json(
+            gemini_response
         )
 
     except Exception as exc:
 
-        log("")
+        log()
+        log("GEMINI RESPONSE PARSE FAILED")
+        log(str(exc))
+        log()
         log(
-            "GEMINI REQUEST FAILED"
+            "Nothing was written to "
+            "analysis/current.json."
         )
 
-        log(
-            str(exc)
-        )
+        sys.exit(1)
 
-        log(
-            "Nothing was written to analysis/current.json."
-        )
+    # ========================================================================
+    # VALIDATE RESPONSE
+    # ========================================================================
 
-        return 1
-
-    request_finished_at = utc_now()
-
-    log("")
     log(
-        "Gemini request succeeded."
+        "Validating Gemini response..."
+    )
+
+    try:
+
+        validated_analyses = validate_analysis(
+            parsed_response,
+            batch_articles,
+        )
+
+    except Exception as exc:
+
+        log()
+        log("GEMINI RESPONSE VALIDATION FAILED")
+        log(str(exc))
+        log()
+        log(
+            "Nothing was written to "
+            "analysis/current.json."
+        )
+
+        sys.exit(1)
+
+    log(
+        "Validation successful."
+    )
+
+    log(
+        f"Exactly {len(validated_analyses)} "
+        "article analyses received."
+    )
+
+    # ========================================================================
+    # BUILD SUCCESSFUL BATCH RECORD
+    # ========================================================================
+
+    batch_number = next_batch_number(
+        analysis_data
+    )
+
+    batch_stored_at = utc_now()
+
+    article_ids = [
+        article["articleId"]
+        for article in batch_articles
+    ]
+
+    batch_record = {
+        "batchNumber": batch_number,
+        "storedAt": batch_stored_at,
+        "model": GEMINI_MODEL,
+        "articleIds": article_ids,
+
+        "request": {
+            "requestStartedAt": request_started_at,
+            "requestFinishedAt": request_finished_at,
+            "responseSeconds": round(
+                total_elapsed_seconds,
+                3,
+            ),
+            "geminiAttempts": attempts_used,
+            "articleCount": len(batch_articles),
+        },
+
+        "validation": {
+            "success": True,
+            "expectedArticleCount": len(
+                batch_articles
+            ),
+            "returnedArticleCount": len(
+                validated_analyses
+            ),
+            "articleIdsMatch": True,
+            "duplicates": False,
+        },
+
+        "prompt": prompt,
+
+        "requestBody": gemini_request_body,
+
+        "parsedResponse": parsed_response,
+
+        "analyses": validated_analyses,
+
+        "rawGeminiResponse": gemini_response,
+
+        "inputArticles": batch_articles,
+    }
+
+    # ========================================================================
+    # UPDATE ANALYSIS FILE
+    # ========================================================================
+
+    analysis_data["batches"].append(
+        batch_record
+    )
+
+    analysis_data[
+        "totalSuccessfulBatches"
+    ] = len(
+        analysis_data["batches"]
+    )
+
+    analysis_data[
+        "totalSuccessfulArticles"
+    ] = sum(
+        len(batch.get("articleIds", []))
+        for batch in analysis_data["batches"]
+        if isinstance(batch, dict)
+    )
+
+    analysis_data["updatedAt"] = (
+        batch_stored_at
+    )
+
+    # ========================================================================
+    # ONLY NOW WRITE THE FILE
+    # ========================================================================
+
+    log()
+    log(
+        "Writing successful batch to "
+        "analysis/current.json..."
+    )
+
+    atomic_write_json(
+        ANALYSIS_CURRENT,
+        analysis_data,
+    )
+
+    log(
+        "Analysis successfully written."
+    )
+
+    log(
+        f"File: {ANALYSIS_CURRENT}"
+    )
+
+    log(
+        f"Successful batches: "
+        f"{analysis_data['totalSuccessfulBatches']}"
+    )
+
+    log(
+        f"Successful articles: "
+        f"{analysis_data['totalSuccessfulArticles']}"
+    )
+
+    log(
+        f"Latest batch: {batch_number}"
+    )
+
+    log(
+        f"Batch articles: {len(batch_articles)}"
+    )
+
+    log(
+        f"Gemini attempts: {attempts_used}"
     )
 
     log(
         f"Response time: "
-        f"{response_seconds:.4f} seconds"
+        f"{total_elapsed_seconds:.2f}s"
     )
 
-    # --------------------------------------------------------
-    # Validate
-    # --------------------------------------------------------
-
+    log()
     log(
-        "Validating batch response..."
+        "TEST BATCH COMPLETED SUCCESSFULLY."
     )
 
-    valid, results, validation_errors = (
-        validate_response(
-            batch,
-            response,
-        )
-    )
 
-    if not valid:
-
-        log(
-            "BATCH VALIDATION FAILED."
-        )
-
-        for error in validation_errors:
-            log(
-                f"  - {error}"
-            )
-
-        log(
-            "Nothing was written to analysis/current.json."
-        )
-
-        return 1
-
-    log(
-        "Batch validation successful."
-    )
-
-    log(
-        f"Validated {len(results)} / "
-        f"{len(batch)} articles."
-    )
-
-    # --------------------------------------------------------
-    # ONLY NOW WRITE SUCCESSFUL BATCH
-    # --------------------------------------------------------
-
-    try:
-
-        analysis = append_successful_batch(
-            analysis=analysis,
-            batch_number=batch_number,
-            articles=batch,
-            prompt=prompt,
-            response=response,
-            raw_gemini_response=raw_response,
-            response_seconds=response_seconds,
-            request_started_at=request_started_at,
-            request_finished_at=request_finished_at,
-            validation_errors=validation_errors,
-        )
-
-        # Atomic write.
-        write_json_atomic(
-            ANALYSIS_CURRENT,
-            analysis,
-        )
-
-    except Exception as exc:
-
-        log(
-            "ERROR writing analysis/current.json:"
-        )
-
-        log(
-            str(exc)
-        )
-
-        return 1
-
-    # --------------------------------------------------------
-    # Final statistics
-    # --------------------------------------------------------
-
-    total_execution = (
-        time.perf_counter()
-        - PROGRAM_START
-    )
-
-    log("")
-    log("=" * 72)
-    log("BATCH SUCCESS")
-    log("=" * 72)
-
-    log(
-        f"Batch number:       {batch_number}"
-    )
-
-    log(
-        f"Articles processed: {len(batch)}"
-    )
-
-    log(
-        f"Gemini requests:    1"
-    )
-
-    log(
-        f"API response time:  {response_seconds:.4f}s"
-    )
-
-    log(
-        f"Avg/article:        "
-        f"{response_seconds / len(batch):.4f}s"
-    )
-
-    log(
-        f"Execution time:     {total_execution:.4f}s"
-    )
-
-    log(
-        f"Total test batches: "
-        f"{analysis['totalSuccessfulBatches']}"
-    )
-
-    log(
-        f"Total test articles: "
-        f"{analysis['totalSuccessfulArticles']}"
-    )
-
-    log(
-        f"Saved to: {ANALYSIS_CURRENT}"
-    )
-
-    log("=" * 72)
-
-    return 0
-
+# ============================================================================
+# ENTRY POINT
+# ============================================================================
 
 if __name__ == "__main__":
-    sys.exit(
-        main()
-    )
+    main()
