@@ -53,7 +53,7 @@ ANALYSIS_CURRENT = ANALYSIS_DIR / "current.json"
 # TEST CONFIGURATION
 # ============================================================
 
-BATCH_SIZE = 5
+BATCH_SIZE = 2
 MAX_BATCHES = 1
 PROCESS_NEWEST_FIRST = True
 
