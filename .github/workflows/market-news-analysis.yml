@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   analyze-market-news:
-    name: Analyze 5 Newest Market News Articles
+    name: Analyze 1 Newest Market News Article
     runs-on: ubuntu-latest
 
     concurrency:
@@ -16,20 +16,27 @@ jobs:
       cancel-in-progress: false
 
     steps:
+      # ==========================================================
+      # CHECKOUT
+      # ==========================================================
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # ==========================================================
+      # PYTHON
+      # ==========================================================
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install openpyxl
+      # ==========================================================
+      # VERIFY INPUTS
+      # ==========================================================
 
       - name: Verify production inputs
         run: |
@@ -48,19 +55,26 @@ jobs:
           echo "Required files:"
           test -f "scripts/analyze_market_news.py"
           test -f "data/market_news/current.json"
-          test -f "Research Funds.xlsx"
 
           echo ""
           echo "All required files found."
 
-      - name: Analyze newest 5 pending articles
+      # ==========================================================
+      # GEMINI ANALYSIS
+      # ==========================================================
+
+      - name: Analyze newest 1 article
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: gemini-3.5-flash-lite
           GEMINI_TIMEOUT_SECONDS: "180"
-          GEMINI_MAX_OUTPUT_TOKENS: "16384"
+          GEMINI_MAX_OUTPUT_TOKENS: "8192"
         run: |
           python -u scripts/analyze_market_news.py
+
+      # ==========================================================
+      # SHOW RESULT
+      # ==========================================================
 
       - name: Show analysis result
         if: always()
@@ -73,7 +87,7 @@ jobs:
             ls -lh "data/market_news/analysis/current.json"
 
             echo ""
-            echo "Latest batch summary:"
+            echo "Latest analysis summary:"
 
             python - <<'PY'
           import json
@@ -83,64 +97,42 @@ jobs:
           with open(path, "r", encoding="utf-8") as f:
               data = json.load(f)
 
-          print(
-              "Successful batches:",
-              data.get("totalSuccessfulBatches", 0)
-          )
+          print("Model:", data.get("configuration", {}).get("model"))
+          print("Generated:", data.get("generatedAt"))
 
-          print(
-              "Successful articles:",
-              data.get("totalSuccessfulArticles", 0)
-          )
+          source = data.get("source", {})
+          print("Source article count:", source.get("articleCount"))
 
-          batches = data.get("batches", [])
+          batch = data.get("batch", {})
+          print("Batch number:", batch.get("batchNumber"))
+          print("Articles analyzed:", batch.get("articleCount"))
 
-          if batches:
-              batch = batches[-1]
+          request = data.get("request", {})
+          print("Attempts used:", request.get("attemptsUsed"))
+          print("Response seconds:", request.get("responseSeconds"))
 
-              print(
-                  "Latest batch:",
-                  batch.get("batchNumber")
-              )
+          validation = data.get("validation", {})
+          print("Validation:", validation.get("passed"))
 
-              print(
-                  "Article count:",
-                  batch.get("request", {}).get(
-                      "articleCount"
-                  )
-              )
+          print("")
+          print("Article IDs:")
 
-              print(
-                  "Response seconds:",
-                  batch.get("request", {}).get(
-                      "responseSeconds"
-                  )
-              )
+          for article_id in batch.get("articleIds", []):
+              print("-", article_id)
 
-              print(
-                  "Model:",
-                  batch.get("model")
-              )
+          print("")
+          print("Retry history:")
 
-              print(
-                  "Validation:",
-                  batch.get("validation", {}).get(
-                      "passed"
-                  )
-              )
-
-              print("")
-              print("Article IDs:")
-
-              for article_id in batch.get(
-                  "articleIds",
-                  []
-              ):
-                  print("-", article_id)
+          for attempt in request.get("retryHistory", []):
+              print("-", attempt)
           PY
           else
             echo "No analysis/current.json exists."
           fi
+
+      # ==========================================================
+      # COMMIT SUCCESSFUL ANALYSIS
+      # ==========================================================
 
       - name: Commit successful analysis
         if: success()
@@ -160,5 +152,5 @@ jobs:
             exit 0
           fi
 
-          git commit -m "Analyze market news batch"
+          git commit -m "Analyze 1 market news article"
           git push
