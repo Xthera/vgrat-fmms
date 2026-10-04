@@ -73,7 +73,7 @@ REQUEST_TIMEOUT = 180
 MAX_OUTPUT_TOKENS = 8192
 
 # Keep this at 1 for the first-stage test.
-MAX_BATCHES =3
+MAX_BATCHES =2
 
 
 # ============================================================
