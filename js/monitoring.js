@@ -780,7 +780,7 @@ function renderSuggestions() {
     list.innerHTML = matches.length
         ? matches
             .map((fund, index) => `
-                <li class="compare-suggestion${index === 0 ? " is-highlighted" : ""}" role="option" data-watch-add="${escapeHtml(fundId(fund))}">
+                <li class="compare-suggestion" role="option" data-watch-add="${escapeHtml(fundId(fund))}">
                     <span class="compare-suggestion-name">${escapeHtml(fund.fundName ?? "")}</span>
                     <span class="compare-suggestion-code">${escapeHtml(fund.fundCode ?? "")}</span>
                 </li>
