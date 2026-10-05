@@ -3812,9 +3812,11 @@ body.has-news-dialog {
     font-size: calc(10px * var(--font-scale, 1));
 }
 
-.explorer-table th:nth-child(n + 4),
-.explorer-table td:nth-child(n + 4) {
-    text-align: right;
+/* Asset class, Risk, BID price, YTD, 1M, 1Y, 3Y sit centred
+   under their headings */
+.explorer-table th:nth-child(n + 2),
+.explorer-table td:nth-child(n + 2) {
+    text-align: center;
 }
 
 .explorer-row {
@@ -4375,6 +4377,14 @@ body.has-news-dialog {
 .performance-grid .performance-table .bid-cell,
 .performance-grid .performance-table .return-cell {
     white-space: nowrap;
+}
+
+/* Code, Return and BID sit centred under their headings */
+.performance-grid .performance-table th:nth-child(n + 3),
+.performance-grid .performance-table .fund-code-cell,
+.performance-grid .performance-table .return-cell,
+.performance-grid .performance-table .bid-cell {
+    text-align: center;
 }
 
 
@@ -5438,6 +5448,17 @@ html[data-theme="light"] .summary-card-value.return-negative::before {
         display: none;
     }
 
+}
+
+
+/* Menu button lines up with the menu icons below it
+   (centre of the icon column), open or minimised. */
+.nav-toggle {
+    margin-left: -4px;
+}
+
+.app-shell.nav-collapsed .nav-toggle {
+    margin-left: calc(var(--sidebar-width) * var(--font-scale, 1) / 2 - 36px);
 }
 
 /* ============================================================
