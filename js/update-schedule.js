@@ -6,8 +6,8 @@
    The times below copy the schedules in .github/workflows.
    If a workflow's cron changes, update UPDATE_JOBS to match.
 
-     Fund details    build_funds_data.yml   cron "20 22 * * *"
-                     -> daily 06:20 SGT
+     Fund details    build_funds_data.yml   cron "0 16,4 * * *"
+                     -> daily 00:00 SGT and 12:00 SGT
      Market refresh  market-news.yml        cron "20 16,19,22,1,4,7,10,13 * * *"
                      -> every 3 hours from 00:20 SGT
      Market analysis market-news-analysis.yml
@@ -29,8 +29,8 @@ const UPDATE_JOBS = [
         key: "funds",
         name: "Fund details",
         detail: "BID prices, returns, holdings, dividends",
-        scheduleText: "Daily at 06:20 SGT",
-        utcSlots: [[22, 20]],
+        scheduleText: "Twice daily, 00:00 and 12:00 SGT",
+        utcSlots: [[16, 0], [4, 0]],
         source: "data/funds.json",
         stampOf: raw => raw?.generatedAtUtc ?? null
     },
