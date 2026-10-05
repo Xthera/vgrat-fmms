@@ -5461,6 +5461,247 @@ html[data-theme="light"] .summary-card-value.return-negative::before {
     margin-left: calc(var(--sidebar-width) * var(--font-scale, 1) / 2 - 36px);
 }
 
+
+/* ============================================================
+   COLOUR PALETTES (Settings › Theme)
+   Each palette swaps the accent colour used for highlights,
+   active tabs, focus rings and links, in dark and light mode.
+   Gain / loss colours and chart series colours stay the same.
+   ============================================================ */
+
+html[data-accent="steel"] {
+    --accent: #8fb6d9;
+    --accent-strong: #b5d4ee;
+    --accent-soft: rgba(143,182,217, 0.13);
+}
+
+html[data-theme="light"][data-accent="steel"] {
+    --accent: #426f96;
+    --accent-strong: #315e86;
+    --accent-soft: rgba(66,111,150, 0.10);
+}
+
+html[data-accent="ocean"] {
+    --accent: #5aa9ff;
+    --accent-strong: #9ccbff;
+    --accent-soft: rgba(90,169,255, 0.13);
+}
+
+html[data-theme="light"][data-accent="ocean"] {
+    --accent: #1f6fd1;
+    --accent-strong: #195bb0;
+    --accent-soft: rgba(31,111,209, 0.10);
+}
+
+html[data-accent="gold"] {
+    --accent: #d9ad55;
+    --accent-strong: #f2cd80;
+    --accent-soft: rgba(217,173,85, 0.13);
+}
+
+html[data-theme="light"][data-accent="gold"] {
+    --accent: #9a6b12;
+    --accent-strong: #7f560a;
+    --accent-soft: rgba(154,107,18, 0.10);
+}
+
+html[data-accent="teal"] {
+    --accent: #4cc2c9;
+    --accent-strong: #86dde2;
+    --accent-soft: rgba(76,194,201, 0.13);
+}
+
+html[data-theme="light"][data-accent="teal"] {
+    --accent: #0d7c83;
+    --accent-strong: #0a666c;
+    --accent-soft: rgba(13,124,131, 0.10);
+}
+
+html[data-accent="violet"] {
+    --accent: #a99cf5;
+    --accent-strong: #c9c0ff;
+    --accent-soft: rgba(169,156,245, 0.13);
+}
+
+html[data-theme="light"][data-accent="violet"] {
+    --accent: #5b49c7;
+    --accent-strong: #4a39ad;
+    --accent-soft: rgba(91,73,199, 0.10);
+}
+
+html[data-accent="rose"] {
+    --accent: #ef8fb6;
+    --accent-strong: #ffb8d4;
+    --accent-soft: rgba(239,143,182, 0.13);
+}
+
+html[data-theme="light"][data-accent="rose"] {
+    --accent: #b8336a;
+    --accent-strong: #9c2a59;
+    --accent-soft: rgba(184,51,106, 0.10);
+}
+
+.palette-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+
+    gap: 8px;
+
+    max-width: 640px;
+}
+
+.palette-option {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 9px 12px;
+
+    border:
+        1px solid var(--border-medium);
+
+    border-radius: 8px;
+
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+
+    font: inherit;
+    font-size: calc(13px * var(--font-scale, 1));
+    font-weight: 600;
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        border-color 140ms ease,
+        background-color 140ms ease;
+}
+
+.palette-option:hover {
+    border-color: var(--accent);
+}
+
+.palette-option.active {
+    border-color: var(--accent);
+
+    background: var(--accent-soft);
+    color: var(--text-primary);
+
+    box-shadow:
+        0 0 0 1px var(--accent) inset;
+}
+
+/* Swatch: the palette's colour in the current mode */
+.palette-swatch {
+    flex-shrink: 0;
+
+    width: 22px;
+    height: 22px;
+
+    border-radius: 50%;
+
+    background: var(--swatch-dark);
+
+    box-shadow:
+        0 0 0 2px var(--bg-surface),
+        0 0 0 3px var(--border-medium);
+}
+
+html[data-theme="light"] .palette-swatch {
+    background: var(--swatch-light);
+}
+
+.palette-check {
+    margin-left: auto;
+
+    color: var(--accent-strong);
+
+    visibility: hidden;
+}
+
+.palette-option.active .palette-check {
+    visibility: visible;
+}
+
+
+/* ============================================================
+   FUND EXPLORER — WATCH STAR IN EACH ROW
+   ============================================================ */
+
+.explorer-fund-wrap {
+    display: flex;
+    align-items: center;    /* star sits in the middle of the row */
+
+    gap: 8px;
+}
+
+.explorer-fund-text {
+    flex: 1;
+
+    min-width: 0;
+}
+
+.explorer-star {
+    flex-shrink: 0;
+
+    width: 28px;
+    height: 28px;
+
+    margin: 0 0 0 -6px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: 6px;
+
+    background: transparent;
+    color: var(--text-faint);
+
+    font-size: calc(17px * var(--font-scale, 1));
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        color 120ms ease,
+        background-color 120ms ease,
+        transform 120ms ease;
+}
+
+.explorer-star:hover {
+    background: var(--warning-soft);
+    color: var(--warning);
+}
+
+.explorer-star:active {
+    transform: scale(0.9);
+}
+
+.explorer-star.is-on {
+    color: var(--warning);
+}
+
+@media (max-width: 699px) and (pointer: coarse), (max-height: 500px) and (max-width: 1000px) and (pointer: coarse) {
+
+    .explorer-fund-wrap {
+        flex-direction: row-reverse;
+        align-items: flex-start;
+    }
+
+    .explorer-star {
+        width: 34px;
+        height: 34px;
+
+        margin: -6px -8px 0 0;
+
+        font-size: calc(20px * var(--font-scale, 1));
+    }
+
+}
+
 /* ============================================================
    STICKY FOOTER (desktop / tablet)
    The "VGrat FMS · Prudential Singapore fund data" bar stays
