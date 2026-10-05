@@ -137,7 +137,7 @@ const state = {
 
     },
 
-    selectedPeriod: "DD",
+    selectedPeriod: "MM",
 
     currentView: "performance",
 
@@ -1396,15 +1396,13 @@ function initializePerformanceTabs() {
     );
 
 
-    const stored =
-        getStoredValue(
-            STORAGE_KEYS.performancePeriod,
-            "DD"
-        );
-
-
+    /*
+     * The performer section always opens on M-M (month over
+     * month); a period picked during the visit isn't carried
+     * over to the next one.
+     */
     setSelectedPeriod(
-        normalizePeriod(stored)
+        "MM"
     );
 
 }
