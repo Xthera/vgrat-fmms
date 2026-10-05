@@ -5983,6 +5983,189 @@ html[data-theme="light"] .palette-swatch {
 
 }
 
+
+/* ============================================================
+   THEMED DROPDOWNS (js/custom-select.js)
+   Replace the browser's menu for filter <select>s so the
+   highlight uses the colour palette and nothing is highlighted
+   until you hover or use the arrow keys.
+   ============================================================ */
+
+.vselect {
+    position: relative;
+
+    width: 100%;
+    min-width: 0;
+}
+
+.vselect-native {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+.vselect-button {
+    width: 100%;
+    height: 37px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 8px;
+
+    padding: 0 10px;
+
+    border:
+        1px solid var(--border-medium);
+
+    border-radius: 6px;
+
+    background: var(--bg-input);
+    color: var(--text-secondary);
+
+    font: inherit;
+    font-size: calc(12px * var(--font-scale, 1));
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.vselect-button:hover {
+    border-color: var(--accent);
+}
+
+.vselect-button:focus-visible,
+.vselect.is-open .vselect-button {
+    border-color: var(--accent);
+
+    outline: none;
+
+    box-shadow:
+        0 0 0 2px var(--accent-soft);
+}
+
+.vselect.is-filtered .vselect-button {
+    border-color: var(--accent);
+
+    color: var(--text-primary);
+}
+
+.vselect-value {
+    min-width: 0;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.vselect-caret {
+    flex-shrink: 0;
+
+    color: var(--text-muted);
+
+    font-size: calc(11px * var(--font-scale, 1));
+
+    transition: transform 140ms ease;
+}
+
+.vselect.is-open .vselect-caret {
+    transform: rotate(180deg);
+}
+
+.vselect-list {
+    position: absolute;
+    z-index: 60;
+
+    top: calc(100% + 4px);
+    left: 0;
+
+    min-width: 100%;
+    max-width: min(420px, 90vw);
+    max-height: 300px;
+
+    margin: 0;
+    padding: 4px;
+
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    list-style: none;
+
+    border:
+        1px solid var(--border-medium);
+
+    border-radius: 8px;
+
+    background: var(--bg-surface);
+
+    box-shadow: var(--shadow-medium);
+}
+
+.vselect-list[hidden] {
+    display: none;
+}
+
+.vselect-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding: 7px 9px;
+
+    border-radius: 5px;
+
+    color: var(--text-secondary);
+
+    font-size: calc(12.5px * var(--font-scale, 1));
+
+    white-space: nowrap;
+
+    cursor: pointer;
+}
+
+/* Palette-coloured highlight: only on hover or arrow keys */
+.vselect-option:hover,
+.vselect-option.is-active {
+    background: var(--bg-surface-hover);
+    color: var(--text-primary);
+}
+
+.vselect-option.is-selected {
+    color: var(--text-primary);
+
+    font-weight: 650;
+}
+
+.vselect-check {
+    color: var(--accent-strong);
+
+    visibility: hidden;
+}
+
+.vselect-option.is-selected .vselect-check {
+    visibility: visible;
+}
+
+
+/* Header brand follows the colour palette */
+.brand-name {
+    color: var(--accent-strong);
+}
+
+.brand-subtitle {
+    color: var(--accent);
+}
+
 /* ============================================================
    STICKY FOOTER (desktop / tablet)
    The "VGrat FMS · Prudential Singapore fund data" bar stays
