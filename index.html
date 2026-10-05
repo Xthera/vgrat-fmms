@@ -20,6 +20,23 @@
 
     <title>VGrat FMS — Market Performance</title>
 
+    <link rel="icon" href="assets/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+    <!-- Apply the saved text size before the page draws -->
+    <script>
+        try {
+            var saved = localStorage.getItem("vgrat-fms-font-size");
+            var named = { small: 0.9, "default": 1, large: 1.15, xlarge: 1.3 };
+            var scale = named[saved] || parseFloat(saved);
+            if (scale >= 0.8 && scale <= 1.4) {
+                document.documentElement.style.setProperty("--font-scale", String(scale));
+            }
+        } catch (error) {}
+    </script>
+
     <link
         rel="stylesheet"
         href="css/style.css"
@@ -97,7 +114,7 @@
                 >
 
                     <span class="brand-mark">
-                        VG
+                        <img src="assets/logo.png" alt="" width="40" height="40" decoding="async">
                     </span>
 
                     <span class="brand-copy">
@@ -263,6 +280,25 @@
 
                     <span class="nav-link-label">
                         Monitoring
+                    </span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    title="Settings"
+                    class="nav-link nav-link-bottom"
+                    data-view-target="settings"
+                    aria-current="false"
+                >
+
+                    <span class="nav-link-icon">
+                        ⚙
+                    </span>
+
+                    <span class="nav-link-label">
+                        Settings
                     </span>
 
                 </button>
@@ -438,9 +474,34 @@
                                 role="tab"
                                 aria-selected="false"
                             >SI</button>
+                            <button
+                                type="button"
+                                class="compare-range-tab"
+                                data-compare-range="CUSTOM"
+                                title="Choose your own dates"
+                                role="tab"
+                                aria-selected="false"
+                            >Custom</button>
 
                         </div>
 
+                    </div>
+
+
+                    <div
+                        id="compare-custom"
+                        class="fund-chart-custom compare-custom"
+                        hidden
+                    >
+                        <label>
+                            <span>From</span>
+                            <input id="compare-custom-from" type="date">
+                        </label>
+                        <label>
+                            <span>To</span>
+                            <input id="compare-custom-to" type="date">
+                        </label>
+                        <span id="compare-custom-error" class="fund-chart-error" role="alert"></span>
                     </div>
 
 
@@ -503,6 +564,15 @@
 
                         <table class="data-table compare-table">
 
+                            <colgroup>
+                                <col class="compare-col-fund">
+                                <col class="compare-col-code">
+                                <col class="compare-col-start">
+                                <col class="compare-col-change">
+                                <col class="compare-col-bid">
+                                <col class="compare-col-remove">
+                            </colgroup>
+
                             <thead>
 
                                 <tr>
@@ -510,7 +580,7 @@
                                     <th scope="col">Code</th>
                                     <th scope="col">Start</th>
                                     <th scope="col">Change</th>
-                                    <th scope="col">Latest BID</th>
+                                    <th scope="col" title="BID price at the end of the selected range">End BID</th>
                                     <th scope="col"><span class="sr-only">Remove</span></th>
                                 </tr>
 
@@ -1073,7 +1143,7 @@
                                 >
 
                                     <option value="ALL">
-                                        All asset classes
+                                        All
                                     </option>
 
                                 </select>
@@ -1094,7 +1164,7 @@
                                 >
 
                                     <option value="ALL">
-                                        All geographies
+                                        All
                                     </option>
 
                                 </select>
@@ -1115,7 +1185,7 @@
                                 >
 
                                     <option value="ALL">
-                                        All sectors
+                                        All
                                     </option>
 
                                 </select>
@@ -1136,7 +1206,7 @@
                                 >
 
                                     <option value="ALL">
-                                        All categories
+                                        All
                                     </option>
 
                                 </select>
@@ -1157,7 +1227,7 @@
                                 >
 
                                     <option value="ALL">
-                                        All importance
+                                        All
                                     </option>
 
                                     <option value="HIGH">
@@ -1190,7 +1260,7 @@
                                 >
 
                                     <option value="ALL">
-                                        All sentiment
+                                        All
                                     </option>
 
                                     <option value="POSITIVE">
@@ -1597,6 +1667,27 @@
 
                     </div>
 
+
+                    <div class="page-header-meta">
+
+                        <span class="meta-label">
+                            Data updated
+                        </span>
+
+                        <strong
+                            id="explorer-updated"
+                            class="meta-value"
+                        >
+                            —
+                        </strong>
+
+                        <span
+                            id="explorer-valuation"
+                            class="meta-sub"
+                        ></span>
+
+                    </div>
+
                 </div>
 
 
@@ -1617,17 +1708,19 @@
                             >
                         </div>
 
-                        <div class="news-search">
+                        <div class="news-search explorer-holding-picker">
                             <label for="explorer-holding" class="sr-only">Find funds holding a company</label>
                             <input
                                 id="explorer-holding"
                                 type="search"
-                                list="explorer-holding-options"
                                 placeholder="Funds holding… (e.g. Nvidia)"
                                 autocomplete="off"
+                                role="combobox"
+                                aria-expanded="false"
+                                aria-controls="explorer-holding-options"
                                 data-explorer-filter
                             >
-                            <datalist id="explorer-holding-options"></datalist>
+                            <ul id="explorer-holding-options" class="compare-suggestions" role="listbox" hidden></ul>
                         </div>
 
                     </div>
@@ -1770,23 +1863,257 @@
                 </div>
 
 
-                <div class="placeholder-panel">
+                <p id="monitoring-loading" class="news-summary-bar">Loading price history…</p>
 
-                    <div class="placeholder-icon">
-                        ◎
+
+                <!-- WATCHLIST -->
+
+                <section class="performance-card monitor-card" aria-labelledby="watchlist-title">
+
+                    <div class="card-header">
+                        <div>
+                            <div class="card-eyebrow">MY FUNDS</div>
+                            <h2 id="watchlist-title" class="card-title">Watchlist &amp; alerts</h2>
+                            <div id="watchlist-summary" class="compare-range-label"></div>
+                        </div>
                     </div>
 
-                    <h2>
-                        Monitoring
-                    </h2>
+                    <div class="compare-toolbar">
+                        <div class="compare-picker watchlist-picker">
+                            <input
+                                id="watchlist-search"
+                                type="search"
+                                autocomplete="off"
+                                placeholder="Add a fund to your watchlist…"
+                                aria-label="Search funds to watch"
+                            >
+                            <ul id="watchlist-suggestions" class="compare-suggestions" role="listbox" hidden></ul>
+                        </div>
+                    </div>
 
-                    <p>
-                        Fund watchlists, performance alerts,
-                        market-news relevance and monitoring
-                        signals will be built here.
+                    <div class="table-wrap">
+                        <table class="data-table monitor-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col"><span class="sr-only">Watching</span></th>
+                                    <th scope="col">Fund</th>
+                                    <th scope="col">Latest BID</th>
+                                    <th scope="col">1D</th>
+                                    <th scope="col">1W</th>
+                                    <th scope="col">1M</th>
+                                    <th scope="col">From 52W high</th>
+                                    <th scope="col">Alerts</th>
+                                </tr>
+                            </thead>
+                            <tbody id="watchlist-body"></tbody>
+                        </table>
+                    </div>
+
+                    <details class="monitor-rules">
+                        <summary>Alert rules</summary>
+
+                        <div class="monitor-rules-body">
+                            <p class="settings-help">Alerts appear on watched funds when a rule is met. Saved in this browser.</p>
+
+                            <label class="monitor-rule">
+                                <input type="checkbox" data-rule-enabled="dayMove">
+                                <span>Daily move (up or down) of at least</span>
+                                <input type="number" min="0.1" step="0.5" class="monitor-rule-value" data-rule-value="dayMove" aria-label="Daily move (up or down) of at least threshold">
+                                <span class="monitor-rule-unit">%</span>
+                            </label>
+
+                            <label class="monitor-rule">
+                                <input type="checkbox" data-rule-enabled="weekDrop">
+                                <span>Fall over 1 week of at least</span>
+                                <input type="number" min="0.1" step="0.5" class="monitor-rule-value" data-rule-value="weekDrop" aria-label="Fall over 1 week of at least threshold">
+                                <span class="monitor-rule-unit">%</span>
+                            </label>
+
+                            <label class="monitor-rule">
+                                <input type="checkbox" data-rule-enabled="monthDrop">
+                                <span>Fall over 1 month of at least</span>
+                                <input type="number" min="0.1" step="0.5" class="monitor-rule-value" data-rule-value="monthDrop" aria-label="Fall over 1 month of at least threshold">
+                                <span class="monitor-rule-unit">%</span>
+                            </label>
+
+                            <label class="monitor-rule">
+                                <input type="checkbox" data-rule-enabled="fromHigh">
+                                <span>Below its 52-week high by at least</span>
+                                <input type="number" min="0.1" step="1" class="monitor-rule-value" data-rule-value="fromHigh" aria-label="Below its 52-week high by at least threshold">
+                                <span class="monitor-rule-unit">%</span>
+                            </label>
+
+                            <label class="monitor-rule">
+                                <input type="checkbox" data-rule-enabled="newHigh">
+                                <span>New 52-week high</span>
+                            </label>
+
+                            <label class="monitor-rule">
+                                <input type="checkbox" data-rule-enabled="newLow">
+                                <span>New 52-week low</span>
+                            </label>
+                            <button id="alert-rules-reset" type="button" class="news-clear-filters">Reset to defaults</button>
+                        </div>
+                    </details>
+
+                </section>
+
+
+                <!-- UNUSUAL MOVES -->
+
+                <section class="performance-card monitor-card" aria-labelledby="unusual-title">
+
+                    <div class="card-header">
+                        <div>
+                            <div class="card-eyebrow">ALL FUNDS</div>
+                            <h2 id="unusual-title" class="card-title">Unusual moves</h2>
+                            <div id="unusual-asof" class="compare-range-label"></div>
+                        </div>
+
+                        <label class="filter-control monitor-sensitivity">
+                            <span>Flag moves bigger than</span>
+                            <select id="unusual-sensitivity">
+                                <option value="2">2× usual</option>
+                                <option value="2.5">2.5× usual</option>
+                                <option value="3">3× usual</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div id="unusual-lists" class="monitor-lists"></div>
+
+                    <p class="fund-source-note monitor-note">
+                        "Usual" move = how much the fund's BID typically changes from one price to the next
+                        over the past 12 months. Based on actual BID prices only. Click any fund for its profile.
                     </p>
 
+                </section>
+
+            </section>
+
+
+            <!-- =================================================
+                 SETTINGS VIEW
+            ================================================== -->
+
+            <section
+                id="settings-view"
+                class="page-view"
+                data-view-panel="settings"
+                aria-labelledby="settings-page-title"
+                hidden
+            >
+
+                <div class="page-header">
+
+                    <div class="page-header-main">
+
+                        <div class="eyebrow">
+                            PREFERENCES
+                        </div>
+
+                        <h1
+                            id="settings-page-title"
+                            class="page-title"
+                        >
+                            Settings
+                        </h1>
+
+                        <p class="page-description">
+                            Adjust how VGrat FMS looks on this device.
+                        </p>
+
+                    </div>
+
                 </div>
+
+
+                <section class="performance-card settings-card" aria-labelledby="settings-display-title">
+
+                    <div class="card-header">
+                        <div>
+                            <div class="card-eyebrow">DISPLAY</div>
+                            <h2 id="settings-display-title" class="card-title">Appearance</h2>
+                        </div>
+                    </div>
+
+                    <div class="settings-body">
+
+                        <div class="settings-row">
+
+                            <h3 class="settings-label">Text size</h3>
+
+                            <p class="settings-help">
+                                Applies to every page, table and chart. Saved in this browser.
+                            </p>
+
+                            <div class="settings-slider">
+
+                                <span class="settings-slider-end settings-slider-small" aria-hidden="true">A</span>
+
+                                <input
+                                    id="font-size-slider"
+                                    type="range"
+                                    min="80"
+                                    max="140"
+                                    step="5"
+                                    value="100"
+                                    aria-label="Text size"
+                                    aria-valuetext="100%"
+                                >
+
+                                <span class="settings-slider-end settings-slider-large" aria-hidden="true">A</span>
+
+                                <output
+                                    id="font-size-value"
+                                    for="font-size-slider"
+                                    class="settings-slider-value"
+                                >100%</output>
+
+                                <button
+                                    id="font-size-reset"
+                                    type="button"
+                                    class="news-clear-filters settings-reset"
+                                >
+                                    Reset
+                                </button>
+
+                            </div>
+
+                            <p class="settings-preview">
+                                Preview: PRULink Asian Equity Fund · BID 3.75635 · +0.57% today
+                            </p>
+
+                        </div>
+
+
+                        <div class="settings-row">
+
+                            <h3 class="settings-label">Theme</h3>
+
+                            <p class="settings-help">
+                                Same as the Dark / Light button at the top right.
+                            </p>
+
+                            <div class="settings-options" role="group" aria-label="Theme">
+
+                                <button type="button" class="settings-option" data-theme-option="dark" aria-pressed="false">
+                                    <span class="settings-option-sample">☾</span>
+                                    <span class="settings-option-name">Dark</span>
+                                </button>
+
+                                <button type="button" class="settings-option" data-theme-option="light" aria-pressed="false">
+                                    <span class="settings-option-sample">☀</span>
+                                    <span class="settings-option-name">Light</span>
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
 
             </section>
 
