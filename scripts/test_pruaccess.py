@@ -1105,7 +1105,12 @@ async def get_prudential_fund_data(
                 first_value(
                     "dividendRate",
                 ),
-
+            
+            "dividendUnit":
+                first_value(
+                    "dividendUnit",
+                ),
+            
             "raw":
                 fund,
         }
