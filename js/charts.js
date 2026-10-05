@@ -1,9 +1,8 @@
 /* VGRAT FMS - CHARTS
  * ===================
  *
- * Optional Chart.js helpers for the VGrat FMS dashboard.
- *
- * The application must continue to work if Chart.js is unavailable.
+ * Optional Chart.js helpers.
+ * The dashboard must remain functional even if Chart.js is unavailable.
  */
 
 const chartRegistry = new Map();
@@ -12,7 +11,7 @@ function getChartConstructor() {
     return window.Chart ?? null;
 }
 
-function getCssVariable(name, fallback = "") {
+function getCssVariable(name, fallback) {
     const value = getComputedStyle(document.documentElement)
         .getPropertyValue(name)
         .trim();
@@ -32,6 +31,10 @@ function getThemeColors() {
     };
 }
 
+function getCanvas(canvasId) {
+    return document.getElementById(canvasId);
+}
+
 function destroyChart(canvasId) {
     const chart = chartRegistry.get(canvasId);
 
@@ -42,7 +45,7 @@ function destroyChart(canvasId) {
     try {
         chart.destroy();
     } catch {
-        // Ignore Chart.js cleanup failures.
+        // Ignore cleanup errors.
     }
 
     chartRegistry.delete(canvasId);
@@ -52,16 +55,6 @@ function destroyAllCharts() {
     for (const canvasId of chartRegistry.keys()) {
         destroyChart(canvasId);
     }
-}
-
-function getCanvas(canvasId) {
-    const canvas = document.getElementById(canvasId);
-
-    if (!canvas) {
-        return null;
-    }
-
-    return canvas;
 }
 
 function createChart(canvasId, config) {
@@ -86,24 +79,18 @@ function createChart(canvasId, config) {
     return chart;
 }
 
-function baseChartOptions(extra = {}) {
+function getBaseOptions() {
     const colors = getThemeColors();
 
     return {
         responsive: true,
         maintainAspectRatio: false,
 
-        interaction: {
-            intersect: false,
-            mode: "index"
-        },
-
         plugins: {
             legend: {
                 labels: {
                     color: colors.text,
-                    usePointStyle: true,
-                    padding: 16
+                    usePointStyle: true
                 }
             },
 
@@ -136,13 +123,16 @@ function baseChartOptions(extra = {}) {
                     color: colors.grid
                 }
             }
-        },
-
-        ...extra
+        }
     };
 }
 
-function createPerformanceChart(canvasId, labels, winners, losers) {
+function createPerformanceChart(
+    canvasId,
+    labels,
+    winners,
+    losers
+) {
     if (!labels?.length) {
         return null;
     }
@@ -172,11 +162,15 @@ function createPerformanceChart(canvasId, labels, winners, losers) {
             ]
         },
 
-        options: baseChartOptions()
+        options: getBaseOptions()
     });
 }
 
-function createPerformanceLineChart(canvasId, labels, values) {
+function createPerformanceLineChart(
+    canvasId,
+    labels,
+    values
+) {
     if (!labels?.length) {
         return null;
     }
@@ -201,20 +195,27 @@ function createPerformanceLineChart(canvasId, labels, values) {
             ]
         },
 
-        options: baseChartOptions()
+        options: getBaseOptions()
     });
 }
 
-function createNewsSentimentChart(canvasId, statistics) {
+function createNewsSentimentChart(
+    canvasId,
+    statistics
+) {
     if (!statistics) {
         return null;
     }
 
     const colors = getThemeColors();
 
-    const labels = ["Positive", "Neutral", "Negative"];
+    const labels = [
+        "Positive",
+        "Neutral",
+        "Negative"
+    ];
 
-    const data = [
+    const values = [
         statistics.sentiment?.POSITIVE ?? 0,
         statistics.sentiment?.NEUTRAL ?? 0,
         statistics.sentiment?.NEGATIVE ?? 0
@@ -228,7 +229,7 @@ function createNewsSentimentChart(canvasId, statistics) {
 
             datasets: [
                 {
-                    data,
+                    data: values,
 
                     backgroundColor: [
                         colors.positive,
@@ -251,8 +252,7 @@ function createNewsSentimentChart(canvasId, statistics) {
 
                     labels: {
                         color: colors.text,
-                        usePointStyle: true,
-                        padding: 16
+                        usePointStyle: true
                     }
                 }
             }
@@ -260,77 +260,78 @@ function createNewsSentimentChart(canvasId, statistics) {
     });
 }
 
-function createNewsCategoryChart(canvasId, statistics) {
-    if (!statistics) {
-        return null;
-    }
-
-    const entries = Object.entries(statistics.categories ?? {});
-
+function createNewsCategoryChart(
+    canvasId,
+    statistics
+) {
     return createNewsDistributionChart(
         canvasId,
         "Category",
-        entries
+        statistics?.categories
     );
 }
 
-function createNewsImportanceChart(canvasId, statistics) {
-    if (!statistics) {
-        return null;
-    }
-
-    const entries = Object.entries(statistics.importance ?? {});
-
+function createNewsImportanceChart(
+    canvasId,
+    statistics
+) {
     return createNewsDistributionChart(
         canvasId,
         "Importance",
-        entries
+        statistics?.importance
     );
 }
 
-function createNewsAssetClassChart(canvasId, statistics) {
-    if (!statistics) {
-        return null;
-    }
-
-    const entries = Object.entries(statistics.assetClasses ?? {});
-
+function createNewsAssetClassChart(
+    canvasId,
+    statistics
+) {
     return createNewsDistributionChart(
         canvasId,
         "Asset Class",
-        entries
+        statistics?.assetClasses
     );
 }
 
-function createNewsGeographyChart(canvasId, statistics) {
-    if (!statistics) {
-        return null;
-    }
-
-    const entries = Object.entries(statistics.geographies ?? {});
-
+function createNewsGeographyChart(
+    canvasId,
+    statistics
+) {
     return createNewsDistributionChart(
         canvasId,
         "Geography",
-        entries
+        statistics?.geographies
     );
 }
 
-function createNewsSectorChart(canvasId, statistics) {
-    if (!statistics) {
-        return null;
-    }
-
-    const entries = Object.entries(statistics.sectors ?? {});
-
+function createNewsSectorChart(
+    canvasId,
+    statistics
+) {
     return createNewsDistributionChart(
         canvasId,
         "Sector",
-        entries
+        statistics?.sectors
     );
 }
 
-function createNewsDistributionChart(canvasId, label, entries) {
+function createNewsDistributionChart(
+    canvasId,
+    label,
+    source
+) {
+    if (!source) {
+        destroyChart(canvasId);
+        return null;
+    }
+
+    const entries = Array.isArray(source)
+        ? source.map(item => [
+            item.name ?? item.label ?? "Unknown",
+            Number(item.value ?? item.count ?? 0)
+        ])
+        : Object.entries(source);
+
     if (!entries.length) {
         destroyChart(canvasId);
         return null;
@@ -338,69 +339,47 @@ function createNewsDistributionChart(canvasId, label, entries) {
 
     const colors = getThemeColors();
 
-    const labels = entries.map(([key]) => key);
-    const values = entries.map(([, value]) => Number(value) || 0);
-
     return createChart(canvasId, {
         type: "bar",
 
         data: {
-            labels,
+            labels: entries.map(([key]) => key),
 
             datasets: [
                 {
                     label,
-                    data: values,
+                    data: entries.map(([, value]) => Number(value) || 0),
                     backgroundColor: colors.accent,
                     borderRadius: 4
                 }
             ]
         },
 
-        options: baseChartOptions({
+        options: {
+            ...getBaseOptions(),
+
             indexAxis: "y"
-        })
+        }
     });
 }
 
 /*
- * Rebuild all currently registered charts using the current theme.
+ * Called when the dashboard theme changes.
  *
- * Chart.js does not automatically rebuild every chart when CSS variables
- * change, so this function destroys the existing instances. The application
- * can recreate the charts from its current data after the theme changes.
+ * The existing chart instances are destroyed because their colours
+ * are based on CSS variables. The application recreates the charts
+ * after the theme change.
  */
 function updateChartsForTheme() {
-    const existingCharts = Array.from(chartRegistry.entries());
-
-    if (!existingCharts.length) {
-        return;
-    }
-
-    /*
-     * Capture the canvas IDs only. The actual chart data/configuration is
-     * owned by the application and should be recreated by the caller.
-     */
-    const canvasIds = existingCharts.map(([canvasId]) => canvasId);
-
-    for (const canvasId of canvasIds) {
-        destroyChart(canvasId);
-    }
+    destroyAllCharts();
 }
 
-/*
- * Compatibility alias.
- *
- * Some older application code may call refreshChartsForTheme().
- */
 function refreshChartsForTheme() {
     updateChartsForTheme();
 }
 
 export {
     chartRegistry,
-    destroyChart,
-    destroyAllCharts,
     createChart,
     createPerformanceChart,
     createPerformanceLineChart,
@@ -410,6 +389,8 @@ export {
     createNewsAssetClassChart,
     createNewsGeographyChart,
     createNewsSectorChart,
+    destroyChart,
+    destroyAllCharts,
     updateChartsForTheme,
     refreshChartsForTheme
 };
