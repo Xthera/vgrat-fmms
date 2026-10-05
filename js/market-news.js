@@ -1,662 +1,513 @@
 /* ============================================================
-   VGRAT FMS - MARKET NEWS
+   VGRAT FMS
+   MARKET NEWS MODULE
    ============================================================
 
-   Visible Market News source:
-
+   Data sources:
+   - Current:
        data/market_news/analysis/current.json
 
-   Historical source:
-
+   - Historical:
        data/market_news/analysis/history/YYYY/MM/YYYY-MM-DD.json
 
-   The frontend uses the AI-analysis output only.
-
-   Raw collector files are intentionally NOT used here.
+   The frontend displays the AI-analysis output only.
+   Raw CNBC collector files are not used here.
 ============================================================ */
+
+import {
+    loadJson
+} from "./data-loader.js";
 
 
 /* ============================================================
-   PATHS
+   CONSTANTS
 ============================================================ */
 
 const MARKET_NEWS_PATHS = {
+
     current:
         "data/market_news/analysis/current.json",
 
-    historyBase:
+    historyRoot:
         "data/market_news/analysis/history"
+
 };
 
 
-/* ============================================================
-   BASIC HELPERS
-============================================================ */
-
-function isObject(value) {
-    return (
-        value !== null &&
-        typeof value === "object" &&
-        !Array.isArray(value)
-    );
-}
+const NEWS_CATEGORIES = [
+    "MARKET",
+    "ECONOMIC",
+    "TECHNOLOGY",
+    "GEOPOLITICAL"
+];
 
 
-function normaliseString(value) {
-    if (value === null || value === undefined) {
-        return "";
-    }
-
-    return String(value).trim();
-}
+const IMPORTANCE_ORDER = {
+    HIGH: 0,
+    MEDIUM: 1,
+    LOW: 2
+};
 
 
-function normaliseArray(value) {
-    if (!Array.isArray(value)) {
-        return [];
-    }
-
-    return value
-        .map(item => normaliseString(item))
-        .filter(Boolean);
-}
+const SENTIMENT_ORDER = {
+    NEGATIVE: 0,
+    NEUTRAL: 1,
+    POSITIVE: 2
+};
 
 
 /* ============================================================
    DATE HELPERS
 ============================================================ */
 
-/**
- * Parse an SGT ISO timestamp.
- *
- * Example:
- * 2026-10-05T04:28:47+08:00
- */
-function parseNewsDate(value) {
-    if (!value) {
+function parseNewsDate(
+    value
+) {
+
+    if (
+        typeof value !== "string" ||
+        !value
+    ) {
+
         return null;
     }
 
-    const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) {
+    const timestamp =
+        Date.parse(
+            value
+        );
+
+
+    if (
+        !Number.isFinite(
+            timestamp
+        )
+    ) {
+
         return null;
     }
 
-    return date;
+
+    return new Date(
+        timestamp
+    );
 }
 
 
-/**
- * Format a timestamp in Singapore time.
- */
 function formatNewsDate(
-    value,
-    options = {}
+    value
 ) {
-    const date = parseNewsDate(value);
+
+    const date =
+        parseNewsDate(
+            value
+        );
+
 
     if (!date) {
-        return "-";
+        return "—";
     }
 
-    const defaultOptions = {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Asia/Singapore"
-    };
 
-    return new Intl.DateTimeFormat(
+    return date.toLocaleDateString(
         "en-SG",
         {
-            ...defaultOptions,
-            ...options
-        }
-    ).format(date);
-}
-
-
-/**
- * Format a date as YYYY-MM-DD in Singapore time.
- */
-function formatSingaporeDate(value) {
-    const date = parseNewsDate(value);
-
-    if (!date) {
-        return null;
-    }
-
-    const parts = new Intl.DateTimeFormat(
-        "en-CA",
-        {
-            year: "numeric",
-            month: "2-digit",
             day: "2-digit",
+            month: "short",
+            year: "numeric",
             timeZone: "Asia/Singapore"
         }
-    ).formatToParts(date);
-
-    const map = {};
-
-    for (const part of parts) {
-        if (part.type !== "literal") {
-            map[part.type] = part.value;
-        }
-    }
-
-    if (!map.year || !map.month || !map.day) {
-        return null;
-    }
-
-    return `${map.year}-${map.month}-${map.day}`;
+    );
 }
 
 
-/**
- * Extract YYYY/MM from a YYYY-MM-DD date.
- */
-function getHistoryPathParts(dateString) {
-    if (
-        typeof dateString !== "string" ||
-        !/^\d{4}-\d{2}-\d{2}$/.test(dateString)
-    ) {
-        return null;
+function formatNewsTime(
+    value
+) {
+
+    const date =
+        parseNewsDate(
+            value
+        );
+
+
+    if (!date) {
+        return "—";
     }
 
-    const [year, month] = dateString.split("-");
 
-    return {
-        year,
-        month
-    };
-}
-
-
-/* ============================================================
-   FETCH
-============================================================ */
-
-async function fetchJson(path) {
-    const response = await fetch(
-        path,
+    return date.toLocaleTimeString(
+        "en-SG",
         {
-            cache: "no-store"
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "Asia/Singapore"
         }
     );
+}
 
-    if (!response.ok) {
-        throw new Error(
-            `Unable to load ${path} (HTTP ${response.status})`
+
+function formatNewsDateTime(
+    value
+) {
+
+    const date =
+        parseNewsDate(
+            value
         );
+
+
+    if (!date) {
+        return "—";
     }
 
-    try {
-        return await response.json();
-    } catch {
-        throw new Error(
-            `Invalid JSON returned from ${path}`
-        );
-    }
+
+    return date.toLocaleString(
+        "en-SG",
+        {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "Asia/Singapore"
+        }
+    );
 }
 
 
 /* ============================================================
-   ARTICLE NORMALISATION
+   HISTORY PATH
 ============================================================ */
 
-/**
- * Convert one raw analysis article into the stable structure
- * consumed by the UI.
- *
- * Hidden/internal fields such as reasoning and collector
- * metadata are retained internally but are not required by
- * the visible article renderer.
- */
-function normaliseArticle(article) {
-    if (!isObject(article)) {
+function buildHistoryPath(
+    date
+) {
+
+    if (
+        typeof date !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(date)
+    ) {
+
+        throw new Error(
+            `Invalid history date: ${date}`
+        );
+    }
+
+
+    const [
+        year,
+        month
+    ] =
+        date.split("-");
+
+
+    return (
+        `${MARKET_NEWS_PATHS.historyRoot}/` +
+        `${year}/${month}/${date}.json`
+    );
+}
+
+
+/* ============================================================
+   DATA NORMALISATION
+============================================================ */
+
+function normaliseAnalysis(
+    article
+) {
+
+    if (
+        !article ||
+        typeof article !== "object"
+    ) {
+
         return null;
     }
 
-    const articleId =
-        normaliseString(article.articleId);
-
-    const title =
-        normaliseString(article.title);
-
-    const summary =
-        normaliseString(article.summary);
-
-    /*
-     * A visible article needs at minimum an ID and title.
-     */
-    if (!articleId || !title) {
-        return null;
-    }
 
     return {
-        articleId,
+
+        articleId:
+            article.articleId ??
+            "",
 
         relevant:
             article.relevant !== false,
 
         category:
-            normaliseString(article.category)
-                .toUpperCase() || "MARKET",
+            String(
+                article.category ??
+                "MARKET"
+            ).toUpperCase(),
 
         sentiment:
-            normaliseString(article.sentiment)
-                .toUpperCase() || "NEUTRAL",
+            String(
+                article.sentiment ??
+                "NEUTRAL"
+            ).toUpperCase(),
 
         importance:
-            normaliseString(article.importance)
-                .toUpperCase() || "MEDIUM",
+            String(
+                article.importance ??
+                "MEDIUM"
+            ).toUpperCase(),
 
-        summary,
+        summary:
+            article.summary ??
+            "",
 
         assetClasses:
-            normaliseArray(article.assetClasses),
+            normaliseArray(
+                article.assetClasses
+            ),
 
         geographies:
-            normaliseArray(article.geographies),
+            normaliseArray(
+                article.geographies
+            ),
 
         sectors:
-            normaliseArray(article.sectors),
+            normaliseArray(
+                article.sectors
+            ),
 
         investorImpact:
-            normaliseString(article.investorImpact),
+            article.investorImpact ??
+            "",
+
+        reasoning:
+            article.reasoning ??
+            "",
 
         fundMonitoringRelevant:
             article.fundMonitoringRelevant === true,
 
         source:
-            normaliseString(article.source) || "CNBC",
+            article.source ??
+            "CNBC",
 
-        title,
+        title:
+            article.title ??
+            "Untitled article",
 
         publishedAtSgt:
-            normaliseString(article.publishedAtSgt),
+            article.publishedAtSgt ??
+            null,
 
         url:
-            normaliseString(article.url),
+            article.url ??
+            "",
 
         collectorCategory:
-            normaliseString(article.collectorCategory),
+            article.collectorCategory ??
+            "",
 
         collectorRelevanceScore:
-            Number.isFinite(
-                Number(article.collectorRelevanceScore)
-            )
-                ? Number(article.collectorRelevanceScore)
-                : null,
+            article.collectorRelevanceScore ??
+            null,
 
         collectorRelevanceReason:
-            normaliseString(
-                article.collectorRelevanceReason
-            ),
+            article.collectorRelevanceReason ??
+            "",
 
         collectedAtSgt:
-            normaliseString(article.collectedAtSgt),
+            article.collectedAtSgt ??
+            null
 
-        reasoning:
-            normaliseString(article.reasoning)
     };
 }
 
 
+function normaliseArray(
+    value
+) {
+
+    if (
+        !Array.isArray(
+            value
+        )
+    ) {
+
+        return [];
+    }
+
+
+    return value
+        .map(
+            item =>
+                String(item).trim()
+        )
+        .filter(
+            Boolean
+        );
+}
+
+
 /* ============================================================
-   ANALYSIS FILE NORMALISATION
+   LOAD CURRENT NEWS
 ============================================================ */
 
-function normaliseAnalysisFile(data) {
-    if (!isObject(data)) {
+async function loadCurrentMarketNews() {
+
+    const raw =
+        await loadJson(
+            MARKET_NEWS_PATHS.current
+        );
+
+
+    if (
+        !raw ||
+        typeof raw !== "object"
+    ) {
+
         throw new Error(
-            "Market news analysis returned an invalid structure."
+            "Market news analysis returned invalid data."
         );
     }
 
-    if (!Array.isArray(data.analyses)) {
+
+    if (
+        !Array.isArray(
+            raw.analyses
+        )
+    ) {
+
         throw new Error(
             "Market news analysis does not contain an analyses array."
         );
     }
 
-    const analyses = data.analyses
-        .map(normaliseArticle)
-        .filter(Boolean);
 
-    return {
-        generatedAtSgt:
-            normaliseString(data.generatedAtSgt) || null,
-
-        timezone:
-            normaliseString(data.timezone) || "Asia/Singapore",
-
-        timezoneLabel:
-            normaliseString(data.timezoneLabel) || "SGT",
-
-        windowDays:
-            Number.isFinite(Number(data.windowDays))
-                ? Number(data.windowDays)
-                : null,
-
-        articleCount:
-            Number.isFinite(Number(data.articleCount))
-                ? Number(data.articleCount)
-                : analyses.length,
-
-        analyses
-    };
-}
-
-
-/* ============================================================
-   CURRENT NEWS
-============================================================ */
-
-/**
- * Load current analyzed Market News.
- */
-async function loadCurrentMarketNews() {
-    const raw =
-        await fetchJson(
-            MARKET_NEWS_PATHS.current
-        );
-
-    return normaliseAnalysisFile(raw);
-}
-
-
-/* ============================================================
-   HISTORICAL NEWS
-============================================================ */
-
-/**
- * Build the path for a historical analysis file.
- *
- * Example:
- *
- * 2026-10-03
- *
- * becomes:
- *
- * data/market_news/analysis/history/2026/10/2026-10-03.json
- */
-function buildHistoryPath(dateString) {
-    const parts =
-        getHistoryPathParts(dateString);
-
-    if (!parts) {
-        throw new Error(
-            `Invalid history date: ${dateString}`
-        );
-    }
-
-    return [
-        MARKET_NEWS_PATHS.historyBase,
-        parts.year,
-        parts.month,
-        `${dateString}.json`
-    ].join("/");
-}
-
-
-/**
- * Load one historical Market News file.
- */
-async function loadHistoricalMarketNews(
-    dateString
-) {
-    const path =
-        buildHistoryPath(dateString);
-
-    const raw =
-        await fetchJson(path);
-
-    return {
-        date: dateString,
-        ...normaliseAnalysisFile(raw)
-    };
-}
-
-
-/* ============================================================
-   HISTORY AVAILABILITY
-============================================================ */
-
-/**
- * Test whether a historical date exists.
- *
- * Returns:
- *   true
- *   false
- */
-async function historyExists(dateString) {
-    try {
-        await loadHistoricalMarketNews(
-            dateString
-        );
-
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-
-/**
- * Generate dates between two YYYY-MM-DD values.
- *
- * Used when checking the rolling history window.
- */
-function generateDateRange(
-    startDateString,
-    endDateString
-) {
-    const start =
-        new Date(
-            `${startDateString}T00:00:00Z`
-        );
-
-    const end =
-        new Date(
-            `${endDateString}T00:00:00Z`
-        );
-
-    if (
-        Number.isNaN(start.getTime()) ||
-        Number.isNaN(end.getTime()) ||
-        start > end
-    ) {
-        return [];
-    }
-
-    const dates = [];
-
-    const current =
-        new Date(start.getTime());
-
-    while (current <= end) {
-        dates.push(
-            current.toISOString().slice(0, 10)
-        );
-
-        current.setUTCDate(
-            current.getUTCDate() + 1
-        );
-    }
-
-    return dates;
-}
-
-
-/**
- * Find available historical dates inside a date range.
- *
- * This intentionally checks the filesystem structure through
- * HTTP requests rather than assuming every calendar date exists.
- */
-async function findAvailableHistoryDates(
-    startDateString,
-    endDateString
-) {
-    const candidateDates =
-        generateDateRange(
-            startDateString,
-            endDateString
-        );
-
-    if (candidateDates.length === 0) {
-        return [];
-    }
-
-    const checks =
-        await Promise.all(
-            candidateDates.map(
-                async dateString => ({
-                    dateString,
-                    exists:
-                        await historyExists(
-                            dateString
-                        )
-                })
+    const analyses =
+        raw.analyses
+            .map(
+                normaliseAnalysis
             )
-        );
-
-    return checks
-        .filter(item => item.exists)
-        .map(item => item.dateString);
-}
-
-
-/* ============================================================
-   HISTORY DATE EXTRACTION
-============================================================ */
-
-/**
- * Convert an article timestamp to its Singapore calendar date.
- */
-function getArticleSingaporeDate(article) {
-    return formatSingaporeDate(
-        article?.publishedAtSgt
-    );
-}
-
-
-/**
- * Group articles by Singapore publication date.
- */
-function groupArticlesByDate(articles) {
-    const groups = new Map();
-
-    if (!Array.isArray(articles)) {
-        return groups;
-    }
-
-    for (const article of articles) {
-        const date =
-            getArticleSingaporeDate(article);
-
-        if (!date) {
-            continue;
-        }
-
-        if (!groups.has(date)) {
-            groups.set(date, []);
-        }
-
-        groups.get(date).push(article);
-    }
-
-    return groups;
-}
-
-
-/* ============================================================
-   ARTICLE SORTING
-============================================================ */
-
-/**
- * Sort newest published articles first.
- */
-function sortArticlesNewestFirst(
-    articles
-) {
-    if (!Array.isArray(articles)) {
-        return [];
-    }
-
-    return [...articles].sort(
-        (a, b) => {
-            const aTime =
-                parseNewsDate(
-                    a?.publishedAtSgt
-                )?.getTime() ?? 0;
-
-            const bTime =
-                parseNewsDate(
-                    b?.publishedAtSgt
-                )?.getTime() ?? 0;
-
-            return bTime - aTime;
-        }
-    );
-}
-
-
-/**
- * Sort oldest published articles first.
- */
-function sortArticlesOldestFirst(
-    articles
-) {
-    return sortArticlesNewestFirst(
-        articles
-    ).reverse();
-}
-
-
-/* ============================================================
-   DEDUPLICATION
-============================================================ */
-
-/**
- * Remove duplicate articles by articleId.
- *
- * This protects the UI if the rolling files happen to overlap.
- */
-function deduplicateArticles(
-    articles
-) {
-    if (!Array.isArray(articles)) {
-        return [];
-    }
-
-    const seen = new Set();
-    const result = [];
-
-    for (const article of articles) {
-        const id =
-            normaliseString(
-                article?.articleId
+            .filter(
+                Boolean
             );
 
-        if (!id) {
-            continue;
-        }
 
-        if (seen.has(id)) {
-            continue;
-        }
+    return {
 
-        seen.add(id);
-        result.push(article);
+        generatedAtSgt:
+            raw.generatedAtSgt ??
+            null,
+
+        timezone:
+            raw.timezone ??
+            "Asia/Singapore",
+
+        timezoneLabel:
+            raw.timezoneLabel ??
+            "SGT",
+
+        windowDays:
+            Number(
+                raw.windowDays ??
+                14
+            ),
+
+        articleCount:
+            Number(
+                raw.articleCount ??
+                analyses.length
+            ),
+
+        analyses,
+
+        raw
+
+    };
+}
+
+
+/* ============================================================
+   LOAD HISTORICAL NEWS
+============================================================ */
+
+async function loadHistoricalMarketNews(
+    date
+) {
+
+    const path =
+        buildHistoryPath(
+            date
+        );
+
+
+    const raw =
+        await loadJson(
+            path
+        );
+
+
+    if (
+        !raw ||
+        typeof raw !== "object"
+    ) {
+
+        throw new Error(
+            `Historical market news returned invalid data for ${date}.`
+        );
     }
 
-    return result;
+
+    if (
+        !Array.isArray(
+            raw.analyses
+        )
+    ) {
+
+        throw new Error(
+            `Historical market news for ${date} does not contain an analyses array.`
+        );
+    }
+
+
+    const analyses =
+        raw.analyses
+            .map(
+                normaliseAnalysis
+            )
+            .filter(
+                Boolean
+            );
+
+
+    return {
+
+        date,
+
+        generatedAtSgt:
+            raw.generatedAtSgt ??
+            null,
+
+        timezone:
+            raw.timezone ??
+            "Asia/Singapore",
+
+        timezoneLabel:
+            raw.timezoneLabel ??
+            "SGT",
+
+        windowDays:
+            raw.windowDays ??
+            null,
+
+        articleCount:
+            Number(
+                raw.articleCount ??
+                analyses.length
+            ),
+
+        analyses,
+
+        raw
+
+    };
 }
 
 
@@ -664,119 +515,149 @@ function deduplicateArticles(
    FILTERING
 ============================================================ */
 
-/**
- * Apply Market News filters.
- *
- * Supported filters:
- *
- * category
- * sentiment
- * importance
- * assetClass
- * geography
- * sector
- * fundMonitoringRelevant
- */
-function filterArticles(
-    articles,
-    filters = {}
+function filterRelevantNews(
+    analyses
 ) {
-    if (!Array.isArray(articles)) {
+
+    if (
+        !Array.isArray(
+            analyses
+        )
+    ) {
+
         return [];
     }
 
-    const category =
-        normaliseString(
-            filters.category
+
+    return analyses.filter(
+        article =>
+            article.relevant !== false
+    );
+}
+
+
+function filterFundRelevantNews(
+    analyses
+) {
+
+    if (
+        !Array.isArray(
+            analyses
+        )
+    ) {
+
+        return [];
+    }
+
+
+    return analyses.filter(
+        article =>
+            article.relevant !== false &&
+            article.fundMonitoringRelevant === true
+    );
+}
+
+
+function filterByCategory(
+    analyses,
+    category
+) {
+
+    if (
+        !Array.isArray(
+            analyses
+        )
+    ) {
+
+        return [];
+    }
+
+
+    if (
+        !category ||
+        category === "ALL"
+    ) {
+
+        return [
+            ...analyses
+        ];
+    }
+
+
+    const normalized =
+        String(
+            category
         ).toUpperCase();
 
-    const sentiment =
-        normaliseString(
-            filters.sentiment
+
+    return analyses.filter(
+        article =>
+            article.category ===
+            normalized
+    );
+}
+
+
+function filterBySentiment(
+    analyses,
+    sentiment
+) {
+
+    if (
+        !sentiment ||
+        sentiment === "ALL"
+    ) {
+
+        return [
+            ...(analyses || [])
+        ];
+    }
+
+
+    const normalized =
+        String(
+            sentiment
         ).toUpperCase();
 
-    const importance =
-        normaliseString(
-            filters.importance
+
+    return (
+        analyses || []
+    ).filter(
+        article =>
+            article.sentiment ===
+            normalized
+    );
+}
+
+
+function filterByImportance(
+    analyses,
+    importance
+) {
+
+    if (
+        !importance ||
+        importance === "ALL"
+    ) {
+
+        return [
+            ...(analyses || [])
+        ];
+    }
+
+
+    const normalized =
+        String(
+            importance
         ).toUpperCase();
 
-    const assetClass =
-        normaliseString(
-            filters.assetClass
-        );
 
-    const geography =
-        normaliseString(
-            filters.geography
-        );
-
-    const sector =
-        normaliseString(
-            filters.sector
-        );
-
-    const fundMonitoringOnly =
-        filters.fundMonitoringRelevant === true;
-
-    return articles.filter(
-        article => {
-            if (
-                category &&
-                article.category !== category
-            ) {
-                return false;
-            }
-
-            if (
-                sentiment &&
-                article.sentiment !== sentiment
-            ) {
-                return false;
-            }
-
-            if (
-                importance &&
-                article.importance !== importance
-            ) {
-                return false;
-            }
-
-            if (
-                assetClass &&
-                !article.assetClasses.includes(
-                    assetClass
-                )
-            ) {
-                return false;
-            }
-
-            if (
-                geography &&
-                !article.geographies.includes(
-                    geography
-                )
-            ) {
-                return false;
-            }
-
-            if (
-                sector &&
-                !article.sectors.includes(
-                    sector
-                )
-            ) {
-                return false;
-            }
-
-            if (
-                fundMonitoringOnly &&
-                article.fundMonitoringRelevant !== true
-            ) {
-                return false;
-            }
-
-            return true;
-        }
+    return (
+        analyses || []
+    ).filter(
+        article =>
+            article.importance ===
+            normalized
     );
 }
 
@@ -785,45 +666,70 @@ function filterArticles(
    SEARCH
 ============================================================ */
 
-/**
- * Search visible article content.
- */
-function searchArticles(
-    articles,
+function searchNews(
+    analyses,
     searchTerm
 ) {
-    const query =
-        normaliseString(
-            searchTerm
-        ).toLowerCase();
 
-    if (!query) {
-        return Array.isArray(articles)
-            ? [...articles]
-            : [];
-    }
+    if (
+        !Array.isArray(
+            analyses
+        )
+    ) {
 
-    if (!Array.isArray(articles)) {
         return [];
     }
 
-    return articles.filter(
+
+    const query =
+        String(
+            searchTerm ??
+            ""
+        )
+            .trim()
+            .toLowerCase();
+
+
+    if (!query) {
+
+        return [
+            ...analyses
+        ];
+    }
+
+
+    return analyses.filter(
         article => {
+
             const searchableText = [
+
                 article.title,
+
                 article.summary,
+
                 article.investorImpact,
+
                 article.source,
+
                 article.category,
+
                 article.sentiment,
+
                 article.importance,
+
                 ...article.assetClasses,
+
                 ...article.geographies,
+
                 ...article.sectors
+
             ]
-                .filter(Boolean)
+                .filter(
+                    Boolean
+                )
                 .join(" ")
                 .toLowerCase();
+
 
             return searchableText.includes(
                 query
@@ -834,378 +740,854 @@ function searchArticles(
 
 
 /* ============================================================
-   FILTER OPTIONS
+   SORTING
 ============================================================ */
 
-/**
- * Build unique filter values from available articles.
- */
-function getNewsFilterOptions(
-    articles
+function sortByPublishedDate(
+    analyses,
+    direction = "desc"
 ) {
-    const categories = new Set();
-    const sentiments = new Set();
-    const importance = new Set();
-    const assetClasses = new Set();
-    const geographies = new Set();
-    const sectors = new Set();
 
-    if (Array.isArray(articles)) {
-        for (const article of articles) {
-            if (article.category) {
-                categories.add(
-                    article.category
+    const multiplier =
+        direction === "asc"
+            ? 1
+            : -1;
+
+
+    return [
+        ...(analyses || [])
+    ].sort(
+        (
+            a,
+            b
+        ) => {
+
+            const dateA =
+                parseNewsDate(
+                    a.publishedAtSgt
                 );
-            }
 
-            if (article.sentiment) {
-                sentiments.add(
-                    article.sentiment
+
+            const dateB =
+                parseNewsDate(
+                    b.publishedAtSgt
                 );
-            }
 
-            if (article.importance) {
-                importance.add(
-                    article.importance
-                );
-            }
 
-            for (
-                const value of article.assetClasses
-            ) {
-                assetClasses.add(value);
-            }
+            const timeA =
+                dateA
+                    ? dateA.getTime()
+                    : 0;
 
-            for (
-                const value of article.geographies
-            ) {
-                geographies.add(value);
-            }
 
-            for (
-                const value of article.sectors
-            ) {
-                sectors.add(value);
-            }
+            const timeB =
+                dateB
+                    ? dateB.getTime()
+                    : 0;
+
+
+            return (
+                (timeA - timeB) *
+                multiplier
+            );
         }
-    }
+    );
+}
 
-    return {
-        categories:
-            [...categories].sort(),
 
-        sentiments:
-            [...sentiments].sort(),
+function sortByImportance(
+    analyses
+) {
 
-        importance:
-            [...importance].sort(),
+    return [
+        ...(analyses || [])
+    ].sort(
+        (
+            a,
+            b
+        ) => {
 
-        assetClasses:
-            [...assetClasses].sort(),
+            const importanceA =
+                IMPORTANCE_ORDER[
+                    a.importance
+                ] ??
+                99;
 
-        geographies:
-            [...geographies].sort(),
 
-        sectors:
-            [...sectors].sort()
-    };
+            const importanceB =
+                IMPORTANCE_ORDER[
+                    b.importance
+                ] ??
+                99;
+
+
+            if (
+                importanceA !==
+                importanceB
+            ) {
+
+                return (
+                    importanceA -
+                    importanceB
+                );
+            }
+
+
+            return comparePublishedDates(
+                a,
+                b
+            );
+        }
+    );
+}
+
+
+function sortBySentiment(
+    analyses
+) {
+
+    return [
+        ...(analyses || [])
+    ].sort(
+        (
+            a,
+            b
+        ) => {
+
+            const sentimentA =
+                SENTIMENT_ORDER[
+                    a.sentiment
+                ] ??
+                99;
+
+
+            const sentimentB =
+                SENTIMENT_ORDER[
+                    b.sentiment
+                ] ??
+                99;
+
+
+            if (
+                sentimentA !==
+                sentimentB
+            ) {
+
+                return (
+                    sentimentA -
+                    sentimentB
+                );
+            }
+
+
+            return comparePublishedDates(
+                a,
+                b
+            );
+        }
+    );
+}
+
+
+function comparePublishedDates(
+    a,
+    b
+) {
+
+    const dateA =
+        parseNewsDate(
+            a?.publishedAtSgt
+        );
+
+
+    const dateB =
+        parseNewsDate(
+            b?.publishedAtSgt
+        );
+
+
+    const timeA =
+        dateA
+            ? dateA.getTime()
+            : 0;
+
+
+    const timeB =
+        dateB
+            ? dateB.getTime()
+            : 0;
+
+
+    return timeB - timeA;
 }
 
 
 /* ============================================================
-   SUMMARY STATISTICS
+   AGGREGATION
 ============================================================ */
 
-/**
- * Calculate basic statistics for the Market News page.
- */
 function getNewsStatistics(
-    articles
+    analyses
 ) {
-    const safeArticles =
-        Array.isArray(articles)
-            ? articles
-            : [];
 
-    const byCategory = {};
-    const bySentiment = {};
-    const byImportance = {};
+    const articles =
+        filterRelevantNews(
+            analyses
+        );
 
-    let fundMonitoringCount = 0;
 
-    for (const article of safeArticles) {
-        const category =
-            article.category || "UNKNOWN";
+    const statistics = {
 
-        const sentiment =
-            article.sentiment || "UNKNOWN";
+        total:
+            articles.length,
+
+        high:
+            0,
+
+        medium:
+            0,
+
+        low:
+            0,
+
+        positive:
+            0,
+
+        neutral:
+            0,
+
+        negative:
+            0,
+
+        fundMonitoringRelevant:
+            0,
+
+        categories:
+            {},
+
+        assetClasses:
+            {},
+
+        geographies:
+            {},
+
+        sectors:
+            {}
+
+    };
+
+
+    for (
+        const article
+        of articles
+    ) {
 
         const importance =
-            article.importance || "UNKNOWN";
+            String(
+                article.importance ||
+                "MEDIUM"
+            ).toLowerCase();
 
-        byCategory[category] =
-            (byCategory[category] || 0) + 1;
 
-        bySentiment[sentiment] =
-            (bySentiment[sentiment] || 0) + 1;
+        if (
+            Object.prototype.hasOwnProperty.call(
+                statistics,
+                importance
+            )
+        ) {
 
-        byImportance[importance] =
-            (byImportance[importance] || 0) + 1;
+            statistics[
+                importance
+            ]++;
+        }
+
+
+        const sentiment =
+            String(
+                article.sentiment ||
+                "NEUTRAL"
+            ).toLowerCase();
+
+
+        if (
+            Object.prototype.hasOwnProperty.call(
+                statistics,
+                sentiment
+            )
+        ) {
+
+            statistics[
+                sentiment
+            ]++;
+        }
+
 
         if (
             article.fundMonitoringRelevant
         ) {
-            fundMonitoringCount += 1;
+
+            statistics
+                .fundMonitoringRelevant++;
         }
-    }
-
-    return {
-        total:
-            safeArticles.length,
-
-        byCategory,
-        bySentiment,
-        byImportance,
-
-        fundMonitoringCount
-    };
-}
 
 
-/* ============================================================
-   CURRENT NEWS VIEW MODEL
-============================================================ */
-
-/**
- * Prepare current Market News data for app.js.
- */
-async function getCurrentMarketNews() {
-    const current =
-        await loadCurrentMarketNews();
-
-    const articles =
-        sortArticlesNewestFirst(
-            deduplicateArticles(
-                current.analyses
-            )
+        incrementCounter(
+            statistics.categories,
+            article.category
         );
 
-    return {
-        ...current,
 
-        analyses: articles,
-
-        filterOptions:
-            getNewsFilterOptions(
-                articles
-            ),
-
-        statistics:
-            getNewsStatistics(
-                articles
-            )
-    };
-}
-
-
-/* ============================================================
-   HISTORICAL NEWS VIEW MODEL
-============================================================ */
-
-/**
- * Load one historical date and prepare it for display.
- */
-async function getHistoricalMarketNews(
-    dateString
-) {
-    const history =
-        await loadHistoricalMarketNews(
-            dateString
-        );
-
-    const articles =
-        sortArticlesNewestFirst(
-            deduplicateArticles(
-                history.analyses
-            )
-        );
-
-    return {
-        ...history,
-
-        analyses: articles,
-
-        filterOptions:
-            getNewsFilterOptions(
-                articles
-            ),
-
-        statistics:
-            getNewsStatistics(
-                articles
-            )
-    };
-}
-
-
-/* ============================================================
-   MONTH HELPERS
-============================================================ */
-
-/**
- * Build a list of months from YYYY-MM values.
- *
- * Example:
- *
- * [
- *   {
- *      key: "2026-10",
- *      year: 2026,
- *      month: 10,
- *      label: "October 2026"
- *   }
- * ]
- */
-function buildMonthOptions(
-    dates
-) {
-    const monthMap = new Map();
-
-    if (!Array.isArray(dates)) {
-        return [];
-    }
-
-    for (const dateString of dates) {
-        if (
-            typeof dateString !== "string" ||
-            !/^\d{4}-\d{2}-\d{2}$/.test(
-                dateString
-            )
+        for (
+            const assetClass
+            of article.assetClasses
         ) {
-            continue;
+
+            incrementCounter(
+                statistics.assetClasses,
+                assetClass
+            );
         }
 
-        const [
-            year,
-            month
-        ] = dateString.split("-");
 
-        const key =
-            `${year}-${month}`;
+        for (
+            const geography
+            of article.geographies
+        ) {
 
-        if (!monthMap.has(key)) {
-            const date =
-                new Date(
-                    Date.UTC(
-                        Number(year),
-                        Number(month) - 1,
-                        1
-                    )
-                );
+            incrementCounter(
+                statistics.geographies,
+                geography
+            );
+        }
 
-            monthMap.set(
-                key,
-                {
-                    key,
-                    year: Number(year),
-                    month: Number(month),
-                    label:
-                        new Intl.DateTimeFormat(
-                            "en-SG",
-                            {
-                                month: "long",
-                                year: "numeric",
-                                timeZone: "UTC"
-                            }
-                        ).format(date)
-                }
+
+        for (
+            const sector
+            of article.sectors
+        ) {
+
+            incrementCounter(
+                statistics.sectors,
+                sector
             );
         }
     }
 
-    return [...monthMap.values()]
+
+    return statistics;
+}
+
+
+function incrementCounter(
+    object,
+    key
+) {
+
+    if (!key) {
+        return;
+    }
+
+
+    object[key] =
+        (object[key] || 0) +
+        1;
+}
+
+
+/* ============================================================
+   TOPIC EXTRACTION
+============================================================ */
+
+function getTopItems(
+    counter,
+    limit = 5
+) {
+
+    return Object.entries(
+        counter || {}
+    )
         .sort(
-            (a, b) =>
-                b.key.localeCompare(a.key)
+            (
+                a,
+                b
+            ) => {
+
+                if (
+                    b[1] !==
+                    a[1]
+                ) {
+
+                    return (
+                        b[1] -
+                        a[1]
+                    );
+                }
+
+
+                return a[0]
+                    .localeCompare(
+                        b[0]
+                    );
+            }
+        )
+        .slice(
+            0,
+            limit
+        )
+        .map(
+            ([name, count]) => ({
+                name,
+                count
+            })
         );
 }
 
 
-/**
- * Filter a list of YYYY-MM-DD dates to a selected month.
- */
-function getDatesForMonth(
-    dates,
-    year,
-    month
+/* ============================================================
+   AVAILABLE CATEGORY HELPERS
+============================================================ */
+
+function getAvailableCategories(
+    analyses
 ) {
-    const yearString =
-        String(year);
 
-    const monthString =
-        String(month).padStart(2, "0");
+    const categories =
+        new Set();
 
-    const prefix =
-        `${yearString}-${monthString}-`;
 
-    return (
-        Array.isArray(dates)
-            ? dates
-                .filter(
-                    date =>
-                        typeof date === "string" &&
-                        date.startsWith(prefix)
-                )
-                .sort()
-                .reverse()
-            : []
+    for (
+        const article
+        of analyses || []
+    ) {
+
+        if (
+            article.category
+        ) {
+
+            categories.add(
+                article.category
+            );
+        }
+    }
+
+
+    return [
+        "ALL",
+        ...[
+            ...categories
+        ].sort()
+    ];
+}
+
+
+function getAvailableYears(
+    analyses
+) {
+
+    const years =
+        new Set();
+
+
+    for (
+        const article
+        of analyses || []
+    ) {
+
+        const date =
+            parseNewsDate(
+                article.publishedAtSgt
+            );
+
+
+        if (!date) {
+            continue;
+        }
+
+
+        years.add(
+            date.toLocaleString(
+                "en-SG",
+                {
+                    year: "numeric",
+                    timeZone: "Asia/Singapore"
+                }
+            )
+        );
+    }
+
+
+    return [
+        ...years
+    ]
+        .map(
+            Number
+        )
+        .sort(
+            (a, b) =>
+                b - a
+        );
+}
+
+
+/* ============================================================
+   ARTICLE DISPLAY MODEL
+============================================================ */
+
+/*
+ * Keeps presentation code separate from the raw analysis
+ * schema.
+ */
+
+function toDisplayArticle(
+    article
+) {
+
+    if (!article) {
+        return null;
+    }
+
+
+    return {
+
+        id:
+            article.articleId,
+
+        title:
+            article.title,
+
+        source:
+            article.source,
+
+        url:
+            article.url,
+
+        category:
+            article.category,
+
+        sentiment:
+            article.sentiment,
+
+        importance:
+            article.importance,
+
+        summary:
+            article.summary,
+
+        investorImpact:
+            article.investorImpact,
+
+        assetClasses:
+            [...article.assetClasses],
+
+        geographies:
+            [...article.geographies],
+
+        sectors:
+            [...article.sectors],
+
+        fundMonitoringRelevant:
+            article.fundMonitoringRelevant,
+
+        publishedAt:
+            article.publishedAtSgt,
+
+        publishedDate:
+            formatNewsDate(
+                article.publishedAtSgt
+            ),
+
+        publishedTime:
+            formatNewsTime(
+                article.publishedAtSgt
+            )
+
+    };
+}
+
+
+/* ============================================================
+   MARKET NEWS STATE
+============================================================ */
+
+function createNewsState(
+    currentNews
+) {
+
+    const analyses =
+        sortByPublishedDate(
+            filterRelevantNews(
+                currentNews?.analyses
+            )
+        );
+
+
+    return {
+
+        source:
+            "analysis/current.json",
+
+        generatedAtSgt:
+            currentNews?.generatedAtSgt ??
+            null,
+
+        timezone:
+            currentNews?.timezone ??
+            "Asia/Singapore",
+
+        timezoneLabel:
+            currentNews?.timezoneLabel ??
+            "SGT",
+
+        windowDays:
+            currentNews?.windowDays ??
+            14,
+
+        articleCount:
+            currentNews?.articleCount ??
+            analyses.length,
+
+        analyses,
+
+        selectedCategory:
+            "ALL",
+
+        selectedSentiment:
+            "ALL",
+
+        selectedImportance:
+            "ALL",
+
+        searchTerm:
+            "",
+
+        sort:
+            "published-desc"
+
+    };
+}
+
+
+/* ============================================================
+   APPLY FILTERS
+============================================================ */
+
+function getVisibleNews(
+    state
+) {
+
+    if (!state) {
+        return [];
+    }
+
+
+    let result =
+        [...(
+            state.analyses ||
+            []
+        )];
+
+
+    result =
+        filterByCategory(
+            result,
+            state.selectedCategory
+        );
+
+
+    result =
+        filterBySentiment(
+            result,
+            state.selectedSentiment
+        );
+
+
+    result =
+        filterByImportance(
+            result,
+            state.selectedImportance
+        );
+
+
+    result =
+        searchNews(
+            result,
+            state.searchTerm
+        );
+
+
+    switch (
+        state.sort
+    ) {
+
+        case "importance":
+
+            result =
+                sortByImportance(
+                    result
+                );
+
+            break;
+
+
+        case "sentiment":
+
+            result =
+                sortBySentiment(
+                    result
+                );
+
+            break;
+
+
+        case "published-asc":
+
+            result =
+                sortByPublishedDate(
+                    result,
+                    "asc"
+                );
+
+            break;
+
+
+        case "published-desc":
+
+        default:
+
+            result =
+                sortByPublishedDate(
+                    result,
+                    "desc"
+                );
+
+            break;
+    }
+
+
+    return result;
+}
+
+
+/* ============================================================
+   HISTORY DATE UTILITIES
+============================================================ */
+
+/*
+ * The history directory is:
+ *
+ * history/
+ *   YYYY/
+ *     MM/
+ *       YYYY-MM-DD.json
+ *
+ * GitHub Pages does not provide a directory API, therefore
+ * this module does not attempt to discover files by listing
+ * folders.
+ *
+ * A specific date is requested directly.
+ */
+
+async function loadHistoryDate(
+    date
+) {
+
+    return loadHistoricalMarketNews(
+        date
     );
 }
 
 
 /* ============================================================
-   EXPORTS
+   ERROR HELPERS
+============================================================ */
+
+function isHistoryNotFoundError(
+    error
+) {
+
+    if (!error) {
+        return false;
+    }
+
+
+    const message =
+        String(
+            error.message ||
+            error
+        );
+
+
+    return (
+        message.includes(
+            "HTTP 404"
+        ) ||
+        message.includes(
+            "Unable to load"
+        )
+    );
+}
+
+
+/* ============================================================
+   PUBLIC API
 ============================================================ */
 
 export {
+
     MARKET_NEWS_PATHS,
 
-    parseNewsDate,
-    formatNewsDate,
-    formatSingaporeDate,
-
-    getHistoryPathParts,
-    buildHistoryPath,
-
-    fetchJson,
-
-    normaliseArticle,
-    normaliseAnalysisFile,
+    NEWS_CATEGORIES,
 
     loadCurrentMarketNews,
+
     loadHistoricalMarketNews,
 
-    historyExists,
-    generateDateRange,
-    findAvailableHistoryDates,
+    loadHistoryDate,
 
-    getArticleSingaporeDate,
-    groupArticlesByDate,
+    buildHistoryPath,
 
-    sortArticlesNewestFirst,
-    sortArticlesOldestFirst,
+    normaliseAnalysis,
 
-    deduplicateArticles,
+    filterRelevantNews,
 
-    filterArticles,
-    searchArticles,
+    filterFundRelevantNews,
 
-    getNewsFilterOptions,
+    filterByCategory,
+
+    filterBySentiment,
+
+    filterByImportance,
+
+    searchNews,
+
+    sortByPublishedDate,
+
+    sortByImportance,
+
+    sortBySentiment,
+
     getNewsStatistics,
 
-    getCurrentMarketNews,
-    getHistoricalMarketNews,
+    getTopItems,
 
-    buildMonthOptions,
-    getDatesForMonth
+    getAvailableCategories,
+
+    getAvailableYears,
+
+    toDisplayArticle,
+
+    createNewsState,
+
+    getVisibleNews,
+
+    formatNewsDate,
+
+    formatNewsTime,
+
+    formatNewsDateTime,
+
+    parseNewsDate,
+
+    isHistoryNotFoundError
+
 };
