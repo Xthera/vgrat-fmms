@@ -183,6 +183,79 @@ html[data-theme="light"] {
 }
 
 
+/* ------------------------------------------------------------
+   THEME VARIANTS
+   Built on the dark or light base above (data-theme), so all
+   dark / light specific styling still applies.
+   ------------------------------------------------------------ */
+
+/* Dim: softer slate grey (dark base) */
+html[data-variant="dim"] {
+    --bg-page: #1c232c;
+    --bg-header: #212a34;
+    --bg-surface: #252f3a;
+    --bg-surface-raised: #2a3541;
+    --bg-surface-hover: #303c49;
+    --bg-input: #212a34;
+
+    --border-subtle: #354251;
+    --border-medium: #3f4d5d;
+    --border-strong: #4b5a6b;
+
+    --text-primary: #e6ebf0;
+    --text-secondary: #b8c3cd;
+    --text-muted: #8d99a6;
+    --text-faint: #6f7c89;
+
+    --shadow-small: 0 2px 8px rgba(0, 0, 0, 0.18);
+    --shadow-medium: 0 8px 30px rgba(0, 0, 0, 0.24);
+}
+
+/* Midnight: pure black for OLED screens (dark base) */
+html[data-variant="midnight"] {
+    --bg-page: #000000;
+    --bg-header: #000000;
+    --bg-surface: #0a0a0a;
+    --bg-surface-raised: #111111;
+    --bg-surface-hover: #171717;
+    --bg-input: #050505;
+
+    --border-subtle: #1c1c1c;
+    --border-medium: #262626;
+    --border-strong: #333333;
+
+    --text-primary: #f2f2f2;
+    --text-secondary: #b5b5b5;
+    --text-muted: #858585;
+    --text-faint: #5f5f5f;
+
+    --shadow-small: none;
+    --shadow-medium: none;
+}
+
+/* Sepia: warm paper (light base) */
+html[data-variant="sepia"] {
+    --bg-page: #f1e8d6;
+    --bg-header: #f8f1e3;
+    --bg-surface: #fbf6ec;
+    --bg-surface-raised: #f6eedf;
+    --bg-surface-hover: #efe4d0;
+    --bg-input: #fffaf1;
+
+    --border-subtle: #e2d5bd;
+    --border-medium: #d4c4a7;
+    --border-strong: #c4b190;
+
+    --text-primary: #3b2f22;
+    --text-secondary: #64553f;
+    --text-muted: #85765f;
+    --text-faint: #a8987e;
+
+    --shadow-small: 0 2px 8px rgba(80, 60, 30, 0.08);
+    --shadow-medium: 0 8px 30px rgba(80, 60, 30, 0.10);
+}
+
+
 /* ============================================================
    ACCESSIBILITY
    ============================================================ */
@@ -5698,6 +5771,214 @@ html[data-theme="light"] .palette-swatch {
         margin: -6px -8px 0 0;
 
         font-size: calc(20px * var(--font-scale, 1));
+    }
+
+}
+
+
+/* ============================================================
+   HEADER — REFRESH BUTTON
+   ============================================================ */
+
+.refresh-button {
+    cursor: pointer;
+}
+
+.refresh-button:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.refresh-icon {
+    display: inline-block;
+
+    font-size: calc(15px * var(--font-scale, 1));
+    line-height: 1;
+}
+
+.refresh-button.is-refreshing .refresh-icon {
+    animation: refresh-spin 0.8s linear infinite;
+}
+
+.refresh-button:disabled {
+    cursor: progress;
+    opacity: 0.7;
+}
+
+@keyframes refresh-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .refresh-button.is-refreshing .refresh-icon {
+        animation: none;
+    }
+
+}
+
+@media (max-width: 699px) and (pointer: coarse), (max-height: 500px) and (max-width: 1000px) and (pointer: coarse) {
+
+    .refresh-label {
+        display: none;
+    }
+
+    .refresh-button {
+        width: 31px;
+
+        padding: 0;
+
+        justify-content: center;
+    }
+
+}
+
+
+/* ============================================================
+   SETTINGS — THEME CARDS WITH PREVIEW
+   ============================================================ */
+
+.theme-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+
+    gap: 8px;
+
+    max-width: 680px;
+}
+
+.theme-option {
+    min-width: 0;
+
+    flex-direction: row;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 8px 10px;
+
+    text-align: left;
+}
+
+.theme-option.active {
+    box-shadow:
+        0 0 0 1px var(--accent) inset;
+}
+
+.theme-preview {
+    position: relative;
+
+    flex-shrink: 0;
+
+    width: 46px;
+    height: 34px;
+
+    border:
+        1px solid var(--border-medium);
+
+    border-radius: 6px;
+
+    background: var(--p-bg);
+
+    overflow: hidden;
+}
+
+.theme-preview-card {
+    position: absolute;
+    left: 7px;
+    right: 7px;
+    top: 7px;
+    bottom: 7px;
+
+    border:
+        1px solid var(--p-line);
+
+    border-radius: 3px;
+
+    background: var(--p-card);
+}
+
+/* two "text lines" inside the mini card */
+.theme-preview-card::before,
+.theme-preview-card::after {
+    content: "";
+
+    position: absolute;
+    left: 4px;
+
+    height: 3px;
+
+    border-radius: 2px;
+
+    background: var(--p-text);
+}
+
+.theme-preview-card::before {
+    top: 5px;
+    width: 60%;
+}
+
+.theme-preview-card::after {
+    top: 11px;
+    width: 40%;
+
+    opacity: 0.5;
+}
+
+/* Follow device: half dark, half light */
+.theme-preview-auto {
+    --p-line: #8a96a2;
+    --p-text: #8a96a2;
+
+    background: linear-gradient(135deg, #0a0f15 0 50%, #f3f6f8 50% 100%);
+}
+
+.theme-preview-auto .theme-preview-card {
+    background: linear-gradient(135deg, #101821 0 50%, #ffffff 50% 100%);
+}
+
+.theme-option-text {
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+
+    min-width: 0;
+}
+
+.theme-option .settings-option-name {
+    color: var(--text-primary);
+
+    font-size: calc(12.5px * var(--font-scale, 1));
+    white-space: nowrap;
+}
+
+.theme-option-desc {
+    color: var(--text-muted);
+
+    font-size: calc(11px * var(--font-scale, 1));
+}
+
+
+/* ============================================================
+   HOVER HIGHLIGHTS FOLLOW THE COLOUR PALETTE
+   Every hover / highlight background (table rows, list rows,
+   menu items, tabs, buttons, suggestions) uses
+   --bg-surface-hover, so tinting it with the accent makes all
+   of them take the chosen palette's colour, in every theme.
+   ============================================================ */
+
+@supports (color: color-mix(in srgb, red 50%, blue)) {
+
+    html[data-theme] {
+        --bg-surface-hover: color-mix(in srgb, var(--accent) 16%, var(--bg-surface));
+    }
+
+    html[data-theme="light"],
+    html[data-theme="light"][data-variant] {
+        --bg-surface-hover: color-mix(in srgb, var(--accent) 11%, var(--bg-surface));
     }
 
 }
