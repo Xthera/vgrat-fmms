@@ -5,19 +5,15 @@
 
    Main responsibilities:
    - Load application data
-   - Initialise theme
-   - Control main navigation
-   - Control performance period
-   - Render performance rankings
+   - Initialise application modules
+   - Control navigation
+   - Control theme
+   - Render Market Performance
    - Render Market News
-   - Connect charts
-   - Handle application errors
+   - Connect optional charts
+   - Handle application-level errors
 
-   Modules:
-   - data-loader.js
-   - performance.js
-   - market-news.js
-   - charts.js
+   Data calculation remains outside this file.
 ============================================================ */
 
 import {
@@ -25,7 +21,6 @@ import {
 } from "./data-loader.js";
 
 import {
-    PERFORMANCE_PERIODS,
     calculateAllPerformance,
     formatReturnPercent,
     formatBid,
@@ -33,15 +28,67 @@ import {
 } from "./performance.js";
 
 import {
-    filterArticles,
-    searchArticles,
-    formatNewsDate
+    loadCurrentMarketNews,
+    createNewsState,
+    getVisibleNews,
+    getNewsStatistics,
+    getTopItems,
+    formatNewsDate,
+    formatNewsTime
 } from "./market-news.js";
 
 import {
-    createPerformanceBarChart,
-    destroyAllCharts
+    isChartAvailable,
+    createNewsSentimentChart,
+    createNewsCategoryChart,
+    createNewsImportanceChart,
+    createNewsAssetClassChart,
+    createNewsGeographyChart,
+    createNewsSectorChart,
+    updateChartTheme
 } from "./charts.js";
+
+
+/* ============================================================
+   APPLICATION CONSTANTS
+============================================================ */
+
+const APP_VERSION =
+    "1.0.0";
+
+
+const STORAGE_KEYS = {
+
+    theme:
+        "vgrat-fms-theme",
+
+    view:
+        "vgrat-fms-view",
+
+    period:
+        "vgrat-fms-performance-period"
+
+};
+
+
+const DEFAULT_THEME =
+    "dark";
+
+
+const DEFAULT_VIEW =
+    "performance";
+
+
+const DEFAULT_PERIOD =
+    "DD";
+
+
+const PERFORMANCE_PERIODS = [
+    "DD",
+    "WW",
+    "MM",
+    "YY"
+];
 
 
 /* ============================================================
@@ -49,189 +96,292 @@ import {
 ============================================================ */
 
 const state = {
-    initialized: false,
-    loading: true,
-    error: null,
 
-    theme:
-        localStorage.getItem("vgrat-fms-theme") || "dark",
+    initialized:
+        false,
 
-    activeView:
-        "market-performance",
+    loading:
+        true,
 
-    activePeriod:
-        "DD",
-
-    selectedFund:
+    error:
         null,
 
-    funds: [],
-    bidHistory: [],
+    data:
+        null,
 
-    marketNews: {
-        analyses: [],
-        generatedAtSgt: null,
-        timezone: "Asia/Singapore",
-        timezoneLabel: "SGT",
-        windowDays: null,
-        articleCount: 0
-    },
+    performance:
+        null,
 
-    performance: null,
+    selectedPeriod:
+        DEFAULT_PERIOD,
 
-    marketNewsSearch: "",
+    currentView:
+        DEFAULT_VIEW,
 
-    marketNewsFilters: {
-        category: "",
-        sentiment: "",
-        importance: ""
-    }
+    news:
+        null,
+
+    newsState:
+        null
+
 };
 
 
 /* ============================================================
-   DOM CACHE
+   DOM HELPERS
 ============================================================ */
 
-const dom = {};
+function qs(
+    selector,
+    root = document
+) {
+
+    return root.querySelector(
+        selector
+    );
+}
 
 
-function cacheDom() {
+function qsa(
+    selector,
+    root = document
+) {
 
-    dom.app =
-        document.querySelector("#app");
+    return [
+        ...root.querySelectorAll(
+            selector
+        )
+    ];
+}
 
-    dom.dataStatus =
-        document.querySelector("#data-status");
 
-    dom.dataStatusText =
-        document.querySelector("#data-status-text");
+function firstExisting(
+    selectors
+) {
 
-    dom.themeToggle =
-        document.querySelector("#theme-toggle");
+    for (
+        const selector
+        of selectors
+    ) {
 
-    dom.themeToggleLabel =
-        document.querySelector("#theme-toggle-label");
+        const element =
+            qs(selector);
 
-    dom.pageTitle =
-        document.querySelector("#page-title");
 
-    dom.pageSubtitle =
-        document.querySelector("#page-subtitle");
+        if (element) {
+            return element;
+        }
+    }
 
-    dom.latestValuationDate =
-        document.querySelector("#latest-valuation-date");
 
-    dom.navLinks =
-        document.querySelectorAll("[data-view]");
+    return null;
+}
 
-    dom.periodTabs =
-        document.querySelectorAll("[data-period]");
 
-    dom.performanceView =
-        document.querySelector("#market-performance-view");
+function setText(
+    selectors,
+    value
+) {
 
-    dom.marketNewsView =
-        document.querySelector("#market-news-view");
+    const element =
+        Array.isArray(selectors)
+            ? firstExisting(
+                selectors
+            )
+            : qs(
+                selectors
+            );
 
-    dom.fundExplorerView =
-        document.querySelector("#fund-explorer-view");
 
-    dom.monitoringView =
-        document.querySelector("#monitoring-view");
+    if (!element) {
+        return;
+    }
 
-    dom.selectedPeriodLabel =
-        document.querySelector("#selected-period-label");
 
-    dom.selectedPeriodDescription =
-        document.querySelector(
-            "#selected-period-description"
+    element.textContent =
+        value ??
+        "";
+}
+
+
+function setHTML(
+    selectors,
+    html
+) {
+
+    const element =
+        Array.isArray(selectors)
+            ? firstExisting(
+                selectors
+            )
+            : qs(
+                selectors
+            );
+
+
+    if (!element) {
+        return;
+    }
+
+
+    element.innerHTML =
+        html;
+}
+
+
+/* ============================================================
+   INITIALISATION
+============================================================ */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    init
+);
+
+
+async function init() {
+
+    if (
+        state.initialized
+    ) {
+
+        return;
+    }
+
+
+    state.initialized =
+        true;
+
+
+    initialiseTheme();
+
+    initialiseNavigation();
+
+    initialisePerformanceControls();
+
+    initialiseNewsControls();
+
+    restoreApplicationState();
+
+    setApplicationLoadingState(
+        true
+    );
+
+
+    try {
+
+        const applicationData =
+            await loadApplicationData();
+
+
+        state.data =
+            applicationData;
+
+
+        state.performance =
+            calculateAllPerformance(
+                applicationData.funds,
+                applicationData.bidHistory,
+                10
+            );
+
+
+        /*
+         * Market News is loaded through its dedicated
+         * analysis module. This keeps the application
+         * controller independent of the raw JSON schema.
+         */
+        try {
+
+            state.news =
+                await loadCurrentMarketNews();
+
+
+            state.newsState =
+                createNewsState(
+                    state.news
+                );
+
+        } catch (
+            newsError
+        ) {
+
+            /*
+             * Market Performance should remain usable even
+             * if Market News is temporarily unavailable.
+             */
+            console.error(
+                "Market News failed to load:",
+                newsError
+            );
+
+
+            state.news =
+                null;
+
+
+            state.newsState =
+                null;
+        }
+
+
+        setApplicationLoadingState(
+            false
         );
 
-    dom.eligibleFundCount =
-        document.querySelector("#eligible-fund-count");
 
-    dom.winnerCount =
-        document.querySelector("#winner-count");
-
-    dom.loserCount =
-        document.querySelector("#loser-count");
-
-    dom.winnersTableBody =
-        document.querySelector("#winners-table-body");
-
-    dom.losersTableBody =
-        document.querySelector("#losers-table-body");
-
-    dom.winnersEmpty =
-        document.querySelector("#winners-empty");
-
-    dom.losersEmpty =
-        document.querySelector("#losers-empty");
-
-    dom.winnersCanvas =
-        document.querySelector("#winners-chart");
-
-    dom.losersCanvas =
-        document.querySelector("#losers-chart");
-
-    dom.marketNewsContainer =
-        document.querySelector(
-            "#market-news-container"
+        updateDataStatus(
+            true
         );
 
-    dom.marketNewsSearch =
-        document.querySelector(
-            "#market-news-search"
+
+        renderPerformance();
+
+        renderMarketNews();
+
+        renderNewsCharts();
+
+        renderApplicationMetadata();
+
+        activateView(
+            state.currentView
         );
 
-    dom.marketNewsCategory =
-        document.querySelector(
-            "#market-news-category"
+        state.loading =
+            false;
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "VGrat FMS initialisation failed:",
+            error
         );
 
-    dom.marketNewsSentiment =
-        document.querySelector(
-            "#market-news-sentiment"
+
+        state.error =
+            error;
+
+
+        state.loading =
+            false;
+
+
+        setApplicationLoadingState(
+            false
         );
 
-    dom.marketNewsImportance =
-        document.querySelector(
-            "#market-news-importance"
+
+        updateDataStatus(
+            false
         );
 
-    dom.marketNewsCount =
-        document.querySelector(
-            "#market-news-count"
-        );
 
-    dom.marketNewsGenerated =
-        document.querySelector(
-            "#market-news-generated"
+        renderApplicationError(
+            error
         );
-
-    dom.marketNewsCurrentTab =
-        document.querySelector(
-            "[data-news-tab='current']"
-        );
-
-    dom.marketNewsHistoryTab =
-        document.querySelector(
-            "[data-news-tab='history']"
-        );
-
-    dom.marketNewsCurrentPanel =
-        document.querySelector(
-            "#market-news-current-panel"
-        );
-
-    dom.marketNewsHistoryPanel =
-        document.querySelector(
-            "#market-news-history-panel"
-        );
-
-    dom.globalError =
-        document.querySelector("#global-error");
+    }
 }
 
 
@@ -239,371 +389,769 @@ function cacheDom() {
    THEME
 ============================================================ */
 
-function applyTheme(theme) {
+function initialiseTheme() {
 
-    const safeTheme =
+    let theme =
+        DEFAULT_THEME;
+
+
+    try {
+
+        const saved =
+            localStorage.getItem(
+                STORAGE_KEYS.theme
+            );
+
+
+        if (
+            saved === "light" ||
+            saved === "dark"
+        ) {
+
+            theme =
+                saved;
+        }
+
+    } catch (
+        error
+    ) {
+
+        console.warn(
+            "Unable to read saved theme:",
+            error
+        );
+    }
+
+
+    applyTheme(
+        theme
+    );
+
+
+    const toggle =
+        firstExisting([
+            "#theme-toggle",
+            "[data-theme-toggle]"
+        ]);
+
+
+    if (!toggle) {
+        return;
+    }
+
+
+    toggle.addEventListener(
+        "click",
+        () => {
+
+            const current =
+                document.documentElement
+                    .getAttribute(
+                        "data-theme"
+                    ) ||
+                DEFAULT_THEME;
+
+
+            const next =
+                current === "dark"
+                    ? "light"
+                    : "dark";
+
+
+            applyTheme(
+                next
+            );
+
+
+            try {
+
+                localStorage.setItem(
+                    STORAGE_KEYS.theme,
+                    next
+                );
+
+            } catch (
+                error
+            ) {
+
+                console.warn(
+                    "Unable to save theme:",
+                    error
+                );
+            }
+
+
+            updateChartTheme();
+        }
+    );
+}
+
+
+function applyTheme(
+    theme
+) {
+
+    const normalized =
         theme === "light"
             ? "light"
             : "dark";
 
-    state.theme =
-        safeTheme;
 
-    document.documentElement.dataset.theme =
-        safeTheme;
-
-    localStorage.setItem(
-        "vgrat-fms-theme",
-        safeTheme
-    );
-
-    if (dom.themeToggle) {
-
-        dom.themeToggle.setAttribute(
-            "aria-pressed",
-            safeTheme === "light"
-                ? "true"
-                : "false"
+    document.documentElement
+        .setAttribute(
+            "data-theme",
+            normalized
         );
+
+
+    const toggle =
+        firstExisting([
+            "#theme-toggle",
+            "[data-theme-toggle]"
+        ]);
+
+
+    if (!toggle) {
+        return;
     }
 
-    if (dom.themeToggleLabel) {
 
-        dom.themeToggleLabel.textContent =
-            safeTheme === "light"
+    const isLight =
+        normalized === "light";
+
+
+    toggle.setAttribute(
+        "aria-pressed",
+        String(
+            isLight
+        )
+    );
+
+
+    toggle.setAttribute(
+        "aria-label",
+        isLight
+            ? "Switch to dark mode"
+            : "Switch to light mode"
+    );
+
+
+    const icon =
+        qs(
+            ".theme-icon",
+            toggle
+        );
+
+
+    if (icon) {
+
+        icon.textContent =
+            isLight
+                ? "☀"
+                : "☾";
+    }
+
+
+    const label =
+        qs(
+            ".theme-label",
+            toggle
+        );
+
+
+    if (label) {
+
+        label.textContent =
+            isLight
                 ? "Light"
                 : "Dark";
     }
 }
 
 
-function toggleTheme() {
-
-    applyTheme(
-        state.theme === "dark"
-            ? "light"
-            : "dark"
-    );
-
-    if (
-        state.activeView ===
-        "market-performance"
-    ) {
-        renderPerformance();
-    }
-}
-
-
 /* ============================================================
-   DATA STATUS
+   NAVIGATION
 ============================================================ */
 
-function setDataStatus(
-    status,
-    message
-) {
+function initialiseNavigation() {
 
-    if (dom.dataStatus) {
-
-        dom.dataStatus.dataset.status =
-            status;
-    }
-
-    if (dom.dataStatusText) {
-
-        dom.dataStatusText.textContent =
-            message;
-    }
-}
-
-
-function setLoadingStatus() {
-
-    setDataStatus(
-        "loading",
-        "Loading data"
-    );
-}
-
-
-function setReadyStatus() {
-
-    setDataStatus(
-        "ready",
-        "Data current"
-    );
-}
-
-
-function setErrorStatus() {
-
-    setDataStatus(
-        "error",
-        "Data error"
-    );
-}
-
-
-/* ============================================================
-   ERROR HANDLING
-============================================================ */
-
-function showGlobalError(error) {
-
-    const message =
-        error instanceof Error
-            ? error.message
-            : String(error);
-
-    state.error =
-        message;
-
-    if (dom.globalError) {
-
-        dom.globalError.hidden =
-            false;
-
-        dom.globalError.textContent =
-            message;
-    }
-
-    setErrorStatus();
-}
-
-
-function clearGlobalError() {
-
-    state.error =
-        null;
-
-    if (dom.globalError) {
-
-        dom.globalError.hidden =
-            true;
-
-        dom.globalError.textContent =
-            "";
-    }
-}
-
-
-/* ============================================================
-   MAIN VIEW NAVIGATION
-============================================================ */
-
-function setActiveView(view) {
-
-    const validViews =
-        new Set([
-            "market-performance",
-            "market-news",
-            "fund-explorer",
-            "monitoring"
-        ]);
-
-    if (!validViews.has(view)) {
-
-        view =
-            "market-performance";
-    }
-
-    state.activeView =
-        view;
-
-
-    /*
-     * Navigation buttons.
-     */
-    for (
-        const link of dom.navLinks || []
-    ) {
-
-        const isActive =
-            link.dataset.view === view;
-
-        link.classList.toggle(
-            "active",
-            isActive
+    const links =
+        qsa(
+            "[data-view-target], [data-view-link]"
         );
 
-        if (
-            link.hasAttribute(
-                "aria-current"
-            )
-        ) {
 
-            link.setAttribute(
-                "aria-current",
-                isActive
-                    ? "page"
-                    : "false"
-            );
-        }
+    for (
+        const link
+        of links
+    ) {
+
+        link.addEventListener(
+            "click",
+            event => {
+
+                const target =
+                    link.dataset.viewTarget ||
+                    link.dataset.viewLink;
+
+
+                if (!target) {
+                    return;
+                }
+
+
+                event.preventDefault();
+
+
+                activateView(
+                    target
+                );
+
+
+                try {
+
+                    localStorage.setItem(
+                        STORAGE_KEYS.view,
+                        target
+                    );
+
+                } catch (
+                    error
+                ) {
+
+                    console.warn(
+                        "Unable to save current view:",
+                        error
+                    );
+                }
+            }
+        );
     }
+}
+
+
+function activateView(
+    requestedView
+) {
+
+    const normalized =
+        normalizeViewName(
+            requestedView
+        );
+
+
+    state.currentView =
+        normalized;
 
 
     /*
-     * Page views.
+     * Navigation items.
      */
-    const views = {
-        "market-performance":
-            dom.performanceView,
-
-        "market-news":
-            dom.marketNewsView,
-
-        "fund-explorer":
-            dom.fundExplorerView,
-
-        "monitoring":
-            dom.monitoringView
-    };
-
     for (
-        const [key, element]
-        of Object.entries(views)
-    ) {
-
-        if (!element) {
-            continue;
-        }
-
-        element.hidden =
-            key !== view;
-    }
-
-
-    updatePageHeading();
-
-
-    if (
-        view ===
-        "market-performance"
-    ) {
-
-        renderPerformance();
-    }
-
-
-    if (
-        view ===
-        "market-news"
-    ) {
-
-        renderMarketNews();
-    }
-}
-
-
-/* ============================================================
-   PAGE HEADING
-============================================================ */
-
-function updatePageHeading() {
-
-    const headings = {
-
-        "market-performance": {
-            title:
-                "Market Performance",
-
-            subtitle:
-                "Prudential Singapore fund performance across the full universe."
-        },
-
-        "market-news": {
-            title:
-                "Market News",
-
-            subtitle:
-                "AI-analyzed market developments relevant to investors and Prudential funds."
-        },
-
-        "fund-explorer": {
-            title:
-                "Fund Explorer",
-
-            subtitle:
-                "Explore Prudential Singapore funds, characteristics and holdings."
-        },
-
-        "monitoring": {
-            title:
-                "Monitoring",
-
-            subtitle:
-                "Monitor selected funds, market conditions and important changes."
-        }
-    };
-
-
-    const current =
-        headings[
-            state.activeView
-        ] ||
-        headings["market-performance"];
-
-
-    if (dom.pageTitle) {
-
-        dom.pageTitle.textContent =
-            current.title;
-    }
-
-
-    if (dom.pageSubtitle) {
-
-        dom.pageSubtitle.textContent =
-            current.subtitle;
-    }
-}
-
-
-/* ============================================================
-   PERFORMANCE PERIOD
-============================================================ */
-
-function setActivePeriod(
-    periodKey
-) {
-
-    if (
-        !Object.prototype.hasOwnProperty.call(
-            PERFORMANCE_PERIODS,
-            periodKey
+        const link
+        of qsa(
+            "[data-view-target], [data-view-link]"
         )
     ) {
 
-        return;
-    }
+        const target =
+            normalizeViewName(
+                link.dataset.viewTarget ||
+                link.dataset.viewLink
+            );
 
-    state.activePeriod =
-        periodKey;
+
+        const active =
+            target ===
+            normalized;
 
 
-    for (
-        const tab of dom.periodTabs || []
-    ) {
-
-        const isActive =
-            tab.dataset.period ===
-            periodKey;
-
-        tab.classList.toggle(
+        link.classList.toggle(
             "active",
-            isActive
+            active
         );
 
-        tab.setAttribute(
-            "aria-selected",
-            isActive
-                ? "true"
+
+        link.classList.toggle(
+            "is-active",
+            active
+        );
+
+
+        link.setAttribute(
+            "aria-current",
+            active
+                ? "page"
                 : "false"
         );
     }
 
 
-    renderPerformance();
+    /*
+     * View panels.
+     *
+     * Supports both:
+     *
+     * data-view-panel="performance"
+     *
+     * and IDs such as:
+     *
+     * market-performance-view
+     */
+    const panels =
+        qsa(
+            "[data-view-panel]"
+        );
+
+
+    if (
+        panels.length > 0
+    ) {
+
+        for (
+            const panel
+            of panels
+        ) {
+
+            const panelView =
+                normalizeViewName(
+                    panel.dataset.viewPanel
+                );
+
+
+            const active =
+                panelView ===
+                normalized;
+
+
+            panel.classList.toggle(
+                "is-active",
+                active
+            );
+
+
+            panel.hidden =
+                !active;
+        }
+
+    } else {
+
+        /*
+         * Fallback for the current index.html structure.
+         */
+        const candidates =
+            getViewPanelCandidates(
+                normalized
+            );
+
+
+        for (
+            const id
+            of candidates
+        ) {
+
+            const panel =
+                document.getElementById(
+                    id
+                );
+
+
+            if (!panel) {
+                continue;
+            }
+
+
+            panel.classList.add(
+                "is-active"
+            );
+
+
+            panel.hidden =
+                false;
+        }
+
+
+        /*
+         * Hide known alternative views.
+         */
+        for (
+            const view
+            of [
+                "performance",
+                "market-news",
+                "news",
+                "fund-explorer",
+                "monitoring"
+            ]
+        ) {
+
+            if (
+                normalizeViewName(
+                    view
+                ) ===
+                normalized
+            ) {
+
+                continue;
+            }
+
+
+            for (
+                const id
+                of getViewPanelCandidates(
+                    view
+                )
+            ) {
+
+                const panel =
+                    document.getElementById(
+                        id
+                    );
+
+
+                if (!panel) {
+                    continue;
+                }
+
+
+                panel.classList.remove(
+                    "is-active"
+                );
+
+
+                panel.hidden =
+                    true;
+            }
+        }
+    }
+
+
+    updateDocumentTitle(
+        normalized
+    );
+}
+
+
+function normalizeViewName(
+    value
+) {
+
+    const normalized =
+        String(
+            value ??
+            ""
+        )
+            .toLowerCase()
+            .trim()
+            .replace(
+                /_/g,
+                "-"
+            );
+
+
+    if (
+        normalized ===
+        "market-performance" ||
+        normalized ===
+        "market"
+    ) {
+
+        return "performance";
+    }
+
+
+    if (
+        normalized ===
+        "market-news" ||
+        normalized ===
+        "news"
+    ) {
+
+        return "news";
+    }
+
+
+    if (
+        normalized ===
+        "fund-explorer" ||
+        normalized ===
+        "funds"
+    ) {
+
+        return "fund-explorer";
+    }
+
+
+    if (
+        normalized ===
+        "monitoring" ||
+        normalized ===
+        "monitor"
+    ) {
+
+        return "monitoring";
+    }
+
+
+    if (
+        normalized ===
+        "performance"
+    ) {
+
+        return "performance";
+    }
+
+
+    return "performance";
+}
+
+
+function getViewPanelCandidates(
+    view
+) {
+
+    switch (
+        normalizeViewName(
+            view
+        )
+    ) {
+
+        case "performance":
+
+            return [
+                "market-performance-view",
+                "view-market-performance",
+                "performance-view"
+            ];
+
+
+        case "news":
+
+            return [
+                "market-news-view",
+                "view-market-news",
+                "news-view"
+            ];
+
+
+        case "fund-explorer":
+
+            return [
+                "fund-explorer-view",
+                "view-fund-explorer"
+            ];
+
+
+        case "monitoring":
+
+            return [
+                "monitoring-view",
+                "view-monitoring"
+            ];
+
+
+        default:
+
+            return [];
+    }
+}
+
+
+function updateDocumentTitle(
+    view
+) {
+
+    const titles = {
+
+        performance:
+            "Market Performance",
+
+        news:
+            "Market News",
+
+        "fund-explorer":
+            "Fund Explorer",
+
+        monitoring:
+            "Monitoring"
+
+    };
+
+
+    const title =
+        titles[
+            normalizeViewName(
+                view
+            )
+        ] ||
+        titles.performance;
+
+
+    document.title =
+        `VGrat FMS — ${title}`;
+}
+
+
+/* ============================================================
+   APPLICATION STATE RESTORATION
+============================================================ */
+
+function restoreApplicationState() {
+
+    try {
+
+        const savedView =
+            localStorage.getItem(
+                STORAGE_KEYS.view
+            );
+
+
+        if (savedView) {
+
+            state.currentView =
+                normalizeViewName(
+                    savedView
+                );
+        }
+
+
+        const savedPeriod =
+            localStorage.getItem(
+                STORAGE_KEYS.period
+            );
+
+
+        if (
+            PERFORMANCE_PERIODS.includes(
+                savedPeriod
+            )
+        ) {
+
+            state.selectedPeriod =
+                savedPeriod;
+        }
+
+    } catch (
+        error
+    ) {
+
+        console.warn(
+            "Unable to restore application state:",
+            error
+        );
+    }
+}
+
+
+/* ============================================================
+   PERFORMANCE CONTROLS
+============================================================ */
+
+function initialisePerformanceControls() {
+
+    const tabs =
+        qsa(
+            "[data-period]"
+        );
+
+
+    for (
+        const tab
+        of tabs
+    ) {
+
+        tab.addEventListener(
+            "click",
+            () => {
+
+                const period =
+                    String(
+                        tab.dataset.period
+                    )
+                        .toUpperCase();
+
+
+                if (
+                    !PERFORMANCE_PERIODS.includes(
+                        period
+                    )
+                ) {
+
+                    return;
+                }
+
+
+                state.selectedPeriod =
+                    period;
+
+
+                try {
+
+                    localStorage.setItem(
+                        STORAGE_KEYS.period,
+                        period
+                    );
+
+                } catch (
+                    error
+                ) {
+
+                    console.warn(
+                        "Unable to save selected period:",
+                        error
+                    );
+                }
+
+
+                updatePerformanceTabs();
+
+                renderPerformance();
+            }
+        );
+    }
+}
+
+
+function updatePerformanceTabs() {
+
+    for (
+        const tab
+        of qsa(
+            "[data-period]"
+        )
+    ) {
+
+        const period =
+            String(
+                tab.dataset.period
+            )
+                .toUpperCase();
+
+
+        const active =
+            period ===
+            state.selectedPeriod;
+
+
+        tab.classList.toggle(
+            "active",
+            active
+        );
+
+
+        tab.classList.toggle(
+            "is-active",
+            active
+        );
+
+
+        tab.setAttribute(
+            "aria-selected",
+            String(
+                active
+            )
+        );
+    }
 }
 
 
@@ -617,1321 +1165,538 @@ function renderPerformance() {
         !state.performance
     ) {
 
-        renderPerformanceEmpty();
-
         return;
     }
 
 
-    const period =
+    updatePerformanceTabs();
+
+
+    const periodData =
         state.performance[
-            state.activePeriod
+            state.selectedPeriod
         ];
 
 
-    if (!period) {
+    if (!periodData) {
 
-        renderPerformanceEmpty();
+        renderPerformanceError(
+            "Performance data is unavailable for this period."
+        );
+
 
         return;
     }
 
 
-    if (dom.selectedPeriodLabel) {
-
-        dom.selectedPeriodLabel.textContent =
-            period.label;
-    }
-
-
-    if (
-        dom.selectedPeriodDescription
-    ) {
-
-        dom.selectedPeriodDescription.textContent =
-            period.description;
-    }
+    /*
+     * Page summary.
+     */
+    setText(
+        [
+            "#selected-period-label",
+            "#performance-period-title",
+            "[data-performance-period-title]"
+        ],
+        periodData.label
+    );
 
 
-    if (dom.eligibleFundCount) {
-
-        dom.eligibleFundCount.textContent =
-            String(
-                period.totalEligibleFunds
-            );
-    }
-
-
-    if (dom.winnerCount) {
-
-        dom.winnerCount.textContent =
-            String(
-                period.winners.length
-            );
-    }
+    setText(
+        [
+            "#selected-period-description",
+            "#performance-period-description",
+            "[data-performance-period-description]"
+        ],
+        getPeriodDescription(
+            periodData
+        )
+    );
 
 
-    if (dom.loserCount) {
+    setText(
+        [
+            "#performance-eligible-count",
+            "#selected-period-count",
+            "[data-performance-eligible-count]"
+        ],
+        `${periodData.totalEligibleFunds} eligible funds`
+    );
 
-        dom.loserCount.textContent =
-            String(
-                period.losers.length
-            );
-    }
+
+    setText(
+        [
+            "#performance-as-of",
+            "[data-performance-as-of]"
+        ],
+        periodData.asOfDate
+            ? `Latest BID: ${formatDisplayDate(periodData.asOfDate)}`
+            : "Latest BID: —"
+    );
 
 
+    setText(
+        [
+            "#performance-target-date",
+            "[data-performance-target-date]"
+        ],
+        periodData.targetDate
+            ? `Comparison target: ${formatDisplayDate(periodData.targetDate)}`
+            : "Comparison target: —"
+    );
+
+
+    /*
+     * Latest valuation date.
+     */
+    setText(
+        [
+            "#latest-valuation-date",
+            "#market-latest-date",
+            "[data-latest-valuation-date]"
+        ],
+        periodData.asOfDate
+            ? formatDisplayDate(
+                periodData.asOfDate
+            )
+            : "—"
+    );
+
+
+    /*
+     * Ranking tables.
+     */
     renderPerformanceTable(
-        dom.winnersTableBody,
-        period.winners,
+        [
+            "#winners-table-body",
+            "#performance-winners-body",
+            "[data-performance-winners]"
+        ],
+        periodData.winners,
         "winners"
     );
 
 
     renderPerformanceTable(
-        dom.losersTableBody,
-        period.losers,
+        [
+            "#losers-table-body",
+            "#performance-losers-body",
+            "[data-performance-losers]"
+        ],
+        periodData.losers,
         "losers"
     );
 
 
-    updateEmptyState(
-        dom.winnersEmpty,
-        period.winners.length === 0
+    /*
+     * Summary cards.
+     */
+    renderPerformanceSummary(
+        periodData
     );
-
-
-    updateEmptyState(
-        dom.losersEmpty,
-        period.losers.length === 0
-    );
-
-
-    renderPerformanceCharts(
-        period
-    );
-
-
-    renderLatestValuationDate();
 }
 
 
-function renderPerformanceEmpty() {
-
-    if (dom.winnersTableBody) {
-
-        dom.winnersTableBody.innerHTML =
-            "";
-    }
-
-
-    if (dom.losersTableBody) {
-
-        dom.losersTableBody.innerHTML =
-            "";
-    }
-
-
-    if (dom.eligibleFundCount) {
-
-        dom.eligibleFundCount.textContent =
-            "—";
-    }
-
-
-    if (dom.winnerCount) {
-
-        dom.winnerCount.textContent =
-            "0";
-    }
-
-
-    if (dom.loserCount) {
-
-        dom.loserCount.textContent =
-            "0";
-    }
-
-
-    updateEmptyState(
-        dom.winnersEmpty,
-        true
-    );
-
-
-    updateEmptyState(
-        dom.losersEmpty,
-        true
-    );
-
-
-    destroyAllCharts();
-}
-
-
-function updateEmptyState(
-    element,
-    visible
+function getPeriodDescription(
+    periodData
 ) {
 
-    if (!element) {
-        return;
+    if (!periodData) {
+        return "";
     }
 
-    element.hidden =
-        !visible;
+
+    const descriptions = {
+
+        DD:
+            "Change versus the latest actual BID available on or before the previous calendar day.",
+
+        WW:
+            "Change versus the latest actual BID available on or before seven calendar days earlier.",
+
+        MM:
+            "Change versus the latest actual BID available on or before the same calendar day one month earlier.",
+
+        YY:
+            "Change versus the latest actual BID available on or before the same calendar day one year earlier."
+
+    };
+
+
+    return (
+        descriptions[
+            periodData.key
+        ] ||
+        periodData.description ||
+        ""
+    );
 }
 
 
-/* ============================================================
-   PERFORMANCE TABLE
-============================================================ */
-
 function renderPerformanceTable(
-    tableBody,
-    results,
+    selectors,
+    rows,
     type
 ) {
 
-    if (!tableBody) {
-        return;
-    }
-
-
-    tableBody.innerHTML =
-        "";
-
-
-    if (
-        !Array.isArray(results) ||
-        results.length === 0
-    ) {
-
-        return;
-    }
-
-
-    results.forEach(
-        (
-            result,
-            index
-        ) => {
-
-            const row =
-                document.createElement("tr");
-
-
-            /*
-             * Rank
-             */
-            const rankCell =
-                document.createElement("td");
-
-            rankCell.className =
-                "rank-cell";
-
-            rankCell.textContent =
-                String(index + 1);
-
-
-            /*
-             * Fund
-             */
-            const fundCell =
-                document.createElement("td");
-
-            fundCell.className =
-                "fund-cell";
-
-
-            const fundButton =
-                document.createElement("button");
-
-            fundButton.type =
-                "button";
-
-            fundButton.className =
-                "fund-link";
-
-            fundButton.textContent =
-                result.fundName ||
-                "Unnamed fund";
-
-            fundButton.dataset.fundIdentifier =
-                result.fundIdentifier ||
-                "";
-
-            fundButton.dataset.fundCode =
-                result.fundCode ||
-                "";
-
-
-            fundButton.addEventListener(
-                "click",
-                () => {
-                    handleFundClick(
-                        result
-                    );
-                }
-            );
-
-
-            fundCell.appendChild(
-                fundButton
-            );
-
-
-            /*
-             * Fund code
-             */
-            const codeCell =
-                document.createElement("td");
-
-            codeCell.className =
-                "code-cell";
-
-            codeCell.textContent =
-                result.fundCode ||
-                "—";
-
-
-            /*
-             * Return
-             */
-            const returnCell =
-                document.createElement("td");
-
-            returnCell.className =
-                "return-cell";
-
-
-            const returnValue =
-                Number(
-                    result.returnPercent
-                );
-
-
-            returnCell.textContent =
-                formatReturnPercent(
-                    returnValue
-                );
-
-
-            if (
-                returnValue > 0
-            ) {
-
-                returnCell.classList.add(
-                    "positive"
-                );
-
-            } else if (
-                returnValue < 0
-            ) {
-
-                returnCell.classList.add(
-                    "negative"
-                );
-
-            } else {
-
-                returnCell.classList.add(
-                    "neutral"
-                );
-            }
-
-
-            /*
-             * Current BID
-             */
-            const bidCell =
-                document.createElement("td");
-
-            bidCell.className =
-                "bid-cell";
-
-            bidCell.textContent =
-                formatBid(
-                    result.currentBid
-                );
-
-
-            /*
-             * Comparison date
-             */
-            const comparisonCell =
-                document.createElement("td");
-
-            comparisonCell.className =
-                "comparison-cell";
-
-            comparisonCell.textContent =
-                formatDisplayDate(
-                    result.comparisonDate
-                );
-
-
-            row.dataset.comparisonDate =
-                result.comparisonDate ||
-                "";
-
-            row.dataset.type =
-                type;
-
-
-            row.appendChild(
-                rankCell
-            );
-
-            row.appendChild(
-                fundCell
-            );
-
-            row.appendChild(
-                codeCell
-            );
-
-            row.appendChild(
-                returnCell
-            );
-
-            row.appendChild(
-                bidCell
-            );
-
-            row.appendChild(
-                comparisonCell
-            );
-
-
-            tableBody.appendChild(
-                row
-            );
-        }
-    );
-}
-
-
-/* ============================================================
-   PERFORMANCE CHARTS
-============================================================ */
-
-function renderPerformanceCharts(
-    period
-) {
-
-    if (
-        !dom.winnersCanvas &&
-        !dom.losersCanvas
-    ) {
-
-        return;
-    }
-
-
-    if (dom.winnersCanvas) {
-
-        createPerformanceBarChart(
-            dom.winnersCanvas,
-            period.winners,
-            {
-                chartId:
-                    "market-winners-chart",
-
-                direction:
-                    "winners",
-
-                limit:
-                    10
-            }
-        );
-    }
-
-
-    if (dom.losersCanvas) {
-
-        createPerformanceBarChart(
-            dom.losersCanvas,
-            period.losers,
-            {
-                chartId:
-                    "market-losers-chart",
-
-                direction:
-                    "losers",
-
-                limit:
-                    10
-            }
-        );
-    }
-}
-
-
-/* ============================================================
-   LATEST VALUATION DATE
-============================================================ */
-
-function renderLatestValuationDate() {
-
-    if (
-        !dom.latestValuationDate ||
-        !Array.isArray(
-            state.bidHistory
-        )
-    ) {
-
-        return;
-    }
-
-
-    let latestDate =
-        null;
-
-
-    for (
-        const record of state.bidHistory
-    ) {
-
-        const observations =
-            record?.bidHistory?.observations;
-
-
-        if (
-            !Array.isArray(
-                observations
-            )
-        ) {
-
-            continue;
-        }
-
-
-        for (
-            const observation of observations
-        ) {
-
-            const date =
-                observation?.date;
-
-
-            const bid =
-                Number(
-                    observation?.bidPrice
-                );
-
-
-            if (
-                typeof date !== "string" ||
-                !Number.isFinite(bid) ||
-                bid <= 0
-            ) {
-
-                continue;
-            }
-
-
-            if (
-                latestDate === null ||
-                date > latestDate
-            ) {
-
-                latestDate =
-                    date;
-            }
-        }
-    }
-
-
-    dom.latestValuationDate.textContent =
-        latestDate
-            ? formatDisplayDate(
-                latestDate
-            )
-            : "—";
-}
-
-
-/* ============================================================
-   FUND NAVIGATION
-============================================================ */
-
-function handleFundClick(
-    result
-) {
-
-    const identifier =
-        result?.fundIdentifier ||
-        result?.fundCode ||
-        "";
-
-
-    if (!identifier) {
-        return;
-    }
-
-
-    state.selectedFund =
-        identifier;
-
-
-    /*
-     * Fund Explorer is not yet implemented.
-     *
-     * We still switch to it so that the eventual detail
-     * implementation has a clean navigation path.
-     */
-    setActiveView(
-        "fund-explorer"
-    );
-}
-
-
-/* ============================================================
-   MARKET NEWS
-============================================================ */
-
-function renderMarketNews() {
-
-    if (
-        !dom.marketNewsContainer
-    ) {
-
-        return;
-    }
-
-
-    const allArticles =
+    const tbody =
         Array.isArray(
-            state.marketNews?.analyses
+            selectors
         )
-            ? state.marketNews.analyses
+            ? firstExisting(
+                selectors
+            )
+            : qs(
+                selectors
+            );
+
+
+    if (!tbody) {
+        return;
+    }
+
+
+    const data =
+        Array.isArray(
+            rows
+        )
+            ? rows
             : [];
 
 
-    let articles =
-        filterArticles(
-            allArticles,
-            state.marketNewsFilters
-        );
-
-
-    articles =
-        searchArticles(
-            articles,
-            state.marketNewsSearch
-        );
-
-
-    /*
-     * Newest article first.
-     */
-    articles.sort(
-        (a, b) => {
-
-            const aTime =
-                parseNewsTimestamp(
-                    a?.publishedAtSgt
-                );
-
-            const bTime =
-                parseNewsTimestamp(
-                    b?.publishedAtSgt
-                );
-
-            return bTime - aTime;
-        }
-    );
-
-
-    renderMarketNewsHeader(
-        articles
-    );
-
-
     if (
-        articles.length === 0
+        data.length === 0
     ) {
 
-        dom.marketNewsContainer.innerHTML =
-            `
-            <div class="empty-state">
+        tbody.innerHTML = `
 
-                <div class="empty-state-title">
-                    No matching news
-                </div>
+            <tr>
 
-                <div class="empty-state-text">
-                    No analyzed articles match the
-                    current filters.
-                </div>
+                <td
+                    colspan="5"
+                    class="empty-state"
+                >
+                    No eligible funds are available
+                    for this period.
+                </td>
 
-            </div>
-            `;
+            </tr>
+
+        `;
+
 
         return;
     }
 
 
-    dom.marketNewsContainer.innerHTML =
-        articles
+    tbody.innerHTML =
+        data
             .map(
-                article =>
-                    renderNewsArticle(
-                        article
+                row =>
+                    renderPerformanceRow(
+                        row,
+                        type
                     )
             )
             .join("");
 }
 
 
-function parseNewsTimestamp(
-    value
+function renderPerformanceRow(
+    row,
+    type
 ) {
 
-    if (
-        typeof value !== "string"
-    ) {
-
-        return 0;
-    }
-
-
-    const timestamp =
-        Date.parse(value);
-
-
-    return Number.isFinite(
-        timestamp
-    )
-        ? timestamp
-        : 0;
-}
-
-
-/* ============================================================
-   MARKET NEWS HEADER
-============================================================ */
-
-function renderMarketNewsHeader(
-    articles
-) {
-
-    if (dom.marketNewsCount) {
-
-        dom.marketNewsCount.textContent =
-            String(
-                articles.length
-            );
-    }
-
-
-    if (dom.marketNewsGenerated) {
-
-        dom.marketNewsGenerated.textContent =
-            state.marketNews.generatedAtSgt
-                ? formatNewsDate(
-                    state.marketNews.generatedAtSgt
-                )
-                : "—";
-    }
-}
-
-
-/* ============================================================
-   MARKET NEWS ARTICLE
-============================================================ */
-
-function renderNewsArticle(
-    article
-) {
-
-    const category =
-        escapeHtml(
-            article?.category ||
-            "MARKET"
+    const returnValue =
+        Number(
+            row.returnPercent
         );
 
 
-    const sentiment =
-        escapeHtml(
-            article?.sentiment ||
-            "NEUTRAL"
+    const returnClass =
+        returnValue > 0
+            ? "return-positive"
+            : returnValue < 0
+                ? "return-negative"
+                : "return-neutral";
+
+
+    const returnText =
+        formatReturnPercent(
+            returnValue
         );
 
 
-    const importance =
-        escapeHtml(
-            article?.importance ||
-            "MEDIUM"
+    const fundName =
+        escapeHTML(
+            row.fundName ||
+            "Unnamed fund"
         );
 
 
-    const title =
-        escapeHtml(
-            article?.title ||
-            "Untitled article"
+    const fundCode =
+        escapeHTML(
+            row.fundCode ||
+            "—"
         );
 
 
-    const summary =
-        escapeHtml(
-            article?.summary ||
+    const identifier =
+        escapeHTML(
+            row.fundIdentifier ||
             ""
         );
 
 
-    const investorImpact =
-        escapeHtml(
-            article?.investorImpact ||
-            ""
+    const bidText =
+        formatBid(
+            row.currentBid
         );
 
 
-    const source =
-        escapeHtml(
-            article?.source ||
-            "CNBC"
-        );
-
-
-    const published =
-        escapeHtml(
-            formatNewsDate(
-                article?.publishedAtSgt
+    const comparisonText =
+        row.comparisonDate
+            ? formatDisplayDate(
+                row.comparisonDate
             )
-        );
+            : "—";
 
 
-    const assetClasses =
-        renderNewsTags(
-            article?.assetClasses,
-            "asset"
-        );
+    const currentDateText =
+        row.currentDate
+            ? formatDisplayDate(
+                row.currentDate
+            )
+            : "—";
 
 
-    const geographies =
-        renderNewsTags(
-            article?.geographies,
-            "geography"
-        );
-
-
-    const sectors =
-        renderNewsTags(
-            article?.sectors,
-            "sector"
-        );
-
-
-    const sourceLink =
-        article?.url
-            ? `
-                <a
-                    class="news-source-link"
-                    href="${escapeAttribute(
-                        article.url
-                    )}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    Read source
-                </a>
-            `
-            : "";
-
-
-    const monitoringBadge =
-        article?.fundMonitoringRelevant
-            ? `
-                <span class="news-badge news-badge-monitoring">
-                    Fund Monitoring
-                </span>
-            `
-            : "";
-
-
+    /*
+     * The fund name is intentionally rendered as a button-like
+     * element for now. Fund detail navigation will be connected
+     * once the Fund Explorer/detail view is built.
+     */
     return `
-        <article
-            class="news-article"
-            data-article-id="${escapeAttribute(
-                article?.articleId || ""
-            )}"
+
+        <tr
+            data-fund-identifier="${identifier}"
+            data-performance-type="${escapeHTML(type)}"
         >
 
-            <div class="news-article-header">
+            <td class="rank-cell">
+                ${Number(row.rank) || "—"}
+            </td>
 
-                <div class="news-article-meta">
 
-                    <span class="news-badge">
-                        ${category}
-                    </span>
+            <td>
 
-                    <span
-                        class="news-badge news-sentiment-${escapeAttribute(
-                            sentiment.toLowerCase()
-                        )}"
-                    >
-                        ${sentiment}
-                    </span>
+                <div class="fund-cell">
 
-                    <span class="news-badge">
-                        ${importance}
-                    </span>
+                    <div class="fund-name">
+                        ${fundName}
+                    </div>
 
-                    ${monitoringBadge}
+                    <div class="fund-meta">
+                        ${fundCode}
+                    </div>
 
                 </div>
 
-                <time
-                    class="news-published"
-                    datetime="${escapeAttribute(
-                        article?.publishedAtSgt || ""
-                    )}"
-                >
-                    ${published}
-                </time>
-
-            </div>
+            </td>
 
 
-            <h3 class="news-article-title">
-                ${title}
-            </h3>
+            <td class="fund-code-cell">
+                ${fundCode}
+            </td>
 
 
-            ${
-                summary
-                    ? `
-                        <p class="news-article-summary">
-                            ${summary}
-                        </p>
-                    `
-                    : ""
-            }
+            <td class="${returnClass}">
+                ${returnText}
+            </td>
 
 
-            ${
-                investorImpact
-                    ? `
-                        <div class="news-investor-impact">
+            <td>
 
-                            <span class="news-impact-label">
-                                Investor impact
-                            </span>
+                <div class="bid-cell">
 
-                            <p>
-                                ${investorImpact}
-                            </p>
+                    <span class="bid-value">
+                        ${escapeHTML(bidText)}
+                    </span>
 
-                        </div>
-                    `
-                    : ""
-            }
+                    <span class="bid-date">
+                        ${escapeHTML(currentDateText)}
+                    </span>
 
+                </div>
 
-            ${
-                assetClasses
-                    ? `
-                        <div class="news-tag-group">
+            </td>
 
-                            <span class="news-tag-label">
-                                Asset class
-                            </span>
+        </tr>
 
-                            <div class="news-tags">
-                                ${assetClasses}
-                            </div>
-
-                        </div>
-                    `
-                    : ""
-            }
-
-
-            ${
-                geographies
-                    ? `
-                        <div class="news-tag-group">
-
-                            <span class="news-tag-label">
-                                Geography
-                            </span>
-
-                            <div class="news-tags">
-                                ${geographies}
-                            </div>
-
-                        </div>
-                    `
-                    : ""
-            }
-
-
-            ${
-                sectors
-                    ? `
-                        <div class="news-tag-group">
-
-                            <span class="news-tag-label">
-                                Sector
-                            </span>
-
-                            <div class="news-tags">
-                                ${sectors}
-                            </div>
-
-                        </div>
-                    `
-                    : ""
-            }
-
-
-            <div class="news-article-footer">
-
-                <span class="news-source">
-                    ${source}
-                </span>
-
-                ${sourceLink}
-
-            </div>
-
-        </article>
     `;
 }
 
 
-function renderNewsTags(
-    values,
-    type
+function renderPerformanceSummary(
+    periodData
 ) {
 
-    if (
-        !Array.isArray(values) ||
-        values.length === 0
-    ) {
-
-        return "";
-    }
-
-
-    return values
-        .filter(
-            value =>
-                value !== null &&
-                value !== undefined &&
-                String(value).trim() !== ""
-        )
-        .map(
-            value => `
-                <span
-                    class="news-tag news-tag-${escapeAttribute(
-                        type
-                    )}"
-                >
-                    ${escapeHtml(value)}
-                </span>
-            `
-        )
-        .join("");
-}
-
-
-/* ============================================================
-   MARKET NEWS FILTER OPTIONS
-============================================================ */
-
-function buildNewsFilterOptions() {
-
-    const articles =
+    const winners =
         Array.isArray(
-            state.marketNews?.analyses
+            periodData.winners
         )
-            ? state.marketNews.analyses
+            ? periodData.winners
             : [];
 
 
-    const categories =
-        new Set();
-
-    const sentiments =
-        new Set();
-
-    const importance =
-        new Set();
-
-
-    for (
-        const article of articles
-    ) {
-
-        if (
-            article?.category
-        ) {
-
-            categories.add(
-                article.category
-            );
-        }
-
-
-        if (
-            article?.sentiment
-        ) {
-
-            sentiments.add(
-                article.sentiment
-            );
-        }
-
-
-        if (
-            article?.importance
-        ) {
-
-            importance.add(
-                article.importance
-            );
-        }
-    }
-
-
-    populateSelect(
-        dom.marketNewsCategory,
-        [...categories].sort(),
-        "All categories"
-    );
-
-
-    populateSelect(
-        dom.marketNewsSentiment,
-        [...sentiments].sort(),
-        "All sentiment"
-    );
-
-
-    populateSelect(
-        dom.marketNewsImportance,
-        [...importance].sort(),
-        "All importance"
-    );
-}
-
-
-function populateSelect(
-    select,
-    values,
-    defaultLabel
-) {
-
-    if (!select) {
-        return;
-    }
-
-
-    const currentValue =
-        select.value;
-
-
-    select.innerHTML =
-        "";
-
-
-    const defaultOption =
-        document.createElement(
-            "option"
-        );
-
-
-    defaultOption.value =
-        "";
-
-    defaultOption.textContent =
-        defaultLabel;
-
-
-    select.appendChild(
-        defaultOption
-    );
-
-
-    for (
-        const value of values || []
-    ) {
-
-        const option =
-            document.createElement(
-                "option"
-            );
-
-
-        option.value =
-            value;
-
-        option.textContent =
-            value;
-
-
-        select.appendChild(
-            option
-        );
-    }
-
-
-    if (
-        values.includes(
-            currentValue
+    const losers =
+        Array.isArray(
+            periodData.losers
         )
-    ) {
-
-        select.value =
-            currentValue;
-    }
-}
+            ? periodData.losers
+            : [];
 
 
-/* ============================================================
-   NEWS FILTER EVENTS
-============================================================ */
-
-function applyMarketNewsFilters() {
-
-    state.marketNewsFilters = {
-
-        category:
-            dom.marketNewsCategory?.value ||
-            "",
-
-        sentiment:
-            dom.marketNewsSentiment?.value ||
-            "",
-
-        importance:
-            dom.marketNewsImportance?.value ||
-            ""
-    };
+    const strongest =
+        winners.length > 0
+            ? winners[0]
+            : null;
 
 
-    renderMarketNews();
-}
+    const weakest =
+        losers.length > 0
+            ? losers[0]
+            : null;
 
 
-/* ============================================================
-   NEWS TAB
-============================================================ */
-
-function setNewsTab(
-    tab
-) {
-
-    const isCurrent =
-        tab === "current";
-
-
-    if (
-        dom.marketNewsCurrentTab
-    ) {
-
-        dom.marketNewsCurrentTab.classList.toggle(
-            "active",
-            isCurrent
-        );
-
-        dom.marketNewsCurrentTab.setAttribute(
-            "aria-selected",
-            isCurrent
-                ? "true"
-                : "false"
-        );
-    }
-
-
-    if (
-        dom.marketNewsHistoryTab
-    ) {
-
-        dom.marketNewsHistoryTab.classList.toggle(
-            "active",
-            !isCurrent
-        );
-
-        dom.marketNewsHistoryTab.setAttribute(
-            "aria-selected",
-            !isCurrent
-                ? "true"
-                : "false"
-        );
-    }
-
-
-    if (
-        dom.marketNewsCurrentPanel
-    ) {
-
-        dom.marketNewsCurrentPanel.hidden =
-            !isCurrent;
-    }
-
-
-    if (
-        dom.marketNewsHistoryPanel
-    ) {
-
-        dom.marketNewsHistoryPanel.hidden =
-            isCurrent;
-    }
-}
-
-
-/* ============================================================
-   EVENT BINDING
-============================================================ */
-
-function bindEvents() {
-
-    /*
-     * Theme.
-     */
-    dom.themeToggle?.addEventListener(
-        "click",
-        toggleTheme
+    setText(
+        [
+            "#top-winner-return",
+            "[data-top-winner-return]"
+        ],
+        strongest
+            ? formatReturnPercent(
+                strongest.returnPercent
+            )
+            : "—"
     );
 
 
-    /*
-     * Main navigation.
-     */
+    setText(
+        [
+            "#top-winner-name",
+            "[data-top-winner-name]"
+        ],
+        strongest?.fundName ||
+        "—"
+    );
+
+
+    setText(
+        [
+            "#top-loser-return",
+            "[data-top-loser-return]"
+        ],
+        weakest
+            ? formatReturnPercent(
+                weakest.returnPercent
+            )
+            : "—"
+    );
+
+
+    setText(
+        [
+            "#top-loser-name",
+            "[data-top-loser-name]"
+        ],
+        weakest?.fundName ||
+        "—"
+    );
+
+
+    setText(
+        [
+            "#eligible-fund-count",
+            "[data-eligible-fund-count]"
+        ],
+        String(
+            periodData.totalEligibleFunds ??
+            0
+        )
+    );
+}
+
+
+function renderPerformanceError(
+    message
+) {
+
+    const containers = [
+        firstExisting([
+            "#winners-table-body",
+            "#performance-winners-body"
+        ]),
+        firstExisting([
+            "#losers-table-body",
+            "#performance-losers-body"
+        ])
+    ];
+
+
     for (
-        const link of dom.navLinks || []
+        const container
+        of containers
     ) {
 
-        link.addEventListener(
-            "click",
-            event => {
+        if (!container) {
+            continue;
+        }
 
-                event.preventDefault();
 
-                setActiveView(
-                    link.dataset.view
-                );
-            }
-        );
+        container.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    class="error-state"
+                >
+                    ${escapeHTML(message)}
+                </td>
+
+            </tr>
+
+        `;
     }
+}
 
+
+/* ============================================================
+   MARKET NEWS CONTROLS
+============================================================ */
+
+function initialiseNewsControls() {
 
     /*
-     * Performance periods.
+     * Current / History tabs.
      */
     for (
-        const tab of dom.periodTabs || []
+        const tab
+        of qsa(
+            "[data-news-tab]"
+        )
     ) {
 
         tab.addEventListener(
             "click",
             () => {
 
-                setActivePeriod(
-                    tab.dataset.period
+                const target =
+                    tab.dataset.newsTab;
+
+
+                switchNewsTab(
+                    target
                 );
             }
         );
@@ -1939,290 +1704,1448 @@ function bindEvents() {
 
 
     /*
-     * Market News search.
+     * Search.
      */
-    dom.marketNewsSearch?.addEventListener(
-        "input",
-        event => {
+    const search =
+        firstExisting([
+            "#market-news-search",
+            "[data-market-news-search]"
+        ]);
 
-            state.marketNewsSearch =
-                event.target.value || "";
 
-            renderMarketNews();
-        }
-    );
+    if (search) {
+
+        search.addEventListener(
+            "input",
+            () => {
+
+                if (!state.newsState) {
+                    return;
+                }
+
+
+                state.newsState.searchTerm =
+                    search.value;
+
+
+                renderMarketNews();
+            }
+        );
+    }
 
 
     /*
-     * Market News filters.
+     * Category filter.
      */
-    dom.marketNewsCategory?.addEventListener(
-        "change",
-        applyMarketNewsFilters
-    );
+    const category =
+        firstExisting([
+            "#market-news-category",
+            "[data-market-news-category]"
+        ]);
 
 
-    dom.marketNewsSentiment?.addEventListener(
-        "change",
-        applyMarketNewsFilters
-    );
+    if (category) {
+
+        category.addEventListener(
+            "change",
+            () => {
+
+                if (!state.newsState) {
+                    return;
+                }
 
 
-    dom.marketNewsImportance?.addEventListener(
-        "change",
-        applyMarketNewsFilters
-    );
+                state.newsState.selectedCategory =
+                    category.value;
+
+
+                renderMarketNews();
+            }
+        );
+    }
 
 
     /*
-     * Market News tabs.
+     * Importance filter.
      */
-    dom.marketNewsCurrentTab?.addEventListener(
-        "click",
-        () => {
+    const importance =
+        firstExisting([
+            "#market-news-importance",
+            "[data-market-news-importance]"
+        ]);
 
-            setNewsTab(
-                "current"
-            );
-        }
+
+    if (importance) {
+
+        importance.addEventListener(
+            "change",
+            () => {
+
+                if (!state.newsState) {
+                    return;
+                }
+
+
+                state.newsState.selectedImportance =
+                    importance.value;
+
+
+                renderMarketNews();
+            }
+        );
+    }
+
+
+    /*
+     * Sentiment filter.
+     */
+    const sentiment =
+        firstExisting([
+            "#market-news-sentiment",
+            "[data-market-news-sentiment]"
+        ]);
+
+
+    if (sentiment) {
+
+        sentiment.addEventListener(
+            "change",
+            () => {
+
+                if (!state.newsState) {
+                    return;
+                }
+
+
+                state.newsState.selectedSentiment =
+                    sentiment.value;
+
+
+                renderMarketNews();
+            }
+        );
+    }
+}
+
+
+function switchNewsTab(
+    target
+) {
+
+    const normalized =
+        String(
+            target ||
+            "current"
+        )
+            .toLowerCase();
+
+
+    for (
+        const tab
+        of qsa(
+            "[data-news-tab]"
+        )
+    ) {
+
+        const active =
+            String(
+                tab.dataset.newsTab
+            )
+                .toLowerCase() ===
+            normalized;
+
+
+        tab.classList.toggle(
+            "active",
+            active
+        );
+
+
+        tab.classList.toggle(
+            "is-active",
+            active
+        );
+
+
+        tab.setAttribute(
+            "aria-selected",
+            String(
+                active
+            )
+        );
+    }
+
+
+    /*
+     * Historical Market News UI will be connected to the
+     * date archive once the history selector is added.
+     */
+    const current =
+        firstExisting([
+            "#market-news-current",
+            "[data-market-news-current]"
+        ]);
+
+
+    const history =
+        firstExisting([
+            "#market-news-history",
+            "[data-market-news-history]"
+        ]);
+
+
+    if (current) {
+
+        current.hidden =
+            normalized !==
+            "current";
+    }
+
+
+    if (history) {
+
+        history.hidden =
+            normalized !==
+            "history";
+    }
+}
+
+
+/* ============================================================
+   MARKET NEWS RENDERING
+============================================================ */
+
+function renderMarketNews() {
+
+    const container =
+        firstExisting([
+            "#market-news-current",
+            "[data-market-news-current]"
+        ]);
+
+
+    if (!container) {
+        return;
+    }
+
+
+    if (
+        !state.newsState
+    ) {
+
+        container.innerHTML = `
+
+            <div class="empty-state">
+
+                <strong>
+                    Market News unavailable
+                </strong>
+
+                <span>
+                    The latest AI analysis could not be loaded.
+                </span>
+
+            </div>
+
+        `;
+
+
+        return;
+    }
+
+
+    const visible =
+        getVisibleNews(
+            state.newsState
+        );
+
+
+    renderNewsMetadata();
+
+    renderNewsFilters();
+
+
+    if (
+        visible.length === 0
+    ) {
+
+        container.innerHTML = `
+
+            <div class="empty-state">
+
+                <strong>
+                    No matching articles
+                </strong>
+
+                <span>
+                    Try changing the selected filters.
+                </span>
+
+            </div>
+
+        `;
+
+
+        return;
+    }
+
+
+    container.innerHTML =
+        visible
+            .map(
+                renderNewsArticle
+            )
+            .join("");
+}
+
+
+function renderNewsMetadata() {
+
+    if (
+        !state.newsState
+    ) {
+
+        return;
+    }
+
+
+    setText(
+        [
+            "#market-news-count",
+            "[data-market-news-count]"
+        ],
+        `${state.newsState.analyses.length} analyzed articles`
     );
 
 
-    dom.marketNewsHistoryTab?.addEventListener(
+    setText(
+        [
+            "#market-news-generated",
+            "[data-market-news-generated]"
+        ],
+        state.newsState.generatedAtSgt
+            ? `Updated ${formatNewsDateTimeSafe(
+                state.newsState.generatedAtSgt
+            )}`
+            : "Update time unavailable"
+    );
+
+
+    setText(
+        [
+            "#market-news-window",
+            "[data-market-news-window]"
+        ],
+        `${state.newsState.windowDays || 14}-day rolling window`
+    );
+}
+
+
+function renderNewsFilters() {
+
+    if (
+        !state.newsState
+    ) {
+
+        return;
+    }
+
+
+    const category =
+        firstExisting([
+            "#market-news-category",
+            "[data-market-news-category]"
+        ]);
+
+
+    if (
+        category &&
+        category.options.length === 0
+    ) {
+
+        const categories =
+            [
+                "ALL",
+                ...new Set(
+                    state.newsState.analyses
+                        .map(
+                            article =>
+                                article.category
+                        )
+                        .filter(
+                            Boolean
+                        )
+                )
+            ];
+
+
+        category.innerHTML =
+            categories
+                .map(
+                    value => `
+
+                        <option value="${escapeHTML(value)}">
+                            ${escapeHTML(
+                                value === "ALL"
+                                    ? "All categories"
+                                    : value
+                            )}
+                        </option>
+
+                    `
+                )
+                .join("");
+    }
+
+
+    if (category) {
+
+        category.value =
+            state.newsState.selectedCategory;
+    }
+
+
+    const importance =
+        firstExisting([
+            "#market-news-importance",
+            "[data-market-news-importance]"
+        ]);
+
+
+    if (importance) {
+
+        importance.value =
+            state.newsState.selectedImportance;
+    }
+
+
+    const sentiment =
+        firstExisting([
+            "#market-news-sentiment",
+            "[data-market-news-sentiment]"
+        ]);
+
+
+    if (sentiment) {
+
+        sentiment.value =
+            state.newsState.selectedSentiment;
+    }
+
+
+    const search =
+        firstExisting([
+            "#market-news-search",
+            "[data-market-news-search]"
+        ]);
+
+
+    if (
+        search &&
+        search.value !==
+        state.newsState.searchTerm
+    ) {
+
+        search.value =
+            state.newsState.searchTerm;
+    }
+}
+
+
+function renderNewsArticle(
+    article
+) {
+
+    const sentimentClass =
+        getNewsStateClass(
+            article.sentiment
+        );
+
+
+    const importanceClass =
+        getNewsStateClass(
+            article.importance
+        );
+
+
+    const categoryClass =
+        getNewsStateClass(
+            article.category
+        );
+
+
+    const tags = [
+        ...article.assetClasses,
+        ...article.geographies,
+        ...article.sectors
+    ]
+        .filter(
+            Boolean
+        )
+        .slice(
+            0,
+            8
+        );
+
+
+    const tagsHTML =
+        tags.length > 0
+            ? `
+
+                <div class="news-tags">
+
+                    ${tags
+                        .map(
+                            tag => `
+
+                                <span class="news-tag">
+                                    ${escapeHTML(tag)}
+                                </span>
+
+                            `
+                        )
+                        .join("")}
+
+                </div>
+
+            `
+            : "";
+
+
+    const sourceHTML =
+        article.url
+            ? `
+
+                <a
+                    class="news-source-link"
+                    href="${escapeAttribute(article.url)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    ${escapeHTML(article.source || "Source")}
+                </a>
+
+            `
+            : escapeHTML(
+                article.source ||
+                "Source"
+            );
+
+
+    const impactHTML =
+        article.investorImpact
+            ? `
+
+                <div class="news-impact">
+
+                    <div class="news-impact-label">
+                        Investor impact
+                    </div>
+
+                    <div class="news-impact-text">
+                        ${escapeHTML(
+                            article.investorImpact
+                        )}
+                    </div>
+
+                </div>
+
+            `
+            : "";
+
+
+    const monitoringHTML =
+        article.fundMonitoringRelevant
+            ? `
+
+                <span class="news-monitoring-badge">
+                    Fund monitoring relevant
+                </span>
+
+            `
+            : "";
+
+
+    return `
+
+        <article
+            class="news-card"
+            data-article-id="${escapeAttribute(
+                article.articleId
+            )}"
+        >
+
+            <div class="news-card-header">
+
+                <div class="news-card-badges">
+
+                    <span
+                        class="news-badge news-category ${categoryClass}"
+                    >
+                        ${escapeHTML(
+                            article.category
+                        )}
+                    </span>
+
+
+                    <span
+                        class="news-badge news-importance ${importanceClass}"
+                    >
+                        ${escapeHTML(
+                            article.importance
+                        )}
+                    </span>
+
+
+                    <span
+                        class="news-badge news-sentiment ${sentimentClass}"
+                    >
+                        ${escapeHTML(
+                            article.sentiment
+                        )}
+                    </span>
+
+                    ${monitoringHTML}
+
+                </div>
+
+
+                <div class="news-card-date">
+
+                    ${escapeHTML(
+                        formatNewsDate(
+                            article.publishedAtSgt
+                        )
+                    )}
+
+                    <span>
+                        ${escapeHTML(
+                            formatNewsTime(
+                                article.publishedAtSgt
+                            )
+                        )}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <h3 class="news-title">
+
+                ${
+                    article.url
+                        ? `
+
+                            <a
+                                href="${escapeAttribute(article.url)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                ${escapeHTML(
+                                    article.title
+                                )}
+                            </a>
+
+                        `
+                        : escapeHTML(
+                            article.title
+                        )
+                }
+
+            </h3>
+
+
+            ${
+                article.summary
+                    ? `
+
+                        <p class="news-summary">
+                            ${escapeHTML(
+                                article.summary
+                            )}
+                        </p>
+
+                    `
+                    : ""
+            }
+
+
+            ${impactHTML}
+
+
+            ${tagsHTML}
+
+
+            <div class="news-card-footer">
+
+                <span class="news-source">
+                    ${sourceHTML}
+                </span>
+
+            </div>
+
+        </article>
+
+    `;
+}
+
+
+/* ============================================================
+   MARKET NEWS CHARTS
+============================================================ */
+
+function renderNewsCharts() {
+
+    if (
+        !state.newsState ||
+        !isChartAvailable()
+    ) {
+
+        return;
+    }
+
+
+    const statistics =
+        getNewsStatistics(
+            state.newsState.analyses
+        );
+
+
+    /*
+     * Only create charts when the corresponding canvas
+     * actually exists in index.html.
+     *
+     * This keeps the module compatible with the initial
+     * Market Performance-first layout.
+     */
+
+    const sentimentCanvas =
+        firstExisting([
+            "#news-sentiment-chart",
+            "[data-news-sentiment-chart]"
+        ]);
+
+
+    if (sentimentCanvas) {
+
+        createNewsSentimentChart(
+            sentimentCanvas,
+            statistics
+        );
+    }
+
+
+    const categoryCanvas =
+        firstExisting([
+            "#news-category-chart",
+            "[data-news-category-chart]"
+        ]);
+
+
+    if (categoryCanvas) {
+
+        createNewsCategoryChart(
+            categoryCanvas,
+            statistics.categories
+        );
+    }
+
+
+    const importanceCanvas =
+        firstExisting([
+            "#news-importance-chart",
+            "[data-news-importance-chart]"
+        ]);
+
+
+    if (importanceCanvas) {
+
+        createNewsImportanceChart(
+            importanceCanvas,
+            statistics
+        );
+    }
+
+
+    const assetClassCanvas =
+        firstExisting([
+            "#news-asset-class-chart",
+            "[data-news-asset-class-chart]"
+        ]);
+
+
+    if (assetClassCanvas) {
+
+        createNewsAssetClassChart(
+            assetClassCanvas,
+            statistics
+        );
+    }
+
+
+    const geographyCanvas =
+        firstExisting([
+            "#news-geography-chart",
+            "[data-news-geography-chart]"
+        ]);
+
+
+    if (geographyCanvas) {
+
+        createNewsGeographyChart(
+            geographyCanvas,
+            statistics
+        );
+    }
+
+
+    const sectorCanvas =
+        firstExisting([
+            "#news-sector-chart",
+            "[data-news-sector-chart]"
+        ]);
+
+
+    if (sectorCanvas) {
+
+        createNewsSectorChart(
+            sectorCanvas,
+            statistics
+        );
+    }
+
+
+    /*
+     * Optional top-topic text summaries.
+     */
+    renderNewsTopTopics(
+        statistics
+    );
+}
+
+
+function renderNewsTopTopics(
+    statistics
+) {
+
+    const mappings = [
+
+        {
+            selectors: [
+                "#top-news-asset-classes",
+                "[data-top-news-asset-classes]"
+            ],
+            values:
+                getTopItems(
+                    statistics.assetClasses,
+                    5
+                )
+        },
+
+        {
+            selectors: [
+                "#top-news-geographies",
+                "[data-top-news-geographies]"
+            ],
+            values:
+                getTopItems(
+                    statistics.geographies,
+                    5
+                )
+        },
+
+        {
+            selectors: [
+                "#top-news-sectors",
+                "[data-top-news-sectors]"
+            ],
+            values:
+                getTopItems(
+                    statistics.sectors,
+                    5
+                )
+        }
+
+    ];
+
+
+    for (
+        const mapping
+        of mappings
+    ) {
+
+        const container =
+            firstExisting(
+                mapping.selectors
+            );
+
+
+        if (!container) {
+            continue;
+        }
+
+
+        container.innerHTML =
+            mapping.values.length > 0
+                ? mapping.values
+                    .map(
+                        item => `
+
+                            <span class="topic-item">
+
+                                <span class="topic-name">
+                                    ${escapeHTML(
+                                        item.name
+                                    )}
+                                </span>
+
+                                <span class="topic-count">
+                                    ${item.count}
+                                </span>
+
+                            </span>
+
+                        `
+                    )
+                    .join("")
+                : `
+
+                    <span class="empty-state">
+                        No data
+                    </span>
+
+                `;
+    }
+}
+
+
+/* ============================================================
+   APPLICATION STATUS
+============================================================ */
+
+function setApplicationLoadingState(
+    loading
+) {
+
+    const body =
+        document.body;
+
+
+    if (body) {
+
+        body.classList.toggle(
+            "is-loading",
+            loading
+        );
+    }
+
+
+    const status =
+        firstExisting([
+            "#app-status",
+            "#data-status",
+            "[data-app-status]"
+        ]);
+
+
+    if (!status) {
+        return;
+    }
+
+
+    status.classList.toggle(
+        "is-loading",
+        loading
+    );
+
+
+    if (loading) {
+
+        status.setAttribute(
+            "aria-busy",
+            "true"
+        );
+
+    } else {
+
+        status.setAttribute(
+            "aria-busy",
+            "false"
+        );
+    }
+
+
+    const text =
+        firstExistingWithin(
+            status,
+            [
+                "#app-status-text",
+                ".status-text",
+                "[data-status-text]"
+            ]
+        );
+
+
+    if (text) {
+
+        text.textContent =
+            loading
+                ? "Loading data…"
+                : text.textContent;
+    }
+}
+
+
+function updateDataStatus(
+    success
+) {
+
+    const status =
+        firstExisting([
+            "#app-status",
+            "#data-status",
+            "[data-app-status]"
+        ]);
+
+
+    if (!status) {
+        return;
+    }
+
+
+    status.classList.remove(
+        "is-loading",
+        "is-error",
+        "is-success"
+    );
+
+
+    status.classList.add(
+        success
+            ? "is-success"
+            : "is-error"
+    );
+
+
+    const text =
+        firstExistingWithin(
+            status,
+            [
+                "#app-status-text",
+                ".status-text",
+                "[data-status-text]"
+            ]
+        );
+
+
+    if (text) {
+
+        text.textContent =
+            success
+                ? "Data loaded"
+                : "Data error";
+    }
+
+
+    status.setAttribute(
+        "title",
+        success
+            ? "VGrat FMS data loaded successfully."
+            : "VGrat FMS data failed to load."
+    );
+}
+
+
+/* ============================================================
+   APPLICATION METADATA
+============================================================ */
+
+function renderApplicationMetadata() {
+
+    setText(
+        [
+            "#app-version",
+            "[data-app-version]"
+        ],
+        `v${APP_VERSION}`
+    );
+
+
+    if (
+        state.performance?.DD?.asOfDate
+    ) {
+
+        setText(
+            [
+                "#latest-data-date",
+                "[data-latest-data-date]"
+            ],
+            formatDisplayDate(
+                state.performance.DD.asOfDate
+            )
+        );
+    }
+}
+
+
+/* ============================================================
+   APPLICATION ERROR
+============================================================ */
+
+function renderApplicationError(
+    error
+) {
+
+    const message =
+        error?.message ||
+        "Unable to load VGrat FMS data.";
+
+
+    const containers = [
+
+        firstExisting([
+            "#application-error",
+            "[data-application-error]"
+        ]),
+
+        firstExisting([
+            "#winners-table-body",
+            "#performance-winners-body"
+        ]),
+
+        firstExisting([
+            "#losers-table-body",
+            "#performance-losers-body"
+        ])
+
+    ].filter(
+        Boolean
+    );
+
+
+    if (
+        containers.length === 0
+    ) {
+
+        return;
+    }
+
+
+    const safeMessage =
+        escapeHTML(
+            message
+        );
+
+
+    const errorHTML = `
+
+        <div class="error-state">
+
+            <strong>
+                Unable to load dashboard data
+            </strong>
+
+            <span>
+                ${safeMessage}
+            </span>
+
+            <button
+                type="button"
+                class="secondary-button"
+                data-retry
+            >
+                Retry
+            </button>
+
+        </div>
+
+    `;
+
+
+    /*
+     * For an explicit application-error container,
+     * use the complete block.
+     */
+    const primary =
+        containers[0];
+
+
+    if (
+        primary &&
+        (
+            primary.id ===
+            "application-error" ||
+            primary.matches(
+                "[data-application-error]"
+            )
+        )
+    ) {
+
+        primary.innerHTML =
+            errorHTML;
+
+
+        attachRetryButton(
+            primary
+        );
+
+
+        return;
+    }
+
+
+    /*
+     * Otherwise put a compact message into the
+     * performance tables.
+     */
+    for (
+        const container
+        of containers
+    ) {
+
+        container.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    class="error-state"
+                >
+                    ${safeMessage}
+                </td>
+
+            </tr>
+
+        `;
+    }
+}
+
+
+function attachRetryButton(
+    container
+) {
+
+    const button =
+        qs(
+            "[data-retry]",
+            container
+        );
+
+
+    if (!button) {
+        return;
+    }
+
+
+    button.addEventListener(
         "click",
         () => {
 
-            setNewsTab(
-                "history"
-            );
+            window.location.reload();
         }
     );
 }
 
 
 /* ============================================================
-   HTML ESCAPING
+   DOM HELPER
 ============================================================ */
 
-function escapeHtml(value) {
+function firstExistingWithin(
+    root,
+    selectors
+) {
 
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    for (
+        const selector
+        of selectors
+    ) {
+
+        const element =
+            root.querySelector(
+                selector
+            );
+
+
+        if (element) {
+            return element;
+        }
+    }
+
+
+    return null;
 }
 
 
-function escapeAttribute(value) {
+/* ============================================================
+   FORMATTING HELPERS
+============================================================ */
 
-    return escapeHtml(
+function formatNewsDateTimeSafe(
+    value
+) {
+
+    try {
+
+        const date =
+            new Date(
+                value
+            );
+
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
+
+            return "—";
+        }
+
+
+        return date.toLocaleString(
+            "en-SG",
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZone: "Asia/Singapore"
+            }
+        );
+
+    } catch (
+        error
+    ) {
+
+        return "—";
+    }
+}
+
+
+function getNewsStateClass(
+    value
+) {
+
+    return String(
+        value ??
+        ""
+    )
+        .toLowerCase()
+        .replace(
+            /[^a-z0-9]+/g,
+            "-"
+        )
+        .replace(
+            /^-+|-+$/g,
+            ""
+        );
+}
+
+
+/* ============================================================
+   HTML SAFETY
+============================================================ */
+
+function escapeHTML(
+    value
+) {
+
+    return String(
+        value ??
+        ""
+    )
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+}
+
+
+function escapeAttribute(
+    value
+) {
+
+    return escapeHTML(
         value
     );
 }
 
 
 /* ============================================================
-   APPLICATION INITIALISATION
+   PUBLIC DEBUG API
 ============================================================ */
 
-async function initialise() {
-
-    cacheDom();
-
-    applyTheme(
-        state.theme
-    );
-
-    bindEvents();
-
-    setLoadingStatus();
-
-    clearGlobalError();
-
-
-    try {
-
-        /*
-         * Load production data.
-         */
-        const data =
-            await loadApplicationData();
-
-
-        state.funds =
-            Array.isArray(data.funds)
-                ? data.funds
-                : [];
-
-
-        state.bidHistory =
-            Array.isArray(data.bidHistory)
-                ? data.bidHistory
-                : [];
-
-
-        state.marketNews = {
-
-            analyses:
-                Array.isArray(
-                    data.marketNews?.analyses
-                )
-                    ? data.marketNews.analyses
-                    : [],
-
-            generatedAtSgt:
-                data.marketNews
-                    ?.generatedAtSgt ??
-                null,
-
-            timezone:
-                data.marketNews
-                    ?.timezone ??
-                "Asia/Singapore",
-
-            timezoneLabel:
-                data.marketNews
-                    ?.timezoneLabel ??
-                "SGT",
-
-            windowDays:
-                data.marketNews
-                    ?.windowDays ??
-                null,
-
-            articleCount:
-                data.marketNews
-                    ?.articleCount ??
-                0
-        };
-
-
-        /*
-         * Calculate all four performance periods.
-         *
-         * Performance is calculated from BID history,
-         * not from cumulative performance fields.
-         */
-        state.performance =
-            calculateAllPerformance(
-                state.funds,
-                state.bidHistory,
-                10
-            );
-
-
-        /*
-         * Build Market News filter values.
-         */
-        buildNewsFilterOptions();
-
-
-        state.loading =
-            false;
-
-        state.initialized =
-            true;
-
-
-        setReadyStatus();
-
-        clearGlobalError();
-
-
-        /*
-         * Initial UI.
-         */
-        renderLatestValuationDate();
-
-        setActivePeriod(
-            state.activePeriod
-        );
-
-        setActiveView(
-            state.activeView
-        );
-
-        renderMarketNews();
-
-
-    } catch (error) {
-
-        state.loading =
-            false;
-
-        state.initialized =
-            false;
-
-
-        console.error(
-            "VGrat FMS initialisation failed:",
-            error
-        );
-
-
-        showGlobalError(
-            error
-        );
-
-
-        renderPerformanceEmpty();
-    }
-}
-
-
-/* ============================================================
-   APPLICATION START
-============================================================ */
-
-if (
-    document.readyState ===
-    "loading"
-) {
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        initialise,
-        {
-            once: true
-        }
-    );
-
-} else {
-
-    initialise();
-}
-
-
-/* ============================================================
-   DEVELOPMENT / DEBUG ACCESS
-============================================================ */
-
+/*
+ * Expose a very small read-only diagnostic interface.
+ *
+ * Useful during GitHub Pages testing:
+ *
+ * window.VGratFMS.getState()
+ */
 window.VGratFMS = {
 
     getState() {
 
         return {
-            ...state,
 
-            funds:
-                [...state.funds],
+            initialized:
+                state.initialized,
 
-            bidHistory:
-                [...state.bidHistory]
+            loading:
+                state.loading,
+
+            error:
+                state.error
+                    ? state.error.message
+                    : null,
+
+            selectedPeriod:
+                state.selectedPeriod,
+
+            currentView:
+                state.currentView,
+
+            fundCount:
+                Array.isArray(
+                    state.data?.funds
+                )
+                    ? state.data.funds.length
+                    : 0,
+
+            bidHistoryCount:
+                Array.isArray(
+                    state.data?.bidHistory
+                )
+                    ? state.data.bidHistory.length
+                    : 0,
+
+            newsCount:
+                Array.isArray(
+                    state.news?.analyses
+                )
+                    ? state.news.analyses.length
+                    : 0
+
         };
-    },
+    }
 
-    setPeriod:
-        setActivePeriod,
-
-    setView:
-        setActiveView,
-
-    setTheme:
-        applyTheme,
-
-    reload:
-        initialise
 };
