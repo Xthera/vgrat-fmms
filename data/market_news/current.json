@@ -1,11 +1,11 @@
 {
-  "generatedAtSgt": "2026-10-05T06:34:33+08:00",
+  "generatedAtSgt": "2026-10-05T09:36:08+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
   "maxArticles": 100,
   "source": "CNBC",
-  "articleCount": 77,
+  "articleCount": 76,
   "articles": [
     {
       "id": "2e98323f01b596216c6a46a9d8ec89ab3a81f366c83cc1eb6ba2f4f6394fa623",
@@ -1174,21 +1174,6 @@
         "finance"
       ],
       "collectedAtSgt": "2026-10-02T12:09:51+08:00"
-    },
-    {
-      "id": "bd8494b014237a9b9453750de9a9cfb04e846c0fd6b435767955370a8e6d0967",
-      "source": "CNBC",
-      "title": "Why Japan’s markets flipped the usual script after central bank rate hike",
-      "publishedAtSgt": "2026-09-21T09:02:25+08:00",
-      "url": "https://www.cnbc.com/2026/09/18/japan-rate-hike-stocks-rise-bond-yields-yen-fall.html",
-      "category": "MARKET",
-      "relevanceScore": 93,
-      "relevanceReason": "strong_market_title",
-      "summary": "Japanese markets reacted in a seemingly counterintuitive fashion on Friday after the country's central bank hiked benchmark interest rates to their highest in 31 years. Interest-rate increases ordinarily support a country's currency, push up its bond yields, and put pressure on its stock market. Japan's currency, bond yields, and stock market did exactly the opposite.",
-      "feeds": [
-        "economy"
-      ],
-      "collectedAtSgt": "2026-10-02T12:09:54+08:00"
     }
   ]
 }
