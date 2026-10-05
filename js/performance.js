@@ -1,211 +1,233 @@
 /* ============================================================
-   VGRAT FMS - PERFORMANCE ENGINE
+   VGRAT FMS
+   MARKET PERFORMANCE ENGINE
    ============================================================
 
-   Purpose:
-   - Calculate D-D / W-W / M-M / Y-Y performance
-   - Use bid_history.json as the authoritative price source
-   - Use actual BID observations only
-   - Never forward-fill missing observations
-   - Rank all Prudential funds dynamically
+   Calculates:
+   - D-D  = Day over Day
+   - W-W  = Week over Week
+   - M-M  = Month over Month
+   - Y-Y  = Year over Year
 
-   Methodology
-   -----------
-   Current BID:
-       Latest valid BID observation available for that fund.
-
-   D-D:
-       Compare current BID against the latest actual BID
-       observation on or before current date - 1 calendar day.
-
-   W-W:
-       Compare current BID against the latest actual BID
-       observation on or before current date - 7 calendar days.
-
-   M-M:
-       Compare current BID against the latest actual BID
-       observation on or before the same calendar day
-       one calendar month earlier.
-
-   Y-Y:
-       Compare current BID against the latest actual BID
-       observation on or before the same calendar day
-       one calendar year earlier.
-
-   Return:
-       ((Current BID - Historical BID) / Historical BID) * 100
-
-   Important:
-       Missing dates are NOT filled forward.
+   IMPORTANT:
+   - Uses actual BID observations only.
+   - Does NOT use cumulative performance fields.
+   - Does NOT forward-fill missing dates.
+   - Each fund uses its own latest actual BID observation.
+   - Historical comparison = latest actual observation
+     on or before the target comparison date.
 ============================================================ */
 
 
 /* ============================================================
-   PERIOD DEFINITIONS
+   PERFORMANCE PERIOD DEFINITIONS
 ============================================================ */
 
 const PERFORMANCE_PERIODS = {
+
     DD: {
         key: "DD",
         label: "D-D",
-        description: "Day over Day"
+        description: "Day over Day",
+        type: "days",
+        amount: 1
     },
 
     WW: {
         key: "WW",
         label: "W-W",
-        description: "Week over Week"
+        description: "Week over Week",
+        type: "days",
+        amount: 7
     },
 
     MM: {
         key: "MM",
         label: "M-M",
-        description: "Month over Month"
+        description: "Month over Month",
+        type: "months",
+        amount: 1
     },
 
     YY: {
         key: "YY",
         label: "Y-Y",
-        description: "Year over Year"
+        description: "Year over Year",
+        type: "years",
+        amount: 1
     }
+
 };
 
 
 /* ============================================================
-   BASIC DATE UTILITIES
+   DATE HELPERS
 ============================================================ */
 
-/**
- * Parse YYYY-MM-DD into a UTC Date.
+/*
+ * Production dates are expected to be:
  *
- * Using UTC avoids browser-local timezone shifts.
+ * YYYY-MM-DD
+ *
+ * We deliberately use UTC internally so that Singapore
+ * browser timezone conversions cannot move a date backwards
+ * or forwards.
  */
-function parseISODate(dateString) {
-    if (typeof dateString !== "string") {
+
+function parseISODate(
+    value
+) {
+
+    if (
+        typeof value !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(value)
+    ) {
+
         return null;
     }
 
-    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString);
 
-    if (!match) {
-        return null;
-    }
+    const [
+        year,
+        month,
+        day
+    ] = value
+        .split("-")
+        .map(Number);
 
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    const day = Number(match[3]);
 
-    const date = new Date(Date.UTC(year, month - 1, day));
+    const date =
+        new Date(
+            Date.UTC(
+                year,
+                month - 1,
+                day
+            )
+        );
+
 
     if (
         date.getUTCFullYear() !== year ||
         date.getUTCMonth() !== month - 1 ||
         date.getUTCDate() !== day
     ) {
+
         return null;
     }
+
 
     return date;
 }
 
 
-/**
- * Format a UTC Date as YYYY-MM-DD.
- */
-function formatISODate(date) {
-    if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+function formatISODate(
+    date
+) {
+
+    if (!(date instanceof Date)) {
         return null;
     }
 
-    return [
-        String(date.getUTCFullYear()).padStart(4, "0"),
-        String(date.getUTCMonth() + 1).padStart(2, "0"),
-        String(date.getUTCDate()).padStart(2, "0")
-    ].join("-");
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return null;
+    }
+
+
+    const year =
+        date.getUTCFullYear();
+
+
+    const month =
+        String(
+            date.getUTCMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const day =
+        String(
+            date.getUTCDate()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    return `${year}-${month}-${day}`;
 }
 
 
-/**
- * Subtract a number of calendar days.
- */
-function subtractDays(date, days) {
-    const result = new Date(date.getTime());
+function subtractPeriod(
+    dateString,
+    period
+) {
 
-    result.setUTCDate(result.getUTCDate() - days);
+    const date =
+        parseISODate(
+            dateString
+        );
 
-    return result;
-}
+
+    if (
+        !date ||
+        !period
+    ) {
+
+        return null;
+    }
 
 
-/**
- * Subtract one calendar month while handling month-end dates.
- *
- * Example:
- * 2026-10-05 -> 2026-09-05
- *
- * For dates such as:
- * 2026-03-31 -> 2026-02-28
- */
-function subtractOneMonth(date) {
-    const originalDay = date.getUTCDate();
+    switch (
+        period.type
+    ) {
 
-    const result = new Date(
-        Date.UTC(
-            date.getUTCFullYear(),
-            date.getUTCMonth(),
-            1
-        )
+        case "days":
+
+            date.setUTCDate(
+                date.getUTCDate() -
+                period.amount
+            );
+
+            break;
+
+
+        case "months":
+
+            date.setUTCMonth(
+                date.getUTCMonth() -
+                period.amount
+            );
+
+            break;
+
+
+        case "years":
+
+            date.setUTCFullYear(
+                date.getUTCFullYear() -
+                period.amount
+            );
+
+            break;
+
+
+        default:
+
+            return null;
+    }
+
+
+    return formatISODate(
+        date
     );
-
-    result.setUTCMonth(result.getUTCMonth() - 1);
-
-    const lastDayOfPreviousMonth = new Date(
-        Date.UTC(
-            result.getUTCFullYear(),
-            result.getUTCMonth() + 1,
-            0
-        )
-    ).getUTCDate();
-
-    result.setUTCDate(
-        Math.min(originalDay, lastDayOfPreviousMonth)
-    );
-
-    return result;
-}
-
-
-/**
- * Subtract one calendar year while handling leap day.
- *
- * Example:
- * 2025-10-05 -> 2024-10-05
- */
-function subtractOneYear(date) {
-    const originalMonth = date.getUTCMonth();
-    const originalDay = date.getUTCDate();
-
-    const result = new Date(
-        Date.UTC(
-            date.getUTCFullYear() - 1,
-            originalMonth,
-            1
-        )
-    );
-
-    const lastDayOfTargetMonth = new Date(
-        Date.UTC(
-            result.getUTCFullYear(),
-            originalMonth + 1,
-            0
-        )
-    ).getUTCDate();
-
-    result.setUTCDate(
-        Math.min(originalDay, lastDayOfTargetMonth)
-    );
-
-    return result;
 }
 
 
@@ -213,267 +235,311 @@ function subtractOneYear(date) {
    BID VALIDATION
 ============================================================ */
 
-/**
- * Convert a BID value into a valid positive number.
- *
- * Accepts:
- *   1.1079
- *   "1.1079"
- *   "$1.1079"
- *
- * Rejects:
- *   null
- *   "-"
- *   ""
- *   NaN
- *   zero
- *   negative values
- */
-function parseBid(value) {
-    if (typeof value === "number") {
-        return Number.isFinite(value) && value > 0
+function normaliseBid(
+    value
+) {
+
+    const number =
+        typeof value === "number"
             ? value
+            : Number(value);
+
+
+    if (
+        !Number.isFinite(number) ||
+        number <= 0
+    ) {
+
+        return null;
+    }
+
+
+    return number;
+}
+
+
+function normaliseObservation(
+    observation
+) {
+
+    if (
+        !observation ||
+        typeof observation !== "object"
+    ) {
+
+        return null;
+    }
+
+
+    const date =
+        typeof observation.date === "string"
+            ? observation.date
             : null;
-    }
 
-    if (typeof value !== "string") {
+
+    const parsedDate =
+        parseISODate(
+            date
+        );
+
+
+    if (!parsedDate) {
         return null;
     }
 
-    const cleaned = value
-        .replace(/[$,\s]/g, "")
-        .trim();
 
-    if (!cleaned || cleaned === "-") {
+    const bidPrice =
+        normaliseBid(
+            observation.bidPrice
+        );
+
+
+    if (
+        bidPrice === null
+    ) {
+
         return null;
     }
 
-    const numericValue = Number(cleaned);
 
-    if (!Number.isFinite(numericValue) || numericValue <= 0) {
-        return null;
-    }
-
-    return numericValue;
+    return {
+        date,
+        bidPrice
+    };
 }
 
 
 /* ============================================================
-   FUND MATCHING
+   FUND IDENTIFIER MATCHING
 ============================================================ */
 
-/**
- * Build a stable identity key for a fund record.
- *
- * fundIdentifier is the strongest identity.
- * fundCode and excelRow are fallbacks.
- */
-function getFundKey(fund) {
-    if (!fund || typeof fund !== "object") {
-        return null;
+function getFundIdentifier(
+    fund
+) {
+
+    if (!fund) {
+        return "";
     }
 
-    if (fund.fundIdentifier != null && fund.fundIdentifier !== "") {
-        return `identifier:${String(fund.fundIdentifier).trim()}`;
-    }
 
-    if (fund.fundCode != null && fund.fundCode !== "") {
-        return `code:${String(fund.fundCode).trim()}`;
-    }
-
-    if (fund.excelRow != null && fund.excelRow !== "") {
-        return `row:${String(fund.excelRow).trim()}`;
-    }
-
-    return null;
+    return String(
+        fund.fundIdentifier ??
+        fund.fundCode ??
+        fund.excelRow ??
+        fund.fundName ??
+        ""
+    );
 }
 
 
-/**
- * Find the matching bid-history record for a fund.
- */
-function findBidHistoryRecord(fund, bidHistoryRecords) {
-    if (!Array.isArray(bidHistoryRecords)) {
-        return null;
+function getBidHistoryIdentifier(
+    record
+) {
+
+    if (!record) {
+        return "";
     }
 
-    const fundIdentifier = fund?.fundIdentifier;
-    const fundCode = fund?.fundCode;
-    const excelRow = fund?.excelRow;
 
-    if (fundIdentifier != null && fundIdentifier !== "") {
-        const match = bidHistoryRecords.find(
-            record =>
-                String(record?.fundIdentifier ?? "").trim() ===
-                String(fundIdentifier).trim()
-        );
-
-        if (match) {
-            return match;
-        }
-    }
-
-    if (fundCode != null && fundCode !== "") {
-        const match = bidHistoryRecords.find(
-            record =>
-                String(record?.fundCode ?? "").trim() ===
-                String(fundCode).trim()
-        );
-
-        if (match) {
-            return match;
-        }
-    }
-
-    if (excelRow != null && excelRow !== "") {
-        const match = bidHistoryRecords.find(
-            record =>
-                String(record?.excelRow ?? "").trim() ===
-                String(excelRow).trim()
-        );
-
-        if (match) {
-            return match;
-        }
-    }
-
-    return null;
-}
-
-
-/* ============================================================
-   OBSERVATION NORMALISATION
-============================================================ */
-
-/**
- * Convert raw BID observations into a clean internal format.
- *
- * Output:
- * [
- *   {
- *     date: "2026-10-02",
- *     dateObject: Date,
- *     bid: 1.10792
- *   }
- * ]
- *
- * Invalid observations are excluded.
- */
-function normaliseObservations(observations) {
-    if (!Array.isArray(observations)) {
-        return [];
-    }
-
-    const byDate = new Map();
-
-    for (const observation of observations) {
-        if (!observation || typeof observation !== "object") {
-            continue;
-        }
-
-        const date = observation.date;
-
-        const dateObject = parseISODate(date);
-
-        if (!dateObject) {
-            continue;
-        }
-
-        const bid = parseBid(observation.bidPrice);
-
-        if (bid === null) {
-            continue;
-        }
-
-        /*
-         * If a duplicate date exists, retain the latest record
-         * encountered in the source.
-         *
-         * The production pipeline is expected to contain
-         * unique observation dates.
-         */
-        byDate.set(date, {
-            date,
-            dateObject,
-            bid
-        });
-    }
-
-    return Array.from(byDate.values()).sort(
-        (a, b) => a.dateObject.getTime() - b.dateObject.getTime()
+    return String(
+        record.fundIdentifier ??
+        record.fundCode ??
+        record.excelRow ??
+        record.fundName ??
+        ""
     );
 }
 
 
 /* ============================================================
-   OBSERVATION LOOKUP
+   BID HISTORY INDEX
 ============================================================ */
 
-/**
- * Find the latest actual observation on or before targetDate.
- *
- * IMPORTANT:
- * This function does NOT forward-fill.
- *
- * If the target date is a weekend or holiday, the function
- * returns the most recent actual observation before that date.
- */
-function findObservationOnOrBefore(observations, targetDate) {
+function buildBidHistoryIndex(
+    bidHistory
+) {
+
+    const index =
+        new Map();
+
+
     if (
-        !Array.isArray(observations) ||
-        observations.length === 0 ||
-        !targetDate
+        !Array.isArray(
+            bidHistory
+        )
     ) {
-        return null;
+
+        return index;
     }
 
-    const targetTime = targetDate.getTime();
 
-    let low = 0;
-    let high = observations.length - 1;
-    let result = null;
+    for (
+        const record of bidHistory
+    ) {
 
-    while (low <= high) {
-        const middle = Math.floor((low + high) / 2);
+        const identifier =
+            getBidHistoryIdentifier(
+                record
+            );
 
-        const observation = observations[middle];
 
-        if (observation.dateObject.getTime() <= targetTime) {
-            result = observation;
-            low = middle + 1;
-        } else {
-            high = middle - 1;
+        if (!identifier) {
+            continue;
         }
+
+
+        const rawObservations =
+            record?.bidHistory?.observations;
+
+
+        if (
+            !Array.isArray(
+                rawObservations
+            )
+        ) {
+
+            continue;
+        }
+
+
+        const observations =
+            rawObservations
+                .map(
+                    normaliseObservation
+                )
+                .filter(
+                    Boolean
+                )
+                .sort(
+                    (
+                        a,
+                        b
+                    ) =>
+                        a.date.localeCompare(
+                            b.date
+                        )
+                );
+
+
+        if (
+            observations.length === 0
+        ) {
+
+            continue;
+        }
+
+
+        /*
+         * Protect against duplicate dates.
+         *
+         * If duplicate dates somehow exist, keep the last
+         * occurrence in the source array.
+         */
+        const deduplicated =
+            new Map();
+
+
+        for (
+            const observation
+            of observations
+        ) {
+
+            deduplicated.set(
+                observation.date,
+                observation
+            );
+        }
+
+
+        index.set(
+            identifier,
+            [...deduplicated.values()]
+        );
     }
 
-    return result;
+
+    return index;
 }
 
 
 /* ============================================================
-   TARGET DATE CALCULATION
+   HISTORICAL OBSERVATION LOOKUP
 ============================================================ */
 
-/**
- * Calculate the target comparison date for a period.
+/*
+ * Returns the latest actual observation whose date is
+ * <= targetDate.
+ *
+ * This is intentionally NOT:
+ *
+ * - nearest date
+ * - next available date
+ * - forward-filled date
+ *
+ * This preserves the actual BID observation methodology.
  */
-function getTargetDate(currentDate, periodKey) {
-    switch (periodKey) {
-        case PERFORMANCE_PERIODS.DD.key:
-            return subtractDays(currentDate, 1);
 
-        case PERFORMANCE_PERIODS.WW.key:
-            return subtractDays(currentDate, 7);
+function findObservationOnOrBefore(
+    observations,
+    targetDate
+) {
 
-        case PERFORMANCE_PERIODS.MM.key:
-            return subtractOneMonth(currentDate);
+    if (
+        !Array.isArray(
+            observations
+        ) ||
+        observations.length === 0 ||
+        !targetDate
+    ) {
 
-        case PERFORMANCE_PERIODS.YY.key:
-            return subtractOneYear(currentDate);
-
-        default:
-            return null;
+        return null;
     }
+
+
+    let low =
+        0;
+
+    let high =
+        observations.length - 1;
+
+    let result =
+        null;
+
+
+    while (
+        low <= high
+    ) {
+
+        const middle =
+            Math.floor(
+                (low + high) / 2
+            );
+
+
+        const observation =
+            observations[middle];
+
+
+        if (
+            observation.date <=
+            targetDate
+        ) {
+
+            result =
+                observation;
+
+            low =
+                middle + 1;
+
+        } else {
+
+            high =
+                middle - 1;
+        }
+    }
+
+
+    return result;
 }
 
 
@@ -481,272 +547,410 @@ function getTargetDate(currentDate, periodKey) {
    RETURN CALCULATION
 ============================================================ */
 
-/**
- * Calculate percentage return.
- */
-function calculateReturn(currentBid, historicalBid) {
+function calculateReturn(
+    currentBid,
+    historicalBid
+) {
+
+    const current =
+        normaliseBid(
+            currentBid
+        );
+
+
+    const historical =
+        normaliseBid(
+            historicalBid
+        );
+
+
     if (
-        !Number.isFinite(currentBid) ||
-        !Number.isFinite(historicalBid) ||
-        historicalBid <= 0
+        current === null ||
+        historical === null
     ) {
+
         return null;
     }
 
-    return ((currentBid - historicalBid) / historicalBid) * 100;
+
+    return (
+        (current - historical) /
+        historical
+    ) * 100;
 }
 
 
 /* ============================================================
-   SINGLE FUND PERFORMANCE
+   SINGLE FUND / PERIOD
 ============================================================ */
 
-/**
- * Calculate one fund's performance for one period.
- */
 function calculateFundPerformance(
     fund,
-    bidHistoryRecord,
-    periodKey
+    observations,
+    period
 ) {
-    if (!fund || !bidHistoryRecord) {
+
+    if (
+        !fund ||
+        !Array.isArray(
+            observations
+        ) ||
+        observations.length === 0 ||
+        !period
+    ) {
+
         return null;
     }
 
-    const observations = normaliseObservations(
-        bidHistoryRecord?.bidHistory?.observations
-    );
-
-    if (observations.length === 0) {
-        return null;
-    }
 
     /*
-     * Current value is the fund's latest actual observation.
+     * The current BID is the latest actual observation
+     * available for this particular fund.
      */
-    const currentObservation =
-        observations[observations.length - 1];
+    const current =
+        observations[
+            observations.length - 1
+        ];
 
-    const currentDate = currentObservation.dateObject;
 
-    const targetDate = getTargetDate(
-        currentDate,
-        periodKey
-    );
-
-    if (!targetDate) {
+    if (!current) {
         return null;
     }
 
+
     /*
-     * Historical value is the latest actual observation
-     * on or before the target date.
+     * Calculate the calendar comparison date.
      */
-    const historicalObservation =
-        findObservationOnOrBefore(
-            observations,
-            targetDate
+    const comparisonTarget =
+        subtractPeriod(
+            current.date,
+            period
         );
 
-    if (!historicalObservation) {
+
+    if (!comparisonTarget) {
         return null;
     }
+
 
     /*
-     * Do not calculate a comparison against itself.
-     *
-     * This can occur only if the history is unusually short
-     * or the target date resolves to the current observation.
+     * Find the latest actual BID on or before the target.
+     */
+    const historical =
+        findObservationOnOrBefore(
+            observations,
+            comparisonTarget
+        );
+
+
+    if (!historical) {
+        return null;
+    }
+
+
+    /*
+     * A historical observation must actually precede
+     * the current observation.
      */
     if (
-        historicalObservation.date === currentObservation.date
+        historical.date >=
+        current.date
     ) {
+
         return null;
     }
 
-    const returnPercent = calculateReturn(
-        currentObservation.bid,
-        historicalObservation.bid
-    );
 
-    if (returnPercent === null) {
+    const returnPercent =
+        calculateReturn(
+            current.bidPrice,
+            historical.bidPrice
+        );
+
+
+    if (
+        returnPercent === null ||
+        !Number.isFinite(
+            returnPercent
+        )
+    ) {
+
         return null;
     }
+
 
     return {
-        period: periodKey,
 
         fundIdentifier:
-            fund.fundIdentifier ?? null,
+            fund.fundIdentifier ??
+            "",
 
         fundCode:
-            fund.fundCode ?? null,
+            fund.fundCode ??
+            "",
 
         fundName:
-            fund.fundName ?? null,
-
-        excelRow:
-            fund.excelRow ?? null,
-
-        currentDate:
-            currentObservation.date,
+            fund.fundName ??
+            "Unnamed fund",
 
         currentBid:
-            currentObservation.bid,
+            current.bidPrice,
 
-        comparisonTargetDate:
-            formatISODate(targetDate),
-
-        comparisonDate:
-            historicalObservation.date,
+        currentDate:
+            current.date,
 
         comparisonBid:
-            historicalObservation.bid,
+            historical.bidPrice,
+
+        comparisonDate:
+            historical.date,
+
+        comparisonTargetDate:
+            comparisonTarget,
 
         returnPercent
+
     };
 }
 
 
 /* ============================================================
-   ALL FUND PERFORMANCE
+   SINGLE PERIOD
 ============================================================ */
 
-/**
- * Calculate performance for every fund for one period.
- *
- * Universe:
- *     funds.json
- *
- * Price source:
- *     bid_history.json
- *
- * Funds without valid history/comparison data are excluded.
- */
 function calculatePerformance(
     funds,
-    bidHistoryRecords,
-    periodKey
+    bidHistory,
+    periodKey,
+    rankingLimit = 10
 ) {
-    if (!Array.isArray(funds)) {
-        return [];
+
+    const period =
+        PERFORMANCE_PERIODS[
+            periodKey
+        ];
+
+
+    if (!period) {
+
+        throw new Error(
+            `Unknown performance period: ${periodKey}`
+        );
     }
 
-    if (!Array.isArray(bidHistoryRecords)) {
-        return [];
+
+    if (
+        !Array.isArray(
+            funds
+        )
+    ) {
+
+        throw new Error(
+            "Funds data must be an array."
+        );
     }
 
-    const results = [];
 
-    for (const fund of funds) {
-        const bidHistoryRecord =
-            findBidHistoryRecord(
-                fund,
-                bidHistoryRecords
+    if (
+        !Array.isArray(
+            bidHistory
+        )
+    ) {
+
+        throw new Error(
+            "BID history must be an array."
+        );
+    }
+
+
+    const historyIndex =
+        buildBidHistoryIndex(
+            bidHistory
+        );
+
+
+    const eligible =
+        [];
+
+
+    /*
+     * Process the entire Prudential universe.
+     */
+    for (
+        const fund of funds
+    ) {
+
+        const identifier =
+            getFundIdentifier(
+                fund
             );
 
-        if (!bidHistoryRecord) {
+
+        if (!identifier) {
             continue;
         }
 
-        const performance =
+
+        const observations =
+            historyIndex.get(
+                identifier
+            );
+
+
+        if (
+            !observations ||
+            observations.length === 0
+        ) {
+
+            continue;
+        }
+
+
+        const result =
             calculateFundPerformance(
                 fund,
-                bidHistoryRecord,
-                periodKey
+                observations,
+                period
             );
 
-        if (!performance) {
+
+        if (!result) {
             continue;
         }
 
-        results.push({
-            ...performance,
-            fund
-        });
+
+        eligible.push(
+            result
+        );
     }
 
-    return results;
-}
 
-
-/* ============================================================
-   RANKING
-============================================================ */
-
-/**
- * Sort performance results from highest to lowest return.
- */
-function sortByReturnDescending(results) {
-    return [...results].sort((a, b) => {
-        const returnDifference =
-            b.returnPercent - a.returnPercent;
-
-        if (returnDifference !== 0) {
-            return returnDifference;
-        }
-
-        /*
-         * Stable deterministic tie-breaker.
-         */
-        return String(a.fundName ?? "").localeCompare(
-            String(b.fundName ?? "")
-        );
-    });
-}
-
-
-/**
- * Sort performance results from lowest to highest return.
- */
-function sortByReturnAscending(results) {
-    return [...results].sort((a, b) => {
-        const returnDifference =
-            a.returnPercent - b.returnPercent;
-
-        if (returnDifference !== 0) {
-            return returnDifference;
-        }
-
-        /*
-         * Stable deterministic tie-breaker.
-         */
-        return String(a.fundName ?? "").localeCompare(
-            String(b.fundName ?? "")
-        );
-    });
-}
-
-
-/**
- * Create winners and losers rankings.
- *
- * Default:
- *     10 winners
- *     10 losers
- */
-function rankPerformance(
-    results,
-    limit = 10
-) {
-    const validResults = Array.isArray(results)
-        ? results.filter(
-            item => Number.isFinite(item.returnPercent)
-        )
-        : [];
-
+    /*
+     * Winners:
+     *
+     * Highest return first.
+     *
+     * Tie-breaker:
+     * fund name, then identifier.
+     */
     const winners =
-        sortByReturnDescending(validResults)
-            .slice(0, limit);
+        [...eligible]
+            .sort(
+                compareWinner
+            )
+            .slice(
+                0,
+                Math.max(
+                    0,
+                    rankingLimit
+                )
+            )
+            .map(
+                (result, index) => ({
+                    ...result,
+                    rank:
+                        index + 1
+                })
+            );
 
+
+    /*
+     * Losers:
+     *
+     * Lowest return first.
+     */
     const losers =
-        sortByReturnAscending(validResults)
-            .slice(0, limit);
+        [...eligible]
+            .sort(
+                compareLoser
+            )
+            .slice(
+                0,
+                Math.max(
+                    0,
+                    rankingLimit
+                )
+            )
+            .map(
+                (result, index) => ({
+                    ...result,
+                    rank:
+                        index + 1
+                })
+            );
+
+
+    /*
+     * Determine the latest date represented in the
+     * eligible universe.
+     *
+     * Because each fund can have a different latest actual
+     * observation, this is informational only.
+     */
+    let latestDate =
+        null;
+
+
+    for (
+        const result of eligible
+    ) {
+
+        if (
+            latestDate === null ||
+            result.currentDate >
+            latestDate
+        ) {
+
+            latestDate =
+                result.currentDate;
+        }
+    }
+
+
+    /*
+     * Calculate the comparison target based on the
+     * latest universe date where possible.
+     *
+     * This is informational and does not affect the
+     * per-fund calculation.
+     */
+    const targetDate =
+        latestDate
+            ? subtractPeriod(
+                latestDate,
+                period
+            )
+            : null;
+
 
     return {
-        totalEligibleFunds: validResults.length,
+
+        key:
+            period.key,
+
+        label:
+            period.label,
+
+        description:
+            period.description,
+
+        type:
+            period.type,
+
+        amount:
+            period.amount,
+
+        totalEligibleFunds:
+            eligible.length,
+
         winners,
-        losers
+
+        losers,
+
+        asOfDate:
+            latestDate,
+
+        targetDate
     };
 }
 
@@ -755,194 +959,276 @@ function rankPerformance(
    ALL PERIODS
 ============================================================ */
 
-/**
- * Calculate and rank all four performance periods.
- */
 function calculateAllPerformance(
     funds,
-    bidHistoryRecords,
-    limit = 10
+    bidHistory,
+    rankingLimit = 10
 ) {
-    const periods = {};
 
-    for (const period of Object.values(PERFORMANCE_PERIODS)) {
-        const results =
+    return {
+
+        DD:
             calculatePerformance(
                 funds,
-                bidHistoryRecords,
-                period.key
-            );
+                bidHistory,
+                "DD",
+                rankingLimit
+            ),
 
-        periods[period.key] = {
-            ...period,
-            ...rankPerformance(results, limit),
-            allResults: results
-        };
-    }
+        WW:
+            calculatePerformance(
+                funds,
+                bidHistory,
+                "WW",
+                rankingLimit
+            ),
 
-    return periods;
+        MM:
+            calculatePerformance(
+                funds,
+                bidHistory,
+                "MM",
+                rankingLimit
+            ),
+
+        YY:
+            calculatePerformance(
+                funds,
+                bidHistory,
+                "YY",
+                rankingLimit
+            )
+    };
 }
 
 
 /* ============================================================
-   MARKET LATEST DATE
+   SORTING
 ============================================================ */
 
-/**
- * Determine the latest BID observation date across the entire
- * Prudential universe.
- *
- * This is useful for the dashboard header.
- */
-function getLatestMarketDate(bidHistoryRecords) {
-    if (!Array.isArray(bidHistoryRecords)) {
-        return null;
+function compareWinner(
+    a,
+    b
+) {
+
+    const returnDifference =
+        b.returnPercent -
+        a.returnPercent;
+
+
+    if (
+        returnDifference !== 0
+    ) {
+
+        return returnDifference;
     }
 
-    let latestDate = null;
 
-    for (const record of bidHistoryRecords) {
-        const observations =
-            normaliseObservations(
-                record?.bidHistory?.observations
-            );
+    return compareFundNames(
+        a,
+        b
+    );
+}
 
-        if (observations.length === 0) {
-            continue;
-        }
 
-        const fundLatest =
-            observations[observations.length - 1].date;
+function compareLoser(
+    a,
+    b
+) {
 
-        if (
-            latestDate === null ||
-            fundLatest > latestDate
-        ) {
-            latestDate = fundLatest;
-        }
+    const returnDifference =
+        a.returnPercent -
+        b.returnPercent;
+
+
+    if (
+        returnDifference !== 0
+    ) {
+
+        return returnDifference;
     }
 
-    return latestDate;
+
+    return compareFundNames(
+        a,
+        b
+    );
+}
+
+
+function compareFundNames(
+    a,
+    b
+) {
+
+    const nameA =
+        String(
+            a?.fundName || ""
+        ).toLowerCase();
+
+
+    const nameB =
+        String(
+            b?.fundName || ""
+        ).toLowerCase();
+
+
+    const nameComparison =
+        nameA.localeCompare(
+            nameB
+        );
+
+
+    if (
+        nameComparison !== 0
+    ) {
+
+        return nameComparison;
+    }
+
+
+    return String(
+        a?.fundIdentifier || ""
+    ).localeCompare(
+        String(
+            b?.fundIdentifier || ""
+        )
+    );
 }
 
 
 /* ============================================================
-   FORMATTING HELPERS
+   DISPLAY FORMATTERS
 ============================================================ */
 
-/**
- * Format percentage for display.
- *
- * Example:
- *     4.123456 -> "+4.12%"
- *    -2.456789 -> "-2.46%"
- *     0 -> "0.00%"
- */
-function formatReturnPercent(value) {
-    if (!Number.isFinite(value)) {
-        return "-";
+function formatReturnPercent(
+    value
+) {
+
+    const number =
+        Number(value);
+
+
+    if (
+        !Number.isFinite(
+            number
+        )
+    ) {
+
+        return "—";
     }
 
-    const sign = value > 0
-        ? "+"
-        : "";
 
-    return `${sign}${value.toFixed(2)}%`;
+    if (
+        Math.abs(number) <
+        0.0000001
+    ) {
+
+        return "0.00%";
+    }
+
+
+    const sign =
+        number > 0
+            ? "+"
+            : "";
+
+
+    return (
+        sign +
+        number.toFixed(2) +
+        "%"
+    );
 }
 
 
-/**
- * Format BID for display.
- *
- * BID precision varies between funds, so preserve enough
- * precision for useful display without excessive decimals.
- */
-function formatBid(value) {
-    if (!Number.isFinite(value)) {
-        return "-";
+function formatBid(
+    value
+) {
+
+    const number =
+        Number(value);
+
+
+    if (
+        !Number.isFinite(
+            number
+        )
+    ) {
+
+        return "—";
     }
 
-    if (value >= 100) {
-        return value.toFixed(2);
-    }
 
-    if (value >= 10) {
-        return value.toFixed(3);
-    }
-
-    if (value >= 1) {
-        return value.toFixed(4);
-    }
-
-    if (value >= 0.1) {
-        return value.toFixed(5);
-    }
-
-    return value.toFixed(6);
-}
-
-
-/**
- * Format an ISO date for dashboard display.
- *
- * Example:
- *     2026-10-02 -> 02 Oct 2026
- */
-function formatDisplayDate(dateString) {
-    const date = parseISODate(dateString);
-
-    if (!date) {
-        return "-";
-    }
-
-    return new Intl.DateTimeFormat(
+    /*
+     * BID history commonly contains five decimal places.
+     *
+     * Keep five places so the displayed value does not
+     * obscure the underlying BID precision.
+     */
+    return number.toLocaleString(
         "en-SG",
         {
+            minimumFractionDigits: 5,
+            maximumFractionDigits: 5
+        }
+    );
+}
+
+
+function formatDisplayDate(
+    value
+) {
+
+    const date =
+        parseISODate(
+            value
+        );
+
+
+    if (!date) {
+        return "—";
+    }
+
+
+    return date.toLocaleDateString(
+        "en-SG",
+        {
+            timeZone: "UTC",
             day: "2-digit",
             month: "short",
-            year: "numeric",
-            timeZone: "UTC"
+            year: "numeric"
         }
-    ).format(date);
+    );
 }
 
 
 /* ============================================================
-   EXPORTS
+   PUBLIC API
 ============================================================ */
 
 export {
+
     PERFORMANCE_PERIODS,
 
     parseISODate,
+
     formatISODate,
-    subtractDays,
-    subtractOneMonth,
-    subtractOneYear,
 
-    parseBid,
+    subtractPeriod,
 
-    getFundKey,
-    findBidHistoryRecord,
-
-    normaliseObservations,
-    findObservationOnOrBefore,
-
-    getTargetDate,
     calculateReturn,
 
     calculateFundPerformance,
+
     calculatePerformance,
 
-    sortByReturnDescending,
-    sortByReturnAscending,
-
-    rankPerformance,
     calculateAllPerformance,
 
-    getLatestMarketDate,
-
     formatReturnPercent,
+
     formatBid,
+
     formatDisplayDate
+
 };
