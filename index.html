@@ -1955,29 +1955,33 @@
 
                             <label class="monitor-rule">
                                 <input type="checkbox" data-rule-enabled="dayMove">
-                                <span>Daily move (up or down) of at least</span>
-                                <input type="number" min="0.1" step="0.5" class="monitor-rule-value" data-rule-value="dayMove" aria-label="Daily move (up or down) of at least threshold">
+                                <select class="monitor-rule-direction" data-rule-direction="dayMove" aria-label="Direction"><option value="down">Fall</option><option value="up">Rise</option><option value="both">Rise or fall</option></select>
+                                <span>in 1 day of at least</span>
+                                <input type="number" min="0.1" step="0.5" class="monitor-rule-value" data-rule-value="dayMove" aria-label="1-day move threshold">
                                 <span class="monitor-rule-unit">%</span>
                             </label>
 
                             <label class="monitor-rule">
                                 <input type="checkbox" data-rule-enabled="weekDrop">
-                                <span>Fall over 1 week of at least</span>
-                                <input type="number" min="0.1" step="0.5" class="monitor-rule-value" data-rule-value="weekDrop" aria-label="Fall over 1 week of at least threshold">
+                                <select class="monitor-rule-direction" data-rule-direction="weekDrop" aria-label="Direction"><option value="down">Fall</option><option value="up">Rise</option><option value="both">Rise or fall</option></select>
+                                <span>over 1 week of at least</span>
+                                <input type="number" min="0.1" step="0.5" class="monitor-rule-value" data-rule-value="weekDrop" aria-label="1-week move threshold">
                                 <span class="monitor-rule-unit">%</span>
                             </label>
 
                             <label class="monitor-rule">
                                 <input type="checkbox" data-rule-enabled="monthDrop">
-                                <span>Fall over 1 month of at least</span>
-                                <input type="number" min="0.1" step="0.5" class="monitor-rule-value" data-rule-value="monthDrop" aria-label="Fall over 1 month of at least threshold">
+                                <select class="monitor-rule-direction" data-rule-direction="monthDrop" aria-label="Direction"><option value="down">Fall</option><option value="up">Rise</option><option value="both">Rise or fall</option></select>
+                                <span>over 1 month of at least</span>
+                                <input type="number" min="0.1" step="0.5" class="monitor-rule-value" data-rule-value="monthDrop" aria-label="1-month move threshold">
                                 <span class="monitor-rule-unit">%</span>
                             </label>
 
                             <label class="monitor-rule">
                                 <input type="checkbox" data-rule-enabled="fromHigh">
-                                <span>Below its 52-week high by at least</span>
-                                <input type="number" min="0.1" step="1" class="monitor-rule-value" data-rule-value="fromHigh" aria-label="Below its 52-week high by at least threshold">
+                                <select class="monitor-rule-direction" data-rule-direction="fromHigh" aria-label="Direction"><option value="down">Below its 52-week high</option><option value="up">Above its 52-week low</option><option value="both">Below 52W high or above 52W low</option></select>
+                                <span>by at least</span>
+                                <input type="number" min="0.1" step="1" class="monitor-rule-value" data-rule-value="fromHigh" aria-label="52-week threshold">
                                 <span class="monitor-rule-unit">%</span>
                             </label>
 
