@@ -619,11 +619,11 @@
 
                     <button
                         type="button"
-                        class="period-tab active"
+                        class="period-tab"
                         data-period="DD"
                         title="Day over Day"
                         role="tab"
-                        aria-selected="true"
+                        aria-selected="false"
                     >
 
                         <span class="period-tab-code">
@@ -659,11 +659,11 @@
 
                     <button
                         type="button"
-                        class="period-tab"
+                        class="period-tab active"
                         data-period="MM"
                         title="Month over Month"
                         role="tab"
-                        aria-selected="false"
+                        aria-selected="true"
                     >
 
                         <span class="period-tab-code">
@@ -1793,7 +1793,7 @@
                             <option value="ytd:asc">YTD (worst first)</option>
                             <option value="y1:asc">1Y (worst first)</option>
                             <option value="risk:asc">Risk (low to high)</option>
-                            <option value="bid:desc">BID (high to low)</option>
+                            <option value="bid:desc">BID price (high to low)</option>
                         </select>
                     </label>
 
@@ -1822,7 +1822,7 @@
                                     <th scope="col" data-explorer-sort="name" tabindex="0" aria-sort="ascending">Fund <span class="sort-arrow"></span></th>
                                     <th scope="col" data-explorer-sort="asset" tabindex="0">Asset class <span class="sort-arrow"></span></th>
                                     <th scope="col" data-explorer-sort="risk" tabindex="0">Risk <span class="sort-arrow"></span></th>
-                                    <th scope="col" data-explorer-sort="bid" tabindex="0">BID <span class="sort-arrow"></span></th>
+                                    <th scope="col" data-explorer-sort="bid" tabindex="0">BID price <span class="sort-arrow"></span></th>
                                     <th scope="col" data-explorer-sort="ytd" tabindex="0">YTD <span class="sort-arrow"></span></th>
                                     <th scope="col" data-explorer-sort="m1" tabindex="0">1M <span class="sort-arrow"></span></th>
                                     <th scope="col" data-explorer-sort="y1" tabindex="0">1Y <span class="sort-arrow"></span></th>
