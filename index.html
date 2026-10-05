@@ -34,6 +34,17 @@
             if (scale >= 0.8 && scale <= 1.4) {
                 document.documentElement.style.setProperty("--font-scale", String(scale));
             }
+            var theme = localStorage.getItem("vgrat-fms-theme") || "dark";
+            var base = { dark: "dark", dim: "dark", midnight: "dark", light: "light", sepia: "light" };
+            if (theme === "auto") {
+                base.auto = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+            }
+            if (base[theme]) {
+                document.documentElement.setAttribute("data-theme", base[theme]);
+                if (/^(dim|midnight|sepia)$/.test(theme)) {
+                    document.documentElement.setAttribute("data-variant", theme);
+                }
+            }
             var accent = localStorage.getItem("vgrat-fms-accent");
             if (/^(steel|ocean|gold|teal|violet|rose)$/.test(accent || "")) {
                 document.documentElement.setAttribute("data-accent", accent);
@@ -163,28 +174,27 @@
                     </div>
 
 
-                    <!-- THEME TOGGLE -->
+                    <!-- REFRESH DATA -->
 
                     <button
-                        id="theme-toggle"
-                        class="theme-toggle"
+                        id="refresh-data"
+                        class="theme-toggle refresh-button"
                         type="button"
-                        aria-label="Switch to light mode"
-                        aria-pressed="false"
+                        aria-label="Refresh data"
+                        title="Reload the latest published data (stays on this page)"
                     >
 
                         <span
-                            class="theme-icon"
+                            class="refresh-icon"
                             aria-hidden="true"
-                        >
-                            ☾
-                        </span>
+                        >↻</span>
 
-                        <span class="theme-label">
-                            Dark
+                        <span class="refresh-label">
+                            Refresh
                         </span>
 
                     </button>
+
 
                 </div>
 
@@ -2122,19 +2132,57 @@
                             <h3 class="settings-label">Theme</h3>
 
                             <p class="settings-help">
-                                Same as the Dark / Light button at the top right.
+                                Saved in this browser.
                             </p>
 
-                            <div class="settings-options" role="group" aria-label="Theme">
+                            <div class="settings-options theme-options" role="group" aria-label="Theme">
 
-                                <button type="button" class="settings-option" data-theme-option="dark" aria-pressed="false">
-                                    <span class="settings-option-sample">☾</span>
-                                    <span class="settings-option-name">Dark</span>
+                                <button type="button" class="settings-option theme-option" data-theme-option="auto" aria-pressed="false">
+                                    <span class="theme-preview theme-preview-auto" aria-hidden="true"><span class="theme-preview-card"></span></span>
+                                    <span class="theme-option-text">
+                                        <span class="settings-option-name">◑&nbsp; Follow device</span>
+                                        <span class="theme-option-desc">Matches your phone / computer</span>
+                                    </span>
                                 </button>
 
-                                <button type="button" class="settings-option" data-theme-option="light" aria-pressed="false">
-                                    <span class="settings-option-sample">☀</span>
-                                    <span class="settings-option-name">Light</span>
+                                <button type="button" class="settings-option theme-option" data-theme-option="dark" aria-pressed="false">
+                                    <span class="theme-preview" aria-hidden="true" style="--p-bg: #0a0f15; --p-card: #101821; --p-text: #edf2f6; --p-line: #2a3947;"><span class="theme-preview-card"></span></span>
+                                    <span class="theme-option-text">
+                                        <span class="settings-option-name">☾&nbsp; Dark</span>
+                                        <span class="theme-option-desc">Default dark</span>
+                                    </span>
+                                </button>
+
+                                <button type="button" class="settings-option theme-option" data-theme-option="dim" aria-pressed="false">
+                                    <span class="theme-preview" aria-hidden="true" style="--p-bg: #1c232c; --p-card: #252f3a; --p-text: #e6ebf0; --p-line: #3f4d5d;"><span class="theme-preview-card"></span></span>
+                                    <span class="theme-option-text">
+                                        <span class="settings-option-name">◐&nbsp; Dim</span>
+                                        <span class="theme-option-desc">Softer slate grey</span>
+                                    </span>
+                                </button>
+
+                                <button type="button" class="settings-option theme-option" data-theme-option="midnight" aria-pressed="false">
+                                    <span class="theme-preview" aria-hidden="true" style="--p-bg: #000000; --p-card: #0a0a0a; --p-text: #f2f2f2; --p-line: #262626;"><span class="theme-preview-card"></span></span>
+                                    <span class="theme-option-text">
+                                        <span class="settings-option-name">●&nbsp; Midnight</span>
+                                        <span class="theme-option-desc">Pure black, OLED</span>
+                                    </span>
+                                </button>
+
+                                <button type="button" class="settings-option theme-option" data-theme-option="light" aria-pressed="false">
+                                    <span class="theme-preview" aria-hidden="true" style="--p-bg: #f3f6f8; --p-card: #ffffff; --p-text: #18232d; --p-line: #ccd5dc;"><span class="theme-preview-card"></span></span>
+                                    <span class="theme-option-text">
+                                        <span class="settings-option-name">☀&nbsp; Light</span>
+                                        <span class="theme-option-desc">Clean white</span>
+                                    </span>
+                                </button>
+
+                                <button type="button" class="settings-option theme-option" data-theme-option="sepia" aria-pressed="false">
+                                    <span class="theme-preview" aria-hidden="true" style="--p-bg: #f1e8d6; --p-card: #fbf6ec; --p-text: #3b2f22; --p-line: #d4c4a7;"><span class="theme-preview-card"></span></span>
+                                    <span class="theme-option-text">
+                                        <span class="settings-option-name">❧&nbsp; Sepia</span>
+                                        <span class="theme-option-desc">Warm paper</span>
+                                    </span>
                                 </button>
 
                             </div>
@@ -2168,4 +2216,111 @@
                                     <span class="palette-check" aria-hidden="true">✓</span>
                                 </button>
                                 <button type="button" class="palette-option" data-accent-option="teal" aria-pressed="false" style="--swatch-dark: #4cc2c9; --swatch-light: #0d7c83;">
-              
+                                    <span class="palette-swatch" aria-hidden="true"></span>
+                                    <span>Teal</span>
+                                    <span class="palette-check" aria-hidden="true">✓</span>
+                                </button>
+                                <button type="button" class="palette-option" data-accent-option="violet" aria-pressed="false" style="--swatch-dark: #a99cf5; --swatch-light: #5b49c7;">
+                                    <span class="palette-swatch" aria-hidden="true"></span>
+                                    <span>Violet</span>
+                                    <span class="palette-check" aria-hidden="true">✓</span>
+                                </button>
+                                <button type="button" class="palette-option" data-accent-option="rose" aria-pressed="false" style="--swatch-dark: #ef8fb6; --swatch-light: #b8336a;">
+                                    <span class="palette-swatch" aria-hidden="true"></span>
+                                    <span>Rose</span>
+                                    <span class="palette-check" aria-hidden="true">✓</span>
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <section id="update-schedule" class="performance-card settings-card" aria-labelledby="settings-schedule-title">
+
+                    <div class="card-header">
+                        <div>
+                            <div class="card-eyebrow">DATA</div>
+                            <h2 id="settings-schedule-title" class="card-title">Update schedule</h2>
+                        </div>
+                    </div>
+
+                    <div class="settings-body">
+
+                        <p class="settings-help schedule-intro">
+                            Time left until the next automatic update. Times are Singapore time (SGT).
+                            GitHub can start scheduled runs a few minutes late.
+                        </p>
+
+                        <ul id="update-schedule-list" class="schedule-list"></ul>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+
+            <!-- =================================================
+                 APPLICATION ERROR
+            ================================================== -->
+
+            <div
+                id="application-error"
+                class="application-error"
+                data-application-error
+                aria-live="assertive"
+            ></div>
+
+
+        </main>
+
+        </div>
+
+
+        <!-- ==================================================
+             FOOTER
+        =================================================== -->
+
+        <footer class="site-footer">
+
+            <div class="footer-inner">
+
+                <div class="footer-brand">
+                    VGrat FMS
+                </div>
+
+                <div class="footer-source">
+                    Prudential Singapore fund data
+                </div>
+
+                <div
+                    id="app-version"
+                    class="footer-version"
+                >
+                    v1.0.0
+                </div>
+
+            </div>
+
+        </footer>
+
+
+    </div>
+
+
+    <!-- ======================================================
+         APPLICATION
+    ======================================================= -->
+
+    <script
+        type="module"
+        src="js/app.js"
+    ></script>
+
+</body>
+</html>
