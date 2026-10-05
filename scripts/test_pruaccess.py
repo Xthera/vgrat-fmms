@@ -732,6 +732,284 @@ def read_excel_funds() -> list[dict[str, Any]]:
 
 
 # ============================================================
+# DIVIDEND UNIT
+# ============================================================
+#
+# Prudential's ilpfunds.json publishes dividendRate as
+#
+#     "20260930=1.25&20260630=1.25"
+#
+# i.e. numbers only. The unit (for example "%" or "cents") is
+# shown on the Prudential fund page next to each payout.
+#
+# The unit is taken, in order, from:
+#
+#     1. a unit field in the API record (if Prudential adds one)
+#     2. the fund page text next to the latest payout value
+#
+# Nothing is guessed: if neither source shows a unit,
+# dividendUnit stays empty and dividendUnitSource is None.
+# dividendUnitEvidence keeps the page text the unit was read
+# from, so every value can be checked.
+# ============================================================
+
+DIVIDEND_UNIT_API_KEYS = (
+    "dividendUnit",
+    "distributionUnit",
+    "dividendRateUnit",
+    "dividendRateType",
+    "dividendType",
+)
+
+DIVIDEND_KEYWORDS = re.compile(
+    r"dividend|distribution|payout",
+    re.IGNORECASE,
+)
+
+# Unit written AFTER the number: "1.25%", "1.25 % p.a.",
+# "1.25 cents", "1.25 cents per unit", "1.25 per cent"
+DIVIDEND_UNIT_AFTER = (
+    r"(?P<after>"
+    r"%(?:\s*(?:p\.?\s*a\.?|per\s+annum|per\s+unit))?"
+    r"|per\s*cent(?:\s*(?:p\.?\s*a\.?|per\s+annum))?"
+    r"|cents?(?:\s+per\s+unit)?"
+    r"|¢"
+    r")"
+)
+
+# Currency written BEFORE the number: "S$1.25", "SGD 1.25"
+DIVIDEND_UNIT_BEFORE = (
+    r"(?P<before>S\$|US\$|SGD|USD|\$)\s*"
+)
+
+
+def latest_dividend_value(
+    dividend_rate: Any,
+) -> str | None:
+    """
+    "20260930=1.25&20260630=1.25" -> "1.25" (newest payout).
+    """
+
+    text = clean_text(
+        dividend_rate
+    )
+
+    if not text:
+        return None
+
+    pairs = []
+
+    for part in text.split("&"):
+
+        date_part, _, value = part.partition("=")
+
+        if re.fullmatch(r"\d{8}", date_part.strip()) and value.strip():
+
+            pairs.append(
+                (
+                    date_part.strip(),
+                    value.strip(),
+                )
+            )
+
+    if not pairs:
+        return None
+
+    pairs.sort(reverse=True)
+
+    return pairs[0][1]
+
+
+def number_patterns(
+    value: str,
+) -> list[str]:
+    """
+    Text forms the page may use for one number:
+    "2.50" -> ["2.50", "2.5"], "2" -> ["2", "2.00", "2.0"].
+    """
+
+    forms = {
+        value,
+    }
+
+    try:
+
+        number = float(value)
+
+        forms.update(
+            {
+                f"{number:g}",
+                f"{number:.1f}",
+                f"{number:.2f}",
+            }
+        )
+
+    except ValueError:
+
+        pass
+
+    return sorted(
+        forms,
+        key=len,
+        reverse=True,
+    )
+
+
+def extract_dividend_unit_from_text(
+    page_text: str,
+    dividend_rate: Any,
+) -> tuple[str | None, str | None]:
+    """
+    Find the unit printed next to the latest payout value,
+    within the dividend / distribution part of the page.
+
+    Returns (unit, evidence_snippet).
+    """
+
+    latest = latest_dividend_value(
+        dividend_rate
+    )
+
+    text = clean_text(
+        page_text
+    )
+
+    if not latest or not text:
+        return None, None
+
+    # Only look at text near a dividend keyword.
+    windows = []
+
+    for keyword in DIVIDEND_KEYWORDS.finditer(text):
+
+        windows.append(
+            text[
+                keyword.start():
+                keyword.start() + 1500
+            ]
+        )
+
+    if not windows:
+        return None, None
+
+    for number in number_patterns(latest):
+
+        escaped = re.escape(number)
+
+        after = re.compile(
+            rf"(?<![\d.]){escaped}(?![\d])\s*{DIVIDEND_UNIT_AFTER}",
+            re.IGNORECASE,
+        )
+
+        before = re.compile(
+            rf"{DIVIDEND_UNIT_BEFORE}{escaped}(?![\d])",
+            re.IGNORECASE,
+        )
+
+        for window in windows:
+
+            match = after.search(window) or before.search(window)
+
+            if not match:
+                continue
+
+            unit = clean_text(
+                match.group("after")
+                if match.groupdict().get("after")
+                else match.group("before")
+            )
+
+            start = max(
+                0,
+                match.start() - 60,
+            )
+
+            evidence = clean_text(
+                window[
+                    start:
+                    match.end() + 40
+                ]
+            )
+
+            return unit, evidence
+
+    return None, None
+
+
+async def extract_dividend_unit(
+    page: Page,
+    fund: dict,
+    dividend_rate: Any,
+) -> dict[str, Any]:
+    """
+    Resolve dividendUnit for one fund (see DIVIDEND UNIT above).
+    """
+
+    empty = {
+        "dividendUnit": None,
+        "dividendUnitSource": None,
+        "dividendUnitEvidence": None,
+    }
+
+    if not clean_text(dividend_rate):
+        return empty
+
+    # 1. API field
+    for key in DIVIDEND_UNIT_API_KEYS:
+
+        value = clean_text(
+            fund.get(key)
+        )
+
+        if value:
+
+            return {
+                "dividendUnit": value,
+                "dividendUnitSource": f"prudential-api:{key}",
+                "dividendUnitEvidence": f"{key}={value}",
+            }
+
+    # 2. Fund page text (textContent also covers collapsed tabs)
+    try:
+
+        page_text = await page.evaluate(
+            "() => document.body ? document.body.textContent : ''"
+        )
+
+    except Exception as error:
+
+        print(
+            f"Dividend unit: could not read page text ({error!r})."
+        )
+
+        return empty
+
+    unit, evidence = extract_dividend_unit_from_text(
+        page_text,
+        dividend_rate,
+    )
+
+    if not unit:
+
+        print(
+            "Dividend unit: not shown on the Prudential page "
+            "next to the latest payout."
+        )
+
+        return empty
+
+    print(
+        f"Dividend unit: {unit!r} (from page: {evidence!r})"
+    )
+
+    return {
+        "dividendUnit": unit,
+        "dividendUnitSource": "prudential-page",
+        "dividendUnitEvidence": evidence,
+    }
+
+
+# ============================================================
 # PRUDENTIAL API
 # ============================================================
 
@@ -933,6 +1211,16 @@ async def get_prudential_fund_data(
             inception_raw
         )
 
+        dividend_rate = first_value(
+            "dividendRate",
+        )
+
+        dividend_unit = await extract_dividend_unit(
+            page,
+            fund,
+            dividend_rate,
+        )
+
         result = {
             "fundIdentifier":
                 clean_text(
@@ -1102,15 +1390,18 @@ async def get_prudential_fund_data(
                 ),
 
             "dividendRate":
-                first_value(
-                    "dividendRate",
-                ),
-            
+                dividend_rate,
+
+            # Unit shown with the rate (see DIVIDEND UNIT).
             "dividendUnit":
-                first_value(
-                    "dividendUnit",
-                ),
-            
+                dividend_unit["dividendUnit"],
+
+            "dividendUnitSource":
+                dividend_unit["dividendUnitSource"],
+
+            "dividendUnitEvidence":
+                dividend_unit["dividendUnitEvidence"],
+
             "raw":
                 fund,
         }
