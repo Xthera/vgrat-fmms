@@ -5,10 +5,10 @@ on:
   # DAILY RUN - 6:00 AM SINGAPORE TIME
   #
   # Singapore = UTC+8
-  # 06:00 SGT = 22:00 UTC on the previous day
+  # 00:00 SGT = 16:00 UTC on the previous day
   # ============================================================
   schedule:
-    - cron: "20 22 * * *"
+    - cron: "00 16 * * *"
 
   # ============================================================
   # MANUAL RUN
