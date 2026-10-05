@@ -319,6 +319,26 @@ function alertsFor(metrics) {
    RENDER: WATCHLIST
    ============================================================ */
 
+/* Latest BID: the price Prudential publishes on the fund page
+   (data/funds.json, same as the Fund Explorer list), with its
+   valuation date. Falls back to the latest BID in the price
+   history if the published price is missing. The 1D / 1W / 1M
+   and 52-week figures are still worked out from the history. */
+function latestBidCell(id, metrics) {
+    const details = monitor.fundById.get(id)?.fund ?? {};
+    const published = Number(String(details.bidPrice ?? "").replace(/[^0-9.\-]/g, ""));
+
+    if (String(details.bidPrice ?? "").trim() && Number.isFinite(published)) {
+        const date = String(details.valuationDate ?? "").trim();
+
+        return `${published.toFixed(4)}${date ? `<div class="fund-meta">${escapeHtml(date)}</div>` : ""}`;
+    }
+
+    return metrics
+        ? `${metrics.latestBid.toFixed(5)}<div class="fund-meta">${escapeHtml(formatDate(metrics.latestDate))}</div>`
+        : "—";
+}
+
 function fundCell(id) {
     const fund = monitor.fundById.get(id);
 
@@ -382,7 +402,7 @@ function renderWatchlist() {
                 </td>
                 <td class="fund-cell">${fundCell(id)}</td>
                 <td class="bid-cell" data-label="Latest BID">
-                    ${metrics ? `${metrics.latestBid.toFixed(5)}<div class="fund-meta">${escapeHtml(formatDate(metrics.latestDate))}</div>` : "—"}
+                    ${latestBidCell(id, metrics)}
                 </td>
                 <td data-label="1D">${pill(metrics?.d1)}</td>
                 <td data-label="1W">${pill(metrics?.w1)}</td>
