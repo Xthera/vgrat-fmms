@@ -2553,6 +2553,8 @@ function updateNewsFilters() {
             ?? "ALL";
 
 
+    renderNewsDynamicOptions();
+
     renderFilterIndicators();
 
     renderNewsSummary();
@@ -2647,7 +2649,12 @@ function initializeNewsFilters() {
 }
 
 
-function getFilteredNews() {
+/*
+ * Articles that pass the Market News filters. `override` replaces
+ * some filter values (e.g. { assetClass: "ALL" }) without touching
+ * the page state; used to work out each dropdown's options.
+ */
+function getFilteredNews(override = null) {
 
     if (!state.news.state) {
 
@@ -2656,29 +2663,38 @@ function getFilteredNews() {
     }
 
 
+    const f =
+        override
+            ? { ...state.news, ...override }
+            : state.news;
+
+
     /*
-     * Synchronize the application-level controls
-     * with the Market News module state.
+     * Synchronize the application-level controls with the
+     * Market News module state (a copy when only probing).
      */
-    state.news.state.searchTerm =
-        state.news.search ?? "";
+    const moduleState =
+        override
+            ? { ...state.news.state }
+            : state.news.state;
 
 
-    state.news.state.selectedCategory =
-        state.news.category ?? "ALL";
+    moduleState.searchTerm =
+        f.search ?? "";
 
+    moduleState.selectedCategory =
+        f.category ?? "ALL";
 
-    state.news.state.selectedImportance =
-        state.news.importance ?? "ALL";
+    moduleState.selectedImportance =
+        f.importance ?? "ALL";
 
-
-    state.news.state.selectedSentiment =
-        state.news.sentiment ?? "ALL";
+    moduleState.selectedSentiment =
+        f.sentiment ?? "ALL";
 
 
     const visible =
         getVisibleNews(
-            state.news.state
+            moduleState
         );
 
 
@@ -2690,14 +2706,15 @@ function getFilteredNews() {
     const tagged =
         visible.filter(
             article =>
-                matchesTag(article.assetClasses, state.news.assetClass) &&
-                matchesTag(article.geographies, state.news.geography) &&
-                matchesTag(article.sectors, state.news.sector)
+                matchesTag(article.assetClasses, f.assetClass) &&
+                matchesTag(article.geographies, f.geography) &&
+                matchesTag(article.sectors, f.sector)
         );
 
 
     if (
-        state.news.fund === "ALL" ||
+        f.fund === "ALL" ||
+        !f.fund ||
         !fundLinker
     ) {
 
@@ -2712,11 +2729,189 @@ function getFilteredNews() {
                 .linkArticle(article)
                 .some(
                     link =>
-                        link.fundId === state.news.fund
+                        link.fundId === f.fund
                 )
     );
 
 }
+
+
+/* ============================================================
+   DYNAMIC NEWS FILTERS
+   Each dropdown lists only the options that still have articles
+   given every OTHER filter, with live counts.
+   ============================================================ */
+
+const NEWS_FILTERS = [
+    { key: "category",   selector: "#market-news-category",   allLabel: "All", single: article => article.category },
+    { key: "importance", selector: "#market-news-importance", allLabel: "All", single: article => article.importance, order: ["HIGH", "MEDIUM", "LOW"] },
+    { key: "sentiment",  selector: "#market-news-sentiment",  allLabel: "All", single: article => article.sentiment, order: ["POSITIVE", "NEUTRAL", "MIXED", "NEGATIVE"] },
+    { key: "assetClass", selector: "#market-news-asset",      allLabel: "All", many: article => article.assetClasses },
+    { key: "geography",  selector: "#market-news-geography",  allLabel: "All", many: article => article.geographies },
+    { key: "sector",     selector: "#market-news-sector",     allLabel: "All", many: article => article.sectors },
+    { key: "fund",       selector: "#market-news-fund",       allLabel: "All funds", fund: true }
+];
+
+/* Display names for option values (kept from the original options) */
+const newsOptionLabels =
+    new Map();
+
+function newsOptionLabel(selector, value) {
+
+    if (!newsOptionLabels.has(selector)) {
+
+        newsOptionLabels.set(selector, new Map());
+
+    }
+
+    const labels =
+        newsOptionLabels.get(selector);
+
+    if (!labels.has(value)) {
+
+        const option =
+            [...(qs(selector)?.options ?? [])]
+                .find(item => item.value === value);
+
+        const text =
+            (option?.dataset.label ?? option?.textContent ?? value)
+                .trim()
+                .replace(/\s*\(\d+\)$/, "");
+
+        labels.set(
+            value,
+            text || value
+        );
+
+    }
+
+    return labels.get(value);
+
+}
+
+function renderNewsDynamicOptions() {
+
+    if (!state.news.state) {
+
+        return;
+
+    }
+
+    for (const filter of NEWS_FILTERS) {
+
+        const select =
+            qs(filter.selector);
+
+        if (!select) {
+
+            continue;
+
+        }
+
+        // Remember labels before rebuilding the options
+        [...select.options].forEach(
+            option => newsOptionLabel(filter.selector, option.value)
+        );
+
+        const articles =
+            getFilteredNews({ [filter.key]: "ALL" });
+
+        const counts =
+            new Map();
+
+        for (const article of articles) {
+
+            let values = [];
+
+            if (filter.single) {
+
+                values = [filter.single(article)];
+
+            } else if (filter.many) {
+
+                values = filter.many(article) ?? [];
+
+            } else if (filter.fund && fundLinker) {
+
+                values = fundLinker
+                    .linkArticle(article)
+                    .map(link => link.fundId);
+
+            }
+
+            for (const value of new Set(values.filter(Boolean))) {
+
+                counts.set(
+                    value,
+                    (counts.get(value) ?? 0) + 1
+                );
+
+            }
+
+        }
+
+        let values =
+            [...counts.keys()];
+
+        if (filter.order) {
+
+            values.sort(
+                (a, b) =>
+                    (filter.order.indexOf(a) + 99) % 99 -
+                    (filter.order.indexOf(b) + 99) % 99
+            );
+
+        } else {
+
+            values.sort(
+                (a, b) =>
+                    counts.get(b) - counts.get(a) ||
+                    newsOptionLabel(filter.selector, a).localeCompare(newsOptionLabel(filter.selector, b))
+            );
+
+        }
+
+        const current =
+            state.news[filter.key] ?? "ALL";
+
+        // Keep the current choice listed even if it has no articles now
+        if (current !== "ALL" && !counts.has(current)) {
+
+            values.unshift(current);
+
+        }
+
+        const html =
+            `<option value="ALL" data-label="${escapeAttribute(filter.allLabel)}">${escapeHtml(filter.allLabel)} (${articles.length})</option>` +
+            values
+                .map(value => {
+
+                    const label =
+                        newsOptionLabel(filter.selector, value);
+
+                    return `<option value="${escapeAttribute(value)}" data-label="${escapeAttribute(label)}">${escapeHtml(label)} (${counts.get(value) ?? 0})</option>`;
+
+                })
+                .join("");
+
+        if (select.dataset.optionsHtml !== html) {
+
+            select.innerHTML = html;
+
+            select.dataset.optionsHtml = html;
+
+        }
+
+        if (select.value !== current) {
+
+            select.value = current;
+
+        }
+
+    }
+
+}
+
 
 function renderNewsSummary() {
 
@@ -3168,6 +3363,8 @@ function initializeNewsState() {
 
     renderNewsTagOptions();
 
+    renderNewsDynamicOptions();
+
     renderNewsSummary();
 
     renderMarketNews();
@@ -3453,6 +3650,8 @@ function initializeNewsFundLinks() {
 
 
     if (state.news.initialized) {
+
+        renderNewsDynamicOptions();
 
         renderNewsSummary();
 
