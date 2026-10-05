@@ -73,6 +73,10 @@ import {
 } from "./fund-explorer.js";
 
 import {
+    enhanceSelects
+} from "./custom-select.js";
+
+import {
     initializeUpdateSchedule,
     setLoadedUpdateTime
 } from "./update-schedule.js";
@@ -3619,6 +3623,17 @@ async function initializeApplication() {
     initializeNavToggle();
 
     initializeSettings();
+
+    /*
+     * Filter dropdowns (Market News, Fund Explorer, Monitoring):
+     * themed menus whose highlight follows the colour palette.
+     * Phones keep the native picker.
+     */
+    try {
+        enhanceSelects(".main-content select:not(#explorer-sort-mobile)");
+    } catch (error) {
+        console.warn("VGrat FMS: dropdown styling failed.", error);
+    }
 
     try {
         initializeUpdateSchedule();
