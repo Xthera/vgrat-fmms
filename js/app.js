@@ -1272,20 +1272,25 @@ function initializeNavigation() {
     );
 
 
-    const hashView =
-        getViewFromHash();
+    /*
+     * Every visit (or reload) opens on Market Performance at the
+     * top of the page, on phone and desktop alike. The last page
+     * and any #page in the address are not restored.
+     */
+    if ("scrollRestoration" in history) {
 
+        history.scrollRestoration = "manual";
 
-    const storedView =
-        getStoredValue(
-            STORAGE_KEYS.view,
-            "performance"
-        );
+    }
 
+    window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "instant"
+    });
 
     setCurrentView(
-        hashView ??
-        storedView,
+        "performance",
         {
             updateHash: true
         }
