@@ -120,9 +120,38 @@ Rules:
 
 The existing dividendRate string is preserved.
 
-The existing dividendUnit value is preserved.
+dividendHistory is published alongside it: the same
+dividendRate string parsed into a list, newest first:
+
+    [{"exDate": "2026-09-30", "rate": 1.25}, ...]
+
+dividendUnit:
+    Extracted by scripts/test_pruaccess.py from the Prudential
+    source (API unit field, otherwise the unit printed next to
+    the latest payout on the fund page) and published with:
+
+        dividendUnitSource    "prudential-api:<field>" |
+                              "prudential-page" | "default"
+        dividendUnitEvidence  the source text it was read from
+
+    Only when Prudential shows no unit is DEFAULT_DIVIDEND_UNIT
+    applied, and dividendUnitSource is then "default".
 
 No dividend calculation is performed.
+
+
+TEXT CLEAN-UP
+=============
+
+fundObjective is published as plain text. Some source records
+contain escaped HTML (e.g. "<p>... &quot;ADRs&quot; ...</p>");
+tags are removed and entities decoded.
+
+Holdings: some factsheet parses place the holding weight at the
+end of the name ("SK HYNIX INC 6.7%") and record a different,
+incorrect weightPercent. When a name ends with a percentage, that
+percentage is the published weight: it is removed from the name
+and used as weightPercent / weightText.
 
 
 OUTPUT
@@ -137,6 +166,7 @@ Both files contain the same master fund identity block and fund count.
 from __future__ import annotations
 
 import json
+import html
 import os
 import re
 import sys
@@ -222,6 +252,9 @@ SCHEMA_VERSION = 1
 
 MAX_HOLDINGS = 10
 
+# Applied when the Prudential source publishes no dividendUnit.
+DEFAULT_DIVIDEND_UNIT = "% per payout"
+
 ALLOW_UNRESOLVED = (
     os.environ.get(
         "ALLOW_UNRESOLVED",
@@ -275,6 +308,44 @@ def clean_raw_text(value: Any) -> str:
         return ""
 
     return str(value).strip()
+
+
+def clean_html_text(value: Any) -> str:
+    """
+    Convert (possibly escaped) HTML to plain text.
+
+        "<p>Invest in ADRs (&quot;ADRs&quot;)</p>"
+            -> 'Invest in ADRs ("ADRs")'
+    """
+
+    if value is None:
+        return ""
+
+    text = str(value)
+
+    # Decode up to twice: some records are double-escaped.
+    for _ in range(2):
+        decoded = html.unescape(text)
+        if decoded == text:
+            break
+        text = decoded
+
+    text = re.sub(
+        r"<br\s*/?>|</p\s*>",
+        " ",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    text = re.sub(
+        r"<[^>]+>",
+        "",
+        text,
+    )
+
+    return clean_text(
+        text
+    )
 
 
 def utc_now_iso() -> str:
@@ -1116,6 +1187,28 @@ def clean_holdings(
             "weightPercent"
         )
 
+        weight_text = clean_text(
+            item.get(
+                "weightText"
+            )
+        )
+
+        # Weight parsed into the name: "SK HYNIX INC 6.7%"
+        embedded = re.match(
+            r"^(.*?)\s+(\d+(?:\.\d+)?)\s*%$",
+            name,
+        )
+
+        if embedded and embedded.group(1).strip():
+
+            name = embedded.group(1).strip()
+
+            weight = float(
+                embedded.group(2)
+            )
+
+            weight_text = f"{weight:.1f}%"
+
         if rank != position:
             raise ValueError(
                 f"{label}: rank {rank} "
@@ -1152,11 +1245,7 @@ def clean_holdings(
                 "rank": position,
                 "name": name,
                 "weightPercent": weight,
-                "weightText": clean_text(
-                    item.get(
-                        "weightText"
-                    )
-                ),
+                "weightText": weight_text,
             }
         )
 
@@ -1461,6 +1550,59 @@ def resolve_holdings(
 # PRUDENTIAL SOURCE DATA
 # =============================================================================
 
+def parse_dividend_history(
+    dividend_rate: str,
+) -> list[dict]:
+    """
+    "20260930=1.25&20260630=1.25"
+        -> [{"exDate": "2026-09-30", "rate": 1.25}, ...]
+
+    Newest first. Unparseable parts are skipped.
+    """
+
+    history = []
+
+    for part in dividend_rate.split(
+        "&"
+    ):
+
+        date, _, rate = part.partition(
+            "="
+        )
+
+        date = date.strip()
+        rate = rate.strip()
+
+        if not re.fullmatch(
+            r"\d{8}",
+            date,
+        ):
+            continue
+
+        try:
+            value = float(
+                rate
+            )
+        except ValueError:
+            continue
+
+        history.append(
+            {
+                "exDate": (
+                    f"{date[0:4]}-{date[4:6]}-{date[6:8]}"
+                ),
+                "rate": value,
+            }
+        )
+
+    history.sort(
+        key=lambda item: item["exDate"],
+        reverse=True,
+    )
+
+    return history
+
+
 def extract_dividend_fields(
     source: dict,
 ) -> dict:
@@ -1484,10 +1626,42 @@ def extract_dividend_fields(
         )
     )
 
+    has_dividend = bool(
+        dividend_rate
+    )
+
+    if dividend_unit:
+
+        unit_source = (
+            clean_text(
+                source.get(
+                    "dividendUnitSource"
+                )
+            )
+            or "prudential"
+        )
+
+        unit_evidence = (
+            clean_text(
+                source.get(
+                    "dividendUnitEvidence"
+                )
+            )
+            or None
+        )
+
+    elif has_dividend:
+
+        unit_source = "default"
+        unit_evidence = None
+
+    else:
+
+        unit_source = None
+        unit_evidence = None
+
     return {
-        "hasDividend": bool(
-            dividend_rate
-        ),
+        "hasDividend": has_dividend,
         "dividendRate": (
             dividend_rate
             if dividend_rate
@@ -1495,8 +1669,20 @@ def extract_dividend_fields(
         ),
         "dividendUnit": (
             dividend_unit
-            if dividend_unit
-            else None
+            or (
+                DEFAULT_DIVIDEND_UNIT
+                if has_dividend
+                else None
+            )
+        ),
+        "dividendUnitSource": unit_source,
+        "dividendUnitEvidence": unit_evidence,
+        "dividendHistory": (
+            parse_dividend_history(
+                dividend_rate
+            )
+            if has_dividend
+            else []
         ),
     }
 
@@ -1535,6 +1721,14 @@ def normalize_prudential_fund(
     fund.update(
         dividend_fields
     )
+
+    if "fundObjective" in fund:
+
+        fund["fundObjective"] = clean_html_text(
+            fund.get(
+                "fundObjective"
+            )
+        )
 
     return fund
 

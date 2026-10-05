@@ -58,6 +58,35 @@
             <div class="header-inner">
 
 
+                <!-- MENU TOGGLE -->
+
+                <button
+                    id="nav-toggle"
+                    type="button"
+                    class="nav-toggle"
+                    aria-controls="main-nav"
+                    aria-expanded="true"
+                    aria-label="Minimise menu"
+                    title="Minimise menu"
+                >
+
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        aria-hidden="true"
+                    >
+                        <path
+                            d="M2 4h12M2 8h12M2 12h12"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+
+                </button>
+
+
                 <!-- BRAND -->
 
                 <a
@@ -84,25 +113,6 @@
                     </span>
 
                 </a>
-
-
-                <!-- HEADER CONTEXT -->
-
-                <div class="header-context">
-
-                    <span class="header-context-label">
-                        Market Performance
-                    </span>
-
-                    <span class="header-context-divider">
-                        /
-                    </span>
-
-                    <span class="header-context-source">
-                        Prudential Singapore
-                    </span>
-
-                </div>
 
 
                 <!-- HEADER ACTIONS -->
@@ -163,10 +173,18 @@
 
 
         <!-- ==================================================
+             APP BODY (left navigation + content)
+        =================================================== -->
+
+        <div class="app-body">
+
+
+        <!-- ==================================================
              MAIN NAVIGATION
         =================================================== -->
 
         <nav
+            id="main-nav"
             class="main-nav"
             aria-label="Primary navigation"
         >
@@ -176,6 +194,7 @@
 
                 <button
                     type="button"
+                    title="Market Performance"
                     class="nav-link active"
                     data-view-target="performance"
                     aria-current="page"
@@ -185,7 +204,7 @@
                         ↗
                     </span>
 
-                    <span>
+                    <span class="nav-link-label">
                         Market Performance
                     </span>
 
@@ -194,6 +213,7 @@
 
                 <button
                     type="button"
+                    title="Market News"
                     class="nav-link"
                     data-view-target="news"
                     aria-current="false"
@@ -203,7 +223,7 @@
                         ◈
                     </span>
 
-                    <span>
+                    <span class="nav-link-label">
                         Market News
                     </span>
 
@@ -212,6 +232,7 @@
 
                 <button
                     type="button"
+                    title="Fund Explorer"
                     class="nav-link"
                     data-view-target="fund-explorer"
                     aria-current="false"
@@ -221,7 +242,7 @@
                         ▦
                     </span>
 
-                    <span>
+                    <span class="nav-link-label">
                         Fund Explorer
                     </span>
 
@@ -230,6 +251,7 @@
 
                 <button
                     type="button"
+                    title="Monitoring"
                     class="nav-link"
                     data-view-target="monitoring"
                     aria-current="false"
@@ -239,7 +261,7 @@
                         ◎
                     </span>
 
-                    <span>
+                    <span class="nav-link-label">
                         Monitoring
                     </span>
 
@@ -294,7 +316,9 @@
                     </div>
 
 
-                    <div class="page-header-meta">
+                    <div class="page-header-side">
+
+                        <div class="page-header-meta">
 
                         <span class="meta-label">
                             Latest BID observation
@@ -309,13 +333,206 @@
 
                     </div>
 
+                    </div>
+
                 </div>
 
+
+                <!-- FUND COMPARISON CHART -->
+
+                <section
+                    class="performance-card compare-card"
+                    aria-labelledby="fund-compare-title"
+                >
+
+                    <div class="card-header compare-header">
+
+                        <div>
+
+                            <div class="card-eyebrow">
+                                COMPARE FUNDS
+                            </div>
+
+                            <h2
+                                id="fund-compare-title"
+                                class="card-title"
+                            >
+                                Price performance
+                            </h2>
+
+                            <div
+                                id="fund-compare-range-label"
+                                class="compare-range-label"
+                            ></div>
+
+                        </div>
+
+
+                        <div
+                            class="compare-range-selector"
+                            role="tablist"
+                            aria-label="Comparison range"
+                        >
+
+                            <button
+                                type="button"
+                                class="compare-range-tab"
+                                data-compare-range="1M"
+                                title="1 month"
+                                role="tab"
+                                aria-selected="false"
+                            >1M</button>
+                            <button
+                                type="button"
+                                class="compare-range-tab"
+                                data-compare-range="3M"
+                                title="3 months"
+                                role="tab"
+                                aria-selected="false"
+                            >3M</button>
+                            <button
+                                type="button"
+                                class="compare-range-tab"
+                                data-compare-range="6M"
+                                title="6 months"
+                                role="tab"
+                                aria-selected="false"
+                            >6M</button>
+                            <button
+                                type="button"
+                                class="compare-range-tab"
+                                data-compare-range="1Y"
+                                title="1 year"
+                                role="tab"
+                                aria-selected="false"
+                            >1Y</button>
+                            <button
+                                type="button"
+                                class="compare-range-tab"
+                                data-compare-range="3Y"
+                                title="3 years"
+                                role="tab"
+                                aria-selected="false"
+                            >3Y</button>
+                            <button
+                                type="button"
+                                class="compare-range-tab"
+                                data-compare-range="5Y"
+                                title="5 years"
+                                role="tab"
+                                aria-selected="false"
+                            >5Y</button>
+                            <button
+                                type="button"
+                                class="compare-range-tab"
+                                data-compare-range="10Y"
+                                title="10 years"
+                                role="tab"
+                                aria-selected="false"
+                            >10Y</button>
+                            <button
+                                type="button"
+                                class="compare-range-tab"
+                                data-compare-range="SI"
+                                title="Since inception"
+                                role="tab"
+                                aria-selected="false"
+                            >SI</button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="compare-toolbar">
+
+                        <div class="compare-picker">
+
+                            <input
+                                id="fund-compare-search"
+                                type="search"
+                                autocomplete="off"
+                                placeholder="Add a fund to compare…"
+                                aria-label="Search funds to add to the comparison"
+                                aria-controls="fund-compare-suggestions"
+                                aria-expanded="false"
+                                role="combobox"
+                            >
+
+                            <ul
+                                id="fund-compare-suggestions"
+                                class="compare-suggestions"
+                                role="listbox"
+                                hidden
+                            ></ul>
+
+                        </div>
+
+                        <span
+                            id="fund-compare-count"
+                            class="compare-count"
+                        ></span>
+
+                    </div>
+
+
+                    <div
+                        id="fund-compare-canvas-wrap"
+                        class="compare-chart-wrap"
+                    >
+
+                        <canvas
+                            id="fund-compare-chart"
+                            role="img"
+                            aria-label="Rebased price performance of the selected funds. The table below lists each fund's change over the range."
+                        ></canvas>
+
+                    </div>
+
+
+                    <div
+                        id="fund-compare-empty"
+                        class="compare-empty"
+                        hidden
+                    >
+                        Add a fund above to start comparing.
+                    </div>
+
+
+                    <div class="table-wrap">
+
+                        <table class="data-table compare-table">
+
+                            <thead>
+
+                                <tr>
+                                    <th scope="col">Fund</th>
+                                    <th scope="col">Code</th>
+                                    <th scope="col">Start</th>
+                                    <th scope="col">Change</th>
+                                    <th scope="col">Latest BID</th>
+                                    <th scope="col"><span class="sr-only">Remove</span></th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="fund-compare-table-body"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+
+                <!-- PERIOD TOOLBAR -->
+
+                <div class="period-toolbar">
 
                 <!-- PERFORMANCE PERIOD SELECTOR -->
 
                 <div
-                    class="period-selector"
+                    class="period-selector period-selector-compact"
                     role="tablist"
                     aria-label="Performance period"
                 >
@@ -324,6 +541,7 @@
                         type="button"
                         class="period-tab active"
                         data-period="DD"
+                        title="Day over Day"
                         role="tab"
                         aria-selected="true"
                     >
@@ -343,6 +561,7 @@
                         type="button"
                         class="period-tab"
                         data-period="WW"
+                        title="Week over Week"
                         role="tab"
                         aria-selected="false"
                     >
@@ -362,6 +581,7 @@
                         type="button"
                         class="period-tab"
                         data-period="MM"
+                        title="Month over Month"
                         role="tab"
                         aria-selected="false"
                     >
@@ -381,6 +601,7 @@
                         type="button"
                         class="period-tab"
                         data-period="YY"
+                        title="Year over Year"
                         role="tab"
                         aria-selected="false"
                     >
@@ -395,6 +616,28 @@
 
                     </button>
 
+
+                <button
+                    type="button"
+                    class="period-tab"
+                    data-period="SI"
+                    title="Since Inception"
+                    role="tab"
+                    aria-selected="false"
+                >
+
+                    <span class="period-tab-code">
+                        S-I
+                    </span>
+
+                    <span class="period-tab-description">
+                        Since Inception
+                    </span>
+
+                </button>
+
+                </div>
+
                 </div>
 
 
@@ -404,29 +647,6 @@
                     class="performance-summary"
                     aria-label="Performance summary"
                 >
-
-
-                    <div class="summary-card">
-
-                        <div class="summary-card-label">
-                            Selected period
-                        </div>
-
-                        <div
-                            id="selected-period-label"
-                            class="summary-card-value"
-                        >
-                            D-D
-                        </div>
-
-                        <div
-                            id="selected-period-description"
-                            class="summary-card-meta"
-                        >
-                            Day over Day
-                        </div>
-
-                    </div>
 
 
                     <div class="summary-card">
@@ -715,119 +935,6 @@
 
                 </div>
 
-
-                <!-- PERFORMANCE METHODOLOGY -->
-
-                <details
-                    id="performance-methodology"
-                    class="methodology"
-                >
-
-                    <summary>
-                        <span>
-                            Performance methodology
-                        </span>
-
-                        <span
-                            class="methodology-chevron"
-                            aria-hidden="true"
-                        >
-                            +
-                        </span>
-
-                    </summary>
-
-
-                    <div class="methodology-content">
-
-                        <div class="methodology-grid">
-
-
-                            <div class="methodology-item">
-
-                                <span class="methodology-label">
-                                    Universe
-                                </span>
-
-                                <span class="methodology-value">
-                                    All Prudential Singapore funds
-                                </span>
-
-                            </div>
-
-
-                            <div class="methodology-item">
-
-                                <span class="methodology-label">
-                                    Price
-                                </span>
-
-                                <span class="methodology-value">
-                                    Actual BID observations
-                                </span>
-
-                            </div>
-
-
-                            <div class="methodology-item">
-
-                                <span class="methodology-label">
-                                    Calculation
-                                </span>
-
-                                <span class="methodology-value">
-                                    ((Current BID − Historical BID)
-                                    ÷ Historical BID) × 100
-                                </span>
-
-                            </div>
-
-
-                            <div class="methodology-item">
-
-                                <span class="methodology-label">
-                                    Missing dates
-                                </span>
-
-                                <span class="methodology-value">
-                                    Latest actual observation on or
-                                    before the comparison target
-                                </span>
-
-                            </div>
-
-
-                            <div class="methodology-item">
-
-                                <span class="methodology-label">
-                                    Forward fill
-                                </span>
-
-                                <span class="methodology-value">
-                                    Not used
-                                </span>
-
-                            </div>
-
-
-                            <div class="methodology-item">
-
-                                <span class="methodology-label">
-                                    Ranking
-                                </span>
-
-                                <span class="methodology-value">
-                                    Highest and lowest valid returns
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </details>
-
             </section>
 
 
@@ -953,6 +1060,68 @@
 
                         <div class="news-filter-group">
 
+                            <label
+                                class="filter-control"
+                            >
+
+                                <span>
+                                    Asset class
+                                </span>
+
+                                <select
+                                    id="market-news-asset"
+                                >
+
+                                    <option value="ALL">
+                                        All asset classes
+                                    </option>
+
+                                </select>
+
+                            </label>
+
+
+                            <label
+                                class="filter-control"
+                            >
+
+                                <span>
+                                    Geography
+                                </span>
+
+                                <select
+                                    id="market-news-geography"
+                                >
+
+                                    <option value="ALL">
+                                        All geographies
+                                    </option>
+
+                                </select>
+
+                            </label>
+
+
+                            <label
+                                class="filter-control"
+                            >
+
+                                <span>
+                                    Sector
+                                </span>
+
+                                <select
+                                    id="market-news-sector"
+                                >
+
+                                    <option value="ALL">
+                                        All sectors
+                                    </option>
+
+                                </select>
+
+                            </label>
+
 
                             <label
                                 class="filter-control"
@@ -1036,13 +1205,239 @@
                                         Negative
                                     </option>
 
+                                    <option value="MIXED">
+                                        Mixed
+                                    </option>
+
                                 </select>
 
                             </label>
 
+
+                            <label
+                                class="filter-control filter-control-fund"
+                            >
+
+                                <span>
+                                    Fund
+                                </span>
+
+                                <select
+                                    id="market-news-fund"
+                                >
+
+                                    <option value="ALL">
+                                        All funds
+                                    </option>
+
+                                </select>
+
+                            </label>
+
+
                         </div>
 
                     </div>
+
+
+                    <!-- NEWS OVERVIEW (charts) -->
+
+                    <details
+                        id="news-overview"
+                        class="news-overview"
+                        open
+                    >
+
+                        <summary class="news-overview-summary">
+
+                            <span class="news-overview-title">
+                                News overview
+                            </span>
+
+                            <span class="news-overview-hint">
+                                Charts follow the filters above
+                            </span>
+
+                            <span
+                                class="news-overview-chevron"
+                                aria-hidden="true"
+                            >
+                                ▾
+                            </span>
+
+                        </summary>
+
+
+                        <section
+                            class="news-analytics"
+                            aria-label="Market news analytics"
+                        >
+
+
+                            <div class="analytics-card">
+
+                                <div class="card-header">
+
+                                    <div>
+
+                                        <div class="card-eyebrow">
+                                            SENTIMENT
+                                        </div>
+
+                                        <h2 class="card-title">
+                                            News Sentiment
+                                        </h2>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="chart-container">
+                                    <canvas
+                                        id="news-sentiment-chart"
+                                    ></canvas>
+                                </div>
+
+                            </div>
+
+
+                            <div class="analytics-card">
+
+                                <div class="card-header">
+
+                                    <div>
+
+                                        <div class="card-eyebrow">
+                                            CATEGORIES
+                                        </div>
+
+                                        <h2 class="card-title">
+                                            News Categories
+                                        </h2>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="chart-container">
+                                    <canvas
+                                        id="news-category-chart"
+                                    ></canvas>
+                                </div>
+
+                            </div>
+
+
+                            <div class="analytics-card">
+
+                                <div class="card-header">
+
+                                    <div>
+
+                                        <div class="card-eyebrow">
+                                            IMPORTANCE
+                                        </div>
+
+                                        <h2 class="card-title">
+                                            Importance
+                                        </h2>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="chart-container">
+                                    <canvas
+                                        id="news-importance-chart"
+                                    ></canvas>
+                                </div>
+
+                            </div>
+
+
+                            <div class="analytics-card">
+
+                                <div class="card-header">
+
+                                    <div>
+
+                                        <div class="card-eyebrow">
+                                            ASSET CLASSES
+                                        </div>
+
+                                        <h2 class="card-title">
+                                            Asset Class Mentions
+                                        </h2>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="chart-container">
+                                    <canvas
+                                        id="news-asset-class-chart"
+                                    ></canvas>
+                                </div>
+
+                            </div>
+
+
+                            <div class="analytics-card">
+
+                                <div class="card-header">
+
+                                    <div>
+
+                                        <div class="card-eyebrow">
+                                            GEOGRAPHY
+                                        </div>
+
+                                        <h2 class="card-title">
+                                            Geographic Mentions
+                                        </h2>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="chart-container">
+                                    <canvas
+                                        id="news-geography-chart"
+                                    ></canvas>
+                                </div>
+
+                            </div>
+
+
+                            <div class="analytics-card">
+
+                                <div class="card-header">
+
+                                    <div>
+
+                                        <div class="card-eyebrow">
+                                            SECTORS
+                                        </div>
+
+                                        <h2 class="card-title">
+                                            Sector Mentions
+                                        </h2>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="chart-container">
+                                    <canvas
+                                        id="news-sector-chart"
+                                    ></canvas>
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </details>
 
 
                     <!-- NEWS SUMMARY -->
@@ -1054,6 +1449,15 @@
                         >
                             —
                         </span>
+
+                        <button
+                            id="market-news-clear"
+                            type="button"
+                            class="news-clear-filters"
+                            hidden
+                        >
+                            Clear filters
+                        </button>
 
                     </div>
 
@@ -1074,177 +1478,6 @@
                     </div>
 
 
-                    <!-- NEWS CHARTS -->
-
-                    <section
-                        class="news-analytics"
-                        aria-label="Market news analytics"
-                    >
-
-
-                        <div class="analytics-card">
-
-                            <div class="card-header">
-
-                                <div>
-
-                                    <div class="card-eyebrow">
-                                        SENTIMENT
-                                    </div>
-
-                                    <h2 class="card-title">
-                                        News Sentiment
-                                    </h2>
-
-                                </div>
-
-                            </div>
-
-                            <div class="chart-container">
-                                <canvas
-                                    id="news-sentiment-chart"
-                                ></canvas>
-                            </div>
-
-                        </div>
-
-
-                        <div class="analytics-card">
-
-                            <div class="card-header">
-
-                                <div>
-
-                                    <div class="card-eyebrow">
-                                        CATEGORIES
-                                    </div>
-
-                                    <h2 class="card-title">
-                                        News Categories
-                                    </h2>
-
-                                </div>
-
-                            </div>
-
-                            <div class="chart-container">
-                                <canvas
-                                    id="news-category-chart"
-                                ></canvas>
-                            </div>
-
-                        </div>
-
-
-                        <div class="analytics-card">
-
-                            <div class="card-header">
-
-                                <div>
-
-                                    <div class="card-eyebrow">
-                                        IMPORTANCE
-                                    </div>
-
-                                    <h2 class="card-title">
-                                        Importance
-                                    </h2>
-
-                                </div>
-
-                            </div>
-
-                            <div class="chart-container">
-                                <canvas
-                                    id="news-importance-chart"
-                                ></canvas>
-                            </div>
-
-                        </div>
-
-
-                        <div class="analytics-card">
-
-                            <div class="card-header">
-
-                                <div>
-
-                                    <div class="card-eyebrow">
-                                        ASSET CLASSES
-                                    </div>
-
-                                    <h2 class="card-title">
-                                        Asset Class Mentions
-                                    </h2>
-
-                                </div>
-
-                            </div>
-
-                            <div class="chart-container">
-                                <canvas
-                                    id="news-asset-class-chart"
-                                ></canvas>
-                            </div>
-
-                        </div>
-
-
-                        <div class="analytics-card">
-
-                            <div class="card-header">
-
-                                <div>
-
-                                    <div class="card-eyebrow">
-                                        GEOGRAPHY
-                                    </div>
-
-                                    <h2 class="card-title">
-                                        Geographic Mentions
-                                    </h2>
-
-                                </div>
-
-                            </div>
-
-                            <div class="chart-container">
-                                <canvas
-                                    id="news-geography-chart"
-                                ></canvas>
-                            </div>
-
-                        </div>
-
-
-                        <div class="analytics-card">
-
-                            <div class="card-header">
-
-                                <div>
-
-                                    <div class="card-eyebrow">
-                                        SECTORS
-                                    </div>
-
-                                    <h2 class="card-title">
-                                        Sector Mentions
-                                    </h2>
-
-                                </div>
-
-                            </div>
-
-                            <div class="chart-container">
-                                <canvas
-                                    id="news-sector-chart"
-                                ></canvas>
-                            </div>
-
-                        </div>
-
-                    </section>
-
                 </div>
 
 
@@ -1259,31 +1492,71 @@
                     hidden
                 >
 
-                    <div class="placeholder-panel">
+                    <div class="history-toolbar">
 
-                        <div class="placeholder-icon">
-                            ◫
+                        <div class="history-month-nav">
+
+                            <button
+                                type="button"
+                                class="history-nav-button"
+                                data-history-month="-1"
+                                aria-label="Previous month"
+                                title="Previous month"
+                            >‹</button>
+
+                            <span
+                                id="history-month-label"
+                                class="history-month-label"
+                            >
+                                —
+                            </span>
+
+                            <button
+                                type="button"
+                                class="history-nav-button"
+                                data-history-month="1"
+                                aria-label="Next month"
+                                title="Next month"
+                            >›</button>
+
                         </div>
 
-                        <h2>
-                            Historical Market News
-                        </h2>
 
-                        <p>
-                            Historical AI-analyzed news is stored
-                            by year and month in the repository.
-                        </p>
+                        <label class="filter-control filter-control-fund">
 
-                        <p class="placeholder-detail">
-                            History selector integration will be
-                            connected to the
-                            <code>
-                                analysis/history/YYYY/MM/
-                            </code>
-                            archive.
-                        </p>
+                            <span>
+                                Fund
+                            </span>
+
+                            <select id="history-fund">
+                                <option value="ALL">
+                                    All funds
+                                </option>
+                            </select>
+
+                        </label>
 
                     </div>
+
+
+                    <div
+                        id="history-days"
+                        class="history-days"
+                        role="tablist"
+                        aria-label="Archived dates"
+                    ></div>
+
+
+                    <div
+                        id="history-status"
+                        class="news-summary-bar"
+                    ></div>
+
+
+                    <div
+                        id="history-articles"
+                        class="news-list"
+                    ></div>
 
                 </div>
 
@@ -1419,6 +1692,8 @@
 
 
         </main>
+
+        </div>
 
 
         <!-- ==================================================
