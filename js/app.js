@@ -2076,9 +2076,7 @@ function renderMarketNews() {
 
 function renderNewsCharts() {
 
-    if (
-        !state.news.state
-    ) {
+    if (!state.news.state) {
 
         return;
 
@@ -2089,43 +2087,50 @@ function renderNewsCharts() {
         getFilteredNews();
 
 
+    const statistics =
+        getNewsStatistics(
+            articles
+        );
+
+
     try {
 
         createNewsSentimentChart(
             "news-sentiment-chart",
-            articles
+            statistics
         );
 
         createNewsCategoryChart(
             "news-category-chart",
-            articles
+            statistics
         );
 
         createNewsImportanceChart(
             "news-importance-chart",
-            articles
+            statistics
         );
 
         createNewsAssetClassChart(
             "news-asset-class-chart",
-            articles
+            statistics
         );
 
         createNewsGeographyChart(
             "news-geography-chart",
-            articles
+            statistics
         );
 
         createNewsSectorChart(
             "news-sector-chart",
-            articles
+            statistics
         );
 
     } catch (error) {
 
         /*
-         * Charts are an enhancement.
-         * A chart failure must not break the dashboard.
+         * Charts are optional.
+         * A chart failure must never prevent
+         * Market News articles from rendering.
          */
         console.warn(
             "VGrat FMS: chart rendering failed.",
@@ -2135,7 +2140,6 @@ function renderNewsCharts() {
     }
 
 }
-
 
 function initializeNewsTabs() {
 
