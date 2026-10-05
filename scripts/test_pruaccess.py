@@ -892,46 +892,62 @@ def extract_dividend_unit_from_text(
     if not windows:
         return None, None
 
-    for number in number_patterns(latest):
+    try:
+        target = float(latest)
+    except ValueError:
+        return None, None
 
-        escaped = re.escape(number)
+    # Any number in the dividend text that equals the latest
+    # payout (so "0.55", "0.550" and ".55" all match), followed
+    # by a unit - or preceded by a currency.
+    after = re.compile(
+        rf"(?<![\d.])(?P<number>\d*\.?\d+)\s*{DIVIDEND_UNIT_AFTER}",
+        re.IGNORECASE,
+    )
 
-        after = re.compile(
-            rf"(?<![\d.]){escaped}(?![\d])\s*{DIVIDEND_UNIT_AFTER}",
-            re.IGNORECASE,
-        )
+    before = re.compile(
+        rf"{DIVIDEND_UNIT_BEFORE}(?P<number>\d*\.?\d+)(?![\d])",
+        re.IGNORECASE,
+    )
 
-        before = re.compile(
-            rf"{DIVIDEND_UNIT_BEFORE}{escaped}(?![\d])",
-            re.IGNORECASE,
-        )
+    for window in windows:
 
-        for window in windows:
+        for pattern in (after, before):
 
-            match = after.search(window) or before.search(window)
+            for match in pattern.finditer(window):
 
-            if not match:
-                continue
+                try:
+                    value = float(match.group("number"))
+                except ValueError:
+                    continue
 
-            unit = clean_text(
-                match.group("after")
-                if match.groupdict().get("after")
-                else match.group("before")
-            )
+                if abs(value - target) > 1e-9:
+                    continue
 
-            start = max(
-                0,
-                match.start() - 60,
-            )
+                unit = clean_text(
+                    match.group("after")
+                    if match.groupdict().get("after")
+                    else match.group("before")
+                )
 
-            evidence = clean_text(
-                window[
-                    start:
-                    match.end() + 40
-                ]
-            )
+                # Store units consistently: "Cent Per Unit"
+                # -> "cent per unit"; currencies keep case.
+                if not re.fullmatch(r"S\$|US\$|\$|SGD|USD", unit, re.IGNORECASE):
+                    unit = unit.lower()
 
-            return unit, evidence
+                start = max(
+                    0,
+                    match.start() - 60,
+                )
+
+                evidence = clean_text(
+                    window[
+                        start:
+                        match.end() + 40
+                    ]
+                )
+
+                return unit, evidence
 
     return None, None
 
