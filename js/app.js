@@ -188,6 +188,7 @@ let fundLinker = null;
 const STORAGE_KEYS = {
 
     theme: "vgrat-fms-theme",
+    accent: "vgrat-fms-accent",
 
     view: "vgrat-fms-view",
 
@@ -657,6 +658,97 @@ function initializeSettings() {
 
         }
     );
+
+
+    qsa("[data-accent-option]").forEach(
+        option => {
+
+            option.addEventListener(
+                "click",
+                () => applyAccent(
+                    option.dataset.accentOption,
+                    { save: true }
+                )
+            );
+
+        }
+    );
+
+    applyAccent(
+        getStoredValue(STORAGE_KEYS.accent, "steel")
+    );
+
+}
+
+
+/* ============================================================
+   COLOUR PALETTE
+   ============================================================ */
+
+const ACCENT_PALETTES = [
+    "steel",
+    "ocean",
+    "gold",
+    "teal",
+    "violet",
+    "rose"
+];
+
+function applyAccent(accent, { save = false } = {}) {
+
+    const name =
+        ACCENT_PALETTES.includes(accent)
+            ? accent
+            : "steel";
+
+    document.documentElement.dataset.accent = name;
+
+    qsa("[data-accent-option]").forEach(
+        option => {
+
+            const active =
+                option.dataset.accentOption === name;
+
+            option.classList.toggle("active", active);
+
+            option.setAttribute("aria-pressed", String(active));
+
+        }
+    );
+
+    if (!save) {
+
+        return;
+
+    }
+
+    setStoredValue(
+        STORAGE_KEYS.accent,
+        name
+    );
+
+    // Charts read colours once; redraw them with the new accent.
+    requestAnimationFrame(() => {
+
+        try {
+
+            updateChartsForTheme();
+
+            refreshFundCompare();
+
+            refreshFundExplorerChart();
+
+            if (state.currentView === "news") {
+                renderNewsCharts();
+            }
+
+        } catch {
+
+            // Charts are optional.
+
+        }
+
+    });
 
 }
 
@@ -3380,84 +3472,4 @@ async function initializeApplication() {
     initializeSettings();
 
     try {
-        initializeUpdateSchedule();
-    } catch (error) {
-        console.warn("VGrat FMS: update schedule failed.", error);
-    }
-
-    initializeNavigation();
-
-    initializePerformanceTabs();
-
-    initializeResizeHandling();
-
-    exposeDiagnostics();
-
-    await loadApplication();
-
-}
-
-
-/* ============================================================
-   DOM READY
-   ============================================================ */
-
-if (
-    document.readyState ===
-    "loading"
-) {
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        () => {
-
-            initializeApplication()
-                .catch(
-                    error => {
-
-                        console.error(
-                            "VGrat FMS startup error:",
-                            error
-                        );
-
-                        setErrorState(
-                            error instanceof Error
-                                ? error.message
-                                : String(error)
-                        );
-
-                    }
-                );
-
-        },
-        {
-            once: true
-        }
-    );
-
-} else {
-
-    initializeApplication()
-        .catch(
-            error => {
-
-                console.error(
-                    "VGrat FMS startup error:",
-                    error
-                );
-
-                setErrorState(
-                    error instanceof Error
-                        ? error.message
-                        : String(error)
-                );
-
-            }
-        );
-
-}
-
-
-/* ============================================================
-   END OF FILE
-   ============================================================ */
+     
