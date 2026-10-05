@@ -31,6 +31,71 @@ function getThemeColors() {
     };
 }
 
+/* ------------------------------------------------------------
+ * COLOUR CODING FOR NEWS CHARTS
+ *
+ * - Importance uses a fixed status-style scale
+ *   (High = red, Medium = amber, Low = grey).
+ * - Category uses fixed slots for its known vocabulary.
+ * - Asset class / geography / sector: each name keeps the
+ *   colour it was first given (colour follows the item, not
+ *   its rank), using the validated 8-colour series palette.
+ *   A 9th+ name in the same chart falls back to grey.
+ * ------------------------------------------------------------ */
+
+const SERIES_SLOTS = 8;
+
+const FIXED_COLOR_SLOTS = {
+    Category: {
+        MARKET: 0,
+        ECONOMIC: 1,
+        TECHNOLOGY: 2,
+        GEOPOLITICAL: 3
+    }
+};
+
+const colorAssignments = new Map();
+
+function seriesColor(slot) {
+    return getCssVariable(`--series-${slot + 1}`, "#3987e5");
+}
+
+function colorForItem(chartKey, name) {
+    const fixed = FIXED_COLOR_SLOTS[chartKey];
+
+    if (fixed && Object.prototype.hasOwnProperty.call(fixed, name)) {
+        return seriesColor(fixed[name]);
+    }
+
+    if (!colorAssignments.has(chartKey)) {
+        colorAssignments.set(chartKey, new Map());
+    }
+
+    const assigned = colorAssignments.get(chartKey);
+
+    if (!assigned.has(name)) {
+        const fixedCount = fixed ? Object.keys(fixed).length : 0;
+        const slot = fixedCount + assigned.size;
+
+        assigned.set(name, slot < SERIES_SLOTS ? slot : null);
+    }
+
+    const slot = assigned.get(name);
+
+    return slot === null
+        ? getCssVariable("--text-faint", "#566572")
+        : seriesColor(slot);
+}
+
+function importanceColor(name, colors) {
+    const key = String(name).toUpperCase();
+
+    if (key === "HIGH") return colors.negative;
+    if (key === "MEDIUM") return getCssVariable("--series-4", "#c98500");
+
+    return colors.muted;
+}
+
 function getCanvas(canvasId) {
     return document.getElementById(canvasId);
 }
@@ -209,50 +274,84 @@ function createNewsSentimentChart(
 
     const colors = getThemeColors();
 
+    /*
+     * getNewsStatistics() returns flat lower-case counters
+     * (positive / neutral / negative / mixed).
+     */
     const labels = [
         "Positive",
         "Neutral",
+        "Mixed",
         "Negative"
     ];
 
     const values = [
-        statistics.sentiment?.POSITIVE ?? 0,
-        statistics.sentiment?.NEUTRAL ?? 0,
-        statistics.sentiment?.NEGATIVE ?? 0
+        statistics.positive ?? 0,
+        statistics.neutral ?? 0,
+        statistics.mixed ?? 0,
+        statistics.negative ?? 0
     ];
 
+    if (!values.some(value => value > 0)) {
+        destroyChart(canvasId);
+        return null;
+    }
+
+    /*
+     * Horizontal bar chart in a fixed order, matching the
+     * other news charts. Each bar keeps its sentiment colour;
+     * the axis labels name the bars, so no legend is needed.
+     */
+    const base = getBaseOptions();
+
     return createChart(canvasId, {
-        type: "doughnut",
+        type: "bar",
 
         data: {
             labels,
 
             datasets: [
                 {
+                    label: "Articles",
                     data: values,
 
                     backgroundColor: [
                         colors.positive,
-                        colors.accent,
+                        colors.muted,
+                        getCssVariable("--series-4", "#c98500"),
                         colors.negative
                     ],
 
-                    borderWidth: 0
+                    borderRadius: 4,
+                    maxBarThickness: 22
                 }
             ]
         },
 
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            ...base,
+
+            indexAxis: "y",
 
             plugins: {
-                legend: {
-                    position: "bottom",
+                ...base.plugins,
 
-                    labels: {
-                        color: colors.text,
-                        usePointStyle: true
+                legend: {
+                    display: false
+                }
+            },
+
+            scales: {
+                ...base.scales,
+
+                x: {
+                    ...base.scales.x,
+
+                    beginAtZero: true,
+
+                    ticks: {
+                        ...base.scales.x.ticks,
+                        precision: 0
                     }
                 }
             }
@@ -275,10 +374,23 @@ function createNewsImportanceChart(
     canvasId,
     statistics
 ) {
+    if (!statistics) {
+        destroyChart(canvasId);
+        return null;
+    }
+
+    /*
+     * Fixed High -> Medium -> Low order (not sorted by count).
+     */
     return createNewsDistributionChart(
         canvasId,
         "Importance",
-        statistics?.importance
+        {
+            High: statistics.high ?? 0,
+            Medium: statistics.medium ?? 0,
+            Low: statistics.low ?? 0
+        },
+        { keepOrder: true }
     );
 }
 
@@ -318,21 +430,31 @@ function createNewsSectorChart(
 function createNewsDistributionChart(
     canvasId,
     label,
-    source
+    source,
+    { keepOrder = false, limit = 8 } = {}
 ) {
     if (!source) {
         destroyChart(canvasId);
         return null;
     }
 
-    const entries = Array.isArray(source)
+    let entries = Array.isArray(source)
         ? source.map(item => [
             item.name ?? item.label ?? "Unknown",
             Number(item.value ?? item.count ?? 0)
         ])
         : Object.entries(source);
 
-    if (!entries.length) {
+    /*
+     * Largest first, top N only, so long lists stay readable.
+     */
+    if (!keepOrder) {
+        entries = entries
+            .sort((a, b) => Number(b[1]) - Number(a[1]))
+            .slice(0, limit);
+    }
+
+    if (!entries.length || !entries.some(([, value]) => Number(value) > 0)) {
         destroyChart(canvasId);
         return null;
     }
@@ -349,8 +471,13 @@ function createNewsDistributionChart(
                 {
                     label,
                     data: entries.map(([, value]) => Number(value) || 0),
-                    backgroundColor: colors.accent,
-                    borderRadius: 4
+                    backgroundColor: entries.map(([key]) =>
+                        label === "Importance"
+                            ? importanceColor(key, colors)
+                            : colorForItem(label, key)
+                    ),
+                    borderRadius: 4,
+                    maxBarThickness: 22
                 }
             ]
         },
@@ -358,7 +485,16 @@ function createNewsDistributionChart(
         options: {
             ...getBaseOptions(),
 
-            indexAxis: "y"
+            indexAxis: "y",
+
+            plugins: {
+                ...getBaseOptions().plugins,
+
+                /* Bars are named on the axis; no legend needed. */
+                legend: {
+                    display: false
+                }
+            }
         }
     });
 }

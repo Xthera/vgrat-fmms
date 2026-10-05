@@ -41,8 +41,14 @@ const DATA_PATHS = {
 
 async function loadJson(path) {
 
+    /*
+     * "no-cache" still checks the server for a newer file on
+     * every visit, but lets the browser reuse its cached copy
+     * when nothing has changed (HTTP 304). "no-store" forced
+     * the full ~6 MB bid_history.json to download every time.
+     */
     const response = await fetch(path, {
-        cache: "no-store"
+        cache: "no-cache"
     });
 
 

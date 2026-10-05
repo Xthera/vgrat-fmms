@@ -55,6 +55,14 @@ const PERFORMANCE_PERIODS = {
         description: "Year over Year",
         type: "years",
         amount: 1
+    },
+
+    SI: {
+        key: "SI",
+        label: "S-I",
+        description: "Since Inception",
+        type: "inception",
+        amount: 0
     }
 
 };
@@ -415,9 +423,16 @@ function buildBidHistoryIndex(
                         a,
                         b
                     ) =>
-                        a.date.localeCompare(
-                            b.date
-                        )
+                        /*
+                         * ISO YYYY-MM-DD strings sort correctly
+                         * with a plain comparison, which is much
+                         * faster than localeCompare().
+                         */
+                        a.date < b.date
+                            ? -1
+                            : a.date > b.date
+                                ? 1
+                                : 0
                 );
 
 
@@ -619,28 +634,47 @@ function calculateFundPerformance(
 
 
     /*
-     * Calculate the calendar comparison date.
+     * Since Inception compares against the fund's first
+     * BID on record. Every other period uses the latest
+     * actual BID on or before the calendar target date.
      */
-    const comparisonTarget =
-        subtractPeriod(
-            current.date,
-            period
-        );
+    let comparisonTarget;
+
+    let historical;
 
 
-    if (!comparisonTarget) {
-        return null;
+    if (
+        period.type === "inception"
+    ) {
+
+        historical =
+            observations[0];
+
+        comparisonTarget =
+            historical?.date ??
+            null;
+
+    } else {
+
+        comparisonTarget =
+            subtractPeriod(
+                current.date,
+                period
+            );
+
+
+        if (!comparisonTarget) {
+            return null;
+        }
+
+
+        historical =
+            findObservationOnOrBefore(
+                observations,
+                comparisonTarget
+            );
+
     }
-
-
-    /*
-     * Find the latest actual BID on or before the target.
-     */
-    const historical =
-        findObservationOnOrBefore(
-            observations,
-            comparisonTarget
-        );
 
 
     if (!historical) {
@@ -722,7 +756,8 @@ function calculatePerformance(
     funds,
     bidHistory,
     periodKey,
-    rankingLimit = 10
+    rankingLimit = 10,
+    prebuiltIndex = null
 ) {
 
     const period =
@@ -763,7 +798,12 @@ function calculatePerformance(
     }
 
 
+    /*
+     * Reuse a pre-built index when supplied so the full BID
+     * history is only parsed once for all four periods.
+     */
     const historyIndex =
+        prebuiltIndex ??
         buildBidHistoryIndex(
             bidHistory
         );
@@ -923,6 +963,17 @@ function calculatePerformance(
             : null;
 
 
+    /*
+     * Every eligible fund, best to worst, for the
+     * full ranked list.
+     */
+    const all =
+        [...eligible]
+            .sort(
+                compareWinner
+            );
+
+
     return {
 
         key:
@@ -947,6 +998,8 @@ function calculatePerformance(
 
         losers,
 
+        all,
+
         asOfDate:
             latestDate,
 
@@ -962,43 +1015,40 @@ function calculatePerformance(
 function calculateAllPerformance(
     funds,
     bidHistory,
-    rankingLimit = 10
+    rankingLimit = 10,
+    prebuiltIndex = null
 ) {
 
-    return {
+    /*
+     * Build the BID history index once and share it across
+     * D-D, W-W, M-M and Y-Y (previously rebuilt 4 times).
+     */
+    const historyIndex =
+        prebuiltIndex ??
+        buildBidHistoryIndex(
+            bidHistory
+        );
 
-        DD:
+
+    const result = {};
+
+
+    for (
+        const key of Object.keys(PERFORMANCE_PERIODS)
+    ) {
+
+        result[key] =
             calculatePerformance(
                 funds,
                 bidHistory,
-                "DD",
-                rankingLimit
-            ),
+                key,
+                rankingLimit,
+                historyIndex
+            );
+    }
 
-        WW:
-            calculatePerformance(
-                funds,
-                bidHistory,
-                "WW",
-                rankingLimit
-            ),
 
-        MM:
-            calculatePerformance(
-                funds,
-                bidHistory,
-                "MM",
-                rankingLimit
-            ),
-
-        YY:
-            calculatePerformance(
-                funds,
-                bidHistory,
-                "YY",
-                rankingLimit
-            )
-    };
+    return result;
 }
 
 
@@ -1224,6 +1274,8 @@ export {
     calculatePerformance,
 
     calculateAllPerformance,
+
+    buildBidHistoryIndex,
 
     formatReturnPercent,
 

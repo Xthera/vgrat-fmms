@@ -19,11 +19,13 @@
    ============================================================ */
 
 import {
-    loadApplicationData
+    loadFundData,
+    loadMarketNews
 } from "./data-loader.js";
 
 import {
     calculateAllPerformance,
+    buildBidHistoryIndex,
     formatReturnPercent,
     formatBid,
     formatDisplayDate
@@ -48,6 +50,29 @@ import {
     updateChartsForTheme,
     destroyAllCharts
 } from "./charts.js";
+
+import {
+    createFundLinker
+} from "./news-fund-links.js";
+
+import {
+    renderNewsCard
+} from "./news-cards.js";
+
+import {
+    openNewsHistory,
+    refreshNewsHistory
+} from "./news-history.js";
+
+import {
+    initializeFundExplorer,
+    refreshFundExplorer
+} from "./fund-explorer.js";
+
+import {
+    initializeFundCompare,
+    refreshFundCompare
+} from "./fund-compare.js";
 
 
 /* ============================================================
@@ -94,7 +119,9 @@ const state = {
 
         MM: null,
 
-        YY: null
+        YY: null,
+
+        SI: null
 
     },
 
@@ -118,11 +145,26 @@ const state = {
 
         importance: "ALL",
 
-        sentiment: "ALL"
+        sentiment: "ALL",
+
+        fund: "ALL",
+
+        assetClass: "ALL",
+
+        geography: "ALL",
+
+        sector: "ALL"
 
     }
 
 };
+
+
+/*
+ * Links news articles to the funds they may affect.
+ * Built once fund data has loaded.
+ */
+let fundLinker = null;
 
 
 /* ============================================================
@@ -135,7 +177,9 @@ const STORAGE_KEYS = {
 
     view: "vgrat-fms-view",
 
-    performancePeriod: "vgrat-fms-performance-period"
+    performancePeriod: "vgrat-fms-performance-period",
+
+    navCollapsed: "vgrat-fms-nav-collapsed"
 
 };
 
@@ -161,7 +205,9 @@ const VALID_PERIODS = [
 
     "MM",
 
-    "YY"
+    "YY",
+
+    "SI"
 
 ];
 
@@ -336,6 +382,14 @@ function applyTheme(theme) {
 
             updateChartsForTheme();
 
+            refreshFundCompare();
+
+            refreshFundExplorer();
+
+            if (state.currentView === "news") {
+                renderNewsCharts();
+            }
+
         } catch {
 
             // Chart layer is optional.
@@ -380,6 +434,132 @@ function initializeThemeToggle() {
                 current === "dark"
                     ? "light"
                     : "dark"
+            );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   MENU TOGGLE
+   ============================================================ */
+
+function applyNavCollapsed(collapsed) {
+
+    const shell =
+        qs("#app");
+
+    const button =
+        qs("#nav-toggle");
+
+
+    if (shell) {
+
+        shell.classList.toggle(
+            "nav-collapsed",
+            collapsed
+        );
+
+    }
+
+
+    if (button) {
+
+        const label =
+            collapsed
+                ? "Expand menu"
+                : "Minimise menu";
+
+        button.setAttribute(
+            "aria-expanded",
+            String(!collapsed)
+        );
+
+        button.setAttribute(
+            "aria-label",
+            label
+        );
+
+        button.title =
+            label;
+
+    }
+
+
+    try {
+
+        localStorage.setItem(
+            STORAGE_KEYS.navCollapsed,
+            collapsed ? "1" : "0"
+        );
+
+    } catch {
+
+        // Ignore localStorage failures.
+
+    }
+
+
+    /*
+     * Charts resize to the new content width.
+     */
+    requestAnimationFrame(() => {
+
+        window.dispatchEvent(
+            new Event("resize")
+        );
+
+    });
+
+}
+
+
+function initializeNavToggle() {
+
+    let collapsed = false;
+
+
+    try {
+
+        collapsed =
+            localStorage.getItem(
+                STORAGE_KEYS.navCollapsed
+            ) === "1";
+
+    } catch {
+
+        collapsed = false;
+
+    }
+
+
+    applyNavCollapsed(collapsed);
+
+
+    const button =
+        qs("#nav-toggle");
+
+
+    if (!button) {
+
+        return;
+
+    }
+
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            const shell =
+                qs("#app");
+
+            applyNavCollapsed(
+                !shell?.classList.contains(
+                    "nav-collapsed"
+                )
             );
 
         }
@@ -970,13 +1150,25 @@ function buildPerformanceResults() {
 
             MM: null,
 
-            YY: null
+            YY: null,
+
+            SI: null
 
         };
 
         return;
 
     }
+
+
+    /*
+     * Build the BID history index once and share it with
+     * the performance tables and the fund comparison chart.
+     */
+    const historyIndex =
+        buildBidHistoryIndex(
+            state.data.bidHistory
+        );
 
 
     state.performance =
@@ -986,9 +1178,61 @@ function buildPerformanceResults() {
 
             state.data.bidHistory,
 
-            10
+            10,
+
+            historyIndex
 
         );
+
+
+    /*
+     * Default comparison: the strongest and weakest funds
+     * over the past year (used until the viewer picks
+     * their own funds).
+     */
+    const yearly =
+        state.performance.YY;
+
+
+    const defaultFundIds = [
+        yearly?.winners?.[0]?.fundIdentifier,
+        yearly?.losers?.[0]?.fundIdentifier
+    ].filter(Boolean);
+
+
+    try {
+
+        initializeFundExplorer({
+            funds: state.data.funds,
+            historyIndex
+        });
+
+    } catch (error) {
+
+        console.warn(
+            "VGrat FMS: fund explorer failed.",
+            error
+        );
+
+    }
+
+
+    try {
+
+        initializeFundCompare({
+            funds: state.data.funds,
+            historyIndex,
+            defaultFundIds
+        });
+
+    } catch (error) {
+
+        console.warn(
+            "VGrat FMS: fund comparison chart failed.",
+            error
+        );
+
+    }
 
 }
 
@@ -1041,6 +1285,11 @@ function renderPerformanceSummary(
         setText(
             "#performance-as-of",
             "Latest BID: —"
+        );
+
+        setText(
+            "#latest-valuation-date",
+            "—"
         );
 
         setText(
@@ -1118,10 +1367,20 @@ function renderPerformanceSummary(
 
 
     setText(
+        "#latest-valuation-date",
+        formatDisplayDate(
+            performance.asOfDate
+        )
+    );
+
+
+    setText(
         "#performance-target-date",
-        `Comparison target: ${formatDisplayDate(
-            performance.targetDate
-        )}`
+        performance.type === "inception"
+            ? "Compared with each fund's first BID on record"
+            : `Comparison target: ${formatDisplayDate(
+                performance.targetDate
+            )}`
     );
 
 
@@ -1245,12 +1504,6 @@ function renderPerformanceTable(
                         : "return-negative";
 
 
-                const sign =
-                    returnValue > 0
-                        ? "+"
-                        : "";
-
-
                 const fundName =
                     escapeHtml(
                         row.fundName
@@ -1311,7 +1564,7 @@ function renderPerformanceTable(
                         <td
                             class="return-cell ${returnClass}"
                         >
-                            ${sign}${formatReturnPercent(
+                            ${formatReturnPercent(
                                 returnValue
                             )}
                         </td>
@@ -1392,7 +1645,6 @@ function renderSelectedPerformance() {
     renderPerformanceTables(
         performance
     );
-
 }
 
 
@@ -1409,37 +1661,34 @@ function initializePerformance() {
    MARKET NEWS
    ============================================================ */
 
-function  {
-
-    const analyses =
-        state.data.marketNews?.analyses ??
-        [];
+let newsControlsBound = false;
 
 
-    state.news.state =
-        createNewsState(
-            analyses
-        );
+function initializeMarketNews() {
+
+    /*
+     * Bind filter and tab listeners only once, even if
+     * the application data is reloaded.
+     */
+    if (!newsControlsBound) {
+
+        initializeNewsFilters();
+
+        initializeNewsTabs();
+
+        newsControlsBound = true;
+
+    }
 
 
-    state.news.initialized =
-        true;
+    /*
+     * createNewsState() expects the full market-news
+     * object (with .analyses), which initializeNewsState()
+     * provides.
+     */
+    initializeNewsState();
 
-
-    state.news.search = "";
-
-    state.news.category = "ALL";
-
-    state.news.importance = "ALL";
-
-    state.news.sentiment = "ALL";
-
-
-    renderNewsFilterOptions();
-
-    renderNewsSummary();
-
-    renderMarketNews();
+    renderNewsMetadata();
 
 }
 
@@ -1524,6 +1773,211 @@ function renderNewsFilterOptions() {
 
 }
 
+/*
+ * Asset class / geography / sector options, most frequent
+ * first, with the article count in brackets.
+ */
+function renderNewsTagOptions() {
+
+    const analyses =
+        state.news?.state?.analyses ??
+        [];
+
+
+    const fill = (selector, field, allLabel, current) => {
+
+        const select =
+            qs(selector);
+
+
+        if (!select) {
+
+            return "ALL";
+
+        }
+
+
+        const counts =
+            new Map();
+
+
+        for (const article of analyses) {
+
+            for (const value of new Set(article[field] ?? [])) {
+
+                counts.set(
+                    value,
+                    (counts.get(value) ?? 0) + 1
+                );
+
+            }
+
+        }
+
+
+        const sorted =
+            [...counts.entries()]
+                .sort(
+                    (a, b) =>
+                        b[1] - a[1] ||
+                        String(a[0]).localeCompare(String(b[0]))
+                );
+
+
+        select.innerHTML =
+            `<option value="ALL">${escapeHtml(allLabel)}</option>` +
+            sorted
+                .map(
+                    ([value, count]) =>
+                        `<option value="${escapeAttribute(value)}">${escapeHtml(value)} (${count})</option>`
+                )
+                .join("");
+
+
+        const keep =
+            current !== "ALL" &&
+            counts.has(current);
+
+
+        select.value =
+            keep
+                ? current
+                : "ALL";
+
+
+        return select.value;
+
+    };
+
+
+    state.news.assetClass =
+        fill("#market-news-asset", "assetClasses", "All asset classes", state.news.assetClass);
+
+    state.news.geography =
+        fill("#market-news-geography", "geographies", "All geographies", state.news.geography);
+
+    state.news.sector =
+        fill("#market-news-sector", "sectors", "All sectors", state.news.sector);
+
+
+    renderFilterIndicators();
+
+}
+
+
+/*
+ * Highlight active filters and show "Clear filters".
+ */
+function renderFilterIndicators() {
+
+    const selectors = [
+        "#market-news-category",
+        "#market-news-importance",
+        "#market-news-sentiment",
+        "#market-news-asset",
+        "#market-news-geography",
+        "#market-news-sector",
+        "#market-news-fund"
+    ];
+
+
+    let active =
+        Boolean(
+            qs("#market-news-search")
+                ?.value
+                ?.trim()
+        );
+
+
+    for (const selector of selectors) {
+
+        const select =
+            qs(selector);
+
+
+        if (!select) {
+
+            continue;
+
+        }
+
+
+        const filtered =
+            select.value !== "ALL";
+
+
+        select.classList.toggle(
+            "is-filtered",
+            filtered
+        );
+
+
+        active =
+            active ||
+            filtered;
+
+    }
+
+
+    const clear =
+        qs("#market-news-clear");
+
+
+    if (clear) {
+
+        clear.hidden =
+            !active;
+
+    }
+
+}
+
+
+function clearNewsFilters() {
+
+    const search =
+        qs("#market-news-search");
+
+
+    if (search) {
+
+        search.value =
+            "";
+
+    }
+
+
+    [
+        "#market-news-category",
+        "#market-news-importance",
+        "#market-news-sentiment",
+        "#market-news-asset",
+        "#market-news-geography",
+        "#market-news-sector",
+        "#market-news-fund"
+    ].forEach(
+        selector => {
+
+            const select =
+                qs(selector);
+
+
+            if (select) {
+
+                select.value =
+                    "ALL";
+
+            }
+
+        }
+    );
+
+
+    updateNewsFilters();
+
+}
+
+
 function updateNewsFilters() {
 
     state.news.search =
@@ -1550,6 +2004,32 @@ function updateNewsFilters() {
             ?.value
             ?? "ALL";
 
+
+    state.news.fund =
+        qs("#market-news-fund")
+            ?.value
+            ?? "ALL";
+
+
+    state.news.assetClass =
+        qs("#market-news-asset")
+            ?.value
+            ?? "ALL";
+
+
+    state.news.geography =
+        qs("#market-news-geography")
+            ?.value
+            ?? "ALL";
+
+
+    state.news.sector =
+        qs("#market-news-sector")
+            ?.value
+            ?? "ALL";
+
+
+    renderFilterIndicators();
 
     renderNewsSummary();
 
@@ -1615,6 +2095,31 @@ function initializeNewsFilters() {
 
     }
 
+
+    [
+        "#market-news-fund",
+        "#market-news-asset",
+        "#market-news-geography",
+        "#market-news-sector"
+    ].forEach(
+        selector => {
+
+            qs(selector)
+                ?.addEventListener(
+                    "change",
+                    updateNewsFilters
+                );
+
+        }
+    );
+
+
+    qs("#market-news-clear")
+        ?.addEventListener(
+            "click",
+            clearNewsFilters
+        );
+
 }
 
 
@@ -1647,8 +2152,44 @@ function getFilteredNews() {
         state.news.sentiment ?? "ALL";
 
 
-    return getVisibleNews(
-        state.news.state
+    const visible =
+        getVisibleNews(
+            state.news.state
+        );
+
+
+    const matchesTag = (values, wanted) =>
+        wanted === "ALL" ||
+        (Array.isArray(values) && values.includes(wanted));
+
+
+    const tagged =
+        visible.filter(
+            article =>
+                matchesTag(article.assetClasses, state.news.assetClass) &&
+                matchesTag(article.geographies, state.news.geography) &&
+                matchesTag(article.sectors, state.news.sector)
+        );
+
+
+    if (
+        state.news.fund === "ALL" ||
+        !fundLinker
+    ) {
+
+        return tagged;
+
+    }
+
+
+    return tagged.filter(
+        article =>
+            fundLinker
+                .linkArticle(article)
+                .some(
+                    link =>
+                        link.fundId === state.news.fund
+                )
     );
 
 }
@@ -1679,7 +2220,11 @@ function renderNewsSummary() {
         state.news.search ||
         state.news.category !== "ALL" ||
         state.news.importance !== "ALL" ||
-        state.news.sentiment !== "ALL"
+        state.news.sentiment !== "ALL" ||
+        state.news.fund !== "ALL" ||
+        state.news.assetClass !== "ALL" ||
+        state.news.geography !== "ALL" ||
+        state.news.sector !== "ALL"
     ) {
 
         count.textContent =
@@ -1691,314 +2236,6 @@ function renderNewsSummary() {
             `${visible.length} analyzed articles`;
 
     }
-
-}
-
-
-function getImportanceClass(
-    importance
-) {
-
-    const normalized =
-        String(
-            importance ?? ""
-        ).toUpperCase();
-
-
-    if (normalized === "HIGH") {
-
-        return "news-importance-high";
-
-    }
-
-
-    if (normalized === "LOW") {
-
-        return "news-importance-low";
-
-    }
-
-
-    return "news-importance-medium";
-
-}
-
-
-function getSentimentClass(
-    sentiment
-) {
-
-    const normalized =
-        String(
-            sentiment ?? ""
-        ).toUpperCase();
-
-
-    if (
-        normalized === "POSITIVE"
-    ) {
-
-        return "news-sentiment-positive";
-
-    }
-
-
-    if (
-        normalized === "NEGATIVE"
-    ) {
-
-        return "news-sentiment-negative";
-
-    }
-
-
-    return "news-sentiment-neutral";
-
-}
-
-
-function renderTagList(
-    values,
-    className = ""
-) {
-
-    if (
-        !Array.isArray(values) ||
-        values.length === 0
-    ) {
-
-        return "";
-
-    }
-
-
-    return `
-
-        <div class="news-tags ${className}">
-
-            ${values.map(
-                value => `
-
-                    <span class="news-tag">
-                        ${escapeHtml(value)}
-                    </span>
-
-                `
-            ).join("")}
-
-        </div>
-
-    `;
-
-}
-
-
-function renderNewsCard(
-    article
-) {
-
-    const title =
-        escapeHtml(
-            article.title ??
-            "Untitled article"
-        );
-
-
-    const summary =
-        escapeHtml(
-            article.summary ??
-            ""
-        );
-
-
-    const investorImpact =
-        escapeHtml(
-            article.investorImpact ??
-            ""
-        );
-
-
-    const source =
-        escapeHtml(
-            article.source ??
-            "Unknown source"
-        );
-
-
-    const category =
-        escapeHtml(
-            article.category ??
-            "MARKET"
-        );
-
-
-    const importance =
-        escapeHtml(
-            article.importance ??
-            "MEDIUM"
-        );
-
-
-    const sentiment =
-        escapeHtml(
-            article.sentiment ??
-            "NEUTRAL"
-        );
-
-
-    const date =
-        formatNewsDate(
-            article.publishedAtSgt
-        );
-
-
-    const url =
-        article.url ??
-        "#";
-
-
-    const assetClasses =
-        Array.isArray(
-            article.assetClasses
-        )
-            ? article.assetClasses
-            : [];
-
-
-    const geographies =
-        Array.isArray(
-            article.geographies
-        )
-            ? article.geographies
-            : [];
-
-
-    const sectors =
-        Array.isArray(
-            article.sectors
-        )
-            ? article.sectors
-            : [];
-
-
-    return `
-
-        <article
-            class="news-card"
-            data-article-id="${escapeAttribute(
-                article.articleId ??
-                ""
-            )}"
-        >
-
-
-            <div class="news-card-header">
-
-                <div class="news-card-source">
-
-                    <span class="news-source">
-                        ${source}
-                    </span>
-
-                    <span class="news-date">
-                        ${escapeHtml(date)}
-                    </span>
-
-                </div>
-
-
-                <div class="news-card-badges">
-
-                    <span
-                        class="news-badge news-category"
-                    >
-                        ${category}
-                    </span>
-
-                    <span
-                        class="news-badge ${getImportanceClass(
-                            article.importance
-                        )}"
-                    >
-                        ${importance}
-                    </span>
-
-                    <span
-                        class="news-badge ${getSentimentClass(
-                            article.sentiment
-                        )}"
-                    >
-                        ${sentiment}
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <h3 class="news-card-title">
-
-                <a
-                    href="${escapeAttribute(url)}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    ${title}
-                </a>
-
-            </h3>
-
-
-            ${
-                summary
-                    ? `
-                        <p class="news-card-summary">
-                            ${summary}
-                        </p>
-                    `
-                    : ""
-            }
-
-
-            ${
-                investorImpact
-                    ? `
-                        <div class="news-impact">
-
-                            <span class="news-impact-label">
-                                Investor impact
-                            </span>
-
-                            <p>
-                                ${investorImpact}
-                            </p>
-
-                        </div>
-                    `
-                    : ""
-            }
-
-
-            ${renderTagList(
-                assetClasses,
-                "news-asset-tags"
-            )}
-
-
-            ${renderTagList(
-                geographies,
-                "news-geography-tags"
-            )}
-
-
-            ${renderTagList(
-                sectors,
-                "news-sector-tags"
-            )}
-
-        </article>
-
-    `;
 
 }
 
@@ -2063,9 +2300,22 @@ function renderMarketNews() {
     }
 
 
+    const selectedFund =
+        state.news.fund !== "ALL"
+            ? state.news.fund
+            : null;
+
+
     container.innerHTML =
         articles.map(
-            renderNewsCard
+            article =>
+                renderNewsCard(
+                    article,
+                    fundLinker
+                        ? fundLinker.linkArticle(article)
+                        : [],
+                    selectedFund
+                )
         ).join("");
 
 
@@ -2140,6 +2390,32 @@ function renderNewsCharts() {
     }
 
 }
+
+/*
+ * Earliest publication date in the current 14-day window
+ * (SGT). The History tab starts from the month before it.
+ */
+function getCurrentWindowStartDate() {
+
+    const dates =
+        (state.data.marketNews?.analyses ?? [])
+            .map(
+                article =>
+                    String(
+                        article.publishedAtSgt ?? ""
+                    ).slice(0, 10)
+            )
+            .filter(
+                date =>
+                    /^\d{4}-\d{2}-\d{2}$/.test(date)
+            )
+            .sort();
+
+
+    return dates[0] ?? null;
+
+}
+
 
 function initializeNewsTabs() {
 
@@ -2216,6 +2492,18 @@ function initializeNewsTabs() {
 
                         historyPanel.hidden =
                             tab !== "history";
+
+                    }
+
+
+                    if (tab === "history") {
+
+                        openNewsHistory({
+                            startDate:
+                                getCurrentWindowStartDate(),
+                            getLinker:
+                                () => fundLinker
+                        });
 
                     }
 
@@ -2319,6 +2607,21 @@ function initializeNewsState() {
     state.news.sentiment =
         "ALL";
 
+    state.news.fund =
+        "ALL";
+
+
+    const fundSelect =
+        qs("#market-news-fund");
+
+
+    if (fundSelect) {
+
+        fundSelect.value =
+            "ALL";
+
+    }
+
 
     /*
      * Keep the module's internal filter state
@@ -2338,6 +2641,8 @@ function initializeNewsState() {
 
 
     renderNewsFilterOptions();
+
+    renderNewsTagOptions();
 
     renderNewsSummary();
 
@@ -2359,100 +2664,235 @@ async function loadApplication() {
     setLoadingState();
 
 
-    try {
-
-        const applicationData =
-            await loadApplicationData();
+    const errorPanel =
+        qs("#application-error");
 
 
-        state.data.funds =
-            applicationData.funds ??
-            [];
+    if (errorPanel) {
+
+        errorPanel.classList.remove(
+            "is-visible"
+        );
+
+        errorPanel.innerHTML = "";
+
+    }
 
 
-        state.data.bidHistory =
-            applicationData.bidHistory ??
-            [];
+    /*
+     * Load the two data sets independently so each view
+     * renders as soon as its own data arrives. The small
+     * market-news file no longer waits for the large
+     * bid_history.json download.
+     */
+    const fundTask =
+        loadFundData().then(
+            fundData => {
+
+                state.data.funds =
+                    fundData.funds ??
+                    [];
+
+                state.data.bidHistory =
+                    fundData.bidHistory ??
+                    [];
+
+                initializePerformance();
+
+                updateFundUniverseStatus();
+
+                initializeNewsFundLinks();
+
+            }
+        );
 
 
-        state.data.marketNews =
-            applicationData.marketNews ?? {
+    const newsTask =
+        loadMarketNews().then(
+            marketNews => {
 
-                analyses: [],
+                state.data.marketNews =
+                    marketNews ?? {
 
-                generatedAtSgt: null,
+                        analyses: [],
 
-                timezone: null,
+                        generatedAtSgt: null,
 
-                timezoneLabel: null,
+                        timezone: null,
 
-                windowDays: null,
+                        timezoneLabel: null,
 
-                articleCount: 0
+                        windowDays: null,
 
-            };
+                        articleCount: 0
+
+                    };
+
+                initializeMarketNews();
+
+            }
+        );
 
 
-        state.loading = false;
+    const results =
+        await Promise.allSettled([
+            fundTask,
+            newsTask
+        ]);
+
+
+    state.loading = false;
+
+
+    const failure =
+        results.find(
+            result =>
+                result.status === "rejected"
+        );
+
+
+    if (!failure) {
 
         state.initialized = true;
 
-
-        const errorPanel =
-            qs("#application-error");
-
-
-        if (errorPanel) {
-
-            errorPanel.classList.remove(
-                "is-visible"
-            );
-
-            errorPanel.innerHTML = "";
-
-        }
-
-
         setReadyState();
 
+        return;
 
-        initializePerformance();
-
-        initializeMarketNews();
+    }
 
 
-        /*
-         * Allow the CSS/UI to display the actual number
-         * of funds after loading.
-         */
-        updateFundUniverseStatus();
+    const error =
+        failure.reason instanceof Error
+            ? failure.reason
+            : new Error(
+                String(failure.reason)
+            );
 
+
+    console.error(
+        "VGrat FMS application initialization failed:",
+        error
+    );
+
+
+    state.initialized = false;
+
+    state.error = error;
+
+    setErrorState(
+        error.message
+    );
+
+}
+
+
+/* ============================================================
+   NEWS ↔ FUND LINKS
+   ============================================================ */
+
+function renderNewsFundOptions() {
+
+    if (!fundLinker) {
+
+        return;
+
+    }
+
+
+    const options =
+        fundLinker.funds
+            .map(
+                fund => `
+                    <option value="${escapeAttribute(
+                        fund.fundIdentifier ??
+                        fund.fundCode ??
+                        ""
+                    )}">
+                        ${escapeHtml(fund.fundName ?? "")}${
+                            fund.fundCode
+                                ? ` (${escapeHtml(fund.fundCode)})`
+                                : ""
+                        }
+                    </option>
+                `
+            )
+            .join("");
+
+
+    ["#market-news-fund", "#history-fund"].forEach(
+        selector => {
+
+            const select =
+                qs(selector);
+
+
+            if (!select) {
+
+                return;
+
+            }
+
+
+            const current =
+                select.value;
+
+
+            select.innerHTML =
+                `<option value="ALL">All funds</option>` +
+                options;
+
+
+            select.value =
+                [...select.options].some(
+                    option =>
+                        option.value === current
+                )
+                    ? current
+                    : "ALL";
+
+        }
+    );
+
+}
+
+
+function initializeNewsFundLinks() {
+
+    try {
+
+        fundLinker =
+            createFundLinker(
+                state.data.funds
+            );
 
     } catch (error) {
 
-        console.error(
-            "VGrat FMS application initialization failed:",
+        console.warn(
+            "VGrat FMS: news fund links failed.",
             error
         );
 
+        fundLinker = null;
 
-        state.loading = false;
-
-        state.initialized = false;
-
-        state.error =
-            error instanceof Error
-                ? error
-                : new Error(
-                    String(error)
-                );
-
-
-        setErrorState(
-            state.error.message
-        );
+        return;
 
     }
+
+
+    renderNewsFundOptions();
+
+
+    if (state.news.initialized) {
+
+        renderNewsSummary();
+
+        renderMarketNews();
+
+    }
+
+
+    refreshNewsHistory();
 
 }
 
@@ -2610,6 +3050,8 @@ async function initializeApplication() {
     initializeTheme();
 
     initializeThemeToggle();
+
+    initializeNavToggle();
 
     initializeNavigation();
 

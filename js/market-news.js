@@ -959,6 +959,9 @@ function getNewsStatistics(
         negative:
             0,
 
+        mixed:
+            0,
+
         fundMonitoringRelevant:
             0,
 
