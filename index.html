@@ -1600,23 +1600,135 @@
                 </div>
 
 
-                <div class="placeholder-panel">
+                <!-- FILTERS -->
 
-                    <div class="placeholder-icon">
-                        ▦
+                <div class="explorer-toolbar">
+
+                    <div class="explorer-search-row">
+
+                        <div class="news-search">
+                            <label for="explorer-search" class="sr-only">Search funds</label>
+                            <input
+                                id="explorer-search"
+                                type="search"
+                                placeholder="Search fund name or code…"
+                                autocomplete="off"
+                                data-explorer-filter
+                            >
+                        </div>
+
+                        <div class="news-search">
+                            <label for="explorer-holding" class="sr-only">Find funds holding a company</label>
+                            <input
+                                id="explorer-holding"
+                                type="search"
+                                list="explorer-holding-options"
+                                placeholder="Funds holding… (e.g. Nvidia)"
+                                autocomplete="off"
+                                data-explorer-filter
+                            >
+                            <datalist id="explorer-holding-options"></datalist>
+                        </div>
+
                     </div>
 
-                    <h2>
-                        Fund Explorer
-                    </h2>
+                    <div class="explorer-filter-group">
 
-                    <p>
-                        Fund search, filters, fund profiles,
-                        historical BID charts and holdings will
-                        be built here.
-                    </p>
+                        <label class="filter-control">
+                            <span>Asset class</span>
+                            <select id="explorer-asset" data-explorer-filter>
+                                <option value="ALL">All asset classes</option>
+                            </select>
+                        </label>
+
+                        <label class="filter-control">
+                            <span>Risk level</span>
+                            <select id="explorer-risk" data-explorer-filter>
+                                <option value="ALL">All risk levels</option>
+                            </select>
+                        </label>
+
+                        <label class="filter-control">
+                            <span>Geography</span>
+                            <select id="explorer-geography" data-explorer-filter>
+                                <option value="ALL">All geographies</option>
+                            </select>
+                        </label>
+
+                        <label class="filter-control">
+                            <span>Sector</span>
+                            <select id="explorer-sector" data-explorer-filter>
+                                <option value="ALL">All sectors</option>
+                            </select>
+                        </label>
+
+                        <label class="filter-control">
+                            <span>Dividend</span>
+                            <select id="explorer-dividend" data-explorer-filter>
+                                <option value="ALL">All funds</option>
+                                <option value="YES">Pays dividend</option>
+                                <option value="NO">No dividend</option>
+                            </select>
+                        </label>
+
+                    </div>
 
                 </div>
+
+
+                <div class="news-summary-bar explorer-summary-bar">
+
+                    <span id="explorer-count">Loading funds…</span>
+
+                    <button
+                        id="explorer-clear"
+                        type="button"
+                        class="news-clear-filters"
+                        hidden
+                    >
+                        Clear filters
+                    </button>
+
+                </div>
+
+
+                <!-- FUND TABLE -->
+
+                <section class="performance-card explorer-card" aria-label="Fund list">
+
+                    <div class="table-wrap">
+
+                        <table class="data-table explorer-table">
+
+                            <thead>
+                                <tr>
+                                    <th scope="col" data-explorer-sort="name" tabindex="0" aria-sort="ascending">Fund <span class="sort-arrow"></span></th>
+                                    <th scope="col" data-explorer-sort="asset" tabindex="0">Asset class <span class="sort-arrow"></span></th>
+                                    <th scope="col" data-explorer-sort="risk" tabindex="0">Risk <span class="sort-arrow"></span></th>
+                                    <th scope="col" data-explorer-sort="bid" tabindex="0">BID <span class="sort-arrow"></span></th>
+                                    <th scope="col" data-explorer-sort="ytd" tabindex="0">YTD <span class="sort-arrow"></span></th>
+                                    <th scope="col" data-explorer-sort="m1" tabindex="0">1M <span class="sort-arrow"></span></th>
+                                    <th scope="col" data-explorer-sort="y1" tabindex="0">1Y <span class="sort-arrow"></span></th>
+                                    <th scope="col" data-explorer-sort="y3" tabindex="0">3Y <span class="sort-arrow"></span></th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="explorer-table-body">
+                                <tr>
+                                    <td colspan="8" class="loading-state">Loading funds…</td>
+                                </tr>
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+                <p class="fund-source-note explorer-note">
+                    Returns are Prudential's published cumulative figures as at
+                    each fund's valuation date. Click a fund for its full profile.
+                </p>
 
             </section>
 
