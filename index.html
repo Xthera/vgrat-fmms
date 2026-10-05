@@ -34,6 +34,10 @@
             if (scale >= 0.8 && scale <= 1.4) {
                 document.documentElement.style.setProperty("--font-scale", String(scale));
             }
+            var accent = localStorage.getItem("vgrat-fms-accent");
+            if (/^(steel|ocean|gold|teal|violet|rose)$/.test(accent || "")) {
+                document.documentElement.setAttribute("data-accent", accent);
+            }
         } catch (error) {}
     </script>
 
@@ -2137,92 +2141,31 @@
 
                         </div>
 
-                    </div>
 
-                </section>
+                        <div class="settings-row">
 
+                            <h3 class="settings-label">Colour palette</h3>
 
-                <section id="update-schedule" class="performance-card settings-card" aria-labelledby="settings-schedule-title">
+                            <p class="settings-help">
+                                Accent colour for highlights, selected tabs and buttons. Works with Dark and Light. Saved in this browser.
+                            </p>
 
-                    <div class="card-header">
-                        <div>
-                            <div class="card-eyebrow">DATA</div>
-                            <h2 id="settings-schedule-title" class="card-title">Update schedule</h2>
-                        </div>
-                    </div>
+                            <div class="palette-options" role="group" aria-label="Colour palette">
 
-                    <div class="settings-body">
-
-                        <p class="settings-help schedule-intro">
-                            Time left until the next automatic update. Times are Singapore time (SGT).
-                            GitHub can start scheduled runs a few minutes late.
-                        </p>
-
-                        <ul id="update-schedule-list" class="schedule-list"></ul>
-
-                    </div>
-
-                </section>
-
-            </section>
-
-
-            <!-- =================================================
-                 APPLICATION ERROR
-            ================================================== -->
-
-            <div
-                id="application-error"
-                class="application-error"
-                data-application-error
-                aria-live="assertive"
-            ></div>
-
-
-        </main>
-
-        </div>
-
-
-        <!-- ==================================================
-             FOOTER
-        =================================================== -->
-
-        <footer class="site-footer">
-
-            <div class="footer-inner">
-
-                <div class="footer-brand">
-                    VGrat FMS
-                </div>
-
-                <div class="footer-source">
-                    Prudential Singapore fund data
-                </div>
-
-                <div
-                    id="app-version"
-                    class="footer-version"
-                >
-                    v1.0.0
-                </div>
-
-            </div>
-
-        </footer>
-
-
-    </div>
-
-
-    <!-- ======================================================
-         APPLICATION
-    ======================================================= -->
-
-    <script
-        type="module"
-        src="js/app.js"
-    ></script>
-
-</body>
-</html>
+                                <button type="button" class="palette-option" data-accent-option="steel" aria-pressed="false" style="--swatch-dark: #8fb6d9; --swatch-light: #426f96;">
+                                    <span class="palette-swatch" aria-hidden="true"></span>
+                                    <span>Steel</span>
+                                    <span class="palette-check" aria-hidden="true">✓</span>
+                                </button>
+                                <button type="button" class="palette-option" data-accent-option="ocean" aria-pressed="false" style="--swatch-dark: #5aa9ff; --swatch-light: #1f6fd1;">
+                                    <span class="palette-swatch" aria-hidden="true"></span>
+                                    <span>Ocean</span>
+                                    <span class="palette-check" aria-hidden="true">✓</span>
+                                </button>
+                                <button type="button" class="palette-option" data-accent-option="gold" aria-pressed="false" style="--swatch-dark: #d9ad55; --swatch-light: #9a6b12;">
+                                    <span class="palette-swatch" aria-hidden="true"></span>
+                                    <span>VGrat Gold</span>
+                                    <span class="palette-check" aria-hidden="true">✓</span>
+                                </button>
+                                <button type="button" class="palette-option" data-accent-option="teal" aria-pressed="false" style="--swatch-dark: #4cc2c9; --swatch-light: #0d7c83;">
+              
