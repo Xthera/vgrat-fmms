@@ -298,6 +298,29 @@ function escapeAttribute(value) {
    THEME
    ============================================================ */
 
+/*
+ * Themes. Each one is built on the dark or the light base (so all
+ * the dark / light specific styling still applies) plus an optional
+ * variant that swaps the background, card, border and text colours.
+ * "auto" follows the device's light / dark setting.
+ */
+const THEMES = {
+    dark:     { base: "dark",  variant: null,       label: "Dark",     icon: "☾" },
+    dim:      { base: "dark",  variant: "dim",      label: "Dim",      icon: "◐" },
+    midnight: { base: "dark",  variant: "midnight", label: "Midnight", icon: "●" },
+    light:    { base: "light", variant: null,       label: "Light",    icon: "☀" },
+    sepia:    { base: "light", variant: "sepia",    label: "Sepia",    icon: "❧" },
+    auto:     { base: null,    variant: null,       label: "Auto",     icon: "◑" }
+};
+
+const deviceLightQuery =
+    window.matchMedia
+        ? window.matchMedia("(prefers-color-scheme: light)")
+        : null;
+
+let currentThemeChoice = "dark";
+
+
 function getStoredTheme() {
 
     try {
@@ -306,7 +329,7 @@ function getStoredTheme() {
             STORAGE_KEYS.theme
         );
 
-        if (stored === "light" || stored === "dark") {
+        if (THEMES[stored]) {
 
             return stored;
 
@@ -323,66 +346,101 @@ function getStoredTheme() {
 }
 
 
-function applyTheme(theme) {
+function resolveTheme(choice) {
 
-    const normalizedTheme =
-        theme === "light"
-            ? "light"
+    if (choice !== "auto") {
+
+        return THEMES[choice] ?? THEMES.dark;
+
+    }
+
+    const deviceIsLight =
+        deviceLightQuery?.matches ?? false;
+
+    return {
+        ...(deviceIsLight ? THEMES.light : THEMES.dark),
+        label: "Auto",
+        icon: "◑"
+    };
+
+}
+
+
+function applyTheme(theme, { save = true } = {}) {
+
+    const choice =
+        THEMES[theme]
+            ? theme
             : "dark";
 
-    document.documentElement.dataset.theme =
-        normalizedTheme;
+    currentThemeChoice = choice;
+
+    const resolved =
+        resolveTheme(choice);
+
+    const root =
+        document.documentElement;
+
+    root.dataset.theme =
+        resolved.base;
+
+    if (resolved.variant) {
+
+        root.dataset.variant = resolved.variant;
+
+    } else {
+
+        delete root.dataset.variant;
+
+    }
+
+    const isLight =
+        resolved.base === "light";
+
 
     const button = qs("#theme-toggle");
 
-    if (!button) {
+    if (button) {
 
-        return;
+        const icon = qs(".theme-icon", button);
 
-    }
+        const label = qs(".theme-label", button);
 
-    const icon = qs(".theme-icon", button);
+        button.setAttribute(
+            "aria-pressed",
+            String(isLight)
+        );
 
-    const label = qs(".theme-label", button);
+        button.setAttribute(
+            "aria-label",
+            `Theme: ${resolved.label}. Switch to ${isLight ? "a dark" : "a light"} theme`
+        );
 
-    const isLight =
-        normalizedTheme === "light";
+        button.title =
+            `Theme: ${resolved.label} · click to switch to ${isLight ? "dark" : "light"}`;
 
-    button.setAttribute(
-        "aria-pressed",
-        String(isLight)
-    );
+        if (icon) {
 
-    button.setAttribute(
-        "aria-label",
-        isLight
-            ? "Switch to dark mode"
-            : "Switch to light mode"
-    );
+            icon.textContent =
+                resolved.icon;
 
-    if (icon) {
+        }
 
-        icon.textContent =
-            isLight
-                ? "☀"
-                : "☾";
+        if (label) {
 
-    }
+            label.textContent =
+                resolved.label;
 
-    if (label) {
-
-        label.textContent =
-            isLight
-                ? "Light"
-                : "Dark";
+        }
 
     }
+
 
     qsa("[data-theme-option]").forEach(
         option => {
 
             const active =
-                option.dataset.themeOption === normalizedTheme;
+                option.dataset.themeOption === choice;
 
             option.classList.toggle("active", active);
 
@@ -392,16 +450,20 @@ function applyTheme(theme) {
     );
 
 
-    try {
+    if (save) {
 
-        localStorage.setItem(
-            STORAGE_KEYS.theme,
-            normalizedTheme
-        );
+        try {
 
-    } catch {
+            localStorage.setItem(
+                STORAGE_KEYS.theme,
+                choice
+            );
 
-        // Ignore localStorage failures.
+        } catch {
+
+            // Ignore localStorage failures.
+
+        }
 
     }
 
@@ -437,7 +499,22 @@ function applyTheme(theme) {
 function initializeTheme() {
 
     applyTheme(
-        getStoredTheme()
+        getStoredTheme(),
+        { save: false }
+    );
+
+    // "Follow device" reacts when the device switches day / night.
+    deviceLightQuery?.addEventListener?.(
+        "change",
+        () => {
+
+            if (currentThemeChoice === "auto") {
+
+                applyTheme("auto", { save: false });
+
+            }
+
+        }
     );
 
 }
@@ -453,20 +530,22 @@ function initializeThemeToggle() {
 
     }
 
+    /*
+     * Quick switch between the dark and light families:
+     * any dark theme -> Light, any light theme -> Dark.
+     */
     button.addEventListener(
         "click",
         () => {
 
-            const current =
+            const isLight =
                 document.documentElement.dataset.theme ===
-                "light"
-                    ? "light"
-                    : "dark";
+                "light";
 
             applyTheme(
-                current === "dark"
-                    ? "light"
-                    : "dark"
+                isLight
+                    ? "dark"
+                    : "light"
             );
 
         }
@@ -1310,6 +1389,48 @@ function getViewFromHash() {
 }
 
 
+const RESUME_VIEW_KEY =
+    "vgrat-fms-resume-view";
+
+
+/*
+ * Refresh: reload the page so every file is fetched again
+ * (fetch uses "no-cache", so unchanged files come back quickly
+ * as 304s) and return to the page currently open.
+ */
+function refreshData() {
+
+    const button =
+        qs("#refresh-data");
+
+    if (button) {
+
+        button.disabled = true;
+
+        button.classList.add("is-refreshing");
+
+        button.setAttribute("aria-busy", "true");
+
+    }
+
+    try {
+
+        sessionStorage.setItem(
+            RESUME_VIEW_KEY,
+            state.currentView ?? "performance"
+        );
+
+    } catch {
+
+        // Without sessionStorage the page opens on Market Performance.
+
+    }
+
+    window.location.reload();
+
+}
+
+
 function initializeNavigation() {
 
     qsa("[data-view-target]").forEach(
@@ -1381,12 +1502,40 @@ function initializeNavigation() {
         behavior: "instant"
     });
 
+    /*
+     * Exception: the Refresh button reloads the page and asks to
+     * come back to the page you were on (one time only).
+     */
+    let resumeView = null;
+
+    try {
+
+        resumeView =
+            sessionStorage.getItem(RESUME_VIEW_KEY);
+
+        sessionStorage.removeItem(RESUME_VIEW_KEY);
+
+    } catch {
+
+        resumeView = null;
+
+    }
+
     setCurrentView(
-        "performance",
+        VALID_VIEWS.includes(resumeView)
+            ? resumeView
+            : "performance",
         {
             updateHash: true
         }
     );
+
+
+    qs("#refresh-data")
+        ?.addEventListener(
+            "click",
+            refreshData
+        );
 
 
     window.addEventListener(
@@ -3472,4 +3621,84 @@ async function initializeApplication() {
     initializeSettings();
 
     try {
-     
+        initializeUpdateSchedule();
+    } catch (error) {
+        console.warn("VGrat FMS: update schedule failed.", error);
+    }
+
+    initializeNavigation();
+
+    initializePerformanceTabs();
+
+    initializeResizeHandling();
+
+    exposeDiagnostics();
+
+    await loadApplication();
+
+}
+
+
+/* ============================================================
+   DOM READY
+   ============================================================ */
+
+if (
+    document.readyState ===
+    "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        () => {
+
+            initializeApplication()
+                .catch(
+                    error => {
+
+                        console.error(
+                            "VGrat FMS startup error:",
+                            error
+                        );
+
+                        setErrorState(
+                            error instanceof Error
+                                ? error.message
+                                : String(error)
+                        );
+
+                    }
+                );
+
+        },
+        {
+            once: true
+        }
+    );
+
+} else {
+
+    initializeApplication()
+        .catch(
+            error => {
+
+                console.error(
+                    "VGrat FMS startup error:",
+                    error
+                );
+
+                setErrorState(
+                    error instanceof Error
+                        ? error.message
+                        : String(error)
+                );
+
+            }
+        );
+
+}
+
+
+/* ============================================================
+   END OF FILE
+   ============================================================ */
