@@ -6171,6 +6171,39 @@ html[data-theme="light"] .palette-swatch {
     color: var(--accent);
 }
 
+
+/* Monitoring alert rules: Fall / Rise / Both picker */
+.monitor-rule {
+    flex-wrap: wrap;
+}
+
+.monitor-rule .vselect,
+.monitor-rule-direction {
+    width: auto;
+    min-width: 0;
+}
+
+.monitor-rule .vselect-button,
+.monitor-rule-direction {
+    height: 30px;
+
+    padding: 0 10px;
+
+    border:
+        1px solid var(--border-medium);
+
+    border-radius: 6px;
+
+    background: var(--bg-input);
+    color: var(--text-primary);
+
+    font-size: calc(13px * var(--font-scale, 1));
+}
+
+.monitor-rule .vselect-list {
+    min-width: 220px;
+}
+
 /* ============================================================
    STICKY FOOTER (desktop / tablet)
    The "VGrat FMS · Prudential Singapore fund data" bar stays
