@@ -1,10 +1,128 @@
 {
-  "generatedAtSgt": "2026-10-06T00:54:44.784814+08:00",
+  "generatedAtSgt": "2026-10-06T06:49:10.728660+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 82,
+  "articleCount": 85,
   "analyses": [
+    {
+      "articleId": "3b0ee24a4b9eba633fedb132a55636bdccae62c1cf38e85dc6fa07b4efba37d7",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer explains that a select few artificial intelligence giants are masking the market pressure caused by surging Treasury yields, resulting in a disconnect between equities and bonds.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors should note that while headline equity indices are reaching records due to AI mega-caps, surging bond yields pose rising pressure and create alternative yields that could challenge broader equity valuations.",
+      "reasoning": "The article highlights an important macro market dynamic regarding the divergence between soaring stock indices driven by artificial intelligence leaders and surging Treasury yields, falling under the MARKET category with MIXED sentiment.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Stocks are hitting records despite surging yields. Cramer explains why",
+      "publishedAtSgt": "2026-10-06T06:18:13+08:00",
+      "url": "https://www.cnbc.com/2026/10/05/cramer-ai-stocks-treasury-yields.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-06T06:24:29+08:00"
+    },
+    {
+      "articleId": "eaa40706ef9d21f613c3f5870442f77145c31ece18180cdb5194899c2fe0affb",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Nokia's CEO highlights that data centers could be built twice as fast if not for supply constraints. Nokia is experiencing a growing role in the AI boom, with investor interest surging as companies utilize various financing mechanisms for infrastructure projects.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Telecommunications"
+      ],
+      "investorImpact": "Highlights supply chain bottlenecks in the AI data center buildout while pointing to strong secular demand and infrastructure growth opportunities for enabling technology providers like Nokia.",
+      "reasoning": "Classified as TECHNOLOGY as it covers data center infrastructure and supply constraints affecting AI buildouts. Sentiment is POSITIVE due to strong stock performance and sustained long-term demand.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Nokia CEO says data centers would be built '2x faster' without supply constraints",
+      "publishedAtSgt": "2026-10-06T06:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/05/nokia-ai-data-center-buildout.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-06T06:24:30+08:00"
+    },
+    {
+      "articleId": "20a058ad4ec7a2d744b4c7bb756c5c57096088d270d590609db986ca25ad62e2",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "AstraZeneca CEO Pascal Soriot stated that Summit Therapeutics' lead drug could drive the next generation of cancer treatment combinations following a $2 billion equity investment and clinical collaboration between the two companies.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Healthcare",
+        "Biotechnology",
+        "Pharmaceuticals"
+      ],
+      "investorImpact": "The significant capital investment and positive executive commentary highlight strong growth and strategic collaboration prospects within the oncology sector, benefiting pharmaceutical and biotech equities.",
+      "reasoning": "The article is classified under MARKET due to the direct impact of a major pharmaceutical collaboration and investment on market sentiment within the healthcare and biotech sectors. Sentiment is POSITIVE given the optimistic outlook on future cancer treatments.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AstraZeneca CEO says Summit drug could drive next generation of cancer combinations after $2 billion investment",
+      "publishedAtSgt": "2026-10-06T03:44:30+08:00",
+      "url": "https://www.cnbc.com/2026/10/05/astrazeneca-ceo-says-summit-drug-could-drive-future-cancer-combos.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-06T06:24:29+08:00"
+    },
+    {
+      "articleId": "e5d8535da02fb064e23fd8c8460e23f9a7509ed9355f43c9cae3aa5eb586cc2c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "LOW",
+      "summary": "Starbucks shares are up 12% for the year amid signs that its recovery plan is working, though the stock remains well off recent highs. Options strategist Mike Khouw suggests selling a November 85/105 strangle to collect premium during the ongoing turnaround.",
+      "assetClasses": [
+        "Equities",
+        "Options"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Food and Beverage"
+      ],
+      "investorImpact": "Investors can consider options strategies like selling strangles to generate income while managing expectations around the coffee giant's modest growth and valuation turnaround.",
+      "reasoning": "The article discusses trading strategies and performance metrics for a major publicly traded consumer stock, making it relevant for market monitoring and equity portfolio management.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Starbucks recovery plan is working. Here's how Mike Khouw says to trade the coffee giant",
+      "publishedAtSgt": "2026-10-06T02:40:35+08:00",
+      "url": "https://www.cnbc.com/2026/10/05/starbucks-recovery-plan-is-working-heres-how-mike-khouw-says-to-trade-the-coffee-giant.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-06T06:24:28+08:00"
+    },
     {
       "articleId": "c49d2dd8d69261e50ebb479fe49b289b73343c758db033106743471bd7b9c6ad",
       "relevant": true,
@@ -2458,35 +2576,6 @@
       "collectorCategory": "GEOPOLITICAL",
       "collectorRelevanceScore": 71,
       "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
-      "collectedAtSgt": "2026-10-02T12:09:51+08:00"
-    },
-    {
-      "articleId": "0980250f2f52a0c38f86c5c5b949dfa8ad54a69b13d7be58244e1b1815438e9f",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "MIXED",
-      "importance": "HIGH",
-      "summary": "JPMorgan Chase CEO Jamie Dimon projects that artificial intelligence spending across the hyperscaler ecosystem could reach $1 trillion next year, surging from $700 billion this year and $300 billion last year, which he notes boosts economic growth while potentially adding to inflation.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Global"
-      ],
-      "sectors": [
-        "Technology",
-        "Financials"
-      ],
-      "investorImpact": "Massive capital expenditure in artificial intelligence by hyperscalers drives growth within the technology sector, but investors must also weigh the macroeconomic risks of inflationary pressures driven by high spending.",
-      "reasoning": "Jamie Dimon's high-profile forecast regarding trillion-dollar AI infrastructure spending provides significant insight into technology sector growth trends and broader economic impacts, making it highly relevant for market and fund monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Jamie Dimon says hyperscaler AI spending could hit $1 trillion next year",
-      "publishedAtSgt": "2026-09-22T09:30:01+08:00",
-      "url": "https://www.cnbc.com/2026/09/21/jamie-dimon-jpm-jpmorgan-indiaconference.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 81,
-      "collectorRelevanceReason": "technology_business_or_infrastructure",
       "collectedAtSgt": "2026-10-02T12:09:51+08:00"
     }
   ]
