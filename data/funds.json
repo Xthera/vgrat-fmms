@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-04T23:30:14+00:00",
+  "generatedAtUtc": "2026-10-05T13:10:09+00:00",
   "source": "Funds Links.xlsm",
   "fundCount": 67,
   "research": {
@@ -1307,9 +1307,9 @@
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": true,
         "dividendRate": "20260930=1.25&20260630=1.25&20260331=1.25&20251231=1.25&20250930=1.25&20250630=1.25&20250401=1.25&20241231=1.12&20240930=1.12&20240628=1.12&20240328=1.12&20231229=0.93&20230929=0.93&20230630=0.93&20230331=0.93&20221230=0.93&20221003=0.93&20220701=0.93&20220331=0.93&20211231=0.93&20211001=0.93&20210701=0.93&20210331=0.93",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "%",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=%",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -1640,9 +1640,9 @@
         "investmentManager": "Schroder Investment Management (Singapore) Ltd",
         "hasDividend": true,
         "dividendRate": "20260901=2.06&20260302=2.06&20250901=2.18&20250303=2.18&20240902=2&20240301=2&20230915=1.5&20230301=1.5&20220901=1.5&20220304=1.5&20210901=1.5&20210304=1.5&20200901=1.5&20200302=1.5&20190902=1.5&20190304=1.5&20180903=1.5&20180305=1.5&20170904=1.5&20170303=1.5&20160902=1.5&20160303=1.5&20150903=1.5&20150303=1.5&20140902=1.5&20140303=1.5",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "% of the value of the units (based on the bid price)",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=% of the value of the units (based on the bid price)",
         "dividendHistory": [
           {
             "exDate": "2026-09-01",
@@ -1985,9 +1985,9 @@
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": true,
         "dividendRate": "20260930=2.50&20260331=2.50&20250930=2&20250401=2&20240930=2&20240328=2&20230928=2&20230331=2&20221003=2&20220331=2&20211001=2&20210405=2&20201001=2&20200401=2.37&20191001=2.37&20190401=2.37&20181001=2.37&20180402=2.37&20171002=2.37&20170403=2.37&20161003=2.37&20160401=2.37&20151001=2.5&20150401=2.5&20141001=2.5&20140401=2.1&20131001=2.1&20130401=2.1&20121001=2.1&20120402=2.1&20111003=2&20110403=2&20101001=2.05&20100401=2&20091001=2",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "% of the value of the units (based on the bid price)",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=% of the value of the units (based on the bid price)",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -2486,9 +2486,9 @@
         "investmentManager": "Fullerton Fund Management Company Ltd",
         "hasDividend": true,
         "dividendRate": "20260930=1.72&20260630=1.72&20260331=1.72&20251231=1.72&20250930=1.72&20250630=1.72&20250401=1.72&20241231=1.72&20240930=1.72&20240628=1.72&20240328=1.72&20231229=1.72&20230929=1.72&20230630=1.72&20230331=1.72&20221230=1.72&20221003=1.72&20220701=1.72&20220331=1.72&20211231=1.72&20211001=1.72&20210701=1.72&20210331=1.72",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "%",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=%",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -2699,9 +2699,9 @@
         "investmentManager": "Fullerton Fund Management Company Ltd",
         "hasDividend": true,
         "dividendRate": "20260930=1.25&20260630=1.25&20260331=1.25&20251231=1.25&20250930=1.25&20250630=1.25&20250401=1.25&20241231=1.25&20240930=1.25&20240628=1.25&20240328=1.25&20231229=1.25&20230929=1.25&20230630=1.25&20230331=1.25&20221230=1.25&20221003=1.25&20220701=1.25&20220331=1.25&20211231=1.25&20211001=1.25&20210701=1.25&20210331=1.25",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "%",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=%",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -3131,7 +3131,7 @@
         "riskClassification": "Medium to High Risk",
         "bidPrice": "$0.9888",
         "offerPrice": "-",
-        "valuationDate": "01/10/2026",
+        "valuationDate": "02/10/2026",
         "inceptionDate": "28-Dec-2022",
         "cumulativeYtd": "-4.40%",
         "cumulative1m": "-0.91%",
@@ -3272,9 +3272,9 @@
         "investmentManager": "PIMCO Global Advisors (Ireland) Limited",
         "hasDividend": true,
         "dividendRate": "20260930=0.30&20260831=0.30&20260731=0.30&20260630=0.30",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "cents per unit",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=cents per unit",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -3468,9 +3468,9 @@
         "investmentManager": "PIMCO Global Advisors (Ireland) Limited",
         "hasDividend": true,
         "dividendRate": "20260930=0.49&20260831=0.49&20260731=0.49&20260630=0.49",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "cent per unit",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=cent per unit",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -3664,9 +3664,9 @@
         "investmentManager": "abrdn Investments Limited, abrdn Inc.",
         "hasDividend": true,
         "dividendRate": "20251001=5",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "cents per unit",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=cents per unit",
         "dividendHistory": [
           {
             "exDate": "2025-10-01",
@@ -3789,9 +3789,9 @@
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": true,
         "dividendRate": "20260930=0.45&20260831=0.45&20260731=0.45&20260630=0.45&20260529=0.45&20260430=0.45&20260331=0.45&20260227=0.45&20260130=0.45&20251231=0.45&20251031=0.45&20250930=0.45&20250829=0.45&20250731=0.45&20250630=0.45&20250530=0.45&20250430=0.45&20250401=0.45&20250228=0.45&20250131=0.45&20241231=0.43&20241129=0.43&20241030=0.43&20240930=0.43&20240830=0.43&20240731=0.43&20240628=0.43&20240531=0.43&20240430=0.43&20240328=0.43&20240229=0.43&20240131=0.43&20231229=0.40&20231201=0.40&20231101=0.40&20230929=0.40&20230831=0.40&20230801=0.40&20230630=0.40&20230601=0.40&20230502=0.40&20230331=0.40&20230301=0.40&20230201=0.40&20221230=0.38&20221130=0.38&20221031=0.38&20220930=0.38&20220901=0.38&20220801=0.38",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "%",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=%",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -4289,9 +4289,9 @@
         "investmentManager": "FIL Fund Management Limited",
         "hasDividend": true,
         "dividendRate": "20260930=0.60&20260630=0.60&20260331=0.60&20251231=0.67&20250930=0.67&20250630=0.67&20250401=0.67&20241231=0.73&20240930=0.73&20240628=0.73&20240328=0.73&20231229=0.71&20230929=0.71&20230630=0.71&20230331=0.71&20221230=0.65&20221003=0.65&20220701=0.65&20220331=0.65&20211231=0.77&20211001=0.77&20210701=0.77&20210331=0.77&20201231=0.74&20201001=0.74&20200701=0.74&20200401=0.74&20191231=0.74&20191001=0.74&20190701=0.74&20190401=0.74&20181231=0.74",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "% of the value of the units (based on the bid price)",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=% of the value of the units (based on the bid price)",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -4869,9 +4869,9 @@
         "assetClass": "Fixed Income",
         "assetSubClass": "Global",
         "riskClassification": "Low to Medium Risk",
-        "bidPrice": "$1.1362",
+        "bidPrice": "$1.1355",
         "offerPrice": "-",
-        "valuationDate": "01/10/2026",
+        "valuationDate": "02/10/2026",
         "inceptionDate": "16-Oct-2023",
         "cumulativeYtd": "-3.35%",
         "cumulative1m": "-2.16%",
@@ -5612,9 +5612,9 @@
         "investmentManager": "Schroder Investment Management (Singapore) Limited",
         "hasDividend": true,
         "dividendRate": "20260930=1.25&20260630=1.25&20260331=1.25&20251231=1.25&20250930=1.25&20250630=1.25&20250401=1.25&20241231=1&20240930=1&20240328=1&20231229=1&20230929=1&20230630=1&20230331=1&20221230=1&20221003=1&20220701=1&20220331=1&20211231=1&20211001=1&20210701=1&20210331=1&20201231=1&20201001=1&20200701=1&20200401=0.5&20191231=0.5&20191001=0.5&20190701=0.5&20190401=1&20181231=1",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "% of the value of the units (based on the bid price)",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=% of the value of the units (based on the bid price)",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -5977,9 +5977,9 @@
         "investmentManager": "Schroder Investment Management Australia Limited",
         "hasDividend": true,
         "dividendRate": "20260930=1.57&20260630=1.57&20260331=1.57&20251231=1.57&20250930=1.57&20250630=1.57&20250401=1.57&20241231=1.57&20240930=1.57&20240628=1.57&20240328=1.57&20231229=1.57&20230929=1.57&20230630=1.57&20230331=1.57&20221230=1.57&20221003=1.57&20220701=1.57&20220331=1.57&20211231=1.57&20211001=1.57&20210701=1.57&20210331=1.57",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "%",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=%",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -6190,9 +6190,9 @@
         "investmentManager": "Schroder Investment Management Australia Limited",
         "hasDividend": true,
         "dividendRate": "20260930=1.12&20260630=1.12&20260331=1.12&20251231=1.12&20250930=1.12&20250630=1.12&20250401=1.12&20241231=1.12&20240930=1.12&20240628=1.12&20240328=1.12&20231229=1.12&20230929=1.12&20230630=1.12&20230331=1.12&20221230=1.12&20221003=1.12&20220701=1.12&20220331=1.12&20211231=1.12&20211001=1.12&20210701=1.12&20210331=1.12",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "%",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=%",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -6763,9 +6763,9 @@
         "investmentManager": "Amundi Hong Kong Limited",
         "hasDividend": true,
         "dividendRate": "20260930=0.43&20260831=0.43&20260731=0.43&20260630=0.43&20260529=0.43&20260430=0.43&20260331=0.43&20260227=0.43&20260130=0.43&20251231=0.43&20251031=0.43&20250930=0.43&20250829=0.43&20250731=0.43&20250630=0.43&20250530=0.43&20250430=0.43&20250401=0.47&20250228=0.47&20250131=0.47&20241231=0.48&20241129=0.48&20241030=0.48&20240930=0.48&20240830=0.48&20240731=0.48&20240628=0.48&20240531=0.48&20240430=0.48&20240328=0.48&20240229=0.5&20240131=0.5&20231229=0.5",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "cent per unit",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=cent per unit",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -8216,9 +8216,9 @@
         "investmentManager": "Eastspring Investments (Singapore) Limited",
         "hasDividend": true,
         "dividendRate": "20260930=1&20260630=1&20260331=1&20251231=1&20250930=1&20250630=1&20250401=1&20241231=1&20240930=1&20240628=1&20240328=1&20231229=1&20230929=1&20230630=1&20230331=1&20221230=1&20221003=1&20220701=1&20211231=1&20211001=2&20201231=1&20200401=2&20191231=1&20191001=1&20190701=1&20190401=1",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "cent per unit",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=cent per unit",
         "dividendHistory": [
           {
             "exDate": "2026-09-30",
@@ -8561,9 +8561,9 @@
         "investmentManager": null,
         "hasDividend": true,
         "dividendRate": "20260915=0.51&20260814=0.51&20260715=0.51&20260615=0.51&20260515=0.51&20260415=0.51&20260316=0.51&20260216=0.51&20260115=0.51&20251215=0.51&20251114=0.51&20251015=0.51&20250915=0.51",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "cent per unit",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=cent per unit",
         "dividendHistory": [
           {
             "exDate": "2026-09-15",
@@ -8669,9 +8669,9 @@
         "assetClass": "Multi-Asset",
         "assetSubClass": "Global",
         "riskClassification": "Medium to High Risk",
-        "bidPrice": "$1.0307",
+        "bidPrice": "$1.0350",
         "offerPrice": "-",
-        "valuationDate": "01/10/2026",
+        "valuationDate": "02/10/2026",
         "inceptionDate": "18-Aug-2025",
         "cumulativeYtd": "4.45%",
         "cumulative1m": "-2.35%",
@@ -8692,9 +8692,9 @@
         "investmentManager": null,
         "hasDividend": true,
         "dividendRate": "20260915=0.55&20260814=0.55&20260715=0.55&20260615=0.55&20260515=0.55&20260415=0.55&20260316=0.55&20260216=0.55&20260115=0.55&20251215=0.55&20251114=0.55&20251015=0.55&20250915=0.55",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "cent per unit",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=cent per unit",
         "dividendHistory": [
           {
             "exDate": "2026-09-15",
@@ -8823,9 +8823,9 @@
         "investmentManager": "Voya Investment Management Co. LLC",
         "hasDividend": true,
         "dividendRate": "20260915=0.51&20260814=0.51&20260715=0.51&20260615=0.51&20260515=0.51&20260415=0.51&20260316=0.51&20260216=0.51&20260115=0.51&20251215=0.51&20251114=0.51&20251015=0.51&20250915=0.51&20250815=0.51&20250715=0.51&20250616=0.51&20250515=0.51&20250414=0.51&20250314=0.51&20250214=0.51&20250115=0.51&20241213=0.51&20241114=0.51&20241015=0.51&20240913=0.55&20240814=0.55&20240715=0.55&20240614=0.55&20240514=0.55&20240415=0.55&20240314=0.55&20240214=0.55&20240115=0.55&20231214=0.55&20231114=0.55&20231016=0.55&20230914=0.55&20230814=0.55&20230714=0.6&20230614=0.6&20230515=0.6&20230414=0.6&20230314=0.6&20230214=0.6&20230113=0.6&20221214=0.6&20221114=0.6&20221014=0.6",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "cent per unit",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=cent per unit",
         "dividendHistory": [
           {
             "exDate": "2026-09-15",
@@ -9113,9 +9113,9 @@
         "assetClass": "Multi-Asset",
         "assetSubClass": "US",
         "riskClassification": "Higher Risk",
-        "bidPrice": "$1.1372",
+        "bidPrice": "$1.1456",
         "offerPrice": "-",
-        "valuationDate": "01/10/2026",
+        "valuationDate": "02/10/2026",
         "inceptionDate": "16-Oct-2023",
         "cumulativeYtd": "4.52%",
         "cumulative1m": "-0.42%",
@@ -9136,9 +9136,9 @@
         "investmentManager": "Voya Investment Management Co. LLC",
         "hasDividend": true,
         "dividendRate": "20260915=0.55&20260814=0.55&20260715=0.55&20260615=0.55&20260515=0.55&20260415=0.55&20260316=0.55&20260216=0.55&20260115=0.55&20251215=0.55&20251114=0.55&20251015=0.55&20250915=0.55&20250815=0.55&20250715=0.55&20250616=0.55&20250515=0.55&20250414=0.55&20250314=0.55&20250214=0.55&20250115=0.55&20241213=0.55&20241114=0.55&20241015=0.55&20240913=0.55&20240814=0.55&20240715=0.55&20240614=0.55&20240514=0.55&20240415=0.55&20240314=0.55&20240214=0.55&20240115=0.55&20231214=0.55&20231114=0.55",
-        "dividendUnit": "% per payout",
-        "dividendUnitSource": "default",
-        "dividendUnitEvidence": null,
+        "dividendUnit": "cent per unit",
+        "dividendUnitSource": "prudential-api:dividendUnit",
+        "dividendUnitEvidence": "dividendUnit=cent per unit",
         "dividendHistory": [
           {
             "exDate": "2026-09-15",
