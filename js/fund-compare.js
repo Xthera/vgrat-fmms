@@ -740,7 +740,7 @@ function renderSuggestions() {
         list.innerHTML = matches
             .map((fund, position) => `
                 <li
-                    class="compare-suggestion${position === 0 ? " is-highlighted" : ""}"
+                    class="compare-suggestion"
                     role="option"
                     data-add-fund="${escapeHtml(fundId(fund))}"
                 >
@@ -824,7 +824,10 @@ function bindEvents() {
             } else if (event.key === "Enter") {
                 event.preventDefault();
 
-                const highlighted = qs("#fund-compare-suggestions .is-highlighted");
+                // Highlighted item, or the first match once something is typed
+                const highlighted =
+                    qs("#fund-compare-suggestions .is-highlighted") ??
+                    (input.value.trim() ? qs("#fund-compare-suggestions [data-add-fund]") : null);
 
                 if (highlighted) {
                     addFund(highlighted.dataset.addFund);
