@@ -1409,7 +1409,7 @@ function initializePerformance() {
    MARKET NEWS
    ============================================================ */
 
-function initializeNewsState() {
+function  {
 
     const analyses =
         state.data.marketNews?.analyses ??
@@ -1456,9 +1456,14 @@ function renderNewsFilterOptions() {
     }
 
 
+    const analyses =
+        state.news?.state?.analyses ??
+        [];
+
+
     const categories =
         getAvailableCategories(
-            state.news.state
+            analyses
         );
 
 
@@ -1472,26 +1477,33 @@ function renderNewsFilterOptions() {
             All categories
         </option>
 
-        ${categories.map(
-            category => `
+        ${categories
+            .filter(
+                category =>
+                    category !== "ALL"
+            )
+            .map(
+                category => `
 
-                <option
-                    value="${escapeAttribute(
-                        category
-                    )}"
-                >
-                    ${escapeHtml(
-                        category
-                    )}
-                </option>
+                    <option
+                        value="${escapeAttribute(
+                            category
+                        )}"
+                    >
+                        ${escapeHtml(
+                            category
+                        )}
+                    </option>
 
-            `
-        ).join("")}
+                `
+            )
+            .join("")}
 
     `;
 
 
     if (
+        currentValue !== "ALL" &&
         categories.includes(
             currentValue
         )
@@ -1511,7 +1523,6 @@ function renderNewsFilterOptions() {
     }
 
 }
-
 
 function updateNewsFilters() {
 
@@ -1616,27 +1627,31 @@ function getFilteredNews() {
     }
 
 
+    /*
+     * Synchronize the application-level controls
+     * with the Market News module state.
+     */
+    state.news.state.searchTerm =
+        state.news.search ?? "";
+
+
+    state.news.state.selectedCategory =
+        state.news.category ?? "ALL";
+
+
+    state.news.state.selectedImportance =
+        state.news.importance ?? "ALL";
+
+
+    state.news.state.selectedSentiment =
+        state.news.sentiment ?? "ALL";
+
+
     return getVisibleNews(
-        state.news.state,
-        {
-
-            search:
-                state.news.search,
-
-            category:
-                state.news.category,
-
-            importance:
-                state.news.importance,
-
-            sentiment:
-                state.news.sentiment
-
-        }
+        state.news.state
     );
 
 }
-
 
 function renderNewsSummary() {
 
@@ -2265,15 +2280,64 @@ function renderNewsMetadata() {
 }
 
 
-function initializeMarketNews() {
+function initializeNewsState() {
 
-    initializeNewsState();
+    const marketNews =
+        state.data.marketNews ?? {
+            analyses: [],
+            generatedAtSgt: null,
+            timezone: "Asia/Singapore",
+            timezoneLabel: "SGT",
+            windowDays: 14,
+            articleCount: 0
+        };
 
-    initializeNewsFilters();
 
-    initializeNewsTabs();
+    state.news.state =
+        createNewsState(
+            marketNews
+        );
 
-    renderNewsMetadata();
+
+    state.news.initialized =
+        true;
+
+
+    state.news.search =
+        "";
+
+    state.news.category =
+        "ALL";
+
+    state.news.importance =
+        "ALL";
+
+    state.news.sentiment =
+        "ALL";
+
+
+    /*
+     * Keep the module's internal filter state
+     * synchronized with the application state.
+     */
+    state.news.state.searchTerm =
+        "";
+
+    state.news.state.selectedCategory =
+        "ALL";
+
+    state.news.state.selectedImportance =
+        "ALL";
+
+    state.news.state.selectedSentiment =
+        "ALL";
+
+
+    renderNewsFilterOptions();
+
+    renderNewsSummary();
+
+    renderMarketNews();
 
 }
 
