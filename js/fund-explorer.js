@@ -27,7 +27,8 @@ import {
 
 import {
     isWatched,
-    toggleWatchlist
+    toggleWatchlist,
+    onWatchlistChange
 } from "./watchlist.js";
 
 const PROFILE_CHART_ID = "fund-profile-chart";
@@ -564,11 +565,16 @@ function renderTable() {
             return `
                 <tr class="explorer-row" data-fund-open="${escapeHtml(row.id)}" tabindex="0" role="button">
                     <td class="fund-cell">
-                        <div class="fund-name">${escapeHtml(row.name)}</div>
-                        <div class="fund-meta">
-                            ${escapeHtml(row.code)}${row.hasDividend ? ` · <span class="explorer-dividend-tag">Dividend</span>` : ""}
+                        <div class="explorer-fund-wrap">
+                            ${watchStarButton(row.id, row.name)}
+                            <div class="explorer-fund-text">
+                                <div class="fund-name">${escapeHtml(row.name)}</div>
+                                <div class="fund-meta">
+                                    ${escapeHtml(row.code)}${row.hasDividend ? ` · <span class="explorer-dividend-tag">Dividend</span>` : ""}
+                                </div>
+                                ${holdingNote}
+                            </div>
                         </div>
-                        ${holdingNote}
                     </td>
                     <td class="explorer-asset-cell">${escapeHtml(row.assetClass)}</td>
                     <td class="explorer-risk-cell"><span class="risk-pill risk-${row.riskOrder}">${escapeHtml(row.risk)}</span></td>
@@ -581,6 +587,48 @@ function renderTable() {
             `;
         })
         .join("");
+}
+
+
+/* ============================================================
+   WATCHLIST STAR (list rows)
+   ============================================================ */
+
+function watchStarButton(id, name) {
+    const on = isWatched(id);
+
+    return `<button
+        type="button"
+        class="explorer-star${on ? " is-on" : ""}"
+        data-explorer-watch="${escapeHtml(id)}"
+        aria-pressed="${on}"
+        aria-label="${on ? "Remove" : "Add"} ${escapeHtml(name)} ${on ? "from" : "to"} your watchlist"
+        title="${on ? "Watching · click to remove from your watchlist" : "Add to your Monitoring watchlist"}"
+    >${on ? "★" : "☆"}</button>`;
+}
+
+/* Keep stars (list) and the popup button in step with the watchlist,
+   whichever page changed it. */
+function syncWatchButtons() {
+    document.querySelectorAll("[data-explorer-watch]").forEach(button => {
+        const id = button.dataset.explorerWatch;
+        const on = isWatched(id);
+        const name = button.closest("tr")?.querySelector(".fund-name")?.textContent.trim() ?? "fund";
+
+        button.classList.toggle("is-on", on);
+        button.setAttribute("aria-pressed", String(on));
+        button.setAttribute("aria-label", `${on ? "Remove" : "Add"} ${name} ${on ? "from" : "to"} your watchlist`);
+        button.title = on ? "Watching · click to remove from your watchlist" : "Add to your Monitoring watchlist";
+        button.textContent = on ? "★" : "☆";
+    });
+
+    document.querySelectorAll("[data-fund-watch]").forEach(button => {
+        const on = isWatched(button.dataset.fundWatch);
+
+        button.classList.toggle("is-on", on);
+        button.setAttribute("aria-pressed", String(on));
+        button.textContent = on ? "★ Watching" : "☆ Watch";
+    });
 }
 
 
@@ -1262,12 +1310,8 @@ function openProfile(id) {
     bindChartControls(dialog);
 
     qs("[data-fund-watch]", dialog)?.addEventListener("click", event => {
-        const button = event.currentTarget;
-        const on = toggleWatchlist(button.dataset.fundWatch);
-
-        button.classList.toggle("is-on", on);
-        button.setAttribute("aria-pressed", String(on));
-        button.textContent = on ? "★ Watching" : "☆ Watch";
+        // The watchlist listener updates this button and the list stars.
+        toggleWatchlist(event.currentTarget.dataset.fundWatch);
     });
 
     document.body.classList.add("has-news-dialog");
@@ -1361,13 +1405,26 @@ function bindEvents() {
     const body = qs("#explorer-table-body");
 
     body?.addEventListener("click", event => {
+        // Star: add / remove from the watchlist without opening the popup
+        const star = event.target.closest("[data-explorer-watch]");
+
+        if (star) {
+            event.stopPropagation();
+            toggleWatchlist(star.dataset.explorerWatch);
+            return;
+        }
+
         const row = event.target.closest("[data-fund-open]");
 
         if (row) openProfile(row.dataset.fundOpen);
     });
 
+    onWatchlistChange(syncWatchButtons);
+
     body?.addEventListener("keydown", event => {
         if (event.key !== "Enter" && event.key !== " ") return;
+
+        if (event.target.closest("[data-explorer-watch]")) return;
 
         const row = event.target.closest("[data-fund-open]");
 
