@@ -1,10 +1,103 @@
 {
-  "generatedAtSgt": "2026-10-05T15:56:01.271759+08:00",
+  "generatedAtSgt": "2026-10-05T22:02:34.349401+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 76,
+  "articleCount": 79,
   "analyses": [
+    {
+      "articleId": "8ade6a00ee9444f24dc75c68e53360a44e3aa91d8fcce62f7fbfcc6faf90de39",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "China is accelerating the consolidation and shutdown of hundreds of smaller, mostly rural banks to shore up its financial system amidst economic slowdown concerns, rising non-performing loans, and high exposure to the property sector.",
+      "assetClasses": [
+        "Equities",
+        "Debt",
+        "Credit"
+      ],
+      "geographies": [
+        "China",
+        "Asia"
+      ],
+      "sectors": [
+        "Financials",
+        "Real Estate",
+        "Banking"
+      ],
+      "investorImpact": "Investors with exposure to Chinese financial institutions, property developers, or local government debt vehicles should note increased systemic risk and tightening credit conditions in the region's banking sector.",
+      "reasoning": "Classified as ECONOMIC because it deals with systemic financial system measures and banking sector health in the world's second-largest economy. Importance is HIGH due to potential contagion risks from rural bank failures and property sector stress. Fund monitoring is relevant because of broad implications for Chinese equity and debt markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China shuts hundreds of banks as Beijing moves to shore up its financial system",
+      "publishedAtSgt": "2026-10-05T21:23:46+08:00",
+      "url": "https://www.cnbc.com/2026/10/05/china-banks-consolidation-economy.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-05T21:41:21+08:00"
+    },
+    {
+      "articleId": "241c5cf0d86650ba1375731cc6a9ff298741e45d0118fd31be141344561b0c87",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Treasury yields rose on Monday, rebounding from a sharp sell-off last week, as traders awaited key economic data and the release of the Federal Reserve's September meeting minutes. The recent bond market sell-off and a lackluster monthly jobs report have influenced market sentiment regarding interest rates.",
+      "assetClasses": [
+        "Fixed Income",
+        "Bonds"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors in fixed income and broader financial markets should monitor Treasury yield movements and upcoming Fed minutes for signals on future interest rate trajectories and macroeconomic health.",
+      "reasoning": "The article discusses Treasury yield movements and anticipation of Federal Reserve minutes and economic data, which are core drivers for market and economic assessment. Thus, it is relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Treasury yields rise as traders await data, Fed minutes this week",
+      "publishedAtSgt": "2026-10-05T21:09:51+08:00",
+      "url": "https://www.cnbc.com/2026/10/05/treasury-yields-bonds-fed-rates.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-05T21:41:21+08:00"
+    },
+    {
+      "articleId": "8f15338c42c95ef38b931e667b792bc0f9b5e44c0aa2f23cd1dc820808eaf48f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "LOW",
+      "summary": "Jim Cramer highlights key market watches for Monday, noting that tame oil and bond yields are not providing a boost, Marvell's upcoming investor day is critical for semiconductor stocks, and the revival of the AI trade has reduced demand for defensive stocks.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors should monitor Marvell's investor day for sentiment shifts in semiconductor and AI-related stocks, while keeping an eye on broader market trends involving bond yields and defensive rotations.",
+      "reasoning": "Classified as MARKET because it provides short-term commentary on stock market factors, upcoming events, and sector rotations. Sentiment is MIXED due to competing market forces like strong AI interest versus weaker defensive demand and unhelpful bond/oil conditions. Importance is LOW as it offers daily commentary rather than major macroeconomic catalysts.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Jim Cramer's top 10 things to watch in the stock market Monday",
+      "publishedAtSgt": "2026-10-05T20:59:40+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/05/jim-cramers-top-10-things-to-watch-in-the-stock-market-monday.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-05T21:41:22+08:00"
+    },
     {
       "articleId": "bf968b02160024fc0d379a565125b0155e1f51c98d589e56e92ad86415ad12ec",
       "relevant": true,
