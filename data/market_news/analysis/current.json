@@ -1,10 +1,39 @@
 {
-  "generatedAtSgt": "2026-10-05T22:05:18.757738+08:00",
+  "generatedAtSgt": "2026-10-06T00:54:44.784814+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 81,
+  "articleCount": 82,
   "analyses": [
+    {
+      "articleId": "c49d2dd8d69261e50ebb479fe49b289b73343c758db033106743471bd7b9c6ad",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Brazilian stocks surged significantly following the first round of the presidential election, with Bolsonaro perceived as a heavy favorite and viewed favorably by investors due to promises of greater fiscal discipline.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Brazil",
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors with exposure to Brazilian equities experienced strong positive gains, particularly in the banking sector, as market sentiment improved on expectations of fiscal discipline under a favored presidential candidate.",
+      "reasoning": "The article details a major market movement in Brazilian stocks driven by political developments and election expectations, making it highly relevant for market monitoring and investment strategy.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Brazilian stocks jump as Bolsonaro now seen as heavy favorite to win presidency",
+      "publishedAtSgt": "2026-10-05T23:47:42+08:00",
+      "url": "https://www.cnbc.com/2026/10/05/brazilian-stocks-jump-bolsonaro-now-heavy-favorite-to-win-presidency.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-06T00:31:52+08:00"
+    },
     {
       "articleId": "8ade6a00ee9444f24dc75c68e53360a44e3aa91d8fcce62f7fbfcc6faf90de39",
       "relevant": true,
