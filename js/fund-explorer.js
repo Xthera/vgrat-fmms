@@ -572,7 +572,7 @@ function renderTable() {
                     </td>
                     <td class="explorer-asset-cell">${escapeHtml(row.assetClass)}</td>
                     <td class="explorer-risk-cell"><span class="risk-pill risk-${row.riskOrder}">${escapeHtml(row.risk)}</span></td>
-                    <td class="bid-cell" data-label="BID">${row.bid !== null ? row.bid.toFixed(4) : "—"}</td>
+                    <td class="bid-cell" data-label="BID price">${row.bid !== null ? row.bid.toFixed(4) : "—"}</td>
                     ${cell(row.ytd, "YTD")}
                     ${cell(row.m1, "1M")}
                     ${cell(row.y1, "1Y")}
