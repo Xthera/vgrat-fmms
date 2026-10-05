@@ -328,7 +328,7 @@ function renderHoldingSuggestions() {
     list.innerHTML = matches.length
         ? matches
             .map((item, index) => `
-                <li class="compare-suggestion${index === 0 ? " is-highlighted" : ""}" role="option" data-holding-pick="${escapeHtml(item.name)}">
+                <li class="compare-suggestion" role="option" data-holding-pick="${escapeHtml(item.name)}">
                     <span class="compare-suggestion-name">${escapeHtml(item.name)}</span>
                     <span class="compare-suggestion-code">${item.count} fund${item.count === 1 ? "" : "s"}</span>
                 </li>
