@@ -4853,10 +4853,15 @@ html[data-theme="light"] .summary-card-value.return-negative::before {
     margin-top: 12px;
 }
 
+/* Latest BID, 1D, 1W, 1M, From 52W high and Alerts sit centred
+   under their headings */
+.monitor-table th:nth-child(n + 3),
+.monitor-table td:nth-child(n + 3) {
+    text-align: center;
+}
+
 .monitor-table th:nth-child(n + 3):nth-child(-n + 7),
 .monitor-table td:nth-child(n + 3):nth-child(-n + 7) {
-    text-align: right;
-
     white-space: nowrap;
 }
 
