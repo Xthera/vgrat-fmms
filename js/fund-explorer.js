@@ -216,13 +216,25 @@ function fillSelect(selector, values, allLabel, labelFor = value => value) {
 
     const current = select.value || "ALL";
 
-    select.innerHTML =
+    // Keep the current choice listed even if it now has no matches,
+    // so the dropdown never silently changes what you picked.
+    const list = current !== "ALL" && !values.includes(current)
+        ? [current, ...values]
+        : values;
+
+    const html =
         `<option value="ALL">${escapeHtml(allLabel)}</option>` +
-        values
+        list
             .map(value => `<option value="${escapeHtml(value)}">${escapeHtml(labelFor(value))}</option>`)
             .join("");
 
-    select.value = values.includes(current) ? current : "ALL";
+    // Only touch the DOM when something changed
+    if (select.dataset.optionsHtml !== html) {
+        select.innerHTML = html;
+        select.dataset.optionsHtml = html;
+    }
+
+    if (select.value !== current) select.value = current;
 }
 
 function countBy(rows, pick) {
@@ -237,41 +249,65 @@ function countBy(rows, pick) {
     return counts;
 }
 
+/*
+ * Dynamic filters: each dropdown lists only the options that still
+ * have funds given every OTHER filter (search, holding and the other
+ * dropdowns), with live counts. Runs on every filter change.
+ */
 function renderFilterOptions() {
-    const rows = explorer.rows;
+    const rowsWithout = key => explorer.rows.filter(row => rowMatches(row, explorer.filters, key));
+    const label = counts => value => `${value} (${counts.get(value) ?? 0})`;
 
-    const assetCounts = countBy(rows, row => [row.assetClass]);
+    const assetRows = rowsWithout("assetClass");
+    const assetCounts = countBy(assetRows, row => [row.assetClass]);
     fillSelect(
         "#explorer-asset",
         [...assetCounts.keys()].sort(),
-        "All asset classes",
-        value => `${value} (${assetCounts.get(value)})`
+        `All asset classes (${assetRows.length})`,
+        label(assetCounts)
     );
 
-    const riskCounts = countBy(rows, row => [row.risk]);
+    const riskRows = rowsWithout("risk");
+    const riskCounts = countBy(riskRows, row => [row.risk]);
     fillSelect(
         "#explorer-risk",
         [...riskCounts.keys()].sort((a, b) => (RISK_ORDER[a] ?? 99) - (RISK_ORDER[b] ?? 99)),
-        "All risk levels",
-        value => `${value} (${riskCounts.get(value)})`
+        `All risk levels (${riskRows.length})`,
+        label(riskCounts)
     );
 
-    const geoCounts = countBy(rows, row => row.geographies);
+    const geoRows = rowsWithout("geography");
+    const geoCounts = countBy(geoRows, row => row.geographies);
     fillSelect(
         "#explorer-geography",
         [...geoCounts.keys()].sort((a, b) => geoCounts.get(b) - geoCounts.get(a) || a.localeCompare(b)),
-        "All geographies",
-        value => `${value} (${geoCounts.get(value)})`
+        `All geographies (${geoRows.length})`,
+        label(geoCounts)
     );
 
-    const sectorCounts = countBy(rows, row => row.sectors);
+    const sectorRows = rowsWithout("sector");
+    const sectorCounts = countBy(sectorRows, row => row.sectors);
     fillSelect(
         "#explorer-sector",
         [...sectorCounts.keys()].sort((a, b) => sectorCounts.get(b) - sectorCounts.get(a) || a.localeCompare(b)),
-        "All sectors",
-        value => `${value} (${sectorCounts.get(value)})`
+        `All sectors (${sectorRows.length})`,
+        label(sectorCounts)
     );
 
+    const dividendRows = rowsWithout("dividend");
+    const dividendCounts = countBy(dividendRows, row => [row.hasDividend ? "YES" : "NO"]);
+    fillSelect(
+        "#explorer-dividend",
+        ["YES", "NO"].filter(value => dividendCounts.has(value)),
+        `All funds (${dividendRows.length})`,
+        value => `${value === "YES" ? "Pays dividend" : "No dividend"} (${dividendCounts.get(value) ?? 0})`
+    );
+
+    // Funds-holding suggestions follow the other filters too
+    explorer.holdingNames = holdingNamesFor(rowsWithout("holding"));
+}
+
+function holdingNamesFor(rows) {
     // Group spellings that differ only by case ("NVIDIA Corp" / "NVIDIA CORP")
     const holdingGroups = new Map();
 
@@ -294,7 +330,7 @@ function renderFilterOptions() {
         }
     }
 
-    explorer.holdingNames = [...holdingGroups.values()]
+    return [...holdingGroups.values()]
         .map(group => ({
             name: [...group.spellings.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0],
             count: group.count
@@ -424,23 +460,26 @@ function holdingMatches(row, term) {
     );
 }
 
-function getVisibleRows() {
-    const f = explorer.filters;
+/* Does a fund pass the filters? `skip` ignores one filter
+   (used to work out each dropdown's remaining options). */
+function rowMatches(row, f, skip = null) {
     const search = f.search.trim().toLowerCase();
     const holding = f.holding.trim().toLowerCase();
 
-    let rows = explorer.rows.filter(row => {
-        if (search && !row.searchText.includes(search)) return false;
-        if (f.assetClass !== "ALL" && row.assetClass !== f.assetClass) return false;
-        if (f.risk !== "ALL" && row.risk !== f.risk) return false;
-        if (f.geography !== "ALL" && !row.geographies.includes(f.geography)) return false;
-        if (f.sector !== "ALL" && !row.sectors.includes(f.sector)) return false;
-        if (f.dividend === "YES" && !row.hasDividend) return false;
-        if (f.dividend === "NO" && row.hasDividend) return false;
-        if (holding && holdingMatches(row, holding).length === 0) return false;
+    if (skip !== "search" && search && !row.searchText.includes(search)) return false;
+    if (skip !== "assetClass" && f.assetClass !== "ALL" && row.assetClass !== f.assetClass) return false;
+    if (skip !== "risk" && f.risk !== "ALL" && row.risk !== f.risk) return false;
+    if (skip !== "geography" && f.geography !== "ALL" && !row.geographies.includes(f.geography)) return false;
+    if (skip !== "sector" && f.sector !== "ALL" && !row.sectors.includes(f.sector)) return false;
+    if (skip !== "dividend" && f.dividend === "YES" && !row.hasDividend) return false;
+    if (skip !== "dividend" && f.dividend === "NO" && row.hasDividend) return false;
+    if (skip !== "holding" && holding && holdingMatches(row, holding).length === 0) return false;
 
-        return true;
-    });
+    return true;
+}
+
+function getVisibleRows() {
+    let rows = explorer.rows.filter(row => rowMatches(row, explorer.filters));
 
     const { key, direction } = explorer.sort;
     const factor = direction === "asc" ? 1 : -1;
@@ -488,6 +527,8 @@ function renderTable() {
     const clear = qs("#explorer-clear");
 
     if (!body) return;
+
+    renderFilterOptions();
 
     const rows = getVisibleRows();
     const holdingTerm = explorer.filters.holding.trim().toLowerCase();
