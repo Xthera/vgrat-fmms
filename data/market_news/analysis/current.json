@@ -1,10 +1,39 @@
 {
-  "generatedAtSgt": "2026-10-05T09:51:32.437734+08:00",
+  "generatedAtSgt": "2026-10-05T13:00:43.813694+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 75,
+  "articleCount": 76,
   "analyses": [
+    {
+      "articleId": "bf968b02160024fc0d379a565125b0155e1f51c98d589e56e92ad86415ad12ec",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Surging Treasury yields are driven by a combination of factors including stronger economic growth, expectations for Federal Reserve rate hikes, higher oil prices, corporate bond issuance, fast-money positioning, and fiscal concerns, though a full fiscal crisis is not imminent.",
+      "assetClasses": [
+        "Fixed Income",
+        "Bonds"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Rising Treasury yields impact fixed income valuations and borrowing costs across the economy, requiring investors to monitor rate expectations and debt issuance closely.",
+      "reasoning": "The article discusses key macroeconomic and market drivers behind surging Treasury yields and fiscal concerns, which are vital for market surveillance and portfolio positioning.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Surging Treasury yields don’t signal a U.S. 'fiscal apocalypse' — yet",
+      "publishedAtSgt": "2026-10-05T10:24:07+08:00",
+      "url": "https://www.cnbc.com/2026/10/05/treasury-yields-fiscal-concerns-not-crisis-yet.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-05T12:45:12+08:00"
+    },
     {
       "articleId": "2e98323f01b596216c6a46a9d8ec89ab3a81f366c83cc1eb6ba2f4f6394fa623",
       "relevant": true,
