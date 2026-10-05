@@ -52,10 +52,11 @@ const DEFAULT_LAYOUT = {
 };
 
 const DEFAULT_RULES = {
-    dayMove: { enabled: true, value: 2 },      // |1D| >= value %
-    weekDrop: { enabled: true, value: 3 },     // 1W <= -value %
-    monthDrop: { enabled: true, value: 5 },    // 1M <= -value %
-    fromHigh: { enabled: true, value: 10 },    // below 52W high by >= value %
+    dayMove: { enabled: true, value: 2, direction: "both" },    // 1D move >= value %
+    // direction: "down" (fall), "up" (rise) or "both"
+    weekDrop: { enabled: true, value: 3, direction: "down" },   // 1W move >= value %
+    monthDrop: { enabled: true, value: 5, direction: "down" },  // 1M move >= value %
+    fromHigh: { enabled: true, value: 10, direction: "down" },  // down: below 52W high / up: above 52W low
     newHigh: { enabled: true },
     newLow: { enabled: true }
 };
@@ -263,6 +264,7 @@ function computeMetrics(observations) {
         high52,
         low52,
         fromHigh,
+        fromLow: pct(low52, latest.bidPrice),
         newHigh,
         newLow,
         hasFullYear,
@@ -284,23 +286,35 @@ function alertsFor(metrics) {
     const rules = monitor.rules;
     const alerts = [];
 
-    if (rules.dayMove.enabled && metrics.d1 !== null && Math.abs(metrics.d1) >= rules.dayMove.value) {
-        alerts.push({
-            tone: metrics.d1 < 0 ? "negative" : "positive",
-            text: `1D ${formatPercent(metrics.d1)}`
-        });
-    }
+    // 1D / 1W / 1M: falls, rises or both, depending on the rule's direction
+    const moveAlert = (rule, value, label) => {
+        if (!rule.enabled || value === null || value === undefined) return;
 
-    if (rules.weekDrop.enabled && metrics.w1 !== null && metrics.w1 <= -rules.weekDrop.value) {
-        alerts.push({ tone: "negative", text: `1W ${formatPercent(metrics.w1)}` });
-    }
+        const direction = rule.direction ?? (rule === rules.dayMove ? "both" : "down");
+        const hit =
+            (direction !== "up" && value <= -rule.value) ||
+            (direction !== "down" && value >= rule.value);
 
-    if (rules.monthDrop.enabled && metrics.m1 !== null && metrics.m1 <= -rules.monthDrop.value) {
-        alerts.push({ tone: "negative", text: `1M ${formatPercent(metrics.m1)}` });
-    }
+        if (hit) {
+            alerts.push({ tone: value < 0 ? "negative" : "positive", text: `${label} ${formatPercent(value)}` });
+        }
+    };
 
-    if (rules.fromHigh.enabled && metrics.fromHigh !== null && metrics.fromHigh <= -rules.fromHigh.value) {
-        alerts.push({ tone: "negative", text: `${formatPercent(metrics.fromHigh, 1)} from 52W high` });
+    moveAlert(rules.dayMove, metrics.d1, "1D");
+    moveAlert(rules.weekDrop, metrics.w1, "1W");
+    moveAlert(rules.monthDrop, metrics.m1, "1M");
+
+    // 52 weeks: below the high (down), above the low (up), or both
+    if (rules.fromHigh.enabled) {
+        const direction = rules.fromHigh.direction ?? "down";
+
+        if (direction !== "up" && metrics.fromHigh !== null && metrics.fromHigh <= -rules.fromHigh.value) {
+            alerts.push({ tone: "negative", text: `${formatPercent(metrics.fromHigh, 1)} from 52W high` });
+        }
+
+        if (direction !== "down" && metrics.fromLow !== null && metrics.fromLow !== undefined && metrics.fromLow >= rules.fromHigh.value) {
+            alerts.push({ tone: "positive", text: `${formatPercent(metrics.fromLow, 1)} above 52W low` });
+        }
     }
 
     if (rules.newHigh.enabled && metrics.newHigh) {
@@ -755,6 +769,10 @@ function syncRuleInputs() {
         const input = qs(`[data-rule-value="${key}"]`);
 
         if (toggle) toggle.checked = Boolean(rule.enabled);
+
+        const direction = qs(`[data-rule-direction="${key}"]`);
+
+        if (direction && rule.direction) direction.value = rule.direction;
         if (input && rule.value !== undefined) {
             input.value = String(rule.value);
             input.disabled = !rule.enabled;
@@ -918,6 +936,18 @@ function bindEvents() {
 
         field.addEventListener("input", update);
         field.addEventListener("change", update);
+    });
+
+    document.querySelectorAll("[data-rule-direction]").forEach(select => {
+        select.addEventListener("change", () => {
+            const key = select.dataset.ruleDirection;
+
+            if (!["down", "up", "both"].includes(select.value)) return;
+
+            monitor.rules[key].direction = select.value;
+            saveRules();
+            renderWatchlist();
+        });
     });
 
     qs("#alert-rules-reset")?.addEventListener("click", () => {
