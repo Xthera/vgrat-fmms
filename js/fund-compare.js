@@ -31,8 +31,6 @@ const CANVAS_ID = "fund-compare-chart";
 
 const MAX_FUNDS = 8;
 
-const MAX_POINTS = 600;
-
 const STORAGE_KEYS = {
     funds: "vgrat-fms-compare-funds",
     range: "vgrat-fms-compare-range"
@@ -333,9 +331,12 @@ function buildSeries() {
     });
 
     /*
-     * Shared date axis (union of every fund's dates), thinned
-     * for long ranges so the chart stays fast. The final date
-     * is always kept.
+     * Shared date axis = union of every fund's actual BID dates.
+     * Every real observation is plotted (no sampling). Where a
+     * fund has no BID on a date another fund traded, its value
+     * is left blank and the line is joined straight across to
+     * its next actual BID (spanGaps). Nothing is interpolated
+     * into the data or shown in the tooltip.
      */
     const allDates = new Set();
 
@@ -345,27 +346,7 @@ function buildSeries() {
         }
     }
 
-    let labels = [...allDates].sort();
-
-    if (labels.length > MAX_POINTS) {
-        const step = Math.ceil(labels.length / MAX_POINTS);
-        const lastLabel = labels[labels.length - 1];
-
-        /*
-         * Always keep every fund's first and last point so each
-         * line starts exactly at 100 and ends at its latest BID.
-         */
-        const required = new Set([lastLabel]);
-
-        for (const item of series) {
-            if (item.baseDate) required.add(item.baseDate);
-            if (item.lastDate) required.add(item.lastDate);
-        }
-
-        labels = labels.filter(
-            (date, position) => position % step === 0 || required.has(date)
-        );
-    }
+    const labels = [...allDates].sort();
 
     return { labels, series, startDate, endDate };
 }
@@ -440,6 +421,8 @@ function renderChart(model) {
         return {
             label: item.fund.fundName ?? item.id,
             data: labels.map(date => item.points.get(date)?.value ?? null),
+
+            /* Join over blank dates with a straight line. */
             borderColor: color,
             backgroundColor: color,
             borderWidth: 2,
@@ -484,6 +467,11 @@ function renderChart(model) {
                     boxPadding: 4,
                     usePointStyle: true,
 
+                    /*
+                     * Only show funds that have an actual BID on
+                     * the hovered date - never a joined/estimated
+                     * value.
+                     */
                     filter: item => item.raw !== null && item.raw !== undefined,
 
                     itemSort: (a, b) => b.raw - a.raw,

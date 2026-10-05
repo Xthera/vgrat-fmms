@@ -62,6 +62,7 @@ function sentimentClass(value) {
 
     if (normalized === "POSITIVE") return "news-sentiment-positive";
     if (normalized === "NEGATIVE") return "news-sentiment-negative";
+    if (normalized === "MIXED") return "news-sentiment-mixed";
 
     return "news-sentiment-neutral";
 }
@@ -250,7 +251,7 @@ function openArticle(key) {
             </h2>
 
             <div class="news-card-badges news-popup-badges">
-                <span class="news-badge news-category">${escapeHtml(article.category ?? "MARKET")}</span>
+                <span class="news-badge news-category" data-category="${escapeHtml(String(article.category ?? "MARKET").toUpperCase())}">${escapeHtml(article.category ?? "MARKET")}</span>
                 <span class="news-badge ${importanceClass(article.importance)}">${escapeHtml(article.importance ?? "MEDIUM")}</span>
                 <span class="news-badge ${sentimentClass(article.sentiment)}">${escapeHtml(article.sentiment ?? "NEUTRAL")}</span>
             </div>

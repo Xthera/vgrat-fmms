@@ -183,30 +183,59 @@ function validateMarketNewsData(data) {
    06. LOAD FUND DATA
    ============================================================ */
 
-async function loadFundData() {
+/*
+ * funds.json and bid_history.json are fetched separately so
+ * the small funds file can be used (Fund Explorer) without
+ * waiting for the much larger BID history download.
+ */
+async function loadFundsOnly() {
 
-    const [
-        fundsRaw,
-        bidHistoryRaw
-    ] = await Promise.all([
-        loadJson(DATA_PATHS.funds),
-        loadJson(DATA_PATHS.bidHistory)
-    ]);
-
-
-    const funds = validateFundsData(fundsRaw);
-
-    const bidHistory =
-        validateBidHistoryData(bidHistoryRaw);
+    const fundsRaw =
+        await loadJson(DATA_PATHS.funds);
 
 
     return {
-        funds,
-        bidHistory,
+        funds: validateFundsData(fundsRaw),
+        raw: fundsRaw
+    };
+}
+
+
+async function loadBidHistory() {
+
+    const bidHistoryRaw =
+        await loadJson(DATA_PATHS.bidHistory);
+
+
+    return {
+        bidHistory: validateBidHistoryData(bidHistoryRaw),
+        raw: bidHistoryRaw
+    };
+}
+
+
+/**
+ * @param {Promise} [fundsPromise] reuse an in-flight
+ *        loadFundsOnly() call instead of fetching again.
+ */
+async function loadFundData(fundsPromise = null) {
+
+    const [
+        fundsResult,
+        bidResult
+    ] = await Promise.all([
+        fundsPromise ?? loadFundsOnly(),
+        loadBidHistory()
+    ]);
+
+
+    return {
+        funds: fundsResult.funds,
+        bidHistory: bidResult.bidHistory,
 
         raw: {
-            funds: fundsRaw,
-            bidHistory: bidHistoryRaw
+            funds: fundsResult.raw,
+            bidHistory: bidResult.raw
         }
     };
 }
@@ -320,6 +349,8 @@ async function loadApplicationData() {
 export {
     DATA_PATHS,
     loadJson,
+    loadFundsOnly,
+    loadBidHistory,
     loadFundData,
     loadMarketNews,
     loadApplicationData

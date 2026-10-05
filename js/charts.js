@@ -60,31 +60,64 @@ function seriesColor(slot) {
     return getCssVariable(`--series-${slot + 1}`, "#3987e5");
 }
 
-function colorForItem(chartKey, name) {
-    const fixed = FIXED_COLOR_SLOTS[chartKey];
-
-    if (fixed && Object.prototype.hasOwnProperty.call(fixed, name)) {
-        return seriesColor(fixed[name]);
-    }
+/*
+ * Assign a colour to every item shown in one chart.
+ *
+ * - Known categories keep their fixed slot.
+ * - Other items keep the slot they had last time when it is
+ *   still free, so colours stay stable across filter changes.
+ * - Anything new takes the next free slot. A chart shows at
+ *   most 8 items, so every bar always gets a colour.
+ */
+function colorsForItems(chartKey, names) {
+    const fixed = FIXED_COLOR_SLOTS[chartKey] ?? {};
 
     if (!colorAssignments.has(chartKey)) {
         colorAssignments.set(chartKey, new Map());
     }
 
-    const assigned = colorAssignments.get(chartKey);
+    const remembered = colorAssignments.get(chartKey);
 
-    if (!assigned.has(name)) {
-        const fixedCount = fixed ? Object.keys(fixed).length : 0;
-        const slot = fixedCount + assigned.size;
+    const slots = new Map();
+    const used = new Set();
 
-        assigned.set(name, slot < SERIES_SLOTS ? slot : null);
+    // 1. fixed vocabulary
+    for (const name of names) {
+        if (Object.prototype.hasOwnProperty.call(fixed, name)) {
+            slots.set(name, fixed[name]);
+            used.add(fixed[name]);
+        }
     }
 
-    const slot = assigned.get(name);
+    // 2. remembered slots that are still free
+    for (const name of names) {
+        if (slots.has(name)) continue;
 
-    return slot === null
-        ? getCssVariable("--text-faint", "#566572")
-        : seriesColor(slot);
+        const previous = remembered.get(name);
+
+        if (previous !== undefined && !used.has(previous)) {
+            slots.set(name, previous);
+            used.add(previous);
+        }
+    }
+
+    // 3. next free slot for everything else
+    for (const name of names) {
+        if (slots.has(name)) continue;
+
+        let slot = 0;
+
+        while (used.has(slot) && slot < SERIES_SLOTS) slot += 1;
+
+        slots.set(name, slot % SERIES_SLOTS);
+        used.add(slot);
+    }
+
+    for (const [name, slot] of slots) {
+        remembered.set(name, slot);
+    }
+
+    return names.map(name => seriesColor(slots.get(name)));
 }
 
 function importanceColor(name, colors) {
@@ -471,11 +504,9 @@ function createNewsDistributionChart(
                 {
                     label,
                     data: entries.map(([, value]) => Number(value) || 0),
-                    backgroundColor: entries.map(([key]) =>
-                        label === "Importance"
-                            ? importanceColor(key, colors)
-                            : colorForItem(label, key)
-                    ),
+                    backgroundColor: label === "Importance"
+                        ? entries.map(([key]) => importanceColor(key, colors))
+                        : colorsForItems(label, entries.map(([key]) => key)),
                     borderRadius: 4,
                     maxBarThickness: 22
                 }

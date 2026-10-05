@@ -20,6 +20,7 @@
 
 import {
     loadFundData,
+    loadFundsOnly,
     loadMarketNews
 } from "./data-loader.js";
 
@@ -65,8 +66,7 @@ import {
 } from "./news-history.js";
 
 import {
-    initializeFundExplorer,
-    refreshFundExplorer
+    initializeFundExplorer
 } from "./fund-explorer.js";
 
 import {
@@ -383,8 +383,6 @@ function applyTheme(theme) {
             updateChartsForTheme();
 
             refreshFundCompare();
-
-            refreshFundExplorer();
 
             if (state.currentView === "news") {
                 renderNewsCharts();
@@ -1198,23 +1196,6 @@ function buildPerformanceResults() {
         yearly?.winners?.[0]?.fundIdentifier,
         yearly?.losers?.[0]?.fundIdentifier
     ].filter(Boolean);
-
-
-    try {
-
-        initializeFundExplorer({
-            funds: state.data.funds,
-            historyIndex
-        });
-
-    } catch (error) {
-
-        console.warn(
-            "VGrat FMS: fund explorer failed.",
-            error
-        );
-
-    }
 
 
     try {
@@ -2685,8 +2666,40 @@ async function loadApplication() {
      * market-news file no longer waits for the large
      * bid_history.json download.
      */
+    /*
+     * Fund Explorer needs data/funds.json only, so it renders
+     * as soon as that file arrives - before the large BID
+     * history finishes downloading.
+     */
+    const fundsOnly =
+        loadFundsOnly();
+
+
+    const explorerTask =
+        fundsOnly.then(
+            ({ funds }) => {
+
+                try {
+
+                    initializeFundExplorer({
+                        funds
+                    });
+
+                } catch (error) {
+
+                    console.warn(
+                        "VGrat FMS: fund explorer failed.",
+                        error
+                    );
+
+                }
+
+            }
+        );
+
+
     const fundTask =
-        loadFundData().then(
+        loadFundData(fundsOnly).then(
             fundData => {
 
                 state.data.funds =
@@ -2736,6 +2749,7 @@ async function loadApplication() {
 
     const results =
         await Promise.allSettled([
+            explorerTask,
             fundTask,
             newsTask
         ]);
