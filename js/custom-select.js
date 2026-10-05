@@ -202,6 +202,9 @@ function enhanceSelect(select) {
     list.addEventListener("mousedown", event => event.preventDefault());
 
     list.addEventListener("click", event => {
+        // Stop a wrapping <label> from also toggling its checkbox
+        event.preventDefault();
+
         const item = event.target.closest(".vselect-option");
 
         if (item) choose(Number(item.dataset.index));
