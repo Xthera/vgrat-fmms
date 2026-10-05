@@ -1,12 +1,28 @@
 {
-  "generatedAtSgt": "2026-10-05T09:36:08+08:00",
+  "generatedAtSgt": "2026-10-05T12:45:12+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
   "maxArticles": 100,
   "source": "CNBC",
-  "articleCount": 76,
+  "articleCount": 77,
   "articles": [
+    {
+      "id": "bf968b02160024fc0d379a565125b0155e1f51c98d589e56e92ad86415ad12ec",
+      "source": "CNBC",
+      "title": "Surging Treasury yields don’t signal a U.S. 'fiscal apocalypse' — yet",
+      "publishedAtSgt": "2026-10-05T10:24:07+08:00",
+      "url": "https://www.cnbc.com/2026/10/05/treasury-yields-fiscal-concerns-not-crisis-yet.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "Therefore, we are some way away from a fiscal crisis.\" The negative feedback loop becomes more dangerous when nominal economic growth falls to low levels, causing debt relative to the size of the economy to rise persistently, Reese said. TD pointed to stronger economic growth, expectations for Federal Reserve rate hikes, higher oil prices, corporate bond issuance and repositioning by fast-money investors alongside fiscal concerns, as factors driving yields higher.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-05T12:45:12+08:00"
+    },
     {
       "id": "2e98323f01b596216c6a46a9d8ec89ab3a81f366c83cc1eb6ba2f4f6394fa623",
       "source": "CNBC",
