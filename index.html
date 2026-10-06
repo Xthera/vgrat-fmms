@@ -1780,35 +1780,35 @@
 
                         <label class="filter-control">
                             <span>Asset class</span>
-                            <select id="explorer-asset" data-explorer-filter>
+                            <select id="explorer-asset" data-explorer-filter multiple>
                                 <option value="ALL">All asset classes</option>
                             </select>
                         </label>
 
                         <label class="filter-control">
                             <span>Risk level</span>
-                            <select id="explorer-risk" data-explorer-filter>
+                            <select id="explorer-risk" data-explorer-filter multiple>
                                 <option value="ALL">All risk levels</option>
                             </select>
                         </label>
 
                         <label class="filter-control">
                             <span>Geography</span>
-                            <select id="explorer-geography" data-explorer-filter>
+                            <select id="explorer-geography" data-explorer-filter multiple>
                                 <option value="ALL">All geographies</option>
                             </select>
                         </label>
 
                         <label class="filter-control">
                             <span>Sector</span>
-                            <select id="explorer-sector" data-explorer-filter>
+                            <select id="explorer-sector" data-explorer-filter multiple>
                                 <option value="ALL">All sectors</option>
                             </select>
                         </label>
 
                         <label class="filter-control">
                             <span>Dividend</span>
-                            <select id="explorer-dividend" data-explorer-filter>
+                            <select id="explorer-dividend" data-explorer-filter multiple>
                                 <option value="ALL">All funds</option>
                                 <option value="YES">Pays dividend</option>
                                 <option value="NO">No dividend</option>
@@ -1817,7 +1817,7 @@
 
                         <label class="filter-control" data-payment-filter hidden>
                             <span>Payment mode</span>
-                            <select id="explorer-payment" data-explorer-filter>
+                            <select id="explorer-payment" data-explorer-filter multiple>
                                 <option value="ALL">All payment modes</option>
                             </select>
                         </label>
@@ -1869,6 +1869,7 @@
                             <thead>
                                 <tr>
                                     <th scope="col" data-explorer-sort="name" tabindex="0" aria-sort="ascending">Fund <span class="sort-arrow"></span></th>
+                                    <th scope="col" class="explorer-payment-head">Payment mode</th>
                                     <th scope="col" data-explorer-sort="asset" tabindex="0">Asset class <span class="sort-arrow"></span></th>
                                     <th scope="col" data-explorer-sort="risk" tabindex="0">Risk <span class="sort-arrow"></span></th>
                                     <th scope="col" data-explorer-sort="bid" tabindex="0">BID price <span class="sort-arrow"></span></th>
@@ -2120,29 +2121,88 @@
 
                     <form id="report-form" class="report-form" novalidate hidden>
 
-                        <fieldset class="report-group">
-                            <legend>Client &amp; adviser</legend>
+                        <!-- STEP 1 -->
+                        <fieldset class="report-group report-step" data-report-step="1">
+                            <legend><span class="report-step-no">1</span>Client &amp; adviser</legend>
 
                             <div class="report-grid report-grid-3">
                                 <label class="report-field">
-                                    <span>Client name</span>
-                                    <input id="report-client" type="text" autocomplete="off" placeholder="e.g. Mr Tan Wei Ming">
+                                    <span>Client name <b class="report-required" aria-hidden="true">*</b></span>
+                                    <input id="report-client" type="text" autocomplete="off" placeholder="e.g. Mr Tan Wei Ming" required aria-required="true">
                                 </label>
 
                                 <label class="report-field">
-                                    <span>Prepared by</span>
-                                    <input id="report-adviser" type="text" autocomplete="off" placeholder="Your name">
+                                    <span>Prepared by <b class="report-required" aria-hidden="true">*</b></span>
+                                    <input id="report-adviser" type="text" autocomplete="off" placeholder="Your name" required aria-required="true">
                                 </label>
 
                                 <label class="report-field">
-                                    <span>Adviser contact</span>
-                                    <input id="report-contact" type="text" autocomplete="off" placeholder="Phone or email (optional)">
+                                    <span>Adviser contact <i class="report-optional">(optional)</i></span>
+                                    <input id="report-contact" type="text" autocomplete="off" placeholder="Phone or email">
                                 </label>
                             </div>
+
+                            <p class="settings-help report-step-hint" data-step-hint="1">Fill in the client name and your name to continue.</p>
                         </fieldset>
 
-                        <fieldset class="report-group">
-                            <legend>Funds &amp; allocation</legend>
+                        <!-- STEP 2 -->
+                        <fieldset class="report-group report-step" data-report-step="2" hidden>
+                            <legend><span class="report-step-no">2</span>Payment mode</legend>
+
+                            <div id="report-payment-options" class="report-payment-options" role="radiogroup" aria-label="Payment mode"></div>
+
+                            <p class="settings-help report-step-hint" data-step-hint="2">Choose how the client will pay. Only funds that accept it can be added.</p>
+                        </fieldset>
+
+                        <!-- STEP 3 -->
+                        <fieldset class="report-group report-step" data-report-step="3" hidden>
+                            <legend><span class="report-step-no">3</span>Premium</legend>
+
+                            <div class="report-grid report-grid-5">
+                                <label class="report-field">
+                                    <span>Initial lump sum</span>
+                                    <input id="report-lump" type="number" min="0" step="100" inputmode="decimal" placeholder="e.g. 10000">
+                                </label>
+
+                                <label class="report-field">
+                                    <span>Regular top-up</span>
+                                    <input id="report-topup" type="number" min="0" step="50" inputmode="decimal" placeholder="e.g. 500">
+                                </label>
+
+                                <label class="filter-control report-field">
+                                    <span>Top-up frequency</span>
+                                    <select id="report-frequency">
+                                        <option value="monthly">Monthly</option>
+                                        <option value="quarterly">Quarterly</option>
+                                        <option value="half-yearly">Half-yearly</option>
+                                        <option value="yearly">Yearly</option>
+                                        <option value="none">No top-ups</option>
+                                    </select>
+                                </label>
+
+                                <label class="report-field">
+                                    <span>Start date</span>
+                                    <input id="report-start" type="date">
+                                </label>
+
+                                <label class="report-field">
+                                    <span>End date</span>
+                                    <input id="report-end" type="date">
+                                </label>
+                            </div>
+
+                            <p id="report-date-note" class="settings-help report-date-note"></p>
+
+                            <p class="settings-help report-step-hint" data-step-hint="3">Enter an initial lump sum or a regular top-up (at least one must be above 0), with a start date before the end date.</p>
+                        </fieldset>
+
+                        <!-- STEP 4 -->
+                        <fieldset class="report-group report-step" data-report-step="4" hidden>
+                            <legend><span class="report-step-no">4</span>Funds &amp; allocation</legend>
+
+                            <p id="report-payment-note" class="settings-help report-payment-note"></p>
+
+                            <p id="report-date-adjust" class="settings-help report-date-adjust" hidden></p>
 
                             <div class="report-picker-row">
                                 <div class="compare-picker report-picker">
@@ -2173,69 +2233,66 @@
                                     <tbody id="report-funds-body"></tbody>
                                 </table>
                             </div>
+
+                            <p class="settings-help report-step-hint" data-step-hint="4">Allocations go up in steps of 5% and must total 100%.</p>
+
                         </fieldset>
 
-                        <fieldset class="report-group">
-                            <legend>Investment</legend>
+                        <!-- STEP 5 -->
+                        <fieldset class="report-group report-step" data-report-step="5" hidden>
+                            <legend><span class="report-step-no">5</span>Investment booster</legend>
 
-                            <div class="report-grid report-grid-5">
-                                <label class="report-field">
-                                    <span>Initial lump sum</span>
-                                    <input id="report-lump" type="number" min="0" step="100" inputmode="decimal" value="10000">
-                                </label>
+                            <p class="settings-help report-booster-question">Add one-off extra investments on top of the premium?</p>
 
-                                <label class="report-field">
-                                    <span>Regular top-up</span>
-                                    <input id="report-topup" type="number" min="0" step="50" inputmode="decimal" value="500">
-                                </label>
-
-                                <label class="filter-control report-field">
-                                    <span>Top-up frequency</span>
-                                    <select id="report-frequency">
-                                        <option value="monthly">Monthly</option>
-                                        <option value="quarterly">Quarterly</option>
-                                        <option value="half-yearly">Half-yearly</option>
-                                        <option value="yearly">Yearly</option>
-                                        <option value="none">No top-ups</option>
-                                    </select>
-                                </label>
-
-                                <label class="report-field">
-                                    <span>Start date</span>
-                                    <input id="report-start" type="date">
-                                </label>
-
-                                <label class="report-field">
-                                    <span>End date</span>
-                                    <input id="report-end" type="date">
-                                </label>
+                            <div id="report-booster-choice" class="report-payment-options report-booster-choice" role="radiogroup" aria-label="Investment booster">
+                                <button type="button" class="report-payment-option" role="radio" aria-checked="false" data-report-booster="no">
+                                    <span class="report-payment-name">No</span>
+                                    <span class="report-payment-desc">Premium only</span>
+                                </button>
+                                <button type="button" class="report-payment-option" role="radio" aria-checked="false" data-report-booster="yes">
+                                    <span class="report-payment-name">Yes</span>
+                                    <span class="report-payment-desc">Add one or more boosters</span>
+                                </button>
                             </div>
 
-                            <p id="report-date-note" class="settings-help report-date-note"></p>
+                            <div id="report-booster-list" class="report-booster-list" hidden></div>
+
+                            <button id="report-booster-add" type="button" class="news-clear-filters report-booster-add" hidden>+ Add another booster</button>
+
+                            <p class="settings-help report-step-hint" data-step-hint="5">Choose No to continue, or Yes and fill in each booster's date, amount and fund allocation (total 100%).</p>
+
+                            <p id="report-error" class="report-error" role="alert" hidden></p>
+
+                            <div class="report-actions">
+                                <button type="submit" class="report-generate" disabled>Generate report</button>
+                                <span class="settings-help">Amounts are in the funds' currency. Nothing you enter is saved or sent anywhere.</span>
+                            </div>
                         </fieldset>
-
-                        <p id="report-error" class="report-error" role="alert" hidden></p>
-
-                        <div class="report-actions">
-                            <button type="submit" class="report-generate">Generate report</button>
-                            <span class="settings-help">Amounts are in the funds' currency. Nothing you enter is saved or sent anywhere.</span>
-                        </div>
 
                     </form>
 
                 </section>
 
 
-                <section id="report-output" class="report-output" hidden>
+                <!-- Report preview popup (A4 "PDF view") -->
+                <dialog id="report-output" class="report-dialog" aria-labelledby="report-dialog-title">
 
                     <div class="report-toolbar">
-                        <span class="settings-help">Preview · prints on A4 in a clean white layout</span>
-                        <button id="report-print" type="button" class="report-generate">⎙ Print / Save as PDF</button>
+                        <div class="report-toolbar-title">
+                            <strong id="report-dialog-title">Report preview</strong>
+                            <span class="settings-help">A4 · this is how the PDF will look</span>
+                        </div>
+                        <div class="report-toolbar-actions">
+                            <button id="report-print" type="button" class="report-generate">⎙ Print / Save as PDF</button>
+                            <button type="button" class="report-close" data-report-close aria-label="Close preview" title="Close">×</button>
+                        </div>
                     </div>
 
-                    <article id="report-sheet" class="report-sheet" aria-label="Investment growth report"></article>
+                    <div class="report-paper-area">
+                        <article id="report-sheet" class="report-sheet" aria-label="Investment growth report"></article>
+                    </div>
 
-                </section>
+                </dialog>
 
             </section>
 
