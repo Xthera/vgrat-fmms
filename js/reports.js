@@ -42,7 +42,7 @@ const report = {
     requestedStart: null,  // start date as typed in the Premium step
     booster: null,         // investment booster: null | "no" | "yes"
     boosters: [],          // [{ date, amount, selected: [{ id, weight }] }]
-    chart: null,
+    charts: [],
     lastResult: null
 };
 
@@ -275,6 +275,46 @@ function paymentRange() {
    CALCULATION
    ============================================================ */
 
+/* Year-by-year rows: each calendar year end in the period + the end date */
+function buildYearRows(series, firstDate, endDate) {
+    const rows = [];
+
+    if (!series.length) return rows;
+
+    const firstYear = Number(firstDate.slice(0, 4));
+    const lastYear = Number(endDate.slice(0, 4));
+
+    const pointOnOrBefore = iso => {
+        let found = null;
+
+        for (const point of series) {
+            if (point.date <= iso) found = point;
+            else break;
+        }
+
+        return found;
+    };
+
+    for (let year = firstYear; year <= lastYear; year += 1) {
+        const target = year === lastYear ? endDate : `${year}-12-31`;
+        const point = pointOnOrBefore(target);
+
+        if (!point) continue;
+        if (rows.length && rows[rows.length - 1].date === point.date) continue;
+
+        rows.push({
+            label: year === lastYear ? `${formatDate(point.date)} (latest)` : `End ${year}`,
+            date: point.date,
+            invested: point.invested,
+            value: point.value,
+            gain: point.value - point.invested,
+            gainPct: point.invested ? ((point.value - point.invested) / point.invested) * 100 : null
+        });
+    }
+
+    return rows;
+}
+
 function calculate(input) {
     const { lumpSum, topUp, frequency, start, end } = input;
     const months = FREQUENCIES[frequency]?.months ?? 0;
@@ -373,17 +413,23 @@ function calculate(input) {
 
     const dates = [...dateSet].sort();
 
+    for (const fund of funds) fund.series = [];
+
     const series = dates.map(date => {
         let value = 0;
         let invested = 0;
 
         for (const fund of funds) {
-            const units = fund.purchases.filter(p => p.date <= date).reduce((sum, p) => sum + p.units, 0);
-            const spent = fund.purchases.filter(p => p.date <= date).reduce((sum, p) => sum + p.amount, 0);
+            const bought = fund.purchases.filter(p => p.date <= date);
+            const units = bought.reduce((sum, p) => sum + p.units, 0);
+            const spent = bought.reduce((sum, p) => sum + p.amount, 0);
             const price = priceOnOrBefore(fund.obs, date);
+            const fundValue = price ? units * price.bidPrice : 0;
 
             invested += spent;
-            value += price ? units * price.bidPrice : 0;
+            value += fundValue;
+
+            if (spent > 0) fund.series.push({ date, value: fundValue, invested: spent });
         }
 
         return { date, value, invested };
@@ -410,7 +456,14 @@ function calculate(input) {
             averageCost: units ? invested / units : null,
             value,
             gain: value - invested,
-            gainPct: invested ? ((value - invested) / invested) * 100 : null
+            gainPct: invested ? ((value - invested) / invested) * 100 : null,
+            annualised: fund.series.length && yearsBetween(fund.series[0].date, endDate) >= 1
+                ? xirr([
+                    ...fund.purchases.map(p => ({ date: p.date, amount: -p.amount })),
+                    { date: endDate, amount: value }
+                ])
+                : null,
+            yearRows: buildYearRows(fund.series, fund.series[0]?.date ?? start, endDate)
         };
     });
 
@@ -435,38 +488,7 @@ function calculate(input) {
     const firstDate = series[0]?.date ?? start;
     const annualised = yearsBetween(firstDate, endDate) >= 1 ? xirr(flows) : null;
 
-    // Year-by-year: each calendar year end in the period + the end date
-    const yearRows = [];
-    const firstYear = Number(firstDate.slice(0, 4));
-    const lastYear = Number(endDate.slice(0, 4));
-
-    const pointOnOrBefore = iso => {
-        let found = null;
-
-        for (const point of series) {
-            if (point.date <= iso) found = point;
-            else break;
-        }
-
-        return found;
-    };
-
-    for (let year = firstYear; year <= lastYear; year += 1) {
-        const target = year === lastYear ? endDate : `${year}-12-31`;
-        const point = pointOnOrBefore(target);
-
-        if (!point) continue;
-        if (yearRows.length && yearRows[yearRows.length - 1].date === point.date) continue;
-
-        yearRows.push({
-            label: year === lastYear ? `${formatDate(point.date)} (latest)` : `End ${year}`,
-            date: point.date,
-            invested: point.invested,
-            value: point.value,
-            gain: point.value - point.invested,
-            gainPct: point.invested ? ((point.value - point.invested) / point.invested) * 100 : null
-        });
-    }
+    const yearRows = buildYearRows(series, firstDate, endDate);
 
     return {
         input,
@@ -1360,7 +1382,147 @@ function renderReport(result) {
 
     const code = id => report.fundById.get(id)?.fundCode ?? id;
 
+    const pageHead = title => `
+        <div class="rpt-running-head">
+            <span>Investment Growth Report${input.clientName ? ` · ${escapeHtml(input.clientName)}` : ""}</span>
+            <span>${escapeHtml(title)}</span>
+        </div>
+    `;
+
+    const published = value => {
+        const text = String(value ?? "").trim();
+
+        if (!text || text === "-" || text === "None") return `<td>—</td>`;
+
+        return `<td class="${tone(parseFloat(text))}">${escapeHtml(text)}</td>`;
+    };
+
+    const CUMULATIVE = [["YTD", "cumulativeYtd"], ["1 month", "cumulative1m"], ["3 months", "cumulative3m"], ["6 months", "cumulative6m"], ["1 year", "cumulative1y"], ["3 years", "cumulative3y"], ["5 years", "cumulative5y"]];
+    const ANNUALISED = [["3 years", "annualised3y"], ["5 years", "annualised5y"], ["10 years", "annualised10y"], ["Since launch", "annualisedSinceLaunch"]];
+
+    const fundPage = (fund, index) => {
+        const details = fund.fund?.fund ?? {};
+        const name = escapeHtml(fund.fund?.fundName ?? fund.id);
+        const color = PRINT_COLORS[fund.slot % PRINT_COLORS.length];
+        const purchases = fund.purchases.length;
+        const boosterBuys = fund.purchases.filter(p => p.booster).length;
+
+        return `
+            <section class="rpt-page rpt-fund-page">
+                ${pageHead(`Fund ${index + 1} of ${perFund.length}`)}
+
+                <div class="rpt-fund-title">
+                    <i class="rpt-swatch rpt-swatch-lg" style="background:${color}"></i>
+                    <div>
+                        <h2>${name}</h2>
+                        <div class="rpt-muted">
+                            ${escapeHtml(fund.fund?.fundCode ?? "")} · ${escapeHtml(details.assetClass ?? "—")}${details.assetSubClass ? ` (${escapeHtml(details.assetSubClass)})` : ""}
+                            · ${escapeHtml(details.riskClassification ?? "—")} · ${escapeHtml(currencyOf(fund.id))}
+                        </div>
+                    </div>
+                </div>
+
+                <section class="rpt-tiles">
+                    <div class="rpt-tile">
+                        <span>Invested</span>
+                        <strong>${m(fund.invested)}</strong>
+                        <em>${fund.boosterInvested > 0 ? `incl. ${m(fund.boosterInvested)} booster` : `${purchases} investment${purchases === 1 ? "" : "s"}`}</em>
+                    </div>
+                    <div class="rpt-tile">
+                        <span>Value on ${escapeHtml(formatDate(fund.endDate ?? result.endDate))}</span>
+                        <strong>${m(fund.value)}</strong>
+                        <em>${fund.units.toLocaleString("en-SG", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} units</em>
+                    </div>
+                    <div class="rpt-tile ${tone(fund.gain)}">
+                        <span>Gain / loss</span>
+                        <strong>${m(fund.gain)}</strong>
+                        <em>${percent(fund.gainPct)} on amount invested</em>
+                    </div>
+                    <div class="rpt-tile ${tone(fund.annualised ?? 0)}">
+                        <span>Annualised return</span>
+                        <strong>${fund.annualised === null ? "—" : percent(fund.annualised)}</strong>
+                        <em>${fund.annualised === null ? "shown for periods of 1 year or more" : "per year, money-weighted"}</em>
+                    </div>
+                </section>
+
+                <section class="rpt-section">
+                    <h3>Value of this holding</h3>
+                    <div class="rpt-chart-wrap rpt-chart-wrap-fund">
+                        <canvas data-fund-chart="${index}" aria-label="Value of ${name} compared with the amount invested"></canvas>
+                    </div>
+                    <div class="rpt-legend">
+                        <span><i style="background:${color}"></i>Holding value</span>
+                        <span><i class="rpt-legend-dash"></i>Amount invested</span>
+                    </div>
+                </section>
+
+                <section class="rpt-section">
+                    <h3>This holding</h3>
+                    <div class="rpt-facts-grid">
+                        <div><span>Allocation</span><strong>${fund.boosterOnly ? "Booster only" : `${fund.weight}%`}</strong></div>
+                        <div><span>First purchase</span><strong>${escapeHtml(formatDate(fund.startDate))}</strong><em>at BID ${fund.startBid === null ? "—" : fund.startBid.toFixed(5)}</em></div>
+                        <div><span>Purchases</span><strong>${purchases}</strong>${boosterBuys ? `<em>${boosterBuys} from boosters</em>` : ""}</div>
+                        <div><span>Average cost</span><strong>${fund.averageCost === null ? "—" : fund.averageCost.toFixed(5)}</strong></div>
+                        <div><span>BID on ${escapeHtml(formatDate(fund.endDate ?? result.endDate))}</span><strong>${fund.endBid === null ? "—" : fund.endBid.toFixed(5)}</strong></div>
+                        <div><span>Payment modes</span><strong>${escapeHtml((Array.isArray(details.paymentModes) ? details.paymentModes : []).join(", ") || "—")}</strong></div>
+                    </div>
+                </section>
+
+                <section class="rpt-section">
+                    <h3>Year by year</h3>
+                    <table class="rpt-table rpt-table-years">
+                        <thead>
+                            <tr>
+                                <th>As at</th>
+                                <th>Amount invested</th>
+                                <th>Holding value</th>
+                                <th>Gain / loss</th>
+                                <th>Return on invested</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${fund.yearRows.map(row => `
+                                <tr>
+                                    <td>${escapeHtml(row.label)}</td>
+                                    <td>${m(row.invested)}</td>
+                                    <td>${m(row.value)}</td>
+                                    <td class="${tone(row.gain)}">${m(row.gain)}</td>
+                                    <td class="${tone(row.gain)}">${percent(row.gainPct)}</td>
+                                </tr>
+                            `).join("")}
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="rpt-section">
+                    <h3>Published fund performance</h3>
+                    <table class="rpt-table rpt-table-perf">
+                        <thead>
+                            <tr><th>Cumulative</th>${CUMULATIVE.map(([label]) => `<th>${label}</th>`).join("")}</tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Fund</td>${CUMULATIVE.map(([, key]) => published(details[key])).join("")}</tr>
+                        </tbody>
+                    </table>
+                    <table class="rpt-table rpt-table-perf">
+                        <thead>
+                            <tr><th>Annualised</th>${ANNUALISED.map(([label]) => `<th>${label}</th>`).join("")}</tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Fund</td>${ANNUALISED.map(([, key]) => published(details[key])).join("")}</tr>
+                        </tbody>
+                    </table>
+                    <div class="rpt-muted rpt-perf-note">
+                        Prudential's published figures${details.valuationDate ? ` as at ${escapeHtml(details.valuationDate)}` : ""}${details.inceptionDate ? ` · fund launched ${escapeHtml(details.inceptionDate)}` : ""}.
+                        These are the fund's own returns, not this client's.
+                    </div>
+                </section>
+            </section>
+        `;
+    };
+
     sheet.innerHTML = `
+        <section class="rpt-page rpt-page-summary">
         <header class="rpt-header">
             <img src="assets/logo.png" alt="" class="rpt-logo" width="56" height="56">
             <div class="rpt-title-block">
@@ -1499,6 +1661,11 @@ function renderReport(result) {
             </table>
         </section>
 
+        </section>
+
+        <section class="rpt-page">
+            ${pageHead("Year by year · About the funds")}
+
         <section class="rpt-section">
             <h3>Year by year</h3>
             <table class="rpt-table rpt-table-years">
@@ -1560,6 +1727,9 @@ function renderReport(result) {
             Please refer to the fund's prospectus and product highlights sheet before investing.
             <div class="rpt-source">Source: VGrat FMS, Prudential Singapore fund prices. Generated ${escapeHtml(today)}.</div>
         </footer>
+        </section>
+
+        ${perFund.map(fundPage).join("")}
     `;
 
     // Show the report in the A4 preview popup (before printing)
@@ -1569,41 +1739,76 @@ function renderReport(result) {
 
     qs(".report-paper-area", wrap)?.scrollTo(0, 0);
 
+    fitPages(sheet);
     renderChart(result);
 
 
 }
 
-function renderChart(result) {
-    const canvas = qs("#report-chart");
+/* ============================================================
+   FIT EACH REPORT PAGE ON ONE A4 SHEET
+   Page 1 = summary to portfolio breakdown, page 2 = year by year
+   and about the funds, then one page per fund. A page whose content
+   is taller than the A4 printable area is scaled down slightly
+   (CSS zoom) so it never spills onto an extra sheet.
+   ============================================================ */
+
+const MM = 96 / 25.4;
+const PRINT_WIDTH_PX = (210 - 2 * 12) * MM;      // @page margin 12mm
+const PRINT_HEIGHT_PX = (297 - 2 * 12) * MM - 8; // small safety gap
+const MIN_ZOOM = 0.6;
+
+function fitPages(sheet) {
+    for (const page of sheet.querySelectorAll(".rpt-page")) {
+        let body = page.querySelector(":scope > .rpt-page-body");
+
+        if (!body) {
+            body = document.createElement("div");
+            body.className = "rpt-page-body";
+            body.append(...page.childNodes);
+            page.append(body);
+        }
+
+        // Measure at the printed width
+        body.style.zoom = "";
+        body.style.width = `${PRINT_WIDTH_PX}px`;
+
+        const height = body.scrollHeight;
+
+        body.style.width = "";
+
+        if (height > PRINT_HEIGHT_PX) {
+            body.style.zoom = String(Math.max(MIN_ZOOM, Math.floor((PRINT_HEIGHT_PX / height) * 1000) / 1000));
+        }
+    }
+}
+
+function buildChart(canvas, series, currency, color, labels) {
     const ChartConstructor = window.Chart;
 
-    report.chart?.destroy?.();
-    report.chart = null;
+    if (!canvas || !ChartConstructor) return null;
 
-    if (!canvas || !ChartConstructor) return;
-
-    const currency = currencyOf(result.perFund[0].id);
     const font = Math.round(11 * getFontScale());
+    const fill = color.length === 7 ? `${color}1a` : color;
 
-    report.chart = new ChartConstructor(canvas, {
+    return new ChartConstructor(canvas, {
         type: "line",
         data: {
-            labels: result.series.map(point => point.date),
+            labels: series.map(point => point.date),
             datasets: [
                 {
-                    label: "Portfolio value",
-                    data: result.series.map(point => point.value),
-                    borderColor: "#1f5f99",
-                    backgroundColor: "rgba(31, 95, 153, 0.10)",
+                    label: labels[0],
+                    data: series.map(point => point.value),
+                    borderColor: color,
+                    backgroundColor: fill,
                     fill: true,
                     borderWidth: 2,
                     pointRadius: 0,
                     tension: 0
                 },
                 {
-                    label: "Total invested",
-                    data: result.series.map(point => point.invested),
+                    label: labels[1],
+                    data: series.map(point => point.invested),
                     borderColor: "#7a8590",
                     borderDash: [5, 4],
                     borderWidth: 1.5,
@@ -1659,6 +1864,28 @@ function renderChart(result) {
             }
         }
     });
+}
+
+function renderChart(result) {
+    for (const chart of report.charts) chart?.destroy?.();
+
+    report.charts = [];
+
+    const currency = currencyOf(result.perFund[0].id);
+
+    report.charts.push(buildChart(qs("#report-chart"), result.series, currency, "#1f5f99", ["Portfolio value", "Total invested"]));
+
+    result.perFund.forEach((fund, index) => {
+        report.charts.push(buildChart(
+            qs(`[data-fund-chart="${index}"]`),
+            fund.series,
+            currency,
+            PRINT_COLORS[fund.slot % PRINT_COLORS.length],
+            ["Holding value", "Amount invested"]
+        ));
+    });
+
+    report.charts = report.charts.filter(Boolean);
 }
 
 
@@ -1866,7 +2093,7 @@ function bindEvents() {
     // whether printing starts from the button or Ctrl+P.
     const resizeChart = () => {
         try {
-            report.chart?.resize?.();
+            for (const chart of report.charts) chart?.resize?.();
         } catch {
             // ignore
         }
