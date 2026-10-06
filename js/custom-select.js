@@ -17,8 +17,9 @@
    - change events still fire on the <select>, so existing
      filter code keeps working unchanged
 
-   On touch phones the native picker is kept (it is the better
-   experience there).
+   On touch phones the native picker is kept for single-choice
+   dropdowns (it is the better experience there); multi-selects
+   always use this dropdown.
    ============================================================ */
 
 const PHONE_QUERY =
@@ -43,7 +44,10 @@ function escapeHtml(value) {
 function enhanceSelect(select) {
     if (!select || select.dataset.enhanced === "true") return;
 
-    if (window.matchMedia?.(PHONE_QUERY).matches) return;
+    // Phones keep their own picker for single-choice dropdowns. A
+    // multi-select has no proper phone picker (it shows as a small
+    // scrolling list box), so it always gets the themed dropdown.
+    if (!select.multiple && window.matchMedia?.(PHONE_QUERY).matches) return;
 
     select.dataset.enhanced = "true";
 
@@ -153,6 +157,19 @@ function enhanceSelect(select) {
 
         list.hidden = false;
         wrap.classList.add("is-open");
+
+        // Keep the menu on screen: if it would run off the right edge
+        // (e.g. a filter in the right-hand column on a phone), line it
+        // up with the right side of its button instead.
+        list.style.left = "";
+        list.style.right = "";
+
+        const box = list.getBoundingClientRect();
+
+        if (box.right > document.documentElement.clientWidth - 8) {
+            list.style.left = "auto";
+            list.style.right = "0";
+        }
         button.setAttribute("aria-expanded", "true");
         openInstance = instance;
 
