@@ -19,6 +19,7 @@
                                download)
    ============================================================ */
 
+import { placeDropdown } from "./dropdown-place.js";
 import {
     createChart,
     destroyChart,
@@ -412,6 +413,7 @@ function renderHoldingSuggestions() {
         : `<li class="compare-suggestion-empty">No matching holdings</li>`;
 
     list.hidden = false;
+    placeDropdown(list);
     list.scrollTop = 0;
     input.setAttribute("aria-expanded", "true");
 }
