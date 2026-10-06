@@ -47,6 +47,15 @@ const PROFILE_RANGES = [
 
 const PRUDENTIAL_ORIGIN = "https://www.prudential.com.sg";
 
+/* Payment modes as published by Prudential (data/funds.json) */
+const PAYMENT_MODE_ORDER = ["Cash", "SRS", "CPF-OA", "CPF-SA", "CPF"];
+
+function paymentChips(modes) {
+    return modes
+        .map(mode => `<span class="payment-chip">${escapeHtml(mode)}</span>`)
+        .join("");
+}
+
 const RISK_ORDER = {
     "Lower Risk": 1,
     "Low to Medium Risk": 2,
@@ -72,7 +81,8 @@ const explorer = {
         risk: "ALL",
         geography: "ALL",
         sector: "ALL",
-        dividend: "ALL"
+        dividend: "ALL",
+        payment: "ALL"
     },
     sort: { key: "name", direction: "asc" },
     profile: { id: null }
@@ -186,6 +196,7 @@ function buildRow(fund) {
         fund,
         name: fund.fundName ?? "",
         code: fund.fundCode ?? "",
+        paymentModes: Array.isArray(details.paymentModes) ? details.paymentModes.filter(Boolean) : [],
         assetClass: details.assetClass ?? "—",
         assetSubClass: details.assetSubClass ?? "",
         risk: details.riskClassification ?? "—",
@@ -302,6 +313,24 @@ function renderFilterOptions() {
         `All funds (${dividendRows.length})`,
         value => `${value === "YES" ? "Pays dividend" : "No dividend"} (${dividendCounts.get(value) ?? 0})`
     );
+
+    // Payment mode (shown only once funds.json has payment modes)
+    const anyPayment = explorer.rows.some(row => row.paymentModes.length);
+    const paymentLabel = document.querySelector("[data-payment-filter]");
+
+    if (paymentLabel) paymentLabel.hidden = !anyPayment;
+
+    if (anyPayment) {
+        const paymentRows = rowsWithout("payment");
+        const paymentCounts = countBy(paymentRows, row => row.paymentModes);
+
+        fillSelect(
+            "#explorer-payment",
+            PAYMENT_MODE_ORDER.filter(mode => paymentCounts.has(mode)),
+            `All payment modes (${paymentRows.length})`,
+            label(paymentCounts)
+        );
+    }
 
     // Funds-holding suggestions follow the other filters too
     explorer.holdingNames = holdingNamesFor(rowsWithout("holding"));
@@ -474,6 +503,7 @@ function rowMatches(row, f, skip = null) {
     if (skip !== "dividend" && f.dividend === "YES" && !row.hasDividend) return false;
     if (skip !== "dividend" && f.dividend === "NO" && row.hasDividend) return false;
     if (skip !== "holding" && holding && holdingMatches(row, holding).length === 0) return false;
+    if (skip !== "payment" && f.payment !== "ALL" && !row.paymentModes.includes(f.payment)) return false;
 
     return true;
 }
@@ -613,6 +643,7 @@ function renderTable() {
                                 <div class="fund-meta">
                                     ${escapeHtml(row.code)}${row.hasDividend ? ` · <span class="explorer-dividend-tag">Dividend</span>` : ""}
                                 </div>
+                                ${row.paymentModes.length ? `<div class="payment-chips" aria-label="Payment modes">${paymentChips(row.paymentModes)}</div>` : ""}
                                 ${holdingNote}
                             </div>
                         </div>
@@ -1310,6 +1341,12 @@ function openProfile(id) {
                 <div class="fund-facts">
                     ${fact("BID price", details.bidPrice)}
                     ${fact("Offer price", details.offerPrice)}
+                    ${row.paymentModes.length ? `
+                        <div class="fund-fact">
+                            <span class="fund-fact-label">Payment mode</span>
+                            <span class="fund-fact-value payment-chips">${paymentChips(row.paymentModes)}</span>
+                        </div>
+                    ` : ""}
                     ${fact("Valuation date", details.valuationDate)}
                     ${fact("Inception", details.inceptionDate)}
                     ${fact("Sub-class", details.assetSubClass)}
@@ -1379,7 +1416,8 @@ function bindEvents() {
         "#explorer-risk": "risk",
         "#explorer-geography": "geography",
         "#explorer-sector": "sector",
-        "#explorer-dividend": "dividend"
+        "#explorer-dividend": "dividend",
+        "#explorer-payment": "payment"
     };
 
     for (const [selector, key] of Object.entries(filterMap)) {
