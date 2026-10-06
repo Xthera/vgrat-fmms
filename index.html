@@ -309,6 +309,27 @@
 
                 <button
                     type="button"
+                    title="Report Generation"
+                    class="nav-link"
+                    data-view-target="reports"
+                    aria-current="false"
+                >
+
+                    <span class="nav-link-icon">
+                        ▤
+                    </span>
+
+                    <span class="nav-link-label">
+                        Report Generation
+                    </span>
+
+                    <span class="nav-link-short" aria-hidden="true">Report</span>
+
+                </button>
+
+
+                <button
+                    type="button"
                     title="Settings"
                     class="nav-link nav-link-bottom"
                     data-view-target="settings"
@@ -1787,6 +1808,13 @@
                             </select>
                         </label>
 
+                        <label class="filter-control" data-payment-filter hidden>
+                            <span>Payment mode</span>
+                            <select id="explorer-payment" data-explorer-filter>
+                                <option value="ALL">All payment modes</option>
+                            </select>
+                        </label>
+
                     </div>
 
                 </div>
@@ -2030,6 +2058,175 @@
                         "Usual" move = how much the fund's BID typically changes from one price to the next
                         over the past 12 months. Based on actual BID prices only. Click any fund for its profile.
                     </p>
+
+                </section>
+
+            </section>
+
+
+            <!-- =================================================
+                 REPORT GENERATION VIEW
+            ================================================== -->
+
+            <section
+                id="reports-view"
+                class="page-view"
+                data-view-panel="reports"
+                aria-labelledby="reports-page-title"
+                hidden
+            >
+
+                <div class="page-header">
+
+                    <div class="page-header-main">
+
+                        <div class="eyebrow">
+                            CLIENT REPORTS
+                        </div>
+
+                        <h1
+                            id="reports-page-title"
+                            class="page-title"
+                        >
+                            Report Generation
+                        </h1>
+
+                        <p class="page-description">
+                            Show a client how an investment would have grown, using the funds' actual BID prices.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <section id="report-setup" class="performance-card report-card" aria-labelledby="report-setup-title">
+
+                    <div class="card-header">
+                        <div>
+                            <div class="card-eyebrow">INVESTMENT GROWTH</div>
+                            <h2 id="report-setup-title" class="card-title">Report setup</h2>
+                        </div>
+                    </div>
+
+                    <p id="report-loading" class="news-summary-bar report-loading">Loading price history…</p>
+
+                    <form id="report-form" class="report-form" novalidate hidden>
+
+                        <fieldset class="report-group">
+                            <legend>Client &amp; adviser</legend>
+
+                            <div class="report-grid report-grid-3">
+                                <label class="report-field">
+                                    <span>Client name</span>
+                                    <input id="report-client" type="text" autocomplete="off" placeholder="e.g. Mr Tan Wei Ming">
+                                </label>
+
+                                <label class="report-field">
+                                    <span>Prepared by</span>
+                                    <input id="report-adviser" type="text" autocomplete="off" placeholder="Your name">
+                                </label>
+
+                                <label class="report-field">
+                                    <span>Adviser contact</span>
+                                    <input id="report-contact" type="text" autocomplete="off" placeholder="Phone or email (optional)">
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="report-group">
+                            <legend>Funds &amp; allocation</legend>
+
+                            <div class="report-picker-row">
+                                <div class="compare-picker report-picker">
+                                    <input
+                                        id="report-fund-search"
+                                        type="search"
+                                        autocomplete="off"
+                                        placeholder="Add a fund to the portfolio…"
+                                        aria-label="Search funds to add"
+                                    >
+                                    <ul id="report-fund-suggestions" class="compare-suggestions" role="listbox" hidden></ul>
+                                </div>
+
+                                <button id="report-split" type="button" class="news-clear-filters">Split equally</button>
+
+                                <span id="report-allocation-total" class="report-total">Total 0%</span>
+                            </div>
+
+                            <div class="table-wrap">
+                                <table class="data-table report-funds-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Fund</th>
+                                            <th scope="col">Allocation</th>
+                                            <th scope="col"><span class="sr-only">Remove</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="report-funds-body"></tbody>
+                                </table>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="report-group">
+                            <legend>Investment</legend>
+
+                            <div class="report-grid report-grid-5">
+                                <label class="report-field">
+                                    <span>Initial lump sum</span>
+                                    <input id="report-lump" type="number" min="0" step="100" inputmode="decimal" value="10000">
+                                </label>
+
+                                <label class="report-field">
+                                    <span>Regular top-up</span>
+                                    <input id="report-topup" type="number" min="0" step="50" inputmode="decimal" value="500">
+                                </label>
+
+                                <label class="filter-control report-field">
+                                    <span>Top-up frequency</span>
+                                    <select id="report-frequency">
+                                        <option value="monthly">Monthly</option>
+                                        <option value="quarterly">Quarterly</option>
+                                        <option value="half-yearly">Half-yearly</option>
+                                        <option value="yearly">Yearly</option>
+                                        <option value="none">No top-ups</option>
+                                    </select>
+                                </label>
+
+                                <label class="report-field">
+                                    <span>Start date</span>
+                                    <input id="report-start" type="date">
+                                </label>
+
+                                <label class="report-field">
+                                    <span>End date</span>
+                                    <input id="report-end" type="date">
+                                </label>
+                            </div>
+
+                            <p id="report-date-note" class="settings-help report-date-note"></p>
+                        </fieldset>
+
+                        <p id="report-error" class="report-error" role="alert" hidden></p>
+
+                        <div class="report-actions">
+                            <button type="submit" class="report-generate">Generate report</button>
+                            <span class="settings-help">Amounts are in the funds' currency. Nothing you enter is saved or sent anywhere.</span>
+                        </div>
+
+                    </form>
+
+                </section>
+
+
+                <section id="report-output" class="report-output" hidden>
+
+                    <div class="report-toolbar">
+                        <span class="settings-help">Preview · prints on A4 in a clean white layout</span>
+                        <button id="report-print" type="button" class="report-generate">⎙ Print / Save as PDF</button>
+                    </div>
+
+                    <article id="report-sheet" class="report-sheet" aria-label="Investment growth report"></article>
 
                 </section>
 
