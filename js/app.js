@@ -2325,7 +2325,7 @@ function renderNewsFilterOptions() {
             "ALL";
 
         state.news.category =
-            "ALL";
+            [];
 
     }
 
@@ -2408,17 +2408,61 @@ function renderNewsTagOptions() {
     };
 
 
-    state.news.assetClass =
-        fill("#market-news-asset", "assetClasses", "All", state.news.assetClass);
+    // Options only; the selection is restored by renderNewsDynamicOptions()
+    fill("#market-news-asset", "assetClasses", "All", "ALL");
 
-    state.news.geography =
-        fill("#market-news-geography", "geographies", "All", state.news.geography);
+    fill("#market-news-geography", "geographies", "All", "ALL");
 
-    state.news.sector =
-        fill("#market-news-sector", "sectors", "All", state.news.sector);
+    fill("#market-news-sector", "sectors", "All", "ALL");
 
 
     renderFilterIndicators();
+
+}
+
+
+/*
+ * Values chosen in a (multi-select) filter, without "ALL".
+ */
+function selectedFilterValues(selector) {
+
+    const select =
+        qs(selector);
+
+    if (!select) {
+
+        return [];
+
+    }
+
+    return [...select.selectedOptions]
+        .map(option => option.value)
+        .filter(value => value && value !== "ALL");
+
+}
+
+
+/* A news filter value as a list ("ALL" / "" / [] -> []) */
+function filterList(value) {
+
+    if (Array.isArray(value)) {
+
+        return value.filter(item => item && item !== "ALL");
+
+    }
+
+    return value && value !== "ALL"
+        ? [value]
+        : [];
+
+}
+
+
+function hasNewsFilters() {
+
+    return Boolean(state.news.search) ||
+        ["category", "importance", "sentiment", "fund", "assetClass", "geography", "sector"]
+            .some(key => filterList(state.news[key]).length > 0);
 
 }
 
@@ -2461,7 +2505,7 @@ function renderFilterIndicators() {
 
 
         const filtered =
-            select.value !== "ALL";
+            selectedFilterValues(selector).length > 0;
 
 
         select.classList.toggle(
@@ -2545,46 +2589,14 @@ function updateNewsFilters() {
             ?? "";
 
 
-    state.news.category =
-        qs("#market-news-category")
-            ?.value
-            ?? "ALL";
-
-
-    state.news.importance =
-        qs("#market-news-importance")
-            ?.value
-            ?? "ALL";
-
-
-    state.news.sentiment =
-        qs("#market-news-sentiment")
-            ?.value
-            ?? "ALL";
-
-
-    state.news.fund =
-        qs("#market-news-fund")
-            ?.value
-            ?? "ALL";
-
-
-    state.news.assetClass =
-        qs("#market-news-asset")
-            ?.value
-            ?? "ALL";
-
-
-    state.news.geography =
-        qs("#market-news-geography")
-            ?.value
-            ?? "ALL";
-
-
-    state.news.sector =
-        qs("#market-news-sector")
-            ?.value
-            ?? "ALL";
+    // Multi-select filters: an empty list means "All"
+    state.news.category = selectedFilterValues("#market-news-category");
+    state.news.importance = selectedFilterValues("#market-news-importance");
+    state.news.sentiment = selectedFilterValues("#market-news-sentiment");
+    state.news.fund = selectedFilterValues("#market-news-fund");
+    state.news.assetClass = selectedFilterValues("#market-news-asset");
+    state.news.geography = selectedFilterValues("#market-news-geography");
+    state.news.sector = selectedFilterValues("#market-news-sector");
 
 
     renderNewsDynamicOptions();
@@ -2716,14 +2728,13 @@ function getFilteredNews(override = null) {
     moduleState.searchTerm =
         f.search ?? "";
 
-    moduleState.selectedCategory =
-        f.category ?? "ALL";
+    // Category / importance / sentiment are multi-select, so they are
+    // filtered here instead of by the single-value news module.
+    moduleState.selectedCategory = "ALL";
 
-    moduleState.selectedImportance =
-        f.importance ?? "ALL";
+    moduleState.selectedImportance = "ALL";
 
-    moduleState.selectedSentiment =
-        f.sentiment ?? "ALL";
+    moduleState.selectedSentiment = "ALL";
 
 
     const visible =
@@ -2732,23 +2743,44 @@ function getFilteredNews(override = null) {
         );
 
 
-    const matchesTag = (values, wanted) =>
-        wanted === "ALL" ||
-        (Array.isArray(values) && values.includes(wanted));
+    // Within one filter: any of the chosen values (OR).
+    // Across filters: all must match (AND).
+    const matchesOne = (value, wanted) => {
+
+        const list = filterList(wanted);
+
+        return !list.length || list.includes(String(value ?? "").toUpperCase()) || list.includes(value);
+
+    };
+
+    const matchesAny = (values, wanted) => {
+
+        const list = filterList(wanted);
+
+        return !list.length ||
+            (Array.isArray(values) && values.some(value => list.includes(value)));
+
+    };
 
 
     const tagged =
         visible.filter(
             article =>
-                matchesTag(article.assetClasses, f.assetClass) &&
-                matchesTag(article.geographies, f.geography) &&
-                matchesTag(article.sectors, f.sector)
+                matchesOne(article.category, f.category) &&
+                matchesOne(article.importance, f.importance) &&
+                matchesOne(article.sentiment, f.sentiment) &&
+                matchesAny(article.assetClasses, f.assetClass) &&
+                matchesAny(article.geographies, f.geography) &&
+                matchesAny(article.sectors, f.sector)
         );
 
 
+    const funds =
+        filterList(f.fund);
+
+
     if (
-        f.fund === "ALL" ||
-        !f.fund ||
+        !funds.length ||
         !fundLinker
     ) {
 
@@ -2763,7 +2795,7 @@ function getFilteredNews(override = null) {
                 .linkArticle(article)
                 .some(
                     link =>
-                        link.fundId === f.fund
+                        funds.includes(link.fundId)
                 )
     );
 
@@ -2848,7 +2880,7 @@ function renderNewsDynamicOptions() {
         );
 
         const articles =
-            getFilteredNews({ [filter.key]: "ALL" });
+            getFilteredNews({ [filter.key]: [] });
 
         const counts =
             new Map();
@@ -2906,12 +2938,16 @@ function renderNewsDynamicOptions() {
         }
 
         const current =
-            state.news[filter.key] ?? "ALL";
+            filterList(state.news[filter.key]);
 
-        // Keep the current choice listed even if it has no articles now
-        if (current !== "ALL" && !counts.has(current)) {
+        // Keep the current choices listed even if they have no articles now
+        for (const value of [...current].reverse()) {
 
-            values.unshift(current);
+            if (!counts.has(value)) {
+
+                values.unshift(value);
+
+            }
 
         }
 
@@ -2936,11 +2972,16 @@ function renderNewsDynamicOptions() {
 
         }
 
-        if (select.value !== current) {
+        // Restore the selection ("All" when nothing is chosen)
+        for (const option of select.options) {
 
-            select.value = current;
+            option.selected = current.length
+                ? current.includes(option.value)
+                : option.value === "ALL";
 
         }
+
+        select.dispatchEvent(new Event("vselect:sync"));
 
     }
 
@@ -2970,14 +3011,7 @@ function renderNewsSummary() {
 
 
     if (
-        state.news.search ||
-        state.news.category !== "ALL" ||
-        state.news.importance !== "ALL" ||
-        state.news.sentiment !== "ALL" ||
-        state.news.fund !== "ALL" ||
-        state.news.assetClass !== "ALL" ||
-        state.news.geography !== "ALL" ||
-        state.news.sector !== "ALL"
+        hasNewsFilters()
     ) {
 
         count.textContent =
@@ -3054,9 +3088,7 @@ function renderMarketNews() {
 
 
     const selectedFund =
-        state.news.fund !== "ALL"
-            ? state.news.fund
-            : null;
+        filterList(state.news.fund);
 
 
     container.innerHTML =
@@ -3351,17 +3383,19 @@ function initializeNewsState() {
     state.news.search =
         "";
 
-    state.news.category =
-        "ALL";
+    state.news.category = [];
 
-    state.news.importance =
-        "ALL";
+    state.news.importance = [];
 
-    state.news.sentiment =
-        "ALL";
+    state.news.sentiment = [];
 
-    state.news.fund =
-        "ALL";
+    state.news.fund = [];
+
+    state.news.assetClass = [];
+
+    state.news.geography = [];
+
+    state.news.sector = [];
 
 
     const fundSelect =
