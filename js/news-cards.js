@@ -107,7 +107,7 @@ function section(label, text, extraClass = "") {
 /**
  * @param {object} article        analysis record
  * @param {Array}  links          from createFundLinker().linkArticle
- * @param {string} [selectedFund] fund id currently filtered on
+ * @param {string|string[]} [selectedFund] fund id(s) currently filtered on
  */
 function renderNewsCard(article, links = [], selectedFund = null) {
     const key = articleKey(article);
@@ -196,7 +196,7 @@ function renderLinkedFunds(links, selectedFund) {
 
             <ul class="news-linked-funds">
                 ${links.map(link => `
-                    <li class="${link.fundId === selectedFund ? "is-selected" : ""}">
+                    <li class="${(Array.isArray(selectedFund) ? selectedFund.includes(link.fundId) : link.fundId === selectedFund) ? "is-selected" : ""}">
                         <span class="news-linked-code">${escapeHtml(link.fundCode)}</span>
                         <span class="news-linked-name">${escapeHtml(link.fundName)}</span>
                         <span class="news-linked-reason">${escapeHtml(link.reasons.join(" · "))}</span>
