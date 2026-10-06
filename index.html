@@ -2264,6 +2264,21 @@
 
                             <button id="report-booster-add" type="button" class="news-clear-filters report-booster-add" hidden>+ Add another booster</button>
 
+                            <div id="report-dividend-choice" class="report-dividend-choice" hidden>
+                                <p class="settings-help report-booster-question">Some chosen funds pay dividends. How should the report treat them?</p>
+
+                                <div class="report-payment-options report-booster-choice" role="radiogroup" aria-label="Dividends">
+                                    <button type="button" class="report-payment-option active" role="radio" aria-checked="true" data-report-dividend="cash">
+                                        <span class="report-payment-name">Paid out as cash</span>
+                                        <span class="report-payment-desc">Payouts are added up and counted in the gain</span>
+                                    </button>
+                                    <button type="button" class="report-payment-option" role="radio" aria-checked="false" data-report-dividend="reinvest">
+                                        <span class="report-payment-name">Reinvested</span>
+                                        <span class="report-payment-desc">Payouts buy more units of the same fund</span>
+                                    </button>
+                                </div>
+                            </div>
+
                             <p class="settings-help report-step-hint" data-step-hint="5">Choose No to continue, or Yes and fill in each booster's date, amount and fund allocation (total 100%).</p>
 
                             <p id="report-error" class="report-error" role="alert" hidden></p>
