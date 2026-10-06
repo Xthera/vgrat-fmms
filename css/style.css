@@ -8518,3 +8518,110 @@ html[data-theme="light"] .palette-swatch {
     top: auto;
     bottom: calc(100% + 4px);
 }
+
+/* Fund popup — dividend payout period */
+.fund-payout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+
+    gap: 8px;
+
+    margin-top: 6px;
+}
+
+.fund-payout-item {
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+
+    padding: 8px 11px;
+
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+
+    background: var(--bg-surface-raised, transparent);
+}
+
+.fund-payout-item span {
+    color: var(--text-muted);
+
+    font-size: calc(10.5px * var(--font-scale, 1));
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.fund-payout-item strong {
+    color: var(--text-primary);
+
+    font-size: calc(15px * var(--font-scale, 1));
+}
+
+.fund-payout-item em {
+    color: var(--text-secondary);
+
+    font-style: normal;
+    font-size: calc(12px * var(--font-scale, 1));
+}
+
+/* Report Generation — dividends choice (step 5) */
+.report-dividend-choice {
+    margin-top: 14px;
+}
+
+.report-dividend-choice[hidden] {
+    display: none;
+}
+
+/* Report: five summary tiles when dividends are shown.
+   Row 1: Total invested · Value · Dividends (three equal tiles)
+   Row 2: Gain / loss · Annualised return (two tiles, full width) */
+.rpt-tiles.rpt-tiles-5 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.rpt-tiles.rpt-tiles-5 > .rpt-tile {
+    grid-column: span 2;
+}
+
+.rpt-tiles.rpt-tiles-5 > .rpt-tile:nth-child(n + 4) {
+    grid-column: span 3;
+}
+
+@media (max-width: 699px) and (pointer: coarse), (max-height: 500px) and (max-width: 1000px) and (pointer: coarse) {
+    .rpt-tiles.rpt-tiles-5 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rpt-tiles.rpt-tiles-5 > .rpt-tile,
+    .rpt-tiles.rpt-tiles-5 > .rpt-tile:nth-child(n + 4) {
+        grid-column: auto;
+    }
+
+    .rpt-tiles.rpt-tiles-5 > .rpt-tile:nth-child(3) {
+        grid-column: span 2;
+    }
+}
+
+/* Portfolio breakdown with the extra Dividends column */
+.rpt-table.rpt-table-wide {
+    table-layout: auto;
+
+    font-size: 10.5px;
+}
+
+.rpt-page .rpt-table.rpt-table-wide th,
+.rpt-page .rpt-table.rpt-table-wide td {
+    padding: 5px 4px;
+}
+
+.rpt-table.rpt-table-wide th {
+    font-size: 8.5px;
+    letter-spacing: 0.03em;
+}
+
+.rpt-table.rpt-table-wide th:first-child,
+.rpt-table.rpt-table-wide td:first-child {
+    width: 22%;
+}
