@@ -3832,8 +3832,9 @@ body.has-news-dialog {
 .explorer-filter-group {
     display: grid;
 
+    /* All six filters on one row on desktop */
     grid-template-columns:
-        repeat(5, minmax(0, 1fr));
+        repeat(6, minmax(0, 1fr));
 
     gap: 8px;
 }
@@ -3863,7 +3864,13 @@ body.has-news-dialog {
 }
 
 .explorer-table {
-    min-width: 860px;
+    min-width: 980px;
+}
+
+.explorer-payment-cell .payment-chips {
+    justify-content: center;
+
+    margin-top: 0;
 }
 
 .explorer-table th[data-explorer-sort] {
@@ -7125,6 +7132,446 @@ html[data-theme="light"] .palette-swatch {
     height: 37px;
 }
 
+
+/* Fund Explorer (phones): payment mode chips on their own line */
+@media (max-width: 699px) and (pointer: coarse), (max-height: 500px) and (max-width: 1000px) and (pointer: coarse) {
+
+    .explorer-table .explorer-payment-cell {
+        grid-column: 1 / -1;
+    }
+
+    .explorer-table .explorer-payment-cell::before {
+        display: none !important;
+    }
+
+    .explorer-payment-cell .payment-chips {
+        justify-content: flex-start;
+    }
+
+}
+
+
+/* ============================================================
+   REPORT GENERATION — STEPS + PAYMENT MODE
+   ============================================================ */
+
+.report-group legend {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.report-step-no {
+    width: 22px;
+    height: 22px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+
+    font-size: calc(12px * var(--font-scale, 1));
+    font-weight: 750;
+}
+
+.report-step.is-done .report-step-no {
+    background: var(--accent);
+    color: var(--bg-surface);
+}
+
+.report-step[hidden] {
+    display: none;
+}
+
+.report-step:not([hidden]) {
+    animation: report-step-in 220ms ease;
+}
+
+@keyframes report-step-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: none; }
+}
+
+.report-step.is-done .report-step-hint {
+    display: none;
+}
+
+.report-step-hint {
+    margin: 10px 0 0;
+}
+
+.report-required {
+    color: var(--negative);
+
+    font-weight: 750;
+}
+
+.report-optional {
+    color: var(--text-faint);
+
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.report-payment-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+
+    gap: 8px;
+
+    max-width: 860px;
+}
+
+.report-payment-option {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 2px;
+
+    padding: 10px 12px;
+
+    border:
+        1px solid var(--border-medium);
+
+    border-radius: 8px;
+
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+
+    font: inherit;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.report-payment-option:hover {
+    border-color: var(--accent);
+}
+
+.report-payment-option.active {
+    border-color: var(--accent);
+
+    background: var(--accent-soft);
+
+    box-shadow: 0 0 0 1px var(--accent) inset;
+}
+
+.report-payment-name {
+    color: var(--text-primary);
+
+    font-size: calc(14px * var(--font-scale, 1));
+    font-weight: 750;
+}
+
+.report-payment-desc {
+    color: var(--text-muted);
+
+    font-size: calc(11.5px * var(--font-scale, 1));
+}
+
+.report-payment-count {
+    margin-top: 4px;
+
+    color: var(--accent-strong);
+
+    font-size: calc(11px * var(--font-scale, 1));
+    font-weight: 700;
+}
+
+.report-payment-note {
+    margin: 0 0 10px;
+}
+
+.report-date-adjust {
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border-left: 3px solid #d4a017;
+    border-radius: 6px;
+    background: rgba(212, 160, 23, 0.1);
+    color: var(--text-primary, inherit);
+}
+
+.report-date-adjust[hidden] {
+    display: none;
+}
+
+/* Step 5 — Investment booster */
+.report-booster-question {
+    margin: 0 0 8px;
+}
+
+.report-booster-choice {
+    max-width: 420px;
+}
+
+.report-booster-list {
+    display: grid;
+    gap: 12px;
+
+    margin-top: 12px;
+}
+
+.report-booster-list[hidden],
+.report-booster-add[hidden] {
+    display: none;
+}
+
+.report-booster {
+    padding: 12px 14px;
+
+    border: 1px solid var(--border-medium);
+    border-radius: 10px;
+
+    background: var(--bg-surface);
+}
+
+.report-booster-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 8px;
+
+    color: var(--text-primary);
+}
+
+.report-booster-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 220px));
+    gap: 12px;
+
+    margin-bottom: 10px;
+}
+
+.report-booster .report-picker-row {
+    flex-wrap: wrap;
+}
+
+.report-booster-status {
+    margin: 8px 0 0;
+
+    color: #d4a017;
+}
+
+.report-booster-status.is-ok {
+    color: var(--positive, #3fb97f);
+}
+
+.report-booster-add {
+    display: block;
+    width: fit-content;
+
+    margin: 10px 0 0;
+}
+
+/* Same gap above Generate whether the last item is the Yes/No
+   choice or "+ Add another booster" */
+.report-step[data-report-step="5"] .report-actions {
+    margin-top: 20px;
+}
+
+.report-generate:disabled {
+    opacity: 0.45;
+
+    cursor: not-allowed;
+}
+
+@media (max-width: 699px) {
+    .report-booster-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.rpt-table-boosters td:last-child {
+    text-align: left;
+}
+
+
+/* ============================================================
+   REPORT PREVIEW POPUP — A4 "PDF view"
+   ============================================================ */
+
+.report-dialog {
+    width: min(calc(900px * var(--font-scale, 1)), calc(100vw - 32px));
+    max-width: none;
+    height: calc(100vh - 32px);
+    max-height: none;
+
+    padding: 0;
+
+    border:
+        1px solid var(--border-medium);
+
+    border-radius: 12px;
+
+    background: var(--bg-surface);
+    color: var(--text-primary);
+
+    overflow: hidden;
+}
+
+.report-dialog[open] {
+    display: flex;
+    flex-direction: column;
+}
+
+.report-dialog::backdrop {
+    background: rgba(5, 10, 16, 0.6);
+
+    backdrop-filter: blur(2px);
+}
+
+.report-dialog .report-toolbar {
+    flex-shrink: 0;
+
+    margin: 0;
+    padding: 12px 16px;
+
+    border-bottom:
+        1px solid var(--border-subtle);
+}
+
+.report-toolbar-title {
+    display: flex;
+    flex-direction: column;
+}
+
+.report-toolbar-title .settings-help {
+    margin: 0;
+}
+
+.report-toolbar-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.report-close {
+    width: 36px;
+    height: 36px;
+
+    border: 0;
+    border-radius: 8px;
+
+    background: transparent;
+    color: var(--text-muted);
+
+    font-size: 22px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.report-close:hover {
+    background: var(--bg-surface-hover);
+    color: var(--text-primary);
+}
+
+/* Grey "PDF viewer" area with an A4-width white page */
+.report-paper-area {
+    flex: 1;
+
+    overflow: auto;
+
+    padding: 24px;
+
+    background: #525659;
+}
+
+.report-dialog .report-sheet {
+    width: 210mm;
+    max-width: 100%;
+    min-height: 297mm;
+
+    margin: 0 auto;
+    padding: 14mm 14mm;
+
+    border-radius: 2px;
+
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 699px) and (pointer: coarse), (max-height: 500px) and (max-width: 1000px) and (pointer: coarse) {
+
+    .report-dialog {
+        width: 100vw;
+        height: 100dvh;
+
+        border-radius: 0;
+    }
+
+    .report-paper-area {
+        padding: 10px;
+    }
+
+    .report-dialog .report-sheet {
+        min-height: 0;
+        padding: 16px 12px;
+    }
+
+}
+
+/* Printing: only the report page, at full A4 width */
+@media print {
+
+    .report-dialog,
+    .report-dialog[open] {
+        position: static !important;
+        inset: auto !important;
+
+        display: block !important;
+
+        width: auto !important;
+        height: auto !important;
+        max-height: none !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        border: 0 !important;
+        border-radius: 0 !important;
+
+        overflow: visible !important;
+
+        background: #ffffff !important;
+    }
+
+    .report-dialog::backdrop {
+        display: none;
+    }
+
+    .report-dialog .report-toolbar {
+        display: none !important;
+    }
+
+    .report-paper-area {
+        padding: 0 !important;
+
+        overflow: visible !important;
+
+        background: #ffffff !important;
+    }
+
+    .report-dialog .report-sheet {
+        width: 100% !important;
+        min-height: 0 !important;
+
+        padding: 0 !important;
+
+        box-shadow: none !important;
+    }
+
+}
+
 /* ============================================================
    STICKY FOOTER (desktop / tablet)
    The "VGrat FMS · Prudential Singapore fund data" bar stays
@@ -7776,4 +8223,8 @@ html[data-theme="light"] .palette-swatch {
         margin-left: 0;
     }
 
+}
+
+.rpt-table-boosters td:first-child {
+    width: 16%;
 }
