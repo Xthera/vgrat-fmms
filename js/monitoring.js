@@ -258,11 +258,6 @@ function computeMetrics(observations) {
         latestDate: latest.date,
         latestBid: latest.bidPrice,
         previousDate: previous.date,
-        previousBid: previous.bidPrice,
-        weekDate: weekIndex >= 0 ? observations[weekIndex].date : null,
-        weekBid: weekIndex >= 0 ? observations[weekIndex].bidPrice : null,
-        priorHigh,
-        priorLow,
         d1,
         w1,
         m1,
@@ -442,25 +437,7 @@ function renderWatchlist() {
    RENDER: UNUSUAL MOVES
    ============================================================ */
 
-/* "1.11198 → 1.10792" BID range line for the Unusual moves lists */
-function bidRange(fromLabel, fromBid, toBid, fromDate = null, toDate = null) {
-    if (fromBid === null || fromBid === undefined || toBid === null || toBid === undefined) return "";
-
-    const short = date => {
-        const [, month, day] = String(date).split("-").map(Number);
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-        return month ? `${String(day).padStart(2, "0")} ${months[month - 1]}` : "";
-    };
-
-    const when = fromDate ? ` <span class="monitor-range-date">(${escapeHtml(short(fromDate))})</span>` : "";
-
-    const latestWhen = toDate ? ` <span class="monitor-range-date">(${escapeHtml(short(toDate))})</span>` : "";
-
-    return `${escapeHtml(fromLabel)} ${Number(fromBid).toFixed(5)}${when} → ${Number(toBid).toFixed(5)}${latestWhen}`;
-}
-
-function listRows(items, valueOf, detailOf, digits = 2, rangeOf = null) {
+function listRows(items, valueOf, detailOf, digits = 2) {
     if (!items.length) {
         return `<li class="monitor-list-empty">None today</li>`;
     }
@@ -475,7 +452,6 @@ function listRows(items, valueOf, detailOf, digits = 2, rangeOf = null) {
                     ${pill(valueOf(metrics), digits)}
                     <div class="fund-meta">${detailOf(metrics)}</div>
                 </div>
-                ${rangeOf ? `<div class="monitor-range">${rangeOf(metrics)}</div>` : ""}
                 ${isWatched(id) ? `<span class="monitor-list-star" title="On your watchlist">★</span>` : ""}
             </li>
         `)
@@ -524,23 +500,23 @@ function renderUnusual() {
     const cards = {
         day: {
             hint: `Latest move ≥ ${k}× the fund's usual daily move`,
-            items: listRows(unusualDay, m => m.d1, m => `${times(m.zDay)} (usual ±${m.usual.toFixed(2)}%)`, 2, m => bidRange("BID", m.previousBid, m.latestBid, m.previousDate, m.latestDate))
+            items: listRows(unusualDay, m => m.d1, m => `${times(m.zDay)} (usual ±${m.usual.toFixed(2)}%)`)
         },
         week: {
             hint: `1-week move ≥ ${k}× the fund's usual weekly move`,
-            items: listRows(unusualWeek, m => m.w1, m => `${times(m.zWeek)} (usual ±${m.usualWeek.toFixed(2)}%)`, 2, m => bidRange("BID", m.weekBid, m.latestBid, m.weekDate, m.latestDate))
+            items: listRows(unusualWeek, m => m.w1, m => `${times(m.zWeek)} (usual ±${m.usualWeek.toFixed(2)}%)`)
         },
         highs: {
             hint: "Latest BID above every BID of the past year",
-            items: listRows(highs, m => m.d1, m => "Above the previous 52-week high", 2, m => bidRange("Prev. high", m.priorHigh, m.latestBid, null, m.latestDate))
+            items: listRows(highs, m => m.d1, m => `BID ${m.latestBid.toFixed(5)}`)
         },
         lows: {
             hint: "Latest BID below every BID of the past year",
-            items: listRows(lows, m => m.d1, m => "Below the previous 52-week low", 2, m => bidRange("Prev. low", m.priorLow, m.latestBid, null, m.latestDate))
+            items: listRows(lows, m => m.d1, m => `BID ${m.latestBid.toFixed(5)}`)
         },
         furthest: {
             hint: "Current BID vs the highest BID of the past year",
-            items: listRows(furthest, m => m.fromHigh, m => "From its 52-week high", 1, m => bidRange("52W high", m.high52, m.latestBid, null, m.latestDate))
+            items: listRows(furthest, m => m.fromHigh, m => `52W high ${m.high52.toFixed(5)}`, 1)
         }
     };
 
