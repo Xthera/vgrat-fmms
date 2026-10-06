@@ -1568,16 +1568,16 @@ function renderReport(result) {
     sheet.innerHTML = `
         <section class="rpt-page rpt-page-summary">
         <header class="rpt-header">
-            <img src="assets/logo.png" alt="" class="rpt-logo" width="56" height="56">
-            <div class="rpt-title-block">
-                <div class="rpt-eyebrow">VGrat FMS · Funds Monitoring System</div>
-                <h2 class="rpt-title">Investment Growth Report</h2>
-                <div class="rpt-subtitle">${escapeHtml(formatDate(result.firstDate))} to ${escapeHtml(formatDate(result.requestedEnd))}</div>
+            <h2 class="rpt-title">Investment Growth Report</h2>
+            <div class="rpt-subtitle">
+                ${escapeHtml(formatDate(result.firstDate))} to ${escapeHtml(formatDate(result.requestedEnd))}
+                <span class="rpt-subtitle-sep">·</span> Report date ${escapeHtml(today)}
             </div>
+
             <div class="rpt-meta">
-                ${input.clientName ? `<div><span>Prepared for</span><strong>${escapeHtml(input.clientName)}</strong></div>` : ""}
-                ${input.adviserName ? `<div><span>Prepared by</span><strong>${escapeHtml(input.adviserName)}</strong>${input.adviserContact ? `<em>${escapeHtml(input.adviserContact)}</em>` : ""}</div>` : ""}
-                <div><span>Report date</span><strong>${escapeHtml(today)}</strong></div>
+                <div><span>Prepared for</span><strong>${escapeHtml(input.clientName || "—")}</strong></div>
+                <div><span>Prepared by</span><strong>${escapeHtml(input.adviserName || "—")}</strong></div>
+                ${input.adviserContact ? `<div><span>Contact</span><strong>${escapeHtml(input.adviserContact)}</strong></div>` : ""}
             </div>
         </header>
 
@@ -1769,7 +1769,7 @@ function renderReport(result) {
             future performance. The value of units and the income from them may fall as well as rise. This report is for
             illustration only and does not constitute financial advice or an offer to buy or sell any investment.
             Please refer to the fund's prospectus and product highlights sheet before investing.
-            <div class="rpt-source">Source: VGrat FMS, Prudential Singapore fund prices. Generated ${escapeHtml(today)}.</div>
+            <div class="rpt-source">Source: Prudential Singapore fund prices. Generated ${escapeHtml(today)}.</div>
         </footer>
         </section>
 
