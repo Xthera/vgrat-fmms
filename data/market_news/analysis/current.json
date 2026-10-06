@@ -1,10 +1,77 @@
 {
-  "generatedAtSgt": "2026-10-06T06:49:10.728660+08:00",
+  "generatedAtSgt": "2026-10-06T09:50:15.993490+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 85,
+  "articleCount": 87,
   "analyses": [
+    {
+      "articleId": "91a7d45e1914090f954bde88418133361df168c646743666f7d2243c68f7dbb4",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Beijing has closed a record 670 banks to stabilize its financial system amid economic deceleration, while oil traders face supply disruption worries following Saudi Aramco's warning that rebuilding global oil stockpiles could take two years amid U.S.-Iran tensions.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "China",
+        "Saudi Arabia",
+        "Iran",
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Energy"
+      ],
+      "investorImpact": "Investors should monitor exposure to Chinese financial institutions and global energy markets, as banking consolidation highlights systemic risks in China while oil supply concerns could increase commodity price volatility.",
+      "reasoning": "The article is classified under ECONOMIC due to China's large-scale banking closures and GEOPOLITICAL/MARKET intersections involving oil supply risks, making it highly important for global asset allocation and risk management.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "CNBC Daily Open: China shuts down record 670 banks, new worries over oil and AI",
+      "publishedAtSgt": "2026-10-06T09:12:40+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/cnbc-daily-open-china-shuts-down-record-670-banks-new-worries-over-oil-and-ai-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-06T09:34:43+08:00"
+    },
+    {
+      "articleId": "8928c9bc7bfe8c912c469e885527332303828c239194661aa6950321939fe6e5",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Hong Kong imported 112.7 tonnes of Russian-origin gold in the first seven months of 2026, surpassing the record 92.1 tonnes from all of 2025 and 3.3 tonnes in 2021, illustrating how Western sanctions are redrawing the global bullion trade.",
+      "assetClasses": [
+        "Commodities",
+        "Precious Metals"
+      ],
+      "geographies": [
+        "Hong Kong",
+        "Russia",
+        "China",
+        "Western Countries"
+      ],
+      "sectors": [
+        "Mining",
+        "Metals and Mining",
+        "Finance"
+      ],
+      "investorImpact": "The shift in Russian gold flows toward Hong Kong highlights structural realignments in global commodity trade routes resulting from Western sanctions, impacting supply chain tracking and alternative bullion trading hubs for investors in precious metals.",
+      "reasoning": "Classified as GEOPOLITICAL because it directly addresses the diversion of Russian bullion trade due to Western sanctions. It is relevant to fund monitoring as it highlights shifting physical commodity trade flows in major Asian financial centers.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Russian gold floods Hong Kong as Western sanctions redraw bullion trade",
+      "publishedAtSgt": "2026-10-06T07:14:39+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/russia-gold-hong-kong-china-western-sanctions.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 72,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-06T09:34:42+08:00"
+    },
     {
       "articleId": "3b0ee24a4b9eba633fedb132a55636bdccae62c1cf38e85dc6fa07b4efba37d7",
       "relevant": true,
