@@ -1,10 +1,157 @@
 {
-  "generatedAtSgt": "2026-10-07T00:53:44.786148+08:00",
+  "generatedAtSgt": "2026-10-07T03:51:24.578753+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 102,
+  "articleCount": 107,
   "analyses": [
+    {
+      "articleId": "3b5ee8e780034b249c1fc4edf14e390e5510206c9cfa4b229392d4f180d728bf",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Meta is considering abandoning plans to build a cloud business for Muse, instead focusing its extensive AI infrastructure and computing power on building its own next growth engine rather than renting capacity out to others.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Communications"
+      ],
+      "investorImpact": "Investors may view this strategic shift favorably as it redirects heavy AI capital expenditure toward internal product growth and proprietary revenue streams rather than competing in the crowded cloud infrastructure market.",
+      "reasoning": "Classified under TECHNOLOGY as it concerns Meta's AI infrastructure strategy and product roadmap. It is relevant for fund monitoring given Meta's scale and its capital allocation decisions regarding artificial intelligence investments.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Meta may ditch the idea of a cloud business for Muse. We think that’s a good trade",
+      "publishedAtSgt": "2026-10-07T02:59:37+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/06/meta-may-ditch-the-idea-of-a-cloud-business-for-muse-we-think-thats-a-good-trade.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-07T03:35:38+08:00"
+    },
+    {
+      "articleId": "4fb0fd6c5c40afd2a53109f38277a059b47d10e5ace43071e2b8b0e0f4f5705c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Marvell Technology shares rose over 6% following upbeat near-term and long-term guidance at its investor day, driven by strong growth in its custom chip business with major clients like Amazon and Alphabet. The positive outlook also lifted other AI data center infrastructure stocks such as GE Vernova and Eaton.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Industrials"
+      ],
+      "investorImpact": "Highlights strong ongoing demand for artificial intelligence infrastructure and custom silicon, providing positive momentum for AI chipmakers and related power equipment providers.",
+      "reasoning": "Classified as MARKET due to its focus on stock price movements and corporate guidance. Sentiment is POSITIVE based on upbeat forecasts and rising share prices. It is relevant for fund monitoring as it offers insights into the health of the AI hardware and data center sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "What Marvell's rosy long-term guidance means for our AI chip stocks",
+      "publishedAtSgt": "2026-10-07T02:51:01+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/06/what-marvells-rosy-long-term-guidance-means-for-our-ai-chip-stocks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-07T03:35:36+08:00"
+    },
+    {
+      "articleId": "2dd4ccf6b9e72bf7cc56ef1679db906ae3f565f22b2040895da61ac175a77e1e",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Meta, Walmart, Stripe, and other companies are establishing an open standard called a personal agent protocol to simplify how AI agents interact with businesses following the viral success of Meta's Muse personal agent.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Retail",
+        "Financials"
+      ],
+      "investorImpact": "The creation of an open standard for AI agents facilitates safer and more structured integration of artificial intelligence into commerce, potentially accelerating enterprise adoption and benefiting participating technology and retail firms.",
+      "reasoning": "The article details a major industry collaborative effort to establish technical standards for business AI integration, making it highly relevant for technology sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Meta joins with group of companies to tame ‘chaos’ of doing business with AI bots",
+      "publishedAtSgt": "2026-10-07T02:48:36+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/meta-joins-companies-to-tame-chaos-of-doing-business-with-ai-bots.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 52,
+      "collectorRelevanceReason": "supporting_technology_description",
+      "collectedAtSgt": "2026-10-07T03:35:34+08:00"
+    },
+    {
+      "articleId": "b444a883e42c0d53beb26896f2851f1bab794606588b0ebc24ff05ab7395068b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Dividend stocks, including utilities, are facing downward pressure as rising 10-year U.S. Treasury bond yields make fixed-income alternatives more attractive. Experts suggest retirees and investors diversify into dividend growth funds, international equities, and growth stocks rather than solely relying on high-yield dividend stocks.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Utilities",
+        "Financials"
+      ],
+      "investorImpact": "Rising bond yields are reducing the relative appeal of high-dividend-yielding equities, prompting a shift in portfolio strategy toward dividend growth and broader international diversification for retirement income.",
+      "reasoning": "The article directly addresses market movements affecting dividend-paying stocks and bond yields, which impacts equity allocations and retirement income strategies, making it relevant for portfolio and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Boomers' dividend stocks take beating as bond yields rise, with retirement income on the line",
+      "publishedAtSgt": "2026-10-07T02:41:02+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/dividend-stocks-bond-yields-retirement-income.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 95,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-07T03:35:35+08:00"
+    },
+    {
+      "articleId": "a54e6929a6fb0ccc033e7ce58dcfd497102474e9458b128507ef0d1b4dd9142f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Salesforce shares reflect the wider confusion surrounding the AI trade, as strong financials clash with investor fears that AI agents will disrupt traditional software subscription models.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Software"
+      ],
+      "investorImpact": "Highlights market uncertainty regarding legacy software business models in the face of generative AI advancements, affecting trading strategies for SaaS equities.",
+      "reasoning": "The article focuses on market sentiment, stock performance, and investor debates surrounding Salesforce amidst broader AI disruption fears in the tech sector, making it relevant for equity and market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Salesforce shares sit at the epicenter of AI confusion. Here's how to trade it",
+      "publishedAtSgt": "2026-10-07T01:22:20+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/salesforce-shares-sit-at-the-epicenter-of-ai-confusion-heres-how-to-trade-it.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-07T03:35:34+08:00"
+    },
     {
       "articleId": "40584932f000f4b641cbdc413ae294a801d9f10e55091085b9011d21f2969af9",
       "relevant": true,
