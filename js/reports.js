@@ -1014,9 +1014,23 @@ function bindEvents() {
         });
     });
 
+    // Resize the chart to the printed page width (and back afterwards),
+    // whether printing starts from the button or Ctrl+P.
+    const resizeChart = () => {
+        try {
+            report.chart?.resize?.();
+        } catch {
+            // ignore
+        }
+    };
+
+    window.addEventListener("beforeprint", resizeChart);
+
+    window.matchMedia?.("print").addEventListener?.("change", resizeChart);
+
     window.addEventListener("afterprint", () => {
         document.body.classList.remove("is-printing-report");
-        report.chart?.resize?.();
+        resizeChart();
     });
 }
 
