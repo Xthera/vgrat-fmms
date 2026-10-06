@@ -1,10 +1,70 @@
 {
-  "generatedAtSgt": "2026-10-06T09:50:15.993490+08:00",
+  "generatedAtSgt": "2026-10-06T12:52:39.468099+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 87,
+  "articleCount": 89,
   "analyses": [
+    {
+      "articleId": "0eb17c57a962800057fc4e9a29667964a1d0543916129a33f5a65398657bf359",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "The World Bank raised its 2026 growth forecast for the East Asia and Pacific region to 4.5% driven by AI-related exports, but warned about high concentration risks and vulnerability to potential global tech spending reversals given that non-AI trade remains weak.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "East Asia",
+        "Pacific"
+      ],
+      "sectors": [
+        "Technology",
+        "Exports"
+      ],
+      "investorImpact": "Investors with exposure to East Asia and Pacific markets or the technology sector should note both the upgraded near-term growth outlook and the systemic concentration risk tied to global AI spending trends.",
+      "reasoning": "The article is classified under ECONOMIC because it discusses regional growth forecasts and trade dynamics by the World Bank, with mixed sentiment reflecting upgraded growth offset by structural concentration warnings.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "World Bank warns of AI concentration risks as it lifts East Asia and Pacific growth outlook to 4.5%",
+      "publishedAtSgt": "2026-10-06T12:07:24+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/world-bank-east-asia-growth-inflation-ai-exports-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-06T12:37:10+08:00"
+    },
+    {
+      "articleId": "003e58793ed8569a4838424ae33c44b75e5bde8ee54b82066786af6927bd8e86",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "India's Finance Minister Nirmala Sitharaman confirmed a trade impasse with the U.S., stating that a trade agreement is not imminent following discussions with U.S. Trade Representative Jamieson Greer, despite ongoing negotiations.",
+      "assetClasses": [
+        "Equities",
+        "Currencies"
+      ],
+      "geographies": [
+        "India",
+        "United States"
+      ],
+      "sectors": [
+        "International Trade"
+      ],
+      "investorImpact": "The lack of progress in U.S.-India trade talks delays potential bilateral trade benefits, maintaining status quo for multinational corporations and exporters operating between both countries.",
+      "reasoning": "Classified as GEOPOLITICAL due to trade negotiations between sovereign nations. Sentiment is neutral as it reflects ongoing talks without a breakdown or a breakthrough. Importance is medium given the size of both economies and bilateral relations.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Little room for ‘giving and taking’: India’s finance minister confirms trade impasse with the U.S.",
+      "publishedAtSgt": "2026-10-06T10:39:19+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/india-us-trade-deal-deal-sitharaman.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-06T12:37:10+08:00"
+    },
     {
       "articleId": "91a7d45e1914090f954bde88418133361df168c646743666f7d2243c68f7dbb4",
       "relevant": true,
