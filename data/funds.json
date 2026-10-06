@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-06T05:09:44+00:00",
+  "generatedAtUtc": "2026-10-06T11:01:01+00:00",
   "source": "Funds Links.xlsm",
   "fundCount": 67,
   "research": {
@@ -272,7 +272,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -356,7 +362,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -428,7 +440,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -512,7 +530,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -590,7 +614,14 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA"
       },
       "research": {
         "geographic1": "United States",
@@ -710,7 +741,14 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA"
       },
       "research": {
         "geographic1": "United States",
@@ -830,7 +868,12 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash"
       },
       "research": {
         "geographic1": "United States",
@@ -950,7 +993,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "China",
@@ -1070,7 +1119,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "China",
@@ -1190,7 +1245,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "China",
@@ -1403,7 +1464,13 @@
             "exDate": "2021-03-31",
             "rate": 0.93
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "China",
@@ -1523,7 +1590,15 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA",
+          "CPF-SA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA, CPFIS-SA"
       },
       "research": {
         "geographic1": "China",
@@ -1748,7 +1823,13 @@
             "exDate": "2014-03-03",
             "rate": 1.5
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "China",
@@ -1868,7 +1949,12 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash"
       },
       "research": {
         "geographic1": "China",
@@ -2129,7 +2215,13 @@
             "exDate": "2009-10-01",
             "rate": 2.0
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "China",
@@ -2249,7 +2341,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "China",
@@ -2369,7 +2467,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "Hong Kong",
@@ -2582,7 +2686,13 @@
             "exDate": "2021-03-31",
             "rate": 1.72
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "Hong Kong",
@@ -2795,7 +2905,13 @@
             "exDate": "2021-03-31",
             "rate": 1.25
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "Hong Kong",
@@ -2915,7 +3031,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "China",
@@ -3035,7 +3157,14 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA"
       },
       "research": {
         "geographic1": "China",
@@ -3155,7 +3284,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -3292,7 +3427,13 @@
             "exDate": "2026-06-30",
             "rate": 0.3
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -3351,7 +3492,15 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA",
+          "CPF-SA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA, CPFIS-SA"
       },
       "research": {
         "geographic1": "United States",
@@ -3488,7 +3637,13 @@
             "exDate": "2026-06-30",
             "rate": 0.49
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -3547,7 +3702,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -3672,7 +3833,13 @@
             "exDate": "2025-10-01",
             "rate": 5.0
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -3993,7 +4160,12 @@
             "exDate": "2022-08-01",
             "rate": 0.38
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash"
       },
       "research": {
         "geographic1": "United States",
@@ -4113,7 +4285,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -4172,7 +4350,14 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA"
       },
       "research": {
         "geographic1": "United States",
@@ -4421,7 +4606,14 @@
             "exDate": "2018-12-31",
             "rate": 0.74
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA"
       },
       "research": {
         "geographic1": "United States",
@@ -4541,7 +4733,12 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash"
       },
       "research": {
         "geographic1": "United States",
@@ -4661,7 +4858,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -4775,7 +4978,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -4895,7 +5104,12 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash"
       },
       "research": {
         "geographic1": "United States",
@@ -5015,7 +5229,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -5135,7 +5355,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -5255,7 +5481,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -5375,7 +5607,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -5495,7 +5733,15 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA",
+          "CPF-SA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA, CPFIS-SA"
       },
       "research": {
         "geographic1": "United States",
@@ -5740,7 +5986,13 @@
             "exDate": "2018-12-31",
             "rate": 1.0
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -5860,7 +6112,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -6073,7 +6331,13 @@
             "exDate": "2021-03-31",
             "rate": 1.57
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -6286,7 +6550,13 @@
             "exDate": "2021-03-31",
             "rate": 1.12
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -6406,7 +6676,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -6526,7 +6802,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -6646,7 +6928,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -6899,7 +7187,12 @@
             "exDate": "2023-12-29",
             "rate": 0.5
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash"
       },
       "research": {
         "geographic1": "United States",
@@ -7019,7 +7312,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -7139,7 +7438,14 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA"
       },
       "research": {
         "geographic1": "Greater China",
@@ -7259,7 +7565,12 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash"
       },
       "research": {
         "geographic1": "Greater China",
@@ -7379,7 +7690,14 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA"
       },
       "research": {
         "geographic1": "India",
@@ -7499,7 +7817,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -7619,7 +7943,14 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA"
       },
       "research": {
         "geographic1": "Europe",
@@ -7739,7 +8070,15 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA",
+          "CPF-SA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA, CPFIS-SA"
       },
       "research": {
         "geographic1": "Singapore",
@@ -7859,7 +8198,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "Singapore",
@@ -7979,7 +8324,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "Singapore",
@@ -8099,7 +8450,15 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA",
+          "CPF-SA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA, CPFIS-SA"
       },
       "research": {
         "geographic1": "Singapore",
@@ -8324,7 +8683,13 @@
             "exDate": "2019-04-01",
             "rate": 1.0
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "Singapore",
@@ -8444,7 +8809,14 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS",
+          "CPF-OA"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS, CPFIS-OA"
       },
       "research": {
         "geographic1": "Singapore",
@@ -8617,7 +8989,12 @@
             "exDate": "2025-09-15",
             "rate": 0.51
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash"
       },
       "research": {
         "geographic1": "United States",
@@ -8748,7 +9125,12 @@
             "exDate": "2025-09-15",
             "rate": 0.55
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash"
       },
       "research": {
         "geographic1": "United States",
@@ -9019,7 +9401,12 @@
             "exDate": "2022-10-14",
             "rate": 0.6
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash"
       },
       "research": {
         "geographic1": "United States",
@@ -9280,7 +9667,12 @@
             "exDate": "2023-11-14",
             "rate": 0.55
           }
-        ]
+        ],
+        "paymentModes": [
+          "Cash"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash"
       },
       "research": {
         "geographic1": "United States",
@@ -9400,7 +9792,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -9459,7 +9857,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
@@ -9518,7 +9922,13 @@
         "dividendUnit": null,
         "dividendUnitSource": null,
         "dividendUnitEvidence": null,
-        "dividendHistory": []
+        "dividendHistory": [],
+        "paymentModes": [
+          "Cash",
+          "SRS"
+        ],
+        "paymentModeSource": "prudential-api:paymentMode",
+        "paymentModeEvidence": "paymentMode=Cash, SRS"
       },
       "research": {
         "geographic1": "United States",
