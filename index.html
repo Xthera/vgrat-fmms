@@ -2119,7 +2119,7 @@
 
                     <p id="report-loading" class="news-summary-bar report-loading">Loading price history…</p>
 
-                    <form id="report-form" class="report-form" novalidate hidden>
+                    <form id="report-form" class="report-form" novalidate hidden autocomplete="off">
 
                         <!-- STEP 1 -->
                         <fieldset class="report-group report-step" data-report-step="1">
@@ -2158,7 +2158,7 @@
                         <fieldset class="report-group report-step" data-report-step="3" hidden>
                             <legend><span class="report-step-no">3</span>Premium</legend>
 
-                            <div class="report-grid report-grid-5">
+                            <div class="report-grid report-grid-6">
                                 <label class="report-field">
                                     <span>Initial lump sum</span>
                                     <input id="report-lump" type="number" min="0" step="100" inputmode="decimal" placeholder="e.g. 10000">
@@ -2181,6 +2181,11 @@
                                 </label>
 
                                 <label class="report-field">
+                                    <span>Payment term (years)</span>
+                                    <input id="report-term" type="number" min="1" max="99" step="1" inputmode="numeric" placeholder="Until end date">
+                                </label>
+
+                                <label class="report-field">
                                     <span>Start date</span>
                                     <input id="report-start" type="date">
                                 </label>
@@ -2193,7 +2198,7 @@
 
                             <p id="report-date-note" class="settings-help report-date-note"></p>
 
-                            <p class="settings-help report-step-hint" data-step-hint="3">Enter an initial lump sum or a regular top-up (at least one must be above 0), with a start date before the end date.</p>
+                            <p class="settings-help report-step-hint" data-step-hint="3">Enter an initial lump sum or a regular top-up (at least one must be above 0), with a start date before the end date. Payment term is optional: leave it empty to pay top-ups until the end date.</p>
                         </fieldset>
 
                         <!-- STEP 4 -->
@@ -2567,7 +2572,7 @@
                     id="app-version"
                     class="footer-version"
                 >
-                    v1.0.0
+                    v1.1.0
                 </div>
 
             </div>
