@@ -866,6 +866,50 @@ function formatRate(rate, unit) {
     return `${text} ${clean}`;
 }
 
+/* Payout frequency, worked out from the gaps between the most recent
+   ex-dividend dates (Prudential's data has no frequency field). */
+const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function payoutPeriod(history) {
+    const dates = history
+        .map(item => String(item?.exDate ?? ""))
+        .filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date))
+        .sort()
+        .reverse();
+
+    if (dates.length < 2) {
+        return { label: "Not enough history", months: [], last: dates[0] ?? null };
+    }
+
+    const recent = dates.slice(0, 7);
+    const gaps = [];
+
+    for (let i = 1; i < recent.length; i += 1) {
+        gaps.push((Date.parse(recent[i - 1]) - Date.parse(recent[i])) / 86400000);
+    }
+
+    gaps.sort((a, b) => a - b);
+
+    const median = gaps[Math.floor(gaps.length / 2)];
+
+    const label =
+        median <= 45 ? "Monthly"
+        : median <= 120 ? "Quarterly"
+        : median <= 220 ? "Half-yearly"
+        : median <= 400 ? "Yearly"
+        : "Irregular";
+
+    // Usual payout months, from the payments in the latest 12 months
+    const lastTime = Date.parse(dates[0]);
+    const months = [...new Set(
+        dates
+            .filter(date => lastTime - Date.parse(date) < 360 * 86400000)
+            .map(date => Number(date.slice(5, 7)) - 1)
+    )].sort((a, b) => a - b);
+
+    return { label, months, last: dates[0] };
+}
+
 function dividendSection(details) {
     if (!details.hasDividend) return "";
 
@@ -881,7 +925,34 @@ function dividendSection(details) {
         `;
     }
 
+    const period = payoutPeriod(history);
+    const latest = [...history].sort((a, b) => String(b.exDate).localeCompare(String(a.exDate)))[0];
+    const usualMonths = period.label === "Monthly"
+        ? "every month"
+        : period.months.length && period.label !== "Irregular"
+            ? period.months.map(month => MONTH_SHORT[month]).join(", ")
+            : "";
+
     return `
+        <section class="news-popup-section">
+            <h3 class="news-popup-label">Dividend payout</h3>
+
+            <div class="fund-payout">
+                <div class="fund-payout-item">
+                    <span>Payout frequency</span>
+                    <strong>${escapeHtml(period.label)}</strong>
+                    ${usualMonths ? `<em>${period.label === "Monthly" ? "Paid every month" : `Usually ${escapeHtml(usualMonths)}`}</em>` : period.label === "Not enough history" ? `<em>Only one payout on record</em>` : ""}
+                </div>
+                <div class="fund-payout-item">
+                    <span>Last payout</span>
+                    <strong>${escapeHtml(formatIsoDate(latest?.exDate))}</strong>
+                    <em>${escapeHtml(formatRate(latest?.rate, unit))}</em>
+                </div>
+            </div>
+
+            <p class="fund-source-note">Payout frequency worked out from the dates of recent payouts (ex-dividend dates).</p>
+        </section>
+
         <section class="news-popup-section">
             <h3 class="news-popup-label">Dividend history${unit ? ` (${escapeHtml(unit)})` : ""}</h3>
 
@@ -1363,6 +1434,14 @@ function openProfile(id) {
                             <span class="fund-fact-value payment-chips">${paymentChips(row.paymentModes)}</span>
                         </div>
                     ` : ""}
+                    ${details.hasDividend && Array.isArray(details.dividendHistory) && details.dividendHistory.length ? (() => {
+                        const period = payoutPeriod(details.dividendHistory);
+                        const months = period.label !== "Monthly" && period.label !== "Irregular" && period.months.length
+                            ? ` (${period.months.map(month => MONTH_SHORT[month]).join(", ")})`
+                            : "";
+
+                        return fact("Payout frequency", period.label === "Not enough history" ? "One payout on record" : `${period.label}${months}`);
+                    })() : ""}
                     ${fact("Valuation date", details.valuationDate)}
                     ${fact("Inception", details.inceptionDate)}
                     ${fact("Sub-class", details.assetSubClass)}
