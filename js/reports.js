@@ -316,8 +316,12 @@ function buildYearRows(series, firstDate, endDate) {
 }
 
 function calculate(input) {
-    const { lumpSum, topUp, frequency, start, end } = input;
+    const { lumpSum, topUp, frequency, start, end, term } = input;
     const months = FREQUENCIES[frequency]?.months ?? 0;
+
+    // Payment term: regular top-ups are paid for this many years from
+    // the start date (empty = until the end date).
+    const termEnd = term > 0 ? addMonths(start, term * 12) : null;
 
     // Investment dates: the start date, then every period after it
     const investDates = [start];
@@ -325,7 +329,7 @@ function calculate(input) {
     if (topUp > 0 && months > 0) {
         let next = addMonths(start, months);
 
-        while (next <= end) {
+        while (next <= end && (!termEnd || next < termEnd)) {
             investDates.push(next);
             next = addMonths(next, months);
         }
@@ -719,6 +723,17 @@ function closeSuggestions() {
    Each step appears once the one before is done.
    ============================================================ */
 
+/* Payment term: empty, or a whole number of years from 1 to 99 */
+function termValid(text) {
+    const value = String(text ?? "").trim();
+
+    if (!value) return true;
+
+    const years = Number(value);
+
+    return Number.isInteger(years) && years >= 1 && years <= 99;
+}
+
 function premiumDone() {
     const lump = Number(qs("#report-lump")?.value) || 0;
     const topUp = Number(qs("#report-topup")?.value) || 0;
@@ -730,6 +745,7 @@ function premiumDone() {
     if (lump < 0 || topUp < 0) return false;
     if (lump <= 0 && topUp <= 0) return false;
     if (topUp > 0 && frequency === "none") return false;
+    if (!termValid(qs("#report-term")?.value ?? "")) return false;
     if (!start || !end || start >= end || end > today) return false;
 
     return true;
@@ -1101,6 +1117,28 @@ function renderBoosterSuggestions(index) {
     list.hidden = false;
 }
 
+function setFrequency(value) {
+    const frequency = qs("#report-frequency");
+
+    if (!frequency || frequency.value === value) return;
+
+    frequency.value = value;
+    frequency.dispatchEvent(new Event("vselect:sync"));
+}
+
+function syncTopUpFrequency() {
+    const frequency = qs("#report-frequency");
+    const topUp = Number(qs("#report-topup")?.value) || 0;
+
+    if (!frequency) return;
+
+    if (topUp <= 0) {
+        setFrequency("none");
+    } else if (frequency.value === "none") {
+        setFrequency("monthly");
+    }
+}
+
 function bindBoosterEvents() {
     qs("#report-booster-choice")?.addEventListener("click", event => {
         const option = event.target.closest("[data-report-booster]");
@@ -1276,6 +1314,8 @@ function readInput() {
         lumpSum: number("#report-lump"),
         topUp: number("#report-topup"),
         frequency: qs("#report-frequency")?.value ?? "monthly",
+        term: number("#report-term"),
+        termText: qs("#report-term")?.value.trim() ?? "",
         start: qs("#report-start")?.value ?? "",
         end: qs("#report-end")?.value ?? "",
         boosterChoice: report.booster,
@@ -1322,6 +1362,8 @@ function validate(input) {
     if (input.lumpSum <= 0 && input.topUp <= 0) return "Enter an initial investment, a regular top-up, or both.";
 
     if (input.topUp > 0 && input.frequency === "none") return "Choose how often the regular top-up is made.";
+
+    if (!termValid(input.termText)) return "The payment term must be a whole number of years (1 to 99), or left empty.";
 
     const limits = dateLimits();
 
@@ -1377,7 +1419,9 @@ function renderReport(result) {
 
     const planText = [
         input.lumpSum > 0 ? `${m(input.lumpSum)} invested on ${formatDate(result.firstDate)}` : "",
-        input.topUp > 0 ? `${m(input.topUp)} ${frequency.label.toLowerCase()} top-ups` : ""
+        input.topUp > 0
+            ? `${m(input.topUp)} ${frequency.label.toLowerCase()} top-ups${input.term > 0 ? ` for ${input.term} year${input.term === 1 ? "" : "s"}` : ""}`
+            : ""
     ].filter(Boolean).join(" plus ");
 
     const code = id => report.fundById.get(id)?.fundCode ?? id;
@@ -1951,7 +1995,7 @@ function bindEvents() {
         });
     }
 
-    for (const selector of ["#report-lump", "#report-topup", "#report-frequency", "#report-start", "#report-end"]) {
+    for (const selector of ["#report-lump", "#report-topup", "#report-frequency", "#report-term", "#report-start", "#report-end"]) {
         qs(selector)?.addEventListener("input", updateSteps);
         qs(selector)?.addEventListener("change", updateSteps);
     }
@@ -2004,17 +2048,37 @@ function bindEvents() {
 
     qs("#report-split")?.addEventListener("click", splitEqually);
 
+    // Top-up frequency follows the regular top-up amount:
+    // empty / 0 -> "No top-ups"; an amount -> Monthly (if it was "No top-ups").
+    // The initial lump sum is never affected by the frequency.
     qs("#report-topup")?.addEventListener("input", () => {
-        const frequency = qs("#report-frequency");
-        const topUp = Number(qs("#report-topup").value) || 0;
+        syncTopUpFrequency();
+        updateSteps();
+    });
 
-        if (frequency && topUp > 0 && frequency.value === "none") {
-            frequency.value = "monthly";
-            frequency.dispatchEvent(new Event("vselect:sync"));
+    qs("#report-topup")?.addEventListener("change", () => {
+        syncTopUpFrequency();
+        updateSteps();
+    });
+
+    // Choosing "No top-ups" clears the top-up amount; choosing a
+    // frequency with no amount goes back to "No top-ups".
+    qs("#report-frequency")?.addEventListener("change", () => {
+        const frequency = qs("#report-frequency");
+        const topUpInput = qs("#report-topup");
+
+        if (!frequency || !topUpInput) return;
+
+        if (frequency.value === "none") {
+            topUpInput.value = "";
+        } else if (!(Number(topUpInput.value) > 0)) {
+            setFrequency("none");
         }
 
         updateSteps();
     });
+
+    syncTopUpFrequency();
 
     qs("#report-form")?.addEventListener("submit", event => {
         event.preventDefault();
@@ -2115,6 +2179,82 @@ function bindEvents() {
 
 
 /* ============================================================
+   CLEAR ON LEAVE
+   Nothing entered here is saved (no browser storage, nothing sent).
+   Leaving the Report Generation page wipes the form, the chosen
+   funds, boosters and any generated report.
+   ============================================================ */
+
+function resetReport() {
+    const dialog = qs("#report-output");
+
+    if (dialog?.open) dialog.close();
+
+    for (const chart of report.charts) chart?.destroy?.();
+
+    report.charts = [];
+    report.selected = [];
+    report.paymentMode = null;
+    report.requestedStart = null;
+    report.booster = null;
+    report.boosters = [];
+    report.lastResult = null;
+
+    const sheet = qs("#report-sheet");
+
+    if (sheet) sheet.innerHTML = "";
+
+    qs("#report-form")?.reset();
+
+    for (const selector of ["#report-start", "#report-end"]) {
+        const field = qs(selector);
+
+        if (field) {
+            field.value = "";
+            field.removeAttribute("min");
+            field.removeAttribute("max");
+        }
+    }
+
+    const error = qs("#report-error");
+
+    if (error) {
+        error.textContent = "";
+        error.hidden = true;
+    }
+
+    const note = qs("#report-payment-note");
+
+    if (note) note.textContent = "";
+
+    closeSuggestions();
+
+    syncTopUpFrequency();
+    qs("#report-frequency")?.dispatchEvent(new Event("vselect:sync"));
+
+    renderPaymentOptions();
+    renderBoosters();
+    renderSelected();
+}
+
+function watchLeavingPage() {
+    const view = qs("#reports-view");
+
+    if (!view) return;
+
+    let wasVisible = !view.hidden;
+
+    new MutationObserver(() => {
+        const visible = !view.hidden;
+
+        if (wasVisible && !visible) resetReport();
+
+        wasVisible = visible;
+    }).observe(view, { attributes: true, attributeFilter: ["hidden"] });
+}
+
+
+/* ============================================================
    PUBLIC API
    ============================================================ */
 
@@ -2128,6 +2268,7 @@ function initializeReports({ funds, historyIndex }) {
 
     if (!report.initialized) {
         bindEvents();
+        watchLeavingPage();
         report.initialized = true;
     }
 
