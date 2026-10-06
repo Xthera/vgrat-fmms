@@ -1691,20 +1691,42 @@ def extract_dividend_fields(
 # PAYMENT MODE (Cash / SRS / CPF-OA / CPF-SA)
 # ============================================================================
 #
-# test_pruaccess.py keeps the full record from Prudential's ilpfunds.json
-# API under "raw". Payment-mode information is read from any field whose
-# name mentions payment / cash / SRS / CPF, e.g.
+# Payment mode is extracted ONLY from explicit Prudential payment-mode
+# fields in the raw ilpfunds.json record, plus explicitly named payment
+# flags. We do not infer a payment mode merely because an unrelated field
+# happens to contain the words "cash", "CPF", or "SRS".
 #
-#     "paymentMode": "Cash, SRS, CPF-OA"      -> list of modes
-#     "cpfisOa": true / "Y", "srs": "Yes"     -> flags
+# Supported explicit value examples:
+#
+#     "paymentMode": "Cash, SRS, CPF-OA"
+#     "paymentModes": ["Cash", "SRS"]
+#     "payMode": "CPFIS-OA"
+#     "paymentMethod": "Cash"
+#
+# Supported explicit flag examples:
+#
+#     "isSrs": true
+#     "srs": "Y"
+#     "cpfisOa": true
+#     "cpfOa": "Yes"
+#     "cpfisSa": true
+#     "cpfSa": "Y"
+#     "isCash": true
 #
 # Result on each fund:
-#     paymentModes        ["Cash", "SRS", "CPF-OA", "CPF-SA"] (subset)
-#     paymentModeSource   "prudential-api:<field names>" or None
-#     paymentModeEvidence the matching raw fields, for checking
 #
-# If no fund has any such field, the build log prints every raw API field
-# name so the right one can be identified.
+#     paymentModes
+#         Ordered list containing only modes explicitly supported by the
+#         Prudential source record.
+#
+#     paymentModeSource
+#         "prudential-api:<field names>" when a mode was found.
+#
+#     paymentModeEvidence
+#         The exact source fields/values used for the extraction, useful for
+#         checking the result against the raw Prudential response.
+#
+# No AI, web research, or inference is performed here.
 
 PAYMENT_MODE_ORDER = (
     "Cash",
@@ -1714,9 +1736,72 @@ PAYMENT_MODE_ORDER = (
     "CPF",
 )
 
+# Explicit payment-mode field names. These are normalized by removing
+# punctuation/case before comparison.
+PAYMENT_VALUE_FIELDS = {
+    "paymentmode",
+    "paymentmodes",
+    "paymode",
+    "paymodes",
+    "paymentmethod",
+    "paymentmethods",
+    "paymenttype",
+    "paymenttypes",
+    "allowedpaymentmode",
+    "allowedpaymentmodes",
+    "eligiblepaymentmode",
+    "eligiblepaymentmodes",
+    "availablepaymentmode",
+    "availablepaymentmodes",
+}
+
+# Explicit flag field names. The name itself identifies the payment mode.
+PAYMENT_FLAG_FIELDS = {
+    # Cash
+    "cash",
+    "iscash",
+    "cancash",
+    "cashallowed",
+    "casheligible",
+    "iscashallowed",
+    "iscasheligible",
+    # SRS
+    "srs",
+    "issrs",
+    "cansrs",
+    "srsallowed",
+    "srseligible",
+    "issrsallowed",
+    "issrseligible",
+    # CPF-OA
+    "cpfoa",
+    "cpfisoa",
+    "iscpfoa",
+    "iscpfisoa",
+    "cancpfoa",
+    "cancpfisoa",
+    "cpfoaallowed",
+    "cpfisoaallowed",
+    "cpfoaeligible",
+    "cpfisoaeligible",
+    # CPF-SA
+    "cpfsa",
+    "cpfissa",
+    "iscpfsa",
+    "iscpfissa",
+    "cancpfsa",
+    "cancpfissa",
+    "cpfsaallowed",
+    "cpfissaallowed",
+    "cpfsaeligible",
+    "cpfissaeligible",
+}
+
 PAYMENT_DIAGNOSTICS = {
     "raw_keys": set(),
     "funds_with_modes": 0,
+    "field_usage": {},
+    "mode_counts": {},
 }
 
 _FALSE_WORDS = {
@@ -1732,53 +1817,192 @@ _FALSE_WORDS = {
     "-",
     "not applicable",
     "not available",
+    "null",
+}
+
+_TRUE_WORDS = {
+    "y",
+    "yes",
+    "true",
+    "1",
+    "t",
 }
 
 
-def _is_truthy_flag(value: Any) -> bool:
+def _payment_field_name(value: Any) -> str:
+    """Normalize a raw API field name for exact payment-field matching."""
+
+    return re.sub(
+        r"[^a-z0-9]",
+        "",
+        str(value).lower(),
+    )
+
+
+def _is_truthy_payment_flag(value: Any) -> bool:
+    """Return True only for values that explicitly mean enabled/allowed."""
 
     if isinstance(value, bool):
         return value
 
-    if isinstance(value, (int, float)):
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
         return value != 0
 
     text = clean_raw_text(value).strip().lower()
 
-    return text not in _FALSE_WORDS
+    if text in _FALSE_WORDS:
+        return False
+
+    if text in _TRUE_WORDS:
+        return True
+
+    # Do not treat arbitrary non-empty strings as a true flag. This avoids
+    # turning unrelated text such as "Not supported" into a payment mode.
+    return False
 
 
-def _modes_from_text(value: Any) -> set:
+def _payment_modes_from_text(value: Any) -> set[str]:
+    """
+    Extract modes from the value of an explicit payment-mode field.
 
-    if isinstance(value, (list, tuple)):
+    This parser is deliberately conservative. It recognizes Cash, SRS,
+    CPF-OA/CPFIS-OA, CPF-SA/CPFIS-SA, and generic CPF/CPFIS. It does not
+    classify an arbitrary mention of these words elsewhere in the API.
+    """
+
+    if isinstance(value, dict):
+        values = list(value.values())
+        text = " ".join(clean_raw_text(item) for item in values)
+    elif isinstance(value, (list, tuple, set)):
         text = " ".join(clean_raw_text(item) for item in value)
     else:
         text = clean_raw_text(value)
 
-    text = text.upper().replace("_", "-").replace(" ", "")
+    if not text:
+        return set()
 
-    modes = set()
+    # Normalize separators but retain enough structure for token matching.
+    normalized = re.sub(r"[\s_/]+", "-", text.upper())
+    compact = re.sub(r"[^A-Z0-9]", "", text.upper())
 
-    if "CASH" in text:
+    modes: set[str] = set()
+
+    # Cash / SRS can be represented as standalone values or within a
+    # comma/semicolon-delimited payment-mode string.
+    if re.search(r"(?<![A-Z])CASH(?![A-Z])", normalized) or compact == "CASH":
         modes.add("Cash")
 
-    if "SRS" in text:
+    if re.search(r"(?<![A-Z])SRS(?![A-Z])", normalized) or compact == "SRS":
         modes.add("SRS")
 
-    if re.search(r"CPF(IS)?-?(OA|ORDINARY)", text):
+    # CPF Ordinary Account.
+    if (
+        re.search(r"CPF(?:IS)?-?(?:OA|ORDINARY(?:-ACCOUNT)?)", normalized)
+        or compact in {"CPFOA", "CPFISOA", "CPFORDINARY", "CPFISORDINARY"}
+    ):
         modes.add("CPF-OA")
 
-    if re.search(r"CPF(IS)?-?(SA|SPECIAL)", text):
+    # CPF Special Account.
+    if (
+        re.search(r"CPF(?:IS)?-?(?:SA|SPECIAL(?:-ACCOUNT)?)", normalized)
+        or compact in {"CPFSA", "CPFISSA", "CPFSPECIAL", "CPFISSPECIAL"}
+    ):
         modes.add("CPF-SA")
 
-    # "CPF" / "CPFIS" without an account named
-    if not {"CPF-OA", "CPF-SA"} & modes and re.search(r"CPF", text):
-        modes.add("CPF")
+    # Generic CPF/CPFIS is only returned when the explicit payment field
+    # itself says CPF but does not identify OA or SA.
+    if not ({"CPF-OA", "CPF-SA"} & modes):
+        if re.search(r"(?<![A-Z])CPFIS?(?![A-Z])", normalized) or compact in {
+            "CPF",
+            "CPFIS",
+        }:
+            modes.add("CPF")
 
     return modes
 
 
+def _payment_mode_from_flag_name(field_name: str) -> str | None:
+    """Map an explicitly named payment flag to its canonical mode."""
+
+    name = _payment_field_name(field_name)
+
+    if name in {
+        "cash",
+        "iscash",
+        "cancash",
+        "cashallowed",
+        "casheligible",
+        "iscashallowed",
+        "iscasheligible",
+    }:
+        return "Cash"
+
+    if name in {
+        "srs",
+        "issrs",
+        "cansrs",
+        "srsallowed",
+        "srseligible",
+        "issrsallowed",
+        "issrseligible",
+    }:
+        return "SRS"
+
+    if name in {
+        "cpfoa",
+        "cpfisoa",
+        "iscpfoa",
+        "iscpfisoa",
+        "cancpfoa",
+        "cancpfisoa",
+        "cpfoaallowed",
+        "cpfisoaallowed",
+        "cpfoaeligible",
+        "cpfisoaeligible",
+    }:
+        return "CPF-OA"
+
+    if name in {
+        "cpfsa",
+        "cpfissa",
+        "iscpfsa",
+        "iscpfissa",
+        "cancpfsa",
+        "cancpfissa",
+        "cpfsaallowed",
+        "cpfissaallowed",
+        "cpfsaeligible",
+        "cpfissaeligible",
+    }:
+        return "CPF-SA"
+
+    return None
+
+
+def _record_payment_diagnostic(field_name: str, modes: set[str]) -> None:
+    """Record which raw field produced which payment modes."""
+
+    key = str(field_name)
+
+    usage = PAYMENT_DIAGNOSTICS["field_usage"]
+    usage[key] = usage.get(key, 0) + 1
+
+    for mode in modes:
+        counts = PAYMENT_DIAGNOSTICS["mode_counts"]
+        counts[mode] = counts.get(mode, 0) + 1
+
+
 def extract_payment_modes(raw: Any) -> dict:
+    """
+    Extract payment modes from explicit Prudential API fields only.
+
+    Priority:
+        1. Explicit payment-mode value fields.
+        2. Explicitly named payment flags.
+
+    A generic raw field containing "CPF", "SRS", or "Cash" is ignored
+    unless its field name itself is a recognized payment field/flag.
+    """
 
     empty = {
         "paymentModes": [],
@@ -1791,48 +2015,58 @@ def extract_payment_modes(raw: Any) -> dict:
 
     PAYMENT_DIAGNOSTICS["raw_keys"].update(str(key) for key in raw.keys())
 
-    modes = set()
-    used = []
+    modes: set[str] = set()
+    used: list[tuple[str, Any]] = []
+
+    # -----------------------------------------------------------------------
+    # 1. Explicit payment-mode value fields
+    # -----------------------------------------------------------------------
 
     for key, value in raw.items():
+        field_name = _payment_field_name(key)
 
-        name = str(key).lower().replace("_", "").replace("-", "")
-
-        if not any(word in name for word in ("payment", "paymode", "cash", "srs", "cpf")):
+        if field_name not in PAYMENT_VALUE_FIELDS:
             continue
 
         if value is None:
             continue
 
-        found = set()
+        found = _payment_modes_from_text(value)
 
-        if any(word in name for word in ("payment", "paymode")):
-            found = _modes_from_text(value)
-
-        elif _is_truthy_flag(value):
-            # A flag field: the field name says which mode it is
-            if isinstance(value, str) and _modes_from_text(value):
-                found = _modes_from_text(value)
-            elif "srs" in name:
-                found = {"SRS"}
-            elif "cpf" in name:
-                rest = name.split("cpf", 1)[1]
-
-                if rest.startswith("is"):
-                    rest = rest[2:]
-
-                if rest.startswith(("sa", "special")):
-                    found = {"CPF-SA"}
-                elif rest.startswith(("oa", "ordinary")):
-                    found = {"CPF-OA"}
-                else:
-                    found = {"CPF"}
-            elif "cash" in name:
-                found = {"Cash"}
+        # Some APIs return an object such as:
+        # {"cash": true, "srs": true, "cpfOa": true}
+        # under paymentMode/paymentModes. Handle that structure explicitly.
+        if isinstance(value, dict):
+            for nested_key, nested_value in value.items():
+                nested_mode = _payment_mode_from_flag_name(str(nested_key))
+                if nested_mode and _is_truthy_payment_flag(nested_value):
+                    found.add(nested_mode)
 
         if found:
             modes |= found
             used.append((str(key), value))
+            _record_payment_diagnostic(str(key), found)
+
+    # -----------------------------------------------------------------------
+    # 2. Explicit payment flags
+    # -----------------------------------------------------------------------
+
+    for key, value in raw.items():
+        field_name = _payment_field_name(key)
+
+        if field_name not in PAYMENT_FLAG_FIELDS:
+            continue
+
+        if not _is_truthy_payment_flag(value):
+            continue
+
+        mode = _payment_mode_from_flag_name(str(key))
+
+        if mode:
+            found = {mode}
+            modes |= found
+            used.append((str(key), value))
+            _record_payment_diagnostic(str(key), found)
 
     if not modes:
         return empty
@@ -1840,36 +2074,58 @@ def extract_payment_modes(raw: Any) -> dict:
     PAYMENT_DIAGNOSTICS["funds_with_modes"] += 1
 
     return {
-        "paymentModes": [mode for mode in PAYMENT_MODE_ORDER if mode in modes],
-        "paymentModeSource": "prudential-api:" + ",".join(key for key, _ in used),
+        "paymentModes": [
+            mode
+            for mode in PAYMENT_MODE_ORDER
+            if mode in modes
+        ],
+        "paymentModeSource": (
+            "prudential-api:"
+            + ",".join(key for key, _ in used)
+        ),
         "paymentModeEvidence": "; ".join(
-            f"{key}={clean_raw_text(value)[:80]}" for key, value in used
+            f"{key}={clean_raw_text(value)[:120]}"
+            for key, value in used
         ),
     }
 
 
 def print_payment_mode_diagnostics(fund_count: int) -> None:
+    """Print a useful payment-mode extraction summary for the build log."""
 
     print()
     print("Payment mode:")
-
     print(
         f"  funds with payment mode: "
         f"{PAYMENT_DIAGNOSTICS['funds_with_modes']} of {fund_count}"
     )
 
-    if not PAYMENT_DIAGNOSTICS["funds_with_modes"]:
+    mode_counts = PAYMENT_DIAGNOSTICS["mode_counts"]
 
+    if mode_counts:
+        print("  modes:")
+        for mode in PAYMENT_MODE_ORDER:
+            if mode in mode_counts:
+                print(f"    {mode}: {mode_counts[mode]}")
+
+    field_usage = PAYMENT_DIAGNOSTICS["field_usage"]
+
+    if field_usage:
+        print("  source fields:")
+        for field_name, count in sorted(
+            field_usage.items(),
+            key=lambda item: (-item[1], item[0].lower()),
+        ):
+            print(f"    {field_name}: {count}")
+    else:
         keys = sorted(PAYMENT_DIAGNOSTICS["raw_keys"])
-
         print(
-            "  No payment-mode field found in Prudential's API record. "
+            "  No explicit Prudential payment-mode field was found. "
             "Raw API fields available:"
         )
 
         for start in range(0, len(keys), 6):
             print("    " + ", ".join(keys[start:start + 6]))
-
 
 
 def normalize_prudential_fund(
@@ -2494,6 +2750,8 @@ def main() -> int:
 
     dividend_funds = 0
 
+    payment_mode_funds = 0
+
     bid_success = 0
     bid_missing = 0
     total_bid_observations = 0
@@ -2566,6 +2824,9 @@ def main() -> int:
 
             if dividend_rate:
                 dividend_funds += 1
+
+            if fund_info.get("paymentModes"):
+                payment_mode_funds += 1
 
         else:
 
@@ -2896,6 +3157,12 @@ def main() -> int:
             "dividendFunds": (
                 dividend_funds
             ),
+            "paymentModeFunds": (
+                payment_mode_funds
+            ),
+            "paymentModeCounts": dict(
+                PAYMENT_DIAGNOSTICS["mode_counts"]
+            ),
             "bidHistoryFunds": (
                 bid_success
             ),
@@ -3014,6 +3281,10 @@ def main() -> int:
 
     print(
         f"Dividend funds:         {dividend_funds}"
+    )
+
+    print(
+        f"Payment-mode funds:      {payment_mode_funds}"
     )
 
     print(
