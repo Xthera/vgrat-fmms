@@ -17,6 +17,7 @@
      accessible data view.
    ============================================================ */
 
+import { placeDropdown } from "./dropdown-place.js";
 import {
     createChart,
     destroyChart,
@@ -720,8 +721,8 @@ function getMatches(term) {
                 String(fund.fundName ?? "").toLowerCase().includes(query) ||
                 String(fund.fundCode ?? "").toLowerCase().includes(query)
             );
-        })
-        .slice(0, 50);
+        });
+    // No cut-off: every fund is listed in the dropdown.
 }
 
 function renderSuggestions() {
@@ -752,6 +753,7 @@ function renderSuggestions() {
     }
 
     list.hidden = false;
+    placeDropdown(list);
     input.setAttribute("aria-expanded", "true");
 }
 
