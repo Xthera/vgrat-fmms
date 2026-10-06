@@ -2951,6 +2951,20 @@ function renderNewsDynamicOptions() {
 
         }
 
+        // Fund lists are always in alphabetical order of fund name
+        // (the "(CODE)" after the name is ignored when sorting)
+        if (filter.fund) {
+
+            const fundName = value =>
+                newsOptionLabel(filter.selector, value).replace(/\s*\([A-Z0-9]+\)$/, "");
+
+            values.sort(
+                (a, b) =>
+                    fundName(a).localeCompare(fundName(b))
+            );
+
+        }
+
         const html =
             `<option value="ALL" data-label="${escapeAttribute(filter.allLabel)}">${escapeHtml(filter.allLabel)} (${articles.length})</option>` +
             values
