@@ -15,6 +15,10 @@
 html {
     min-height: 100%;
     scroll-behavior: smooth;
+
+    /* Always keep room for the scrollbar, so short pages (e.g. Report
+       Generation before its steps open) line up with long ones. */
+    scrollbar-gutter: stable;
 }
 
 body {
