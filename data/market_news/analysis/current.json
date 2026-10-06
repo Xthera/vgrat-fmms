@@ -1,10 +1,257 @@
 {
-  "generatedAtSgt": "2026-10-06T18:52:26.335485+08:00",
+  "generatedAtSgt": "2026-10-06T21:53:42.714380+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 94,
+  "articleCount": 102,
   "analyses": [
+    {
+      "articleId": "40584932f000f4b641cbdc413ae294a801d9f10e55091085b9011d21f2969af9",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Iran has increased its attacks on tankers moving through the Strait of Hormuz, putting a fragile rebound in Persian Gulf crude oil exports at risk despite fluctuating daily shipment volumes.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "Middle East",
+        "Iran",
+        "Persian Gulf"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas",
+        "Transportation"
+      ],
+      "investorImpact": "Increased geopolitical risks and tanker attacks in the Strait of Hormuz could disrupt global crude oil supplies, driving up energy price volatility and impacting shipping and energy sector equities.",
+      "reasoning": "The article details military and geopolitical escalations directly threatening critical global energy supply routes, making it highly significant for energy market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Rebounding oil exports through Strait of Hormuz are vulnerable to stepped-up Iranian tanker attacks",
+      "publishedAtSgt": "2026-10-06T21:17:17+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/crude-oil-tanker-strait-hormuz-iran-attack.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-06T21:38:00+08:00"
+    },
+    {
+      "articleId": "bc2b2399c75e33ae10e5dd8722120db4555c398ca8d4089921a307a83ea33f55",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The U.S. trade deficit widened sharply to $105.6 billion in August, marking a 13.7% jump from July and exceeding consensus estimates. The increase was driven by a 4.3% surge in imports, influenced by artificial intelligence infrastructure buildout and import tariffs.",
+      "assetClasses": [
+        "Equities",
+        "Currencies",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Industrials",
+        "Imports/Exports"
+      ],
+      "investorImpact": "A widening trade deficit driven by surging imports can weigh on GDP calculations and currency valuations while reflecting strong demand for AI-related hardware and goods ahead of tariff implementations.",
+      "reasoning": "The article reports a key macroeconomic indicator, the U.S. trade deficit, hitting its widest level since the previous year, surpassing analyst expectations and offering insights into import trends driven by AI investments and tariffs.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trade deficit hits $105.6 billion, widest since just before Trump tariffs enacted last year",
+      "publishedAtSgt": "2026-10-06T21:07:57+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/trade-deficit-hits-105point6-billion-widest-since-just-before-trump-tariffs-enacted-last-year.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-06T21:38:00+08:00"
+    },
+    {
+      "articleId": "7e30c13388cce84beb5937d52cfbc3b3e4f26a6cd2e4de6229569e1b9ce0aa13",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "A startup is offering a product to help institutions reduce liquidation risk from margin calls on prediction markets by allowing them to pre-determine capital deployment limits and manage risks associated with perpetual futures trading around the clock.",
+      "assetClasses": [
+        "Derivatives",
+        "Alternative Investments"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Financial Services",
+        "Fintech"
+      ],
+      "investorImpact": "The development highlights niche infrastructure improvements for institutional participation in prediction markets and perpetual futures, though its immediate impact on broader asset classes remains limited.",
+      "reasoning": "Classified as MARKET due to its focus on trading risk management, margin calls, and institutional execution in prediction markets. Sentiment is neutral as it reports on a product launch without broad market implications.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "This startup wants to reduce liquidation risk from margin calls on prediction markets",
+      "publishedAtSgt": "2026-10-06T21:01:20+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/this-firm-aims-to-reduce-liquidation-risk-from-margin-calls-on-prediction-markets.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 100,
+      "collectorRelevanceReason": "financial_market_legal_story",
+      "collectedAtSgt": "2026-10-06T21:38:01+08:00"
+    },
+    {
+      "articleId": "2154a29b716fe6c3d34780010eb8452ba457c9b1c0707207bf67f4d85d0f2d98",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Chinese AI startup DeepSeek is considering doubling its latest funding round to as much as $14.9 billion (100 billion yuan) due to intense interest from state-backed funds, corporate investors, and venture capital firms.",
+      "assetClasses": [
+        "Private Equity",
+        "Equities"
+      ],
+      "geographies": [
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Highlights massive capital inflows and strong investor appetite for leading AI startups in China, impacting competitive dynamics in the global artificial intelligence sector.",
+      "reasoning": "Classified as MARKET due to the significant private funding and valuation implications for the AI sector. It is important and fund-monitoring relevant because of the scale of the capital raise and involvement of state-backed entities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "DeepSeek considers doubling latest funding round to up to $15 billion, sources say",
+      "publishedAtSgt": "2026-10-06T20:59:10+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/deepseek-funding-round.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 95,
+      "collectorRelevanceReason": "business_market_event",
+      "collectedAtSgt": "2026-10-06T21:38:01+08:00"
+    },
+    {
+      "articleId": "859ff367e12db63c4145f505c147d120e7c25d0ec45bca5f3f6e19c697bf9940",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer outlines top stock market items to watch, noting declining oil prices and bond yields, potential upward revisions to long-term financial targets for an AI chip and networking gear maker, and expectations for strong cloud revenue growth.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Energy"
+      ],
+      "investorImpact": "Provides investors with a daily watchlist of key market drivers including oil prices, bond yields, and semiconductor/cloud trends that could impact equity portfolios.",
+      "reasoning": "Classified as MARKET because it discusses daily market watch items, equity catalysts, and macro factors like bond yields and oil prices. Important for monitoring market sentiment and sector-specific dynamics.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Jim Cramer's top 10 things to watch in the stock market Tuesday",
+      "publishedAtSgt": "2026-10-06T20:47:59+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/06/jim-cramers-top-10-things-to-watch-in-the-stock-market-tuesday.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-06T21:38:02+08:00"
+    },
+    {
+      "articleId": "18be524555ba6dc3f19014d71f14d777eb59724d36fb8dfe3e0ff1159945f29e",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Despite Treasury yields hitting a 24-year high, stocks closed higher, led by artificial intelligence names driving the Nasdaq Composite to record highs. SpaceX shares also jumped nearly 8%, returning Elon Musk to trillionaire status.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Aerospace & Defense"
+      ],
+      "investorImpact": "The resilience of equity markets in the face of surging Treasury yields indicates strong appetite for growth and technology stocks, particularly AI-related assets, despite macro rate pressures.",
+      "reasoning": "Classified as MARKET due to broader equity index records and interest rate dynamics. Important for monitoring market sentiment and technology sector momentum.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Paramount-WBD merger, Musk's return to trillionaire, AI researchers' warning and more in Morning Squawk",
+      "publishedAtSgt": "2026-10-06T20:46:42+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/5-things-to-know-before-the-stock-market-opens.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-06T21:38:02+08:00"
+    },
+    {
+      "articleId": "9806875c4810a0a461699c92a8dd78052f2831ebf61bf0be6f16ad1365739234",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Car buyers are stretching loan terms to afford record high monthly payments driven by larger borrowing amounts and elevated energy costs linked to Middle East conflict.",
+      "assetClasses": [
+        "Credit",
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Automotive",
+        "Consumer Discretionary",
+        "Financials"
+      ],
+      "investorImpact": "Highlights consumer financial strain and stretched credit terms in the auto sector, which could impact auto lenders and consumer discretionary spending.",
+      "reasoning": "Classified as MARKET because it discusses consumer financing trends, auto loan lengths, and monthly payments affecting consumer discretionary and auto sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Car buyers are stretching loans to afford payments — it's a 'potential warning light,' analyst says",
+      "publishedAtSgt": "2026-10-06T20:15:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/car-loans-are-getting-longer-as-monthly-payments-hit-record-highs.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-06T21:38:01+08:00"
+    },
+    {
+      "articleId": "6a3dcb7019d4405c801b82fcab79ad65c04e1dc6951d5c4fcff327f6a8f2cd4f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "The S&P 500 forward price-to-earnings ratio has compressed from 23 to 19 over the past year, reflecting investor caution regarding high profit margins and decelerating growth, while rising government bond yields offer an alternative cushion for portfolios.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Technology"
+      ],
+      "investorImpact": "Investors can utilize bonds as an attractive cushion amid falling equity valuations and compressed P/E ratios, helping to balance multi-asset portfolios against AI bull market uncertainty.",
+      "reasoning": "Classified as MARKET due to its focus on equity valuations, P/E compression, and bond yields. Sentiment is MIXED reflecting both caution on equities and opportunity in bonds. Importance is HIGH given its relevance to broad asset allocation and portfolio protection.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Unsure how long this AI bull has? Bonds now offer a cushion at the best values in years",
+      "publishedAtSgt": "2026-10-06T19:08:28+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/unsure-how-long-this-ai-bull-has-bonds-now-offer-a-cushion-at-the-best-values-in-years.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-06T21:38:01+08:00"
+    },
     {
       "articleId": "41877e23ea510b7bb2a9375971a9dba5414a938caeb6ca7be409d9f66f2dc391",
       "relevant": true,
