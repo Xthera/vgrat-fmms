@@ -7490,14 +7490,32 @@ html[data-theme="light"] .palette-swatch {
 .report-dialog .report-sheet {
     width: 210mm;
     max-width: 100%;
-    min-height: 297mm;
 
     margin: 0 auto;
-    padding: 14mm 14mm;
+    padding: 0;
+
+    border-radius: 0;
+
+    background: transparent;
+    box-shadow: none;
+}
+
+/* Each printed page shown as its own A4 sheet in the preview */
+.report-dialog .rpt-page {
+    min-height: 297mm;
+
+    margin: 0 0 18px;
+    padding: 14mm;
 
     border-radius: 2px;
 
+    background: #ffffff;
+
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
+
+.report-dialog .rpt-page:last-child {
+    margin-bottom: 0;
 }
 
 @media (max-width: 699px) and (pointer: coarse), (max-height: 500px) and (max-width: 1000px) and (pointer: coarse) {
@@ -7514,6 +7532,11 @@ html[data-theme="light"] .palette-swatch {
     }
 
     .report-dialog .report-sheet {
+        min-height: 0;
+        padding: 0;
+    }
+
+    .report-dialog .rpt-page {
         min-height: 0;
         padding: 16px 12px;
     }
@@ -7594,6 +7617,24 @@ html[data-theme="light"] .palette-swatch {
         padding: 0 !important;
 
         box-shadow: none !important;
+    }
+
+    /* Page 1: summary to portfolio breakdown. Page 2: year by year
+       and about the funds. Then one page per fund. */
+    .report-dialog .rpt-page {
+        min-height: 0 !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        border-radius: 0 !important;
+
+        box-shadow: none !important;
+    }
+
+    .rpt-page + .rpt-page {
+        break-before: page;
+        page-break-before: always;
     }
 
 }
@@ -8253,4 +8294,148 @@ html[data-theme="light"] .palette-swatch {
 
 .rpt-table-boosters td:first-child {
     width: 16%;
+}
+
+
+/* ============================================================
+   REPORT PAGES — running head and per-fund pages
+   ============================================================ */
+
+.rpt-running-head {
+    display: flex;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+
+    border-bottom: 2px solid #1f5f99;
+
+    color: #5b6670;
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.rpt-page > .rpt-section:first-of-type {
+    margin-top: 0;
+}
+
+.rpt-fund-title {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-bottom: 14px;
+}
+
+.rpt-fund-title h2 {
+    margin: 0 0 2px;
+
+    color: #10202e;
+
+    font-size: 18px;
+    font-weight: 750;
+    line-height: 1.25;
+}
+
+.rpt-swatch.rpt-swatch-lg {
+    flex-shrink: 0;
+
+    width: 14px;
+    height: 14px;
+
+    margin: 5px 0 0;
+}
+
+.rpt-chart-wrap.rpt-chart-wrap-fund {
+    height: 220px;
+}
+
+.rpt-facts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 8px;
+}
+
+.rpt-facts-grid > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 1px;
+
+    padding: 8px 10px;
+
+    border: 1px solid #e6ebef;
+    border-radius: 6px;
+}
+
+.rpt-facts-grid span {
+    color: #7a8590;
+
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.rpt-facts-grid strong {
+    color: #10202e;
+
+    font-size: 13px;
+}
+
+.rpt-facts-grid em {
+    color: #5b6670;
+
+    font-style: normal;
+    font-size: 10.5px;
+}
+
+.rpt-table.rpt-table-perf {
+    margin-bottom: 8px;
+}
+
+.rpt-table.rpt-table-perf td:first-child {
+    width: 16%;
+
+    font-weight: 700;
+}
+
+.rpt-perf-note {
+    margin-top: 2px;
+}
+
+/* Slightly more compact report so pages fit A4 */
+.rpt-page .rpt-chart-wrap {
+    height: 220px;
+}
+
+.rpt-page .rpt-chart-wrap.rpt-chart-wrap-fund {
+    height: 190px;
+}
+
+.rpt-page .rpt-tile {
+    padding: 9px 12px;
+}
+
+.rpt-page .rpt-section {
+    margin-top: 14px;
+}
+
+.rpt-page .rpt-table td {
+    padding: 5px 6px;
+}
+
+.rpt-page .rpt-table th {
+    padding: 5px 6px;
+}
+
+.rpt-page-body {
+    width: 100%;
 }
