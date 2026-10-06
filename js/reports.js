@@ -42,6 +42,7 @@ const report = {
     paymentMode: null,     // "Cash" | "SRS" | "CPF-OA" | "CPF-SA"
     requestedStart: null,  // start date as typed in the Premium step
     booster: null,         // investment booster: null | "no" | "yes"
+    dividendMode: "cash",  // dividends: "cash" (paid out) | "reinvest"
     boosters: [],          // [{ date, amount, selected: [{ id, weight }] }]
     charts: [],
     lastResult: null
@@ -303,17 +304,103 @@ function buildYearRows(series, firstDate, endDate) {
         if (!point) continue;
         if (rows.length && rows[rows.length - 1].date === point.date) continue;
 
+        const dividends = point.dividends ?? 0;
+        const gain = point.value + dividends - point.invested;
+
         rows.push({
             label: year === lastYear ? `${formatDate(point.date)} (latest)` : `End ${year}`,
             date: point.date,
             invested: point.invested,
             value: point.value,
-            gain: point.value - point.invested,
-            gainPct: point.invested ? ((point.value - point.invested) / point.invested) * 100 : null
+            dividends,
+            gain,
+            gainPct: point.invested ? (gain / point.invested) * 100 : null
         });
     }
 
     return rows;
+}
+
+/* ============================================================
+   DIVIDENDS
+   Uses each fund's dividend history (data/funds.json):
+   - "%" units: payout per unit = rate % x BID on the ex-date
+   - "cent(s) per unit": payout per unit = rate / 100
+   Units held = units bought before the ex-date.
+   cash      -> the payout is kept as cash (counted in gain/loss)
+   reinvest  -> the payout buys more units at the BID on/after
+                the ex-date (not counted as money invested)
+   ============================================================ */
+
+function dividendKind(unit) {
+    const text = String(unit ?? "").trim().toLowerCase();
+
+    if (text.startsWith("%")) return "percent";
+    if (text.includes("cent")) return "cents";
+
+    return null;
+}
+
+function fundPaysDividends(id) {
+    const details = report.fundById.get(id)?.fund ?? {};
+
+    return Boolean(details.hasDividend) && Array.isArray(details.dividendHistory) && details.dividendHistory.length > 0;
+}
+
+function applyDividends(funds, mode, end) {
+    for (const entry of funds) {
+        entry.dividends = [];
+
+        const details = entry.fund?.fund ?? {};
+        const kind = dividendKind(details.dividendUnit);
+
+        if (!details.hasDividend || !kind || !entry.purchases.length) continue;
+
+        const history = (Array.isArray(details.dividendHistory) ? details.dividendHistory : [])
+            .filter(item => /^\d{4}-\d{2}-\d{2}$/.test(String(item?.exDate ?? "")) && Number(item.rate) > 0)
+            .sort((a, b) => a.exDate.localeCompare(b.exDate));
+
+        for (const item of history) {
+            if (item.exDate > end) continue;
+
+            const held = entry.purchases
+                .filter(p => p.date < item.exDate)
+                .reduce((sum, p) => sum + p.units, 0);
+
+            if (held <= 0) continue;
+
+            let perUnit;
+
+            if (kind === "percent") {
+                const price = priceOnOrBefore(entry.obs, item.exDate);
+
+                if (!price) continue;
+
+                perUnit = price.bidPrice * Number(item.rate) / 100;
+            } else {
+                perUnit = Number(item.rate) / 100;
+            }
+
+            const payout = { exDate: item.exDate, rate: Number(item.rate), units: held, cash: held * perUnit, reinvested: false };
+
+            if (mode === "reinvest") {
+                const buy = priceOnOrAfter(entry.obs, item.exDate);
+
+                if (buy && buy.date <= end) {
+                    const units = payout.cash / buy.bidPrice;
+
+                    entry.purchases.push({ date: buy.date, amount: 0, units, bid: buy.bidPrice, reinvest: true });
+                    entry.purchases.sort((x, y) => x.date.localeCompare(y.date));
+
+                    payout.reinvested = true;
+                    payout.reinvestDate = buy.date;
+                    payout.reinvestUnits = units;
+                }
+            }
+
+            entry.dividends.push(payout);
+        }
+    }
 }
 
 function calculate(input) {
@@ -407,6 +494,9 @@ function calculate(input) {
         purchases: entry.purchases.sort((x, y) => x.date.localeCompare(y.date))
     }));
 
+    // Dividends: paid out as cash, or reinvested into more units
+    applyDividends(funds, input.dividendMode === "reinvest" ? "reinvest" : "cash", end);
+
     // All price dates in the period, across the chosen funds
     const dateSet = new Set();
 
@@ -423,6 +513,7 @@ function calculate(input) {
     const series = dates.map(date => {
         let value = 0;
         let invested = 0;
+        let dividends = 0;
 
         for (const fund of funds) {
             const bought = fund.purchases.filter(p => p.date <= date);
@@ -430,14 +521,18 @@ function calculate(input) {
             const spent = bought.reduce((sum, p) => sum + p.amount, 0);
             const price = priceOnOrBefore(fund.obs, date);
             const fundValue = price ? units * price.bidPrice : 0;
+            const cash = fund.dividends
+                .filter(d => !d.reinvested && d.exDate <= date)
+                .reduce((sum, d) => sum + d.cash, 0);
 
             invested += spent;
             value += fundValue;
+            dividends += cash;
 
-            if (spent > 0) fund.series.push({ date, value: fundValue, invested: spent });
+            if (spent > 0) fund.series.push({ date, value: fundValue, invested: spent, dividends: cash });
         }
 
-        return { date, value, invested };
+        return { date, value, invested, dividends };
     }).filter(point => point.invested > 0);
 
     const endDate = series.length ? series[series.length - 1].date : end;
@@ -448,6 +543,11 @@ function calculate(input) {
         const boosterInvested = fund.purchases.filter(p => p.booster).reduce((sum, p) => sum + p.amount, 0);
         const endPrice = priceOnOrBefore(fund.obs, endDate);
         const value = endPrice ? units * endPrice.bidPrice : 0;
+        const paid = fund.dividends.filter(d => d.exDate <= endDate);
+        const dividendCash = paid.filter(d => !d.reinvested).reduce((sum, d) => sum + d.cash, 0);
+        const dividendTotal = paid.reduce((sum, d) => sum + d.cash, 0);
+        const reinvestedUnits = fund.purchases.filter(p => p.reinvest).reduce((sum, p) => sum + p.units, 0);
+        const gain = value + dividendCash - invested;
 
         return {
             ...fund,
@@ -458,15 +558,21 @@ function calculate(input) {
             startDate: fund.purchases[0]?.date ?? null,
             endBid: endPrice?.bidPrice ?? null,
             endDate: endPrice?.date ?? null,
-            averageCost: units ? invested / units : null,
+            averageCost: units - reinvestedUnits > 0 ? invested / (units - reinvestedUnits) : null,
             value,
-            gain: value - invested,
-            gainPct: invested ? ((value - invested) / invested) * 100 : null,
+            dividendCash,
+            dividendTotal,
+            dividendPayouts: paid,
+            reinvestedUnits,
+            buys: fund.purchases.filter(p => !p.reinvest).length,
+            gain,
+            gainPct: invested ? (gain / invested) * 100 : null,
             annualised: fund.series.length && yearsBetween(fund.series[0].date, endDate) >= 1
                 ? xirr([
-                    ...fund.purchases.map(p => ({ date: p.date, amount: -p.amount })),
+                    ...fund.purchases.filter(p => p.amount > 0).map(p => ({ date: p.date, amount: -p.amount })),
+                    ...paid.filter(d => !d.reinvested).map(d => ({ date: d.exDate, amount: d.cash })),
                     { date: endDate, amount: value }
-                ])
+                ].sort((a, b) => a.date.localeCompare(b.date)))
                 : null,
             yearRows: buildYearRows(fund.series, fund.series[0]?.date ?? start, endDate)
         };
@@ -474,13 +580,25 @@ function calculate(input) {
 
     const totalInvested = perFund.reduce((sum, fund) => sum + fund.invested, 0);
     const totalValue = perFund.reduce((sum, fund) => sum + fund.value, 0);
+    const totalDividendCash = perFund.reduce((sum, fund) => sum + fund.dividendCash, 0);
+    const totalDividends = perFund.reduce((sum, fund) => sum + fund.dividendTotal, 0);
 
     // Cash flows for the annualised (money-weighted) return
     const flowMap = new Map();
+    let contributionDates = new Set();
 
     for (const fund of perFund) {
         for (const purchase of fund.purchases) {
+            if (!(purchase.amount > 0)) continue;   // reinvested dividends are not new money
+
+            contributionDates.add(purchase.date);
             flowMap.set(purchase.date, (flowMap.get(purchase.date) ?? 0) - purchase.amount);
+        }
+
+        for (const payout of fund.dividendPayouts) {
+            if (payout.reinvested) continue;
+
+            flowMap.set(payout.exDate, (flowMap.get(payout.exDate) ?? 0) + payout.cash);
         }
     }
 
@@ -503,10 +621,14 @@ function calculate(input) {
         perFund,
         totalInvested,
         totalValue,
-        gain: totalValue - totalInvested,
-        gainPct: totalInvested ? ((totalValue - totalInvested) / totalInvested) * 100 : null,
+        gain: totalValue + totalDividendCash - totalInvested,
+        gainPct: totalInvested ? ((totalValue + totalDividendCash - totalInvested) / totalInvested) * 100 : null,
+        totalDividendCash,
+        totalDividends,
+        dividendMode: input.dividendMode === "reinvest" ? "reinvest" : "cash",
+        hasDividends: perFund.some(fund => fund.dividendPayouts.length),
         annualised,
-        contributions: flows.length - 1,
+        contributions: contributionDates.size,
         yearRows,
         requestedEnd: end,
         priceDateBeforeEnd: endDate < end,
@@ -798,6 +920,8 @@ function updateSteps() {
     for (const step of [1, 2, 3, 4, 5]) {
         qs(`[data-report-step="${step}"]`)?.classList.toggle("is-done", stepDone(step));
     }
+
+    renderDividendChoice();
 
     // Generate is only clickable once every step is complete
     const generate = qs("#report-form .report-generate[type=submit]");
@@ -1142,6 +1266,28 @@ function syncTopUpFrequency() {
     }
 }
 
+/* Dividends choice: only shown when a chosen fund (main portfolio
+   or a booster) pays dividends */
+function renderDividendChoice() {
+    const box = qs("#report-dividend-choice");
+
+    if (!box) return;
+
+    const ids = [
+        ...report.selected.map(item => item.id),
+        ...(report.booster === "yes" ? report.boosters.flatMap(booster => booster.selected.map(item => item.id)) : [])
+    ];
+
+    box.hidden = !ids.some(fundPaysDividends);
+
+    box.querySelectorAll("[data-report-dividend]").forEach(button => {
+        const active = button.dataset.reportDividend === report.dividendMode;
+
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-checked", String(active));
+    });
+}
+
 function bindBoosterEvents() {
     qs("#report-booster-choice")?.addEventListener("click", event => {
         const option = event.target.closest("[data-report-booster]");
@@ -1322,6 +1468,7 @@ function readInput() {
         start: qs("#report-start")?.value ?? "",
         end: qs("#report-end")?.value ?? "",
         boosterChoice: report.booster,
+        dividendMode: report.dividendMode,
         boosters: report.booster === "yes"
             ? report.boosters.map(booster => ({
                 date: booster.date,
@@ -1429,6 +1576,34 @@ function renderReport(result) {
 
     const code = id => report.fundById.get(id)?.fundCode ?? id;
 
+    const divCash = result.dividendMode === "cash";
+    const showDiv = result.hasDividends;
+
+    const dividendTile = (cash, total, payouts) => showDiv && payouts ? `
+        <div class="rpt-tile">
+            <span>${divCash ? "Dividends received" : "Dividends reinvested"}</span>
+            <strong>${m(divCash ? cash : total)}</strong>
+            <em>${divCash ? "paid out as cash, included in gain / loss" : "used to buy more units"}</em>
+        </div>
+    ` : "";
+
+    // Dividends grouped by calendar year (fund pages)
+    const dividendsByYear = payouts => {
+        const years = new Map();
+
+        for (const payout of payouts) {
+            const year = payout.exDate.slice(0, 4);
+            const row = years.get(year) ?? { year, count: 0, cash: 0, units: 0 };
+
+            row.count += 1;
+            row.cash += payout.cash;
+            row.units += payout.reinvestUnits ?? 0;
+            years.set(year, row);
+        }
+
+        return [...years.values()].sort((a, b) => a.year.localeCompare(b.year));
+    };
+
     const pageHead = title => `
         <div class="rpt-running-head">
             <span>Investment Growth Report${input.clientName ? ` · ${escapeHtml(input.clientName)}` : ""}</span>
@@ -1451,8 +1626,10 @@ function renderReport(result) {
         const details = fund.fund?.fund ?? {};
         const name = escapeHtml(fund.fund?.fundName ?? fund.id);
         const color = PRINT_COLORS[fund.slot % PRINT_COLORS.length];
-        const purchases = fund.purchases.length;
+        const purchases = fund.buys;
         const boosterBuys = fund.purchases.filter(p => p.booster).length;
+        const pays = fund.dividendPayouts.length > 0;
+        const fundDivCash = pays && divCash;
 
         return `
             <section class="rpt-page rpt-fund-page">
@@ -1469,7 +1646,7 @@ function renderReport(result) {
                     </div>
                 </div>
 
-                <section class="rpt-tiles">
+                <section class="rpt-tiles${pays ? " rpt-tiles-5" : ""}">
                     <div class="rpt-tile">
                         <span>Invested</span>
                         <strong>${m(fund.invested)}</strong>
@@ -1480,6 +1657,7 @@ function renderReport(result) {
                         <strong>${m(fund.value)}</strong>
                         <em>${fund.units.toLocaleString("en-SG", { minimumFractionDigits: 4, maximumFractionDigits: 4 })} units</em>
                     </div>
+                    ${dividendTile(fund.dividendCash, fund.dividendTotal, pays)}
                     <div class="rpt-tile ${tone(fund.gain)}">
                         <span>Gain / loss</span>
                         <strong>${m(fund.gain)}</strong>
@@ -1523,6 +1701,7 @@ function renderReport(result) {
                                 <th>As at</th>
                                 <th>Amount invested</th>
                                 <th>Holding value</th>
+                                ${fundDivCash ? `<th>Dividends received</th>` : ""}
                                 <th>Gain / loss</th>
                                 <th>Return on invested</th>
                             </tr>
@@ -1533,6 +1712,7 @@ function renderReport(result) {
                                     <td>${escapeHtml(row.label)}</td>
                                     <td>${m(row.invested)}</td>
                                     <td>${m(row.value)}</td>
+                                    ${fundDivCash ? `<td>${m(row.dividends)}</td>` : ""}
                                     <td class="${tone(row.gain)}">${m(row.gain)}</td>
                                     <td class="${tone(row.gain)}">${percent(row.gainPct)}</td>
                                 </tr>
@@ -1540,6 +1720,32 @@ function renderReport(result) {
                         </tbody>
                     </table>
                 </section>
+
+                ${pays ? `
+                    <section class="rpt-section">
+                        <h3>Dividends by year</h3>
+                        <table class="rpt-table rpt-table-years">
+                            <thead>
+                                <tr>
+                                    <th>Year</th>
+                                    <th>Payouts</th>
+                                    <th>${divCash ? "Paid out as cash" : "Dividends reinvested"}</th>
+                                    ${divCash ? "" : "<th>Units bought</th>"}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${dividendsByYear(fund.dividendPayouts).map(row => `
+                                    <tr>
+                                        <td>${row.year}</td>
+                                        <td>${row.count}</td>
+                                        <td>${m(row.cash)}</td>
+                                        ${divCash ? "" : `<td>${row.units.toLocaleString("en-SG", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</td>`}
+                                    </tr>
+                                `).join("")}
+                            </tbody>
+                        </table>
+                    </section>
+                ` : ""}
 
                 <section class="rpt-section">
                     <h3>Published fund performance</h3>
@@ -1597,10 +1803,11 @@ function renderReport(result) {
             <strong>Investment plan:</strong> ${escapeHtml(planText)}, paid by <strong>${escapeHtml(PAYMENT_LABELS[input.paymentMode] ?? input.paymentMode ?? "—")}</strong>, across ${mainFunds.length} fund${mainFunds.length === 1 ? "" : "s"}
             (${mainFunds.map(fund => `${escapeHtml(fund.fund?.fundCode ?? "")} ${fund.weight}%`).join(", ")})${boosterCount ? `,
             plus ${boosterCount} investment booster${boosterCount === 1 ? "" : "s"} totalling ${m(result.boosterTotal)}` : ""}.
+            ${showDiv ? `Dividends are <strong>${divCash ? "paid out as cash" : "reinvested"}</strong>.` : ""}
         </section>
 
 
-        <section class="rpt-tiles">
+        <section class="rpt-tiles${showDiv ? " rpt-tiles-5" : ""}">
             <div class="rpt-tile">
                 <span>Total invested</span>
                 <strong>${m(result.totalInvested)}</strong>
@@ -1611,6 +1818,7 @@ function renderReport(result) {
                 <strong>${m(result.totalValue)}</strong>
                 <em>${result.priceDateBeforeEnd ? "latest available BID price" : "at BID price"}</em>
             </div>
+            ${dividendTile(result.totalDividendCash, result.totalDividends, true)}
             <div class="rpt-tile ${tone(result.gain)}">
                 <span>Gain / loss</span>
                 <strong>${m(result.gain)}</strong>
@@ -1662,7 +1870,7 @@ function renderReport(result) {
 
         <section class="rpt-section">
             <h3>Portfolio breakdown</h3>
-            <table class="rpt-table">
+            <table class="rpt-table${showDiv ? " rpt-table-wide" : ""}">
                 <thead>
                     <tr>
                         <th>Fund</th>
@@ -1672,6 +1880,7 @@ function renderReport(result) {
                         <th>Average cost</th>
                         <th>BID on ${escapeHtml(formatDate(result.endDate))}</th>
                         <th>Value</th>
+                        ${showDiv ? `<th>Dividends</th>` : ""}
                         <th>Gain / loss</th>
                     </tr>
                 </thead>
@@ -1689,6 +1898,7 @@ function renderReport(result) {
                             <td>${fund.averageCost === null ? "—" : fund.averageCost.toFixed(5)}</td>
                             <td>${fund.endBid === null ? "—" : fund.endBid.toFixed(5)}</td>
                             <td>${m(fund.value)}</td>
+                            ${showDiv ? `<td>${fund.dividendPayouts.length ? `${m(divCash ? fund.dividendCash : fund.dividendTotal)}<div class="rpt-muted">${divCash ? "cash" : "reinvested"}</div>` : "—"}</td>` : ""}
                             <td class="${tone(fund.gain)}">${m(fund.gain)}<div class="rpt-muted">${percent(fund.gainPct)}</div></td>
                         </tr>
                     `).join("")}
@@ -1702,6 +1912,7 @@ function renderReport(result) {
                         <td></td>
                         <td></td>
                         <td>${m(result.totalValue)}</td>
+                        ${showDiv ? `<td>${m(divCash ? result.totalDividendCash : result.totalDividends)}</td>` : ""}
                         <td class="${tone(result.gain)}">${m(result.gain)}<div class="rpt-muted">${percent(result.gainPct)}</div></td>
                     </tr>
                 </tfoot>
@@ -1721,6 +1932,7 @@ function renderReport(result) {
                         <th>As at</th>
                         <th>Total invested</th>
                         <th>Portfolio value</th>
+                        ${showDiv && divCash ? `<th>Dividends received</th>` : ""}
                         <th>Gain / loss</th>
                         <th>Return on invested</th>
                     </tr>
@@ -1731,6 +1943,7 @@ function renderReport(result) {
                             <td>${escapeHtml(row.label)}</td>
                             <td>${m(row.invested)}</td>
                             <td>${m(row.value)}</td>
+                            ${showDiv && divCash ? `<td>${m(row.dividends)}</td>` : ""}
                             <td class="${tone(row.gain)}">${m(row.gain)}</td>
                             <td class="${tone(row.gain)}">${percent(row.gainPct)}</td>
                         </tr>
@@ -1767,8 +1980,11 @@ function renderReport(result) {
             <strong>Important notes.</strong>
             This is a historical illustration based on actual published BID prices of the funds between the dates shown.
             Units are assumed to be bought at the BID price on the first pricing day on or after each investment date, with no
-            sales charge, fees or taxes deducted. Dividends paid out by distribution funds are not included, so the
-            figures for those funds may understate their total return. Past performance is not necessarily indicative of
+            sales charge, fees or taxes deducted. ${showDiv
+                ? (divCash
+                    ? "Dividends are worked out from each fund's published dividend history (units held before the ex-dividend date x the declared rate) and treated as paid out in cash on the ex-dividend date; they are added to the gain / loss."
+                    : "Dividends are worked out from each fund's published dividend history (units held before the ex-dividend date x the declared rate) and reinvested at the BID price on or after the ex-dividend date.")
+                : "Dividends paid out by distribution funds are not included, so the figures for those funds may understate their total return."} Past performance is not necessarily indicative of
             future performance. The value of units and the income from them may fall as well as rise. This report is for
             illustration only and does not constitute financial advice or an offer to buy or sell any investment.
             Please refer to the fund's prospectus and product highlights sheet before investing.
@@ -1984,6 +2200,15 @@ function bindEvents() {
     }
 
     bindBoosterEvents();
+
+    qs("#report-dividend-choice")?.addEventListener("click", event => {
+        const option = event.target.closest("[data-report-dividend]");
+
+        if (!option) return;
+
+        report.dividendMode = option.dataset.reportDividend === "reinvest" ? "reinvest" : "cash";
+        renderDividendChoice();
+    });
 
     // Premium (step 3)
     qs("#report-start")?.addEventListener("change", event => {
@@ -2201,6 +2426,7 @@ function resetReport() {
     report.requestedStart = null;
     report.booster = null;
     report.boosters = [];
+    report.dividendMode = "cash";
     report.lastResult = null;
 
     const sheet = qs("#report-sheet");
