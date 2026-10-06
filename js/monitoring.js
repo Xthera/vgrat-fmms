@@ -22,6 +22,7 @@
    12 months (the latest move itself excluded).
    ============================================================ */
 
+import { placeDropdown } from "./dropdown-place.js";
 import {
     getWatchlist,
     isWatched,
@@ -836,8 +837,9 @@ function renderSuggestions() {
                 String(fund.fundName ?? "").toLowerCase().includes(query) ||
                 String(fund.fundCode ?? "").toLowerCase().includes(query)
             );
-        })
-        .slice(0, 50);
+        });
+    // All funds are listed (no cut-off), so every fund can be picked
+    // from the dropdown without having to search for it.
 
     list.innerHTML = matches.length
         ? matches
@@ -851,6 +853,7 @@ function renderSuggestions() {
         : `<li class="compare-suggestion-empty">No matching funds</li>`;
 
     list.hidden = false;
+    placeDropdown(list);
 }
 
 function closeSuggestions() {
