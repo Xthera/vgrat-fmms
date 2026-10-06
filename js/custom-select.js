@@ -76,15 +76,41 @@ function enhanceSelect(select) {
     select.tabIndex = -1;
     select.setAttribute("aria-hidden", "true");
 
+    const multi = select.multiple;
+
+    if (multi) {
+        wrap.classList.add("is-multi");
+        list.setAttribute("aria-multiselectable", "true");
+    }
+
     const instance = { select, wrap, button, list, active: -1 };
+
+    // Option label without the "(12)" count, for the button summary
+    const plainLabel = option =>
+        (option?.dataset.label ?? option?.textContent ?? "").trim().replace(/\s*\(\d+\)$/, "");
 
 
     /* ---------- render ---------- */
 
     function syncButton() {
-        const option = select.options[select.selectedIndex];
+        let text;
 
-        button.innerHTML = `<span class="vselect-value">${escapeHtml(option?.textContent ?? "")}</span><span class="vselect-caret" aria-hidden="true">▾</span>`;
+        if (multi) {
+            const chosen = [...select.options].filter(option => option.selected && option.value !== "ALL");
+            const allOption = [...select.options].find(option => option.value === "ALL");
+
+            text = !chosen.length
+                ? allOption?.textContent ?? "All"
+                : chosen.length === 1
+                    ? chosen[0].textContent
+                    : `${plainLabel(chosen[0])} +${chosen.length - 1} more`;
+
+            button.title = chosen.map(plainLabel).join(", ");
+        } else {
+            text = select.options[select.selectedIndex]?.textContent ?? "";
+        }
+
+        button.innerHTML = `<span class="vselect-value">${escapeHtml(text)}</span><span class="vselect-caret" aria-hidden="true">▾</span>`;
 
         // keep the "filter in use" styling the page adds to the select
         wrap.classList.toggle("is-filtered", select.classList.contains("is-filtered"));
@@ -99,8 +125,9 @@ function enhanceSelect(select) {
                     aria-selected="${option.selected}"
                     data-index="${index}"
                 >
-                    <span>${escapeHtml(option.textContent)}</span>
-                    <span class="vselect-check" aria-hidden="true">✓</span>
+                    ${multi ? `<span class="vselect-box" aria-hidden="true"></span>` : ""}
+                    <span class="vselect-text">${escapeHtml(option.textContent)}</span>
+                    ${multi ? "" : `<span class="vselect-check" aria-hidden="true">✓</span>`}
                 </li>
             `)
             .join("");
@@ -141,7 +168,44 @@ function enhanceSelect(select) {
         if (openInstance === instance) openInstance = null;
     }
 
+    // Multi-select: tick / untick without closing the menu
+    function toggle(index) {
+        const option = select.options[index];
+
+        if (!option) return;
+
+        const all = [...select.options].find(item => item.value === "ALL");
+
+        if (option.value === "ALL") {
+            for (const item of select.options) item.selected = item.value === "ALL";
+        } else {
+            option.selected = !option.selected;
+
+            const anyChosen = [...select.options].some(item => item.selected && item.value !== "ALL");
+
+            if (all) all.selected = !anyChosen;
+        }
+
+        const scroll = list.scrollTop;
+        const active = instance.active;
+
+        syncButton();
+        renderList();
+
+        list.scrollTop = scroll;
+
+        if (active >= 0) setActive(active);
+
+        select.dispatchEvent(new Event("input", { bubbles: true }));
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
     function choose(index) {
+        if (multi) {
+            toggle(index);
+            return;
+        }
+
         if (index < 0 || index >= select.options.length) return;
 
         const changed = select.selectedIndex !== index;
@@ -222,6 +286,13 @@ function enhanceSelect(select) {
     /* ---------- stay in sync with the real <select> ---------- */
 
     select.addEventListener("change", syncButton);
+
+    // Page code changed the selection directly (e.g. restoring choices)
+    select.addEventListener("vselect:sync", () => {
+        syncButton();
+
+        if (!list.hidden) renderList();
+    });
 
     // value / selectedIndex set from code (e.g. "Clear filters")
     Object.defineProperty(select, "value", {
