@@ -8481,3 +8481,40 @@ html[data-theme="light"] .palette-swatch {
     }
 
 }
+
+/* The fund pickers' dropdown lists (Funds & allocation, boosters)
+   must be able to extend past the bottom of the setup card instead
+   of being cut off by it. */
+#report-setup.report-card {
+    overflow: visible;
+}
+
+#report-setup .compare-picker {
+    position: relative;
+}
+
+#report-setup .compare-suggestions {
+    z-index: 70;
+}
+
+/* Fund search lists: never clipped by the card around them, and
+   able to open upwards (placeDropdown in js/dropdown-place.js) */
+.performance-card:has(.compare-picker),
+.compare-card,
+.monitor-card,
+.explorer-toolbar {
+    overflow: visible;
+}
+
+.compare-picker {
+    position: relative;
+}
+
+.compare-suggestions {
+    z-index: 70;
+}
+
+.compare-suggestions.opens-up {
+    top: auto;
+    bottom: calc(100% + 4px);
+}
