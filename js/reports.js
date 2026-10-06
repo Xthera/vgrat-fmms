@@ -1827,11 +1827,34 @@ function bindEvents() {
     });
 
     dialog?.addEventListener("close", () => {
-        document.body.classList.remove("has-news-dialog");
+        // Not when it was only re-opened for printing
+        if (!dialog.open) document.body.classList.remove("has-news-dialog");
     });
+
+    // A modal popup sits in the browser's "top layer", which Chrome
+    // prints at its on-screen size with the dark backdrop around it
+    // (black border, right side cut off). For printing, re-open it as
+    // a normal in-page popup, then put the modal back afterwards.
+    const flattenForPrint = () => {
+        if (!dialog?.open || !dialog.matches(":modal")) return;
+
+        report.printFlattened = true;
+        dialog.close();
+        dialog.show();
+    };
+
+    const restoreAfterPrint = () => {
+        if (!report.printFlattened || !dialog) return;
+
+        report.printFlattened = false;
+        dialog.close();
+        dialog.showModal();
+        document.body.classList.add("has-news-dialog");
+    };
 
     qs("#report-print")?.addEventListener("click", () => {
         document.body.classList.add("is-printing-report");
+        flattenForPrint();
 
         // Let Chart.js resize for the page before printing
         requestAnimationFrame(() => {
@@ -1849,12 +1872,16 @@ function bindEvents() {
         }
     };
 
-    window.addEventListener("beforeprint", resizeChart);
+    window.addEventListener("beforeprint", () => {
+        flattenForPrint();
+        resizeChart();
+    });
 
     window.matchMedia?.("print").addEventListener?.("change", resizeChart);
 
     window.addEventListener("afterprint", () => {
         document.body.classList.remove("is-printing-report");
+        restoreAfterPrint();
         resizeChart();
     });
 }
