@@ -6716,7 +6716,18 @@ html[data-theme="light"] .palette-swatch {
 .rpt-chart-wrap {
     position: relative;
 
+    width: 100%;
     height: 260px;
+
+    overflow: hidden;
+}
+
+/* The chart canvas never sets the page width (Chart.js gives it a
+   fixed pixel width from the screen layout). */
+.rpt-chart-wrap canvas {
+    display: block;
+
+    max-width: 100% !important;
 }
 
 .rpt-legend {
@@ -6780,6 +6791,8 @@ html[data-theme="light"] .palette-swatch {
 
 .rpt-table th:first-child,
 .rpt-table td:first-child {
+    width: 28%;
+
     text-align: left;
 }
 
@@ -6962,10 +6975,13 @@ html[data-theme="light"] .palette-swatch {
     }
 
     .report-sheet {
-        max-width: none;
+        width: 100% !important;
+        max-width: 100% !important;
 
         margin: 0;
         padding: 0;
+
+        overflow: hidden;
 
         border-radius: 0;
 
@@ -6976,6 +6992,11 @@ html[data-theme="light"] .palette-swatch {
     .rpt-tiles,
     .rpt-fund {
         break-inside: avoid;
+    }
+
+    .rpt-chart-wrap canvas {
+        width: 100% !important;
+        height: 100% !important;
     }
 
     * {
@@ -7023,6 +7044,85 @@ html[data-theme="light"] .palette-swatch {
 
 .filter-control[hidden] {
     display: none;
+}
+
+
+/* Multi-select dropdowns: tick boxes */
+.vselect.is-multi .vselect-option {
+    justify-content: flex-start;
+
+    gap: 9px;
+}
+
+.vselect-text {
+    min-width: 0;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+.vselect-box {
+    flex-shrink: 0;
+
+    width: 15px;
+    height: 15px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border:
+        1.5px solid var(--border-strong);
+
+    border-radius: 4px;
+
+    background: var(--bg-input);
+}
+
+.vselect-option.is-selected .vselect-box {
+    border-color: var(--accent);
+
+    background: var(--accent);
+}
+
+.vselect-option.is-selected .vselect-box::after {
+    content: "";
+
+    width: 4px;
+    height: 8px;
+
+    margin-top: -2px;
+
+    border:
+        solid var(--bg-surface);
+
+    border-width: 0 2px 2px 0;
+
+    transform: rotate(45deg);
+}
+
+/* Market News: [Funds] / [News] scope tags on filter labels */
+.filter-scope {
+    margin-left: 4px;
+
+    font-style: normal;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: none;
+}
+
+.filter-scope-funds {
+    color: var(--accent-strong);
+}
+
+.filter-scope-news {
+    color: var(--warning);
+}
+
+/* Phones keep the native multi-picker: show it as one line */
+.market-news-current select[multiple] {
+    height: 37px;
 }
 
 /* ============================================================
