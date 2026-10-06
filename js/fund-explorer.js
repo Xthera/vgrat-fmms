@@ -77,12 +77,13 @@ const explorer = {
     filters: {
         search: "",
         holding: "",
-        assetClass: "ALL",
-        risk: "ALL",
-        geography: "ALL",
-        sector: "ALL",
-        dividend: "ALL",
-        payment: "ALL"
+        // Multi-select filters: [] means "All"
+        assetClass: [],
+        risk: [],
+        geography: [],
+        sector: [],
+        dividend: [],
+        payment: []
     },
     sort: { key: "name", direction: "asc" },
     profile: { id: null }
@@ -220,21 +221,26 @@ function buildRow(fund) {
    FILTER OPTIONS
    ============================================================ */
 
+/* Values ticked in a multi-select filter, without "ALL" */
+function selectedValues(select) {
+    return select
+        ? [...select.selectedOptions].map(option => option.value).filter(value => value && value !== "ALL")
+        : [];
+}
+
 function fillSelect(selector, values, allLabel, labelFor = value => value) {
     const select = qs(selector);
 
     if (!select) return;
 
-    const current = select.value || "ALL";
+    const current = selectedValues(select);
 
-    // Keep the current choice listed even if it now has no matches,
+    // Keep the current choices listed even if they now have no matches,
     // so the dropdown never silently changes what you picked.
-    const list = current !== "ALL" && !values.includes(current)
-        ? [current, ...values]
-        : values;
+    const list = [...current.filter(value => !values.includes(value)), ...values];
 
     const html =
-        `<option value="ALL">${escapeHtml(allLabel)}</option>` +
+        `<option value="ALL" data-label="${escapeHtml(allLabel)}">${escapeHtml(allLabel)}</option>` +
         list
             .map(value => `<option value="${escapeHtml(value)}">${escapeHtml(labelFor(value))}</option>`)
             .join("");
@@ -245,7 +251,11 @@ function fillSelect(selector, values, allLabel, labelFor = value => value) {
         select.dataset.optionsHtml = html;
     }
 
-    if (select.value !== current) select.value = current;
+    for (const option of select.options) {
+        option.selected = current.length ? current.includes(option.value) : option.value === "ALL";
+    }
+
+    select.dispatchEvent(new Event("vselect:sync"));
 }
 
 function countBy(rows, pick) {
@@ -491,19 +501,23 @@ function holdingMatches(row, term) {
 
 /* Does a fund pass the filters? `skip` ignores one filter
    (used to work out each dropdown's remaining options). */
+/* Does a fund pass the filters? `skip` ignores one filter
+   (used to work out each dropdown's remaining options).
+   Within a filter any ticked value matches (OR); filters combine with AND. */
 function rowMatches(row, f, skip = null) {
     const search = f.search.trim().toLowerCase();
     const holding = f.holding.trim().toLowerCase();
+    const one = (list, value) => !list.length || list.includes(value);
+    const any = (list, values) => !list.length || values.some(value => list.includes(value));
 
     if (skip !== "search" && search && !row.searchText.includes(search)) return false;
-    if (skip !== "assetClass" && f.assetClass !== "ALL" && row.assetClass !== f.assetClass) return false;
-    if (skip !== "risk" && f.risk !== "ALL" && row.risk !== f.risk) return false;
-    if (skip !== "geography" && f.geography !== "ALL" && !row.geographies.includes(f.geography)) return false;
-    if (skip !== "sector" && f.sector !== "ALL" && !row.sectors.includes(f.sector)) return false;
-    if (skip !== "dividend" && f.dividend === "YES" && !row.hasDividend) return false;
-    if (skip !== "dividend" && f.dividend === "NO" && row.hasDividend) return false;
+    if (skip !== "assetClass" && !one(f.assetClass, row.assetClass)) return false;
+    if (skip !== "risk" && !one(f.risk, row.risk)) return false;
+    if (skip !== "geography" && !any(f.geography, row.geographies)) return false;
+    if (skip !== "sector" && !any(f.sector, row.sectors)) return false;
+    if (skip !== "dividend" && !one(f.dividend, row.hasDividend ? "YES" : "NO")) return false;
     if (skip !== "holding" && holding && holdingMatches(row, holding).length === 0) return false;
-    if (skip !== "payment" && f.payment !== "ALL" && !row.paymentModes.includes(f.payment)) return false;
+    if (skip !== "payment" && !any(f.payment, row.paymentModes)) return false;
 
     return true;
 }
@@ -564,7 +578,7 @@ function renderTable() {
     const holdingTerm = explorer.filters.holding.trim().toLowerCase();
 
     const active = Object.entries(explorer.filters).some(([key, value]) =>
-        key === "search" || key === "holding" ? value.trim() !== "" : value !== "ALL"
+        Array.isArray(value) ? value.length > 0 : String(value ?? "").trim() !== ""
     );
 
     if (count) {
@@ -577,7 +591,7 @@ function renderTable() {
 
     document.querySelectorAll("[data-explorer-filter]").forEach(control => {
         const filtered = control.tagName === "SELECT"
-            ? control.value !== "ALL"
+            ? selectedValues(control).length > 0
             : control.value.trim() !== "";
 
         control.classList.toggle("is-filtered", filtered);
@@ -615,7 +629,7 @@ function renderTable() {
     if (!rows.length) {
         body.innerHTML = `
             <tr>
-                <td colspan="8" class="empty-state">No funds match these filters.</td>
+                <td colspan="9" class="empty-state">No funds match these filters.</td>
             </tr>
         `;
         return;
@@ -643,11 +657,11 @@ function renderTable() {
                                 <div class="fund-meta">
                                     ${escapeHtml(row.code)}${row.hasDividend ? ` · <span class="explorer-dividend-tag">Dividend</span>` : ""}
                                 </div>
-                                ${row.paymentModes.length ? `<div class="payment-chips" aria-label="Payment modes">${paymentChips(row.paymentModes)}</div>` : ""}
                                 ${holdingNote}
                             </div>
                         </div>
                     </td>
+                    <td class="explorer-payment-cell" data-label="Payment mode">${row.paymentModes.length ? `<div class="payment-chips">${paymentChips(row.paymentModes)}</div>` : "—"}</td>
                     <td class="explorer-asset-cell">${escapeHtml(row.assetClass)}</td>
                     <td class="explorer-risk-cell"><span class="risk-pill risk-${row.riskOrder}">${escapeHtml(row.risk)}</span></td>
                     <td class="bid-cell" data-label="BID price">${row.bid !== null ? row.bid.toFixed(4) : "—"}</td>
@@ -1426,7 +1440,9 @@ function bindEvents() {
         if (!control) continue;
 
         const update = () => {
-            explorer.filters[key] = control.value ?? (key === "search" || key === "holding" ? "" : "ALL");
+            explorer.filters[key] = control.tagName === "SELECT"
+                ? selectedValues(control)
+                : control.value ?? "";
             renderTable();
         };
 
@@ -1436,11 +1452,11 @@ function bindEvents() {
     qs("#explorer-clear")?.addEventListener("click", () => {
         for (const [selector, key] of Object.entries(filterMap)) {
             const control = qs(selector);
-            const empty = key === "search" || key === "holding" ? "" : "ALL";
+            const isSelect = control?.tagName === "SELECT";
 
-            if (control) control.value = empty;
+            if (control) control.value = isSelect ? "ALL" : "";
 
-            explorer.filters[key] = empty;
+            explorer.filters[key] = isSelect ? [] : "";
         }
 
         renderTable();
