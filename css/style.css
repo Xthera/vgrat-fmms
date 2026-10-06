@@ -7549,6 +7549,32 @@ html[data-theme="light"] .palette-swatch {
         display: none;
     }
 
+    /* No colour/size animations while printing: Chrome can print a
+       transition's starting value (the dark page background). */
+    *,
+    *::before,
+    *::after {
+        transition: none !important;
+        animation: none !important;
+    }
+
+    /* The open popup locks page scrolling with overflow:hidden, which
+       would clip the printed page instead of letting it flow. */
+    /* The dark theme sets color-scheme: dark, which makes Chrome paint
+       the page margins black. Printed pages are always light. */
+    :root,
+    html {
+        color-scheme: light !important;
+    }
+
+    html,
+    body,
+    body.has-news-dialog {
+        overflow: visible !important;
+        min-height: 0 !important;
+        background: #ffffff !important;
+    }
+
     .report-dialog .report-toolbar {
         display: none !important;
     }
