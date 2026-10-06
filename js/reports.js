@@ -7,6 +7,8 @@
    - a portfolio of up to 8 funds with a % split
    - an initial lump sum plus optional regular top-ups
      (monthly / quarterly / half-yearly / yearly)
+   - optional investment boosters: one-off extra amounts on a
+     chosen date, each with its own fund allocation
    - units are bought at the BID price on the first price date
      on or after each investment date (no sales charge)
    - value on any date = units held x BID on or before that date
@@ -36,6 +38,10 @@ const report = {
     fundById: new Map(),
     index: new Map(),
     selected: [],          // [{ id, weight }]
+    paymentMode: null,     // "Cash" | "SRS" | "CPF-OA" | "CPF-SA"
+    requestedStart: null,  // start date as typed in the Premium step
+    booster: null,         // investment booster: null | "no" | "yes"
+    boosters: [],          // [{ date, amount, selected: [{ id, weight }] }]
     chart: null,
     lastResult: null
 };
@@ -64,6 +70,34 @@ function observationsFor(id) {
     const list = report.index.get(id);
 
     return Array.isArray(list) ? list : [];
+}
+
+const PAYMENT_MODES = ["Cash", "SRS", "CPF-OA", "CPF-SA"];
+
+const PAYMENT_LABELS = {
+    "Cash": "Cash",
+    "SRS": "SRS (Supplementary Retirement Scheme)",
+    "CPF-OA": "CPF Ordinary Account (CPFIS-OA)",
+    "CPF-SA": "CPF Special Account (CPFIS-SA)"
+};
+
+function paymentModesOf(id) {
+    const modes = report.fundById.get(id)?.fund?.paymentModes;
+
+    return Array.isArray(modes) ? modes : [];
+}
+
+function acceptsPayment(id, mode = report.paymentMode) {
+    return Boolean(mode) && paymentModesOf(id).includes(mode);
+}
+
+/* Allocation steps of 5% */
+const ALLOCATION_STEP = 5;
+
+function roundToStep(value) {
+    const number = Number(value) || 0;
+
+    return Math.min(100, Math.max(ALLOCATION_STEP, Math.round(number / ALLOCATION_STEP) * ALLOCATION_STEP));
 }
 
 function currencyOf(id) {
@@ -214,6 +248,28 @@ function dateLimits() {
     return earliest <= latest ? { earliest, latest } : null;
 }
 
+/* Price range across every fund that accepts the chosen payment mode.
+   Used for the Premium step, before any fund has been picked. */
+function paymentRange() {
+    let earliest = null;
+    let latest = null;
+
+    for (const fund of report.funds) {
+        const id = fundId(fund);
+
+        if (!acceptsPayment(id)) continue;
+
+        const obs = observationsFor(id);
+
+        if (!obs.length) continue;
+
+        if (!earliest || obs[0].date < earliest) earliest = obs[0].date;
+        if (!latest || obs[obs.length - 1].date > latest) latest = obs[obs.length - 1].date;
+    }
+
+    return earliest ? { earliest, latest } : null;
+}
+
 
 /* ============================================================
    CALCULATION
@@ -237,17 +293,40 @@ function calculate(input) {
 
     const skipped = [];
 
-    const funds = report.selected.map((item, slot) => {
-        const obs = observationsFor(item.id);
+    // One holding per fund: the main portfolio first, then any fund
+    // that only appears in a booster.
+    const holdings = new Map();
+
+    const holding = id => {
+        if (!holdings.has(id)) {
+            holdings.set(id, {
+                id,
+                weight: 0,
+                boosterOnly: true,
+                slot: holdings.size,
+                obs: observationsFor(id),
+                purchases: [],
+                fund: report.fundById.get(id)
+            });
+        }
+
+        return holdings.get(id);
+    };
+
+    for (const item of report.selected) {
+        const entry = holding(item.id);
+
+        entry.weight = item.weight;
+        entry.boosterOnly = false;
+
         const weight = item.weight / 100;
-        const purchases = [];
 
         investDates.forEach((date, index) => {
             const amount = (index === 0 ? lumpSum + topUp : topUp) * weight;
 
             if (amount <= 0) return;
 
-            const price = priceOnOrAfter(obs, date);
+            const price = priceOnOrAfter(entry.obs, date);
 
             if (!price || price.date > end) {
                 // No BID price yet for this date (after the latest price)
@@ -255,11 +334,33 @@ function calculate(input) {
                 return;
             }
 
-            purchases.push({ date: price.date, amount, units: amount / price.bidPrice, bid: price.bidPrice });
+            entry.purchases.push({ date: price.date, amount, units: amount / price.bidPrice, bid: price.bidPrice });
         });
+    }
 
-        return { ...item, slot, obs, purchases, fund: report.fundById.get(item.id) };
-    });
+    // Investment boosters: one-off amounts on their own date and split
+    for (const booster of input.boosters ?? []) {
+        for (const item of booster.selected) {
+            const entry = holding(item.id);
+            const amount = booster.amount * (item.weight / 100);
+
+            if (amount <= 0) continue;
+
+            const price = priceOnOrAfter(entry.obs, booster.date);
+
+            if (!price || price.date > end) {
+                skipped.push({ date: booster.date, amount });
+                continue;
+            }
+
+            entry.purchases.push({ date: price.date, amount, units: amount / price.bidPrice, bid: price.bidPrice, booster: true });
+        }
+    }
+
+    const funds = [...holdings.values()].map(entry => ({
+        ...entry,
+        purchases: entry.purchases.sort((x, y) => x.date.localeCompare(y.date))
+    }));
 
     // All price dates in the period, across the chosen funds
     const dateSet = new Set();
@@ -293,6 +394,7 @@ function calculate(input) {
     const perFund = funds.map(fund => {
         const units = fund.purchases.reduce((sum, p) => sum + p.units, 0);
         const invested = fund.purchases.reduce((sum, p) => sum + p.amount, 0);
+        const boosterInvested = fund.purchases.filter(p => p.booster).reduce((sum, p) => sum + p.amount, 0);
         const endPrice = priceOnOrBefore(fund.obs, endDate);
         const value = endPrice ? units * endPrice.bidPrice : 0;
 
@@ -300,6 +402,7 @@ function calculate(input) {
             ...fund,
             units,
             invested,
+            boosterInvested,
             startBid: fund.purchases[0]?.bid ?? null,
             startDate: fund.purchases[0]?.date ?? null,
             endBid: endPrice?.bidPrice ?? null,
@@ -380,6 +483,8 @@ function calculate(input) {
         yearRows,
         requestedEnd: end,
         priceDateBeforeEnd: endDate < end,
+        boosters: input.boosters ?? [],
+        boosterTotal: (input.boosters ?? []).reduce((sum, booster) => sum + booster.amount, 0),
         skippedAmount: skipped.reduce((sum, item) => sum + item.amount, 0),
         skippedCount: new Set(skipped.map(item => item.date)).size
     };
@@ -410,7 +515,7 @@ function renderSelected() {
                             <div class="fund-meta">${escapeHtml(fund?.fundCode ?? "")} · ${escapeHtml(currencyOf(item.id))}</div>
                         </td>
                         <td class="report-weight-cell">
-                            <input type="number" min="0" max="100" step="1" value="${item.weight}" data-report-weight="${index}" aria-label="Allocation % for ${escapeHtml(fund?.fundName ?? item.id)}">
+                            <input type="number" min="5" max="100" step="5" value="${item.weight}" data-report-weight="${index}" aria-label="Allocation % for ${escapeHtml(fund?.fundName ?? item.id)}">
                             <span>%</span>
                         </td>
                         <td class="report-remove-cell">
@@ -431,15 +536,23 @@ function renderSelected() {
     }
 
     syncDateLimits();
+    updateSteps();
 }
 
 function syncDateLimits() {
     const startInput = qs("#report-start");
     const endInput = qs("#report-end");
     const note = qs("#report-date-note");
-    const limits = dateLimits();
+    const adjust = qs("#report-date-adjust");
+    const fundLimits = dateLimits();
+    const limits = fundLimits ?? paymentRange();
 
     if (!startInput || !endInput) return;
+
+    if (adjust) {
+        adjust.hidden = true;
+        adjust.textContent = "";
+    }
 
     if (!limits) {
         startInput.removeAttribute("min");
@@ -471,13 +584,36 @@ function syncDateLimits() {
         startInput.value = threeYears > limits.earliest ? threeYears : limits.earliest;
     }
 
+    // Funds picked after the premium was set can have a shorter price
+    // history: move the start date into range and say so in step 4.
+    // The date typed in step 3 is kept, so removing that fund restores it.
+    if (report.requestedStart) startInput.value = report.requestedStart;
+
+    const requested = startInput.value;
+
     if (startInput.value < limits.earliest) startInput.value = limits.earliest;
     if (startInput.value > limits.latest) startInput.value = limits.latest;
 
+    if (fundLimits && adjust && requested !== startInput.value) {
+        const late = report.selected
+            .filter(item => observationsFor(item.id)[0]?.date === limits.earliest)
+            .map(item => report.fundById.get(item.id)?.fundCode ?? item.id);
+
+        adjust.textContent = requested < limits.earliest
+            ? `Start date moved from ${formatDate(requested)} to ${formatDate(startInput.value)}, because ${late.join(", ") || "a chosen fund"} prices begin then. You can change it in step 3.`
+            : `Start date moved from ${formatDate(requested)} to ${formatDate(startInput.value)}, the latest price shared by the chosen funds. You can change it in step 3.`;
+        adjust.hidden = false;
+    }
+
     if (note) {
+        const scope = fundLimits
+            ? "Price history for the chosen funds"
+            : `Price history for ${PAYMENT_LABELS[report.paymentMode] ?? report.paymentMode ?? "the"} funds`;
+
         note.textContent =
-            `Price history for the chosen funds: ${formatDate(limits.earliest)} to ${formatDate(limits.latest)}. ` +
-            `The end date can be up to today; if it is after ${formatDate(limits.latest)}, the report values the portfolio at that latest BID price and says so.`;
+            `${scope}: ${formatDate(limits.earliest)} to ${formatDate(limits.latest)}. ` +
+            `The end date can be up to today; if it is after ${formatDate(limits.latest)}, the report values the portfolio at that latest BID price and says so.` +
+            (fundLimits ? "" : " Some funds start later; adding one may move the start date.");
     }
 }
 
@@ -486,15 +622,17 @@ function splitEqually() {
 
     if (!n) return;
 
-    const base = Math.floor(100 / n);
-    let remainder = 100 - base * n;
+    // Whole 5% steps: e.g. 3 funds -> 35 / 35 / 30
+    const steps = 100 / ALLOCATION_STEP;
+    const base = Math.floor(steps / n);
+    let remainder = steps - base * n;
 
     report.selected = report.selected.map(item => {
         const extra = remainder > 0 ? 1 : 0;
 
         remainder -= extra;
 
-        return { ...item, weight: base + extra };
+        return { ...item, weight: (base + extra) * ALLOCATION_STEP };
     });
 
     renderSelected();
@@ -502,6 +640,8 @@ function splitEqually() {
 
 function addFund(id) {
     if (!id || report.selected.some(item => item.id === id) || report.selected.length >= MAX_FUNDS) return;
+
+    if (!acceptsPayment(id)) return;
 
     report.selected.push({ id, weight: 0 });
     splitEqually();
@@ -521,6 +661,7 @@ function renderSuggestions() {
             const id = fundId(fund);
 
             if (chosen.has(id) || !observationsFor(id).length) return false;
+            if (!acceptsPayment(id)) return false;
             if (!query) return true;
 
             return (
@@ -538,7 +679,7 @@ function renderSuggestions() {
                 </li>
             `)
             .join("")
-        : `<li class="compare-suggestion-empty">${report.selected.length >= MAX_FUNDS ? `Maximum ${MAX_FUNDS} funds` : "No matching funds"}</li>`;
+        : `<li class="compare-suggestion-empty">${report.selected.length >= MAX_FUNDS ? `Maximum ${MAX_FUNDS} funds` : `No matching funds that accept ${escapeHtml(report.paymentMode ?? "this payment mode")}`}</li>`;
 
     list.hidden = false;
 }
@@ -547,6 +688,555 @@ function closeSuggestions() {
     const list = qs("#report-fund-suggestions");
 
     if (list) list.hidden = true;
+}
+
+/* ============================================================
+   STEP-BY-STEP SETUP
+   1 Client & adviser -> 2 Payment mode -> 3 Premium
+   -> 4 Funds & allocation -> 5 Investment booster.
+   Each step appears once the one before is done.
+   ============================================================ */
+
+function premiumDone() {
+    const lump = Number(qs("#report-lump")?.value) || 0;
+    const topUp = Number(qs("#report-topup")?.value) || 0;
+    const frequency = qs("#report-frequency")?.value ?? "monthly";
+    const start = qs("#report-start")?.value ?? "";
+    const end = qs("#report-end")?.value ?? "";
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (lump < 0 || topUp < 0) return false;
+    if (lump <= 0 && topUp <= 0) return false;
+    if (topUp > 0 && frequency === "none") return false;
+    if (!start || !end || start >= end || end > today) return false;
+
+    return true;
+}
+
+function stepDone(step) {
+    if (step === 1) {
+        return Boolean(qs("#report-client")?.value.trim()) && Boolean(qs("#report-adviser")?.value.trim());
+    }
+
+    if (step === 2) return stepDone(1) && Boolean(report.paymentMode);
+
+    if (step === 3) return stepDone(2) && premiumDone();
+
+    if (step === 4) {
+        const sum = report.selected.reduce((acc, item) => acc + (Number(item.weight) || 0), 0);
+
+        return stepDone(3) && report.selected.length > 0 && Math.abs(sum - 100) < 0.01;
+    }
+
+    if (step === 5) {
+        if (!stepDone(4)) return false;
+        if (report.booster === "no") return true;
+        if (report.booster !== "yes" || !report.boosters.length) return false;
+
+        const input = readInput();
+
+        return report.boosters.every((booster, index) => !boosterProblem(booster, index, input));
+    }
+
+    return false;
+}
+
+function updateSteps() {
+    const show = {
+        2: stepDone(1),
+        3: stepDone(2),
+        4: stepDone(3),
+        5: stepDone(4)
+    };
+
+    for (const [step, visible] of Object.entries(show)) {
+        const section = qs(`[data-report-step="${step}"]`);
+
+        if (section) section.hidden = !visible;
+    }
+
+    for (const step of [1, 2, 3, 4, 5]) {
+        qs(`[data-report-step="${step}"]`)?.classList.toggle("is-done", stepDone(step));
+    }
+
+    // Generate is only clickable once every step is complete
+    const generate = qs("#report-form .report-generate[type=submit]");
+
+    if (generate) generate.disabled = !stepDone(5);
+
+    report.boosters.forEach((_, index) => refreshBoosterStatus(index));
+
+    const note = qs("#report-payment-note");
+
+    if (note) {
+        const eligible = report.funds.filter(fund => acceptsPayment(fundId(fund)) && observationsFor(fundId(fund)).length).length;
+
+        note.textContent = report.paymentMode
+            ? `Showing the ${eligible} funds that accept ${PAYMENT_LABELS[report.paymentMode] ?? report.paymentMode}.`
+            : "";
+    }
+}
+
+function renderPaymentOptions() {
+    const container = qs("#report-payment-options");
+
+    if (!container) return;
+
+    const counts = new Map(PAYMENT_MODES.map(mode => [
+        mode,
+        report.funds.filter(fund => paymentModesOf(fundId(fund)).includes(mode) && observationsFor(fundId(fund)).length).length
+    ]));
+
+    const available = PAYMENT_MODES.filter(mode => counts.get(mode) > 0);
+
+    container.innerHTML = available.length
+        ? available
+            .map(mode => `
+                <button
+                    type="button"
+                    class="report-payment-option${report.paymentMode === mode ? " active" : ""}"
+                    role="radio"
+                    aria-checked="${report.paymentMode === mode}"
+                    data-report-payment="${escapeHtml(mode)}"
+                >
+                    <span class="report-payment-name">${escapeHtml(mode)}</span>
+                    <span class="report-payment-desc">${escapeHtml(PAYMENT_LABELS[mode] ?? mode)}</span>
+                    <span class="report-payment-count">${counts.get(mode)} funds</span>
+                </button>
+            `)
+            .join("")
+        : `<p class="settings-help">Payment modes aren't in the fund data yet. Run Build Funds Data to add them.</p>`;
+}
+
+function setPaymentMode(mode) {
+    if (!PAYMENT_MODES.includes(mode) || report.paymentMode === mode) return;
+
+    report.paymentMode = mode;
+
+    // Drop funds that don't accept the new payment mode
+    const removed = report.selected.filter(item => !acceptsPayment(item.id, mode));
+
+    if (removed.length) {
+        report.selected = report.selected.filter(item => acceptsPayment(item.id, mode));
+    }
+
+    for (const booster of report.boosters) {
+        booster.selected = booster.selected.filter(item => acceptsPayment(item.id, mode));
+    }
+
+    renderPaymentOptions();
+    renderBoosters();
+
+    if (removed.length && report.selected.length) {
+        splitEqually();
+    } else {
+        renderSelected();
+    }
+
+    const note = qs("#report-payment-note");
+
+    if (note && removed.length) {
+        note.textContent +=
+            ` Removed ${removed.length} fund${removed.length === 1 ? "" : "s"} that ${removed.length === 1 ? "doesn't" : "don't"} accept ${mode}: ` +
+            `${removed.map(item => report.fundById.get(item.id)?.fundCode ?? item.id).join(", ")}.`;
+    }
+}
+
+/* ============================================================
+   INVESTMENT BOOSTERS (step 5)
+   One-off extra investments, each with its own date, amount and
+   fund allocation (5% steps, total 100%). There can be several.
+   ============================================================ */
+
+function newBooster() {
+    return {
+        date: "",
+        amount: "",
+        selected: report.selected.map(item => ({ id: item.id, weight: item.weight }))
+    };
+}
+
+function boosterSum(booster) {
+    return booster.selected.reduce((acc, item) => acc + (Number(item.weight) || 0), 0);
+}
+
+function boosterProblem(booster, index, input) {
+    const label = `Booster ${index + 1}`;
+    const code = id => report.fundById.get(id)?.fundCode ?? id;
+
+    if (!booster.date) return `${label}: choose a date.`;
+
+    if (!(Number(booster.amount) > 0)) return `${label}: enter an amount above 0.`;
+
+    if (!booster.selected.length) return `${label}: add at least one fund.`;
+
+    if (booster.selected.some(item => !(Number(item.weight) > 0) || Number(item.weight) % ALLOCATION_STEP !== 0)) {
+        return `${label}: allocations must be in steps of ${ALLOCATION_STEP}%.`;
+    }
+
+    const sum = boosterSum(booster);
+
+    if (Math.abs(sum - 100) >= 0.01) return `${label}: the allocation adds up to ${Math.round(sum * 100) / 100}%. It needs to total 100%.`;
+
+    if (input?.start && booster.date < input.start) return `${label}: the date must be on or after the start date (${formatDate(input.start)}).`;
+
+    if (input?.end && booster.date > input.end) return `${label}: the date must be on or before the end date (${formatDate(input.end)}).`;
+
+    for (const item of booster.selected) {
+        if (!acceptsPayment(item.id)) return `${label}: ${code(item.id)} doesn't accept ${report.paymentMode}.`;
+
+        const obs = observationsFor(item.id);
+
+        if (!obs.length) return `${label}: no price history for ${code(item.id)}.`;
+
+        if (obs[0].date > booster.date) {
+            return `${label}: ${code(item.id)} prices begin on ${formatDate(obs[0].date)}, after the booster date.`;
+        }
+    }
+
+    return null;
+}
+
+function boosterRows(booster, index) {
+    if (!booster.selected.length) {
+        return `<tr><td colspan="3" class="report-empty">Add funds for this booster (up to ${MAX_FUNDS}).</td></tr>`;
+    }
+
+    return booster.selected
+        .map((item, slot) => {
+            const fund = report.fundById.get(item.id);
+            const name = escapeHtml(fund?.fundName ?? item.id);
+
+            return `
+                <tr>
+                    <td>
+                        <div class="fund-name">${name}</div>
+                        <div class="fund-meta">${escapeHtml(fund?.fundCode ?? "")} · ${escapeHtml(currencyOf(item.id))}</div>
+                    </td>
+                    <td class="report-weight-cell">
+                        <input type="number" min="5" max="100" step="5" value="${item.weight}" data-booster-weight="${index}:${slot}" aria-label="Booster ${index + 1} allocation % for ${name}">
+                        <span>%</span>
+                    </td>
+                    <td class="report-remove-cell">
+                        <button type="button" class="compare-remove" data-booster-fund-remove="${index}:${slot}" aria-label="Remove ${name} from booster ${index + 1}" title="Remove">×</button>
+                    </td>
+                </tr>
+            `;
+        })
+        .join("");
+}
+
+function boosterMarkup(booster, index) {
+    const start = qs("#report-start")?.value ?? "";
+    const end = qs("#report-end")?.value ?? "";
+
+    return `
+        <div class="report-booster" data-booster="${index}">
+            <div class="report-booster-head">
+                <strong>Booster ${index + 1}</strong>
+                <button type="button" class="compare-remove" data-booster-remove="${index}" aria-label="Remove booster ${index + 1}" title="Remove booster">×</button>
+            </div>
+
+            <div class="report-grid report-booster-grid">
+                <label class="report-field">
+                    <span>Date</span>
+                    <input type="date" data-booster-field="date" data-booster-index="${index}" value="${escapeHtml(booster.date)}"${start ? ` min="${start}"` : ""}${end ? ` max="${end}"` : ""}>
+                </label>
+
+                <label class="report-field">
+                    <span>Amount</span>
+                    <input type="number" min="0" step="100" inputmode="decimal" placeholder="e.g. 5000" data-booster-field="amount" data-booster-index="${index}" value="${escapeHtml(booster.amount)}">
+                </label>
+            </div>
+
+            <div class="report-picker-row">
+                <div class="compare-picker report-picker">
+                    <input type="search" autocomplete="off" placeholder="Add a fund to this booster…" aria-label="Search funds to add to booster ${index + 1}" data-booster-search="${index}">
+                    <ul class="compare-suggestions" role="listbox" data-booster-suggestions="${index}" hidden></ul>
+                </div>
+
+                <button type="button" class="news-clear-filters" data-booster-copy="${index}">Same as main allocation</button>
+                <button type="button" class="news-clear-filters" data-booster-split="${index}">Split equally</button>
+
+                <span class="report-total" data-booster-total="${index}">Total 0%</span>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table report-funds-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Fund</th>
+                            <th scope="col">Allocation</th>
+                            <th scope="col"><span class="sr-only">Remove</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>${boosterRows(booster, index)}</tbody>
+                </table>
+            </div>
+
+            <p class="settings-help report-booster-status" data-booster-status="${index}"></p>
+        </div>
+    `;
+}
+
+function refreshBoosterStatus(index) {
+    const booster = report.boosters[index];
+
+    if (!booster) return;
+
+    const sum = boosterSum(booster);
+    const total = qs(`[data-booster-total="${index}"]`);
+
+    if (total) {
+        total.textContent = `Total ${Math.round(sum * 100) / 100}%`;
+        total.classList.toggle("is-ok", Math.abs(sum - 100) < 0.01);
+        total.classList.toggle("is-off", booster.selected.length > 0 && Math.abs(sum - 100) >= 0.01);
+    }
+
+    const status = qs(`[data-booster-status="${index}"]`);
+
+    if (status) {
+        const problem = boosterProblem(booster, index, readInput());
+
+        status.textContent = problem ? problem.replace(/^Booster \d+: /, "To do: ") : "Booster ready.";
+        status.classList.toggle("is-ok", !problem);
+    }
+}
+
+function renderBoosters() {
+    const list = qs("#report-booster-list");
+    const add = qs("#report-booster-add");
+    const yes = report.booster === "yes";
+
+    document.querySelectorAll("[data-report-booster]").forEach(button => {
+        const active = button.dataset.reportBooster === report.booster;
+
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-checked", String(active));
+    });
+
+    if (list) {
+        list.hidden = !yes;
+        list.innerHTML = yes ? report.boosters.map(boosterMarkup).join("") : "";
+    }
+
+    if (add) add.hidden = !yes;
+
+    updateSteps();
+}
+
+function splitBooster(booster) {
+    const n = booster.selected.length;
+
+    if (!n) return;
+
+    const steps = 100 / ALLOCATION_STEP;
+    const base = Math.floor(steps / n);
+    let remainder = steps - base * n;
+
+    booster.selected = booster.selected.map(item => {
+        const extra = remainder > 0 ? 1 : 0;
+
+        remainder -= extra;
+
+        return { ...item, weight: (base + extra) * ALLOCATION_STEP };
+    });
+}
+
+function renderBoosterSuggestions(index) {
+    const booster = report.boosters[index];
+    const input = qs(`[data-booster-search="${index}"]`);
+    const list = qs(`[data-booster-suggestions="${index}"]`);
+
+    if (!booster || !input || !list) return;
+
+    const query = input.value.trim().toLowerCase();
+    const chosen = new Set(booster.selected.map(item => item.id));
+
+    const matches = booster.selected.length >= MAX_FUNDS ? [] : report.funds.filter(fund => {
+        const id = fundId(fund);
+
+        if (chosen.has(id) || !observationsFor(id).length || !acceptsPayment(id)) return false;
+        if (!query) return true;
+
+        return (
+            String(fund.fundName ?? "").toLowerCase().includes(query) ||
+            String(fund.fundCode ?? "").toLowerCase().includes(query)
+        );
+    });
+
+    list.innerHTML = matches.length
+        ? matches
+            .map(fund => `
+                <li class="compare-suggestion" role="option" data-booster-add-fund="${index}:${escapeHtml(fundId(fund))}">
+                    <span class="compare-suggestion-name">${escapeHtml(fund.fundName ?? "")}</span>
+                    <span class="compare-suggestion-code">${escapeHtml(fund.fundCode ?? "")} · ${escapeHtml(currencyOf(fundId(fund)))}</span>
+                </li>
+            `)
+            .join("")
+        : `<li class="compare-suggestion-empty">${booster.selected.length >= MAX_FUNDS ? `Maximum ${MAX_FUNDS} funds` : `No matching funds that accept ${escapeHtml(report.paymentMode ?? "this payment mode")}`}</li>`;
+
+    list.hidden = false;
+}
+
+function bindBoosterEvents() {
+    qs("#report-booster-choice")?.addEventListener("click", event => {
+        const option = event.target.closest("[data-report-booster]");
+
+        if (!option) return;
+
+        report.booster = option.dataset.reportBooster;
+
+        if (report.booster === "yes" && !report.boosters.length) report.boosters.push(newBooster());
+
+        renderBoosters();
+    });
+
+    qs("#report-booster-add")?.addEventListener("click", () => {
+        report.boosters.push(newBooster());
+        renderBoosters();
+
+        const last = qs(`[data-booster="${report.boosters.length - 1}"] [data-booster-field="date"]`);
+
+        last?.focus();
+    });
+
+    const list = qs("#report-booster-list");
+
+    if (!list) return;
+
+    const pair = value => {
+        const [index, rest] = String(value).split(/:(.*)/s);
+
+        return [Number(index), rest];
+    };
+
+    list.addEventListener("input", event => {
+        const field = event.target.closest("[data-booster-field]");
+
+        if (field) {
+            const booster = report.boosters[Number(field.dataset.boosterIndex)];
+
+            if (booster) booster[field.dataset.boosterField] = field.value;
+
+            updateSteps();
+            return;
+        }
+
+        const weight = event.target.closest("[data-booster-weight]");
+
+        if (weight) {
+            const [index, slot] = pair(weight.dataset.boosterWeight);
+            const item = report.boosters[index]?.selected[Number(slot)];
+
+            if (item) item.weight = Math.max(0, Number(weight.value) || 0);
+
+            updateSteps();
+            return;
+        }
+
+        const search = event.target.closest("[data-booster-search]");
+
+        if (search) renderBoosterSuggestions(Number(search.dataset.boosterSearch));
+    });
+
+    // Snap booster allocations to 5% steps
+    list.addEventListener("change", event => {
+        const weight = event.target.closest("[data-booster-weight]");
+
+        if (!weight) return;
+
+        const [index, slot] = pair(weight.dataset.boosterWeight);
+        const item = report.boosters[index]?.selected[Number(slot)];
+
+        if (item) item.weight = roundToStep(weight.value);
+
+        renderBoosters();
+    });
+
+    list.addEventListener("focusin", event => {
+        const search = event.target.closest("[data-booster-search]");
+
+        if (search) renderBoosterSuggestions(Number(search.dataset.boosterSearch));
+    });
+
+    list.addEventListener("focusout", event => {
+        const search = event.target.closest("[data-booster-search]");
+
+        if (!search) return;
+
+        setTimeout(() => {
+            const suggestions = qs(`[data-booster-suggestions="${search.dataset.boosterSearch}"]`);
+
+            if (suggestions) suggestions.hidden = true;
+        }, 150);
+    });
+
+    list.addEventListener("keydown", event => {
+        if (event.key === "Escape" && event.target.closest("[data-booster-search]")) {
+            const suggestions = qs(`[data-booster-suggestions="${event.target.dataset.boosterSearch}"]`);
+
+            if (suggestions) suggestions.hidden = true;
+        }
+    });
+
+    list.addEventListener("mousedown", event => {
+        const option = event.target.closest("[data-booster-add-fund]");
+
+        if (!option) return;
+
+        event.preventDefault();
+
+        const [index, id] = pair(option.dataset.boosterAddFund);
+        const booster = report.boosters[index];
+
+        if (!booster || booster.selected.some(item => item.id === id) || booster.selected.length >= MAX_FUNDS) return;
+
+        booster.selected.push({ id, weight: 0 });
+        splitBooster(booster);
+        renderBoosters();
+    });
+
+    list.addEventListener("click", event => {
+        const removeBooster = event.target.closest("[data-booster-remove]");
+
+        if (removeBooster) {
+            report.boosters.splice(Number(removeBooster.dataset.boosterRemove), 1);
+            renderBoosters();
+            return;
+        }
+
+        const removeFund = event.target.closest("[data-booster-fund-remove]");
+
+        if (removeFund) {
+            const [index, slot] = pair(removeFund.dataset.boosterFundRemove);
+
+            report.boosters[index]?.selected.splice(Number(slot), 1);
+            renderBoosters();
+            return;
+        }
+
+        const copy = event.target.closest("[data-booster-copy]");
+
+        if (copy) {
+            const booster = report.boosters[Number(copy.dataset.boosterCopy)];
+
+            if (booster) booster.selected = report.selected.map(item => ({ id: item.id, weight: item.weight }));
+
+            renderBoosters();
+            return;
+        }
+
+        const split = event.target.closest("[data-booster-split]");
+
+        if (split) {
+            const booster = report.boosters[Number(split.dataset.boosterSplit)];
+
+            if (booster) splitBooster(booster);
+
+            renderBoosters();
+        }
+    });
 }
 
 function readInput() {
@@ -560,16 +1250,39 @@ function readInput() {
         clientName: qs("#report-client")?.value.trim() ?? "",
         adviserName: qs("#report-adviser")?.value.trim() ?? "",
         adviserContact: qs("#report-contact")?.value.trim() ?? "",
+        paymentMode: report.paymentMode,
         lumpSum: number("#report-lump"),
         topUp: number("#report-topup"),
         frequency: qs("#report-frequency")?.value ?? "monthly",
         start: qs("#report-start")?.value ?? "",
-        end: qs("#report-end")?.value ?? ""
+        end: qs("#report-end")?.value ?? "",
+        boosterChoice: report.booster,
+        boosters: report.booster === "yes"
+            ? report.boosters.map(booster => ({
+                date: booster.date,
+                amount: Number(booster.amount) || 0,
+                selected: booster.selected.map(item => ({ id: item.id, weight: Number(item.weight) || 0 }))
+            }))
+            : []
     };
 }
 
 function validate(input) {
+    if (!input.clientName) return "Enter the client name.";
+
+    if (!input.adviserName) return "Enter your name (Prepared by).";
+
+    if (!input.paymentMode) return "Choose a payment mode.";
+
     if (!report.selected.length) return "Add at least one fund.";
+
+    if (report.selected.some(item => !acceptsPayment(item.id, input.paymentMode))) {
+        return `Some chosen funds don't accept ${input.paymentMode}. Remove them first.`;
+    }
+
+    if (report.selected.some(item => Number(item.weight) % ALLOCATION_STEP !== 0)) {
+        return `Allocations must be in steps of ${ALLOCATION_STEP}% (5%, 10%, 15% …).`;
+    }
 
     const sum = report.selected.reduce((acc, item) => acc + (Number(item.weight) || 0), 0);
 
@@ -577,7 +1290,10 @@ function validate(input) {
 
     if (report.selected.some(item => !(Number(item.weight) > 0))) return "Every fund needs an allocation above 0%. Remove funds you don't want.";
 
-    const currencies = new Set(report.selected.map(item => currencyOf(item.id)));
+    const currencies = new Set([
+        ...report.selected.map(item => currencyOf(item.id)),
+        ...input.boosters.flatMap(booster => booster.selected.map(item => currencyOf(item.id)))
+    ]);
 
     if (currencies.size > 1) return `The chosen funds are in different currencies (${[...currencies].join(" and ")}). Pick funds in one currency for a report.`;
 
@@ -601,6 +1317,18 @@ function validate(input) {
         return `Choose a start date between ${formatDate(limits.earliest)} and ${formatDate(limits.latest)}.`;
     }
 
+    if (input.boosterChoice !== "yes" && input.boosterChoice !== "no") return "Choose whether to add an investment booster (step 5).";
+
+    if (input.boosterChoice === "yes") {
+        if (!report.boosters.length) return "Add a booster, or choose No in step 5.";
+
+        for (const [index, booster] of report.boosters.entries()) {
+            const problem = boosterProblem(booster, index, input);
+
+            if (problem) return problem;
+        }
+    }
+
     return null;
 }
 
@@ -622,10 +1350,15 @@ function renderReport(result) {
     const frequency = FREQUENCIES[input.topUp > 0 ? input.frequency : "none"];
     const today = formatDate(new Date().toISOString().slice(0, 10));
 
+    const mainFunds = perFund.filter(fund => !fund.boosterOnly);
+    const boosterCount = result.boosters.length;
+
     const planText = [
         input.lumpSum > 0 ? `${m(input.lumpSum)} invested on ${formatDate(result.firstDate)}` : "",
         input.topUp > 0 ? `${m(input.topUp)} ${frequency.label.toLowerCase()} top-ups` : ""
     ].filter(Boolean).join(" plus ");
+
+    const code = id => report.fundById.get(id)?.fundCode ?? id;
 
     sheet.innerHTML = `
         <header class="rpt-header">
@@ -647,14 +1380,16 @@ function renderReport(result) {
                 <strong>Price date:</strong> the latest BID price available is for
                 ${escapeHtml(formatDate(result.endDate))}, so the portfolio is valued at that date
                 (end date requested: ${escapeHtml(formatDate(result.requestedEnd))}).
-                ${result.skippedCount ? `${result.skippedCount} top-up${result.skippedCount === 1 ? "" : "s"} totalling ${m(result.skippedAmount)} scheduled after ${escapeHtml(formatDate(result.endDate))} ${result.skippedCount === 1 ? "is" : "are"} not included, as no price is available yet.` : ""}
+                ${result.skippedCount ? `${result.skippedCount} investment${result.skippedCount === 1 ? "" : "s"} totalling ${m(result.skippedAmount)} scheduled after ${escapeHtml(formatDate(result.endDate))} ${result.skippedCount === 1 ? "is" : "are"} not included, as no price is available yet.` : ""}
             </section>
         ` : ""}
 
         <section class="rpt-plan">
-            <strong>Investment plan:</strong> ${escapeHtml(planText)}, across ${perFund.length} fund${perFund.length === 1 ? "" : "s"}
-            (${perFund.map(fund => `${escapeHtml(fund.fund?.fundCode ?? "")} ${fund.weight}%`).join(", ")}).
+            <strong>Investment plan:</strong> ${escapeHtml(planText)}, paid by <strong>${escapeHtml(PAYMENT_LABELS[input.paymentMode] ?? input.paymentMode ?? "—")}</strong>, across ${mainFunds.length} fund${mainFunds.length === 1 ? "" : "s"}
+            (${mainFunds.map(fund => `${escapeHtml(fund.fund?.fundCode ?? "")} ${fund.weight}%`).join(", ")})${boosterCount ? `,
+            plus ${boosterCount} investment booster${boosterCount === 1 ? "" : "s"} totalling ${m(result.boosterTotal)}` : ""}.
         </section>
+
 
         <section class="rpt-tiles">
             <div class="rpt-tile">
@@ -678,6 +1413,32 @@ function renderReport(result) {
                 <em>${result.annualised === null ? "shown for periods of 1 year or more" : "per year, money-weighted"}</em>
             </div>
         </section>
+
+        ${boosterCount ? `
+            <section class="rpt-section">
+                <h3>Investment boosters</h3>
+                <table class="rpt-table rpt-table-boosters">
+                    <thead>
+                        <tr>
+                            <th>Booster</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Fund allocation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${result.boosters.map((booster, index) => `
+                            <tr>
+                                <td>Booster ${index + 1}</td>
+                                <td>${escapeHtml(formatDate(booster.date))}</td>
+                                <td>${m(booster.amount)}</td>
+                                <td>${booster.selected.map(item => `${escapeHtml(code(item.id))} ${item.weight}%`).join(", ")}</td>
+                            </tr>
+                        `).join("")}
+                    </tbody>
+                </table>
+            </section>
+        ` : ""}
 
         <section class="rpt-section">
             <h3>Growth of the investment</h3>
@@ -713,8 +1474,8 @@ function renderReport(result) {
                                 <strong>${escapeHtml(fund.fund?.fundName ?? fund.id)}</strong>
                                 <div class="rpt-muted">${escapeHtml(fund.fund?.fundCode ?? "")}</div>
                             </td>
-                            <td>${fund.weight}%</td>
-                            <td>${m(fund.invested)}</td>
+                            <td>${fund.boosterOnly ? "Booster only" : `${fund.weight}%`}</td>
+                            <td>${m(fund.invested)}${fund.boosterInvested > 0 ? `<div class="rpt-muted">incl. ${m(fund.boosterInvested)} booster</div>` : ""}</td>
                             <td>${fund.units.toLocaleString("en-SG", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</td>
                             <td>${fund.averageCost === null ? "—" : fund.averageCost.toFixed(5)}</td>
                             <td>${fund.endBid === null ? "—" : fund.endBid.toFixed(5)}</td>
@@ -801,11 +1562,16 @@ function renderReport(result) {
         </footer>
     `;
 
-    wrap.hidden = false;
+    // Show the report in the A4 preview popup (before printing)
+    if (!wrap.open) wrap.showModal?.();
+
+    document.body.classList.add("has-news-dialog");
+
+    qs(".report-paper-area", wrap)?.scrollTo(0, 0);
 
     renderChart(result);
 
-    requestAnimationFrame(() => wrap.scrollIntoView({ behavior: "smooth", block: "start" }));
+
 }
 
 function renderChart(result) {
@@ -939,7 +1705,47 @@ function bindEvents() {
         renderSuggestions();
     });
 
+    for (const selector of ["#report-client", "#report-adviser"]) {
+        qs(selector)?.addEventListener("input", updateSteps);
+    }
+
+    bindBoosterEvents();
+
+    // Premium (step 3)
+    qs("#report-start")?.addEventListener("change", event => {
+        report.requestedStart = event.target.value || null;
+        syncDateLimits();
+    });
+
+    // Keep the booster date limits in line with the premium dates
+    for (const selector of ["#report-start", "#report-end"]) {
+        qs(selector)?.addEventListener("change", () => {
+            if (report.booster === "yes") renderBoosters();
+        });
+    }
+
+    for (const selector of ["#report-lump", "#report-topup", "#report-frequency", "#report-start", "#report-end"]) {
+        qs(selector)?.addEventListener("input", updateSteps);
+        qs(selector)?.addEventListener("change", updateSteps);
+    }
+
+    qs("#report-payment-options")?.addEventListener("click", event => {
+        const option = event.target.closest("[data-report-payment]");
+
+        if (option) setPaymentMode(option.dataset.reportPayment);
+    });
+
     const body = qs("#report-funds-body");
+
+    // Snap allocations to 5% steps when the box is left / Enter pressed
+    body?.addEventListener("change", event => {
+        const field = event.target.closest("[data-report-weight]");
+
+        if (!field) return;
+
+        report.selected[Number(field.dataset.reportWeight)].weight = roundToStep(field.value);
+        renderSelected();
+    });
 
     body?.addEventListener("input", event => {
         const field = event.target.closest("[data-report-weight]");
@@ -956,6 +1762,8 @@ function bindEvents() {
             total.classList.toggle("is-ok", Math.abs(sum - 100) < 0.01);
             total.classList.toggle("is-off", Math.abs(sum - 100) >= 0.01);
         }
+
+        updateSteps();
     });
 
     body?.addEventListener("click", event => {
@@ -973,7 +1781,12 @@ function bindEvents() {
         const frequency = qs("#report-frequency");
         const topUp = Number(qs("#report-topup").value) || 0;
 
-        if (frequency && topUp > 0 && frequency.value === "none") frequency.value = "monthly";
+        if (frequency && topUp > 0 && frequency.value === "none") {
+            frequency.value = "monthly";
+            frequency.dispatchEvent(new Event("vselect:sync"));
+        }
+
+        updateSteps();
     });
 
     qs("#report-form")?.addEventListener("submit", event => {
@@ -1003,6 +1816,18 @@ function bindEvents() {
 
         report.lastResult = result;
         renderReport(result);
+    });
+
+    const dialog = qs("#report-output");
+
+    dialog?.querySelector("[data-report-close]")?.addEventListener("click", () => dialog.close());
+
+    dialog?.addEventListener("click", event => {
+        if (event.target === dialog) dialog.close();
+    });
+
+    dialog?.addEventListener("close", () => {
+        document.body.classList.remove("has-news-dialog");
     });
 
     qs("#report-print")?.addEventListener("click", () => {
@@ -1060,6 +1885,7 @@ function initializeReports({ funds, historyIndex }) {
 
     if (form) form.hidden = false;
 
+    renderPaymentOptions();
     renderSelected();
 }
 
