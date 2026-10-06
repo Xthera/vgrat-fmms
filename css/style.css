@@ -6204,6 +6204,814 @@ html[data-theme="light"] .palette-swatch {
     min-width: 220px;
 }
 
+
+/* Unusual moves: BID price range on its own line under each fund */
+.monitor-list-row:has(.monitor-range) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+
+    gap: 4px 12px;
+}
+
+.monitor-list-row .fund-cell {
+    min-width: 0;
+}
+
+.monitor-range {
+    grid-column: 1 / -1;
+
+    padding-top: 5px;
+
+    border-top:
+        1px dashed var(--border-subtle);
+
+    text-align: right;
+
+    color: var(--text-secondary);
+
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+    font-size: calc(11px * var(--font-scale, 1));
+    font-variant-numeric: tabular-nums;
+
+    white-space: nowrap;
+}
+
+.monitor-range-date {
+    color: var(--text-muted);
+
+    font-family: inherit;
+}
+
+
+/* ============================================================
+   REPORT GENERATION — SETUP FORM
+   ============================================================ */
+
+.report-card {
+    margin-bottom: 14px;
+}
+
+.report-loading {
+    padding: 0 16px;
+}
+
+.report-loading[hidden],
+.report-form[hidden],
+.report-output[hidden],
+.report-error[hidden] {
+    display: none;
+}
+
+.report-form {
+    padding: 4px 16px 16px;
+}
+
+.report-group {
+    margin: 0;
+    padding: 14px 0;
+
+    border: 0;
+    border-top:
+        1px solid var(--border-subtle);
+}
+
+.report-group:first-child {
+    border-top: 0;
+}
+
+.report-group legend {
+    padding: 0;
+    margin-bottom: 10px;
+
+    color: var(--text-primary);
+
+    font-size: calc(13px * var(--font-scale, 1));
+    font-weight: 700;
+}
+
+.report-grid {
+    display: grid;
+
+    gap: 12px;
+}
+
+.report-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.report-grid-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.report-field {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+
+    min-width: 0;
+}
+
+.report-field > span {
+    color: var(--text-muted);
+
+    font-size: calc(10px * var(--font-scale, 1));
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.report-field input {
+    width: 100%;
+    height: 37px;
+
+    padding: 0 10px;
+
+    border:
+        1px solid var(--border-medium);
+
+    border-radius: 6px;
+
+    background: var(--bg-input);
+    color: var(--text-primary);
+
+    font: inherit;
+    font-size: calc(13px * var(--font-scale, 1));
+
+    color-scheme: inherit;
+}
+
+.report-field input:focus {
+    border-color: var(--accent);
+
+    outline: none;
+
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.report-picker-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 10px;
+}
+
+.report-picker {
+    flex: 1;
+
+    min-width: 220px;
+    max-width: 460px;
+}
+
+.report-total {
+    margin-left: auto;
+
+    padding: 4px 10px;
+
+    border-radius: 999px;
+
+    background: var(--bg-surface-raised);
+    color: var(--text-muted);
+
+    font-size: calc(12px * var(--font-scale, 1));
+    font-weight: 700;
+}
+
+.report-total.is-ok {
+    background: var(--positive-soft);
+    color: var(--positive);
+}
+
+.report-total.is-off {
+    background: var(--negative-soft);
+    color: var(--negative);
+}
+
+.report-funds-table {
+    min-width: 0;
+}
+
+.report-funds-table td:nth-child(2),
+.report-funds-table th:nth-child(2) {
+    width: 140px;
+
+    text-align: center;
+}
+
+.report-weight-cell {
+    white-space: nowrap;
+}
+
+.report-weight-cell input {
+    width: 72px;
+    height: 30px;
+
+    padding: 0 8px;
+
+    border:
+        1px solid var(--border-medium);
+
+    border-radius: 6px;
+
+    background: var(--bg-input);
+    color: var(--text-primary);
+
+    font: inherit;
+    font-size: calc(13px * var(--font-scale, 1));
+    text-align: right;
+}
+
+.report-weight-cell span {
+    margin-left: 4px;
+
+    color: var(--text-muted);
+}
+
+.report-remove-cell {
+    width: 44px;
+
+    text-align: right;
+}
+
+.report-empty {
+    padding: 18px 12px !important;
+
+    color: var(--text-muted) !important;
+
+    text-align: center;
+}
+
+.report-date-note {
+    margin: 10px 0 0;
+}
+
+.report-error {
+    margin: 4px 0 12px;
+    padding: 9px 12px;
+
+    border-radius: 6px;
+
+    background: var(--negative-soft);
+    color: var(--negative);
+
+    font-size: calc(13px * var(--font-scale, 1));
+}
+
+.report-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    gap: 8px 14px;
+}
+
+.report-actions .settings-help {
+    margin: 0;
+}
+
+.report-generate {
+    height: 38px;
+
+    padding: 0 18px;
+
+    border: 0;
+    border-radius: 7px;
+
+    background: var(--accent);
+    color: var(--bg-surface);
+
+    font: inherit;
+    font-size: calc(13px * var(--font-scale, 1));
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.report-generate:hover {
+    filter: brightness(1.08);
+}
+
+.report-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin: 6px 0 12px;
+}
+
+.report-toolbar .settings-help {
+    margin: 0;
+}
+
+
+/* ============================================================
+   REPORT GENERATION — THE REPORT (white paper, any theme)
+   ============================================================ */
+
+.report-sheet {
+    max-width: 1000px;
+
+    margin: 0 auto 24px;
+    padding: 34px 38px;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: #1b2530;
+
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.report-sheet .is-up { color: #047a3a; }
+.report-sheet .is-down { color: #c1121f; }
+
+.rpt-header {
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+
+    padding-bottom: 16px;
+
+    border-bottom: 3px solid #1f5f99;
+}
+
+.rpt-logo {
+    flex-shrink: 0;
+
+    width: 56px;
+    height: 56px;
+
+    object-fit: contain;
+}
+
+.rpt-title-block {
+    flex: 1;
+
+    min-width: 0;
+}
+
+.rpt-eyebrow {
+    color: #8a6a1f;
+
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.rpt-title {
+    margin: 2px 0 0;
+
+    color: #10202e;
+
+    font-size: 24px;
+    font-weight: 750;
+    letter-spacing: -0.01em;
+}
+
+.rpt-subtitle {
+    color: #5b6670;
+
+    font-size: 13px;
+}
+
+.rpt-meta {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+
+    text-align: right;
+}
+
+.rpt-meta div {
+    display: flex;
+    flex-direction: column;
+}
+
+.rpt-meta span {
+    color: #7a8590;
+
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.rpt-meta strong {
+    color: #10202e;
+
+    font-size: 13px;
+}
+
+.rpt-meta em {
+    color: #5b6670;
+
+    font-style: normal;
+    font-size: 11px;
+}
+
+.rpt-plan {
+    margin: 14px 0;
+    padding: 10px 14px;
+
+    border-radius: 8px;
+
+    background: #f3f6f9;
+    color: #2c3a46;
+}
+
+.rpt-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 10px;
+
+    margin-bottom: 18px;
+}
+
+.rpt-tile {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+
+    padding: 12px 14px;
+
+    border: 1px solid #dfe5ea;
+    border-radius: 8px;
+}
+
+.rpt-tile span {
+    color: #7a8590;
+
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.rpt-tile strong {
+    color: #10202e;
+
+    font-size: 19px;
+    font-weight: 750;
+}
+
+.rpt-tile.is-up strong { color: #047a3a; }
+.rpt-tile.is-down strong { color: #c1121f; }
+
+.rpt-tile em {
+    color: #5b6670;
+
+    font-style: normal;
+    font-size: 11px;
+}
+
+.rpt-section {
+    margin-top: 18px;
+
+    break-inside: avoid;
+}
+
+.rpt-section h3 {
+    margin: 0 0 8px;
+
+    color: #10202e;
+
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.rpt-chart-wrap {
+    position: relative;
+
+    height: 260px;
+}
+
+.rpt-legend {
+    display: flex;
+
+    gap: 18px;
+
+    margin-top: 6px;
+
+    color: #5b6670;
+
+    font-size: 11px;
+}
+
+.rpt-legend i {
+    display: inline-block;
+
+    width: 18px;
+    height: 3px;
+
+    margin-right: 6px;
+
+    vertical-align: middle;
+}
+
+.rpt-legend-dash {
+    border-top: 2px dashed #7a8590;
+
+    height: 0 !important;
+}
+
+.rpt-table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+.rpt-table th {
+    padding: 7px 8px;
+
+    border-bottom: 1.5px solid #c9d2da;
+
+    color: #5b6670;
+
+    font-size: 9.5px;
+    font-weight: 750;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.rpt-table td {
+    padding: 7px 8px;
+
+    border-bottom: 1px solid #e6ebef;
+
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    vertical-align: middle;
+}
+
+.rpt-table th:first-child,
+.rpt-table td:first-child {
+    text-align: left;
+}
+
+.rpt-table tfoot td {
+    border-top: 1.5px solid #c9d2da;
+    border-bottom: 0;
+
+    font-weight: 750;
+}
+
+.rpt-muted {
+    color: #7a8590;
+
+    font-size: 10.5px;
+}
+
+.rpt-swatch {
+    display: inline-block;
+
+    width: 9px;
+    height: 9px;
+
+    margin-right: 6px;
+
+    border-radius: 50%;
+
+    vertical-align: middle;
+}
+
+.rpt-fund {
+    padding: 10px 0;
+
+    border-bottom: 1px solid #e6ebef;
+
+    break-inside: avoid;
+}
+
+.rpt-fund-head {
+    display: flex;
+    align-items: baseline;
+
+    gap: 6px;
+}
+
+.rpt-fund-facts {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 2px 18px;
+
+    margin-top: 4px;
+
+    color: #3b4955;
+
+    font-size: 11.5px;
+}
+
+.rpt-fund p {
+    margin: 6px 0 0;
+
+    color: #3b4955;
+
+    font-size: 11.5px;
+}
+
+.rpt-disclaimer {
+    margin-top: 20px;
+    padding-top: 12px;
+
+    border-top: 1px solid #c9d2da;
+
+    color: #5b6670;
+
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+.rpt-source {
+    margin-top: 6px;
+
+    color: #7a8590;
+}
+
+@media (max-width: 699px) and (pointer: coarse), (max-height: 500px) and (max-width: 1000px) and (pointer: coarse) {
+
+    .report-grid-3,
+    .report-grid-5 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .report-total {
+        margin-left: 0;
+    }
+
+    .report-sheet {
+        padding: 18px 14px;
+
+        font-size: 11.5px;
+    }
+
+    .rpt-header {
+        flex-wrap: wrap;
+    }
+
+    .rpt-meta {
+        width: 100%;
+
+        flex-direction: row;
+        flex-wrap: wrap;
+
+        gap: 6px 18px;
+
+        text-align: left;
+    }
+
+    .rpt-tiles {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rpt-section .rpt-table {
+        display: block;
+
+        overflow-x: auto;
+    }
+
+    .report-funds-table td:nth-child(2),
+    .report-funds-table th:nth-child(2) {
+        width: 110px;
+    }
+
+}
+
+@media (max-width: 1100px) {
+
+    .report-grid-5 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+}
+
+
+/* ============================================================
+   PRINT — only the report, on white A4
+   ============================================================ */
+
+@page {
+    size: A4;
+    margin: 12mm;
+}
+
+@media print {
+
+    html,
+    body {
+        background: #ffffff !important;
+    }
+
+    .site-header,
+    .main-nav,
+    .site-footer,
+    .page-header,
+    #report-setup,
+    .report-toolbar,
+    .page-view:not(#reports-view),
+    .application-error {
+        display: none !important;
+    }
+
+    .app-shell,
+    .app-body,
+    .app-body > .main-content,
+    #reports-view {
+        display: block !important;
+
+        width: auto !important;
+        max-width: none !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .report-sheet {
+        max-width: none;
+
+        margin: 0;
+        padding: 0;
+
+        border-radius: 0;
+
+        box-shadow: none;
+    }
+
+    .rpt-section,
+    .rpt-tiles,
+    .rpt-fund {
+        break-inside: avoid;
+    }
+
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+}
+
+
+/* Fund Explorer — payment mode chips (Cash / SRS / CPF-OA / CPF-SA) */
+.payment-chips {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 4px;
+
+    margin-top: 5px;
+}
+
+.fund-fact-value.payment-chips {
+    margin-top: 2px;
+}
+
+.payment-chip {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 1px 7px;
+
+    border:
+        1px solid var(--border-medium);
+
+    border-radius: 999px;
+
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+
+    font-size: calc(10.5px * var(--font-scale, 1));
+    font-weight: 700;
+    letter-spacing: 0.02em;
+
+    white-space: nowrap;
+}
+
+.filter-control[hidden] {
+    display: none;
+}
+
 /* ============================================================
    STICKY FOOTER (desktop / tablet)
    The "VGrat FMS · Prudential Singapore fund data" bar stays
@@ -6335,7 +7143,7 @@ html[data-theme="light"] .palette-swatch {
         padding: 0 4px;
 
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(6, minmax(0, 1fr));
         align-items: stretch;
 
         gap: 0;
@@ -6360,8 +7168,9 @@ html[data-theme="light"] .palette-swatch {
 
         background: transparent;
 
-        font-size: calc(10.5px * var(--font-scale, 1));
+        font-size: calc(9.5px * var(--font-scale, 1));
         font-weight: 600;
+        letter-spacing: -0.01em;
 
         text-align: center;
     }
