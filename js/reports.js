@@ -19,6 +19,7 @@
    ============================================================ */
 
 import { getFontScale } from "./charts.js";
+import { placeDropdown } from "./dropdown-place.js";
 
 const MAX_FUNDS = 8;
 
@@ -708,6 +709,7 @@ function renderSuggestions() {
         : `<li class="compare-suggestion-empty">${report.selected.length >= MAX_FUNDS ? `Maximum ${MAX_FUNDS} funds` : `No matching funds that accept ${escapeHtml(report.paymentMode ?? "this payment mode")}`}</li>`;
 
     list.hidden = false;
+    placeDropdown(list);
 }
 
 function closeSuggestions() {
@@ -1115,6 +1117,7 @@ function renderBoosterSuggestions(index) {
         : `<li class="compare-suggestion-empty">${booster.selected.length >= MAX_FUNDS ? `Maximum ${MAX_FUNDS} funds` : `No matching funds that accept ${escapeHtml(report.paymentMode ?? "this payment mode")}`}</li>`;
 
     list.hidden = false;
+    placeDropdown(list);
 }
 
 function setFrequency(value) {
