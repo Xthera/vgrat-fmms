@@ -5,6 +5,128 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "40584932f000f4b641cbdc413ae294a801d9f10e55091085b9011d21f2969af9",
+      "source": "CNBC",
+      "title": "Rebounding oil exports through Strait of Hormuz are vulnerable to stepped-up Iranian tanker attacks",
+      "publishedAtSgt": "2026-10-06T21:17:17+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/crude-oil-tanker-strait-hormuz-iran-attack.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "Iran has stepped up its attacks on tankers transiting the Strait of Hormuz, threatening a fragile rebound of crude oil exports from the Persian Gulf. Crude oil shipments through Hormuz fluctuate daily, sometimes matching or even exceeding levels before the Iran war, according to data from Kpler, a firm that tracks tankers and global trade flows.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-06T21:38:00+08:00"
+    },
+    {
+      "id": "bc2b2399c75e33ae10e5dd8722120db4555c398ca8d4089921a307a83ea33f55",
+      "source": "CNBC",
+      "title": "Trade deficit hits $105.6 billion, widest since just before Trump tariffs enacted last year",
+      "publishedAtSgt": "2026-10-06T21:07:57+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/trade-deficit-hits-105point6-billion-widest-since-just-before-trump-tariffs-enacted-last-year.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "trade deficit widened sharply in August amid an influx of goods related to the artificial intelligence buildout and the vagaries of import tariffs, the Commerce Department reported Tuesday. Imports swelled 4.3% for the month, pushing the total imbalance to $105.6 billion. That marked a 13.7% jump from July and was ahead of the Dow Jones consensus estimate for $102 billion.",
+      "feeds": [
+        "latest",
+        "economy"
+      ],
+      "collectedAtSgt": "2026-10-06T21:38:00+08:00"
+    },
+    {
+      "id": "7e30c13388cce84beb5937d52cfbc3b3e4f26a6cd2e4de6229569e1b9ce0aa13",
+      "source": "CNBC",
+      "title": "This startup wants to reduce liquidation risk from margin calls on prediction markets",
+      "publishedAtSgt": "2026-10-06T21:01:20+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/this-firm-aims-to-reduce-liquidation-risk-from-margin-calls-on-prediction-markets.html",
+      "category": "MARKET",
+      "relevanceScore": 100,
+      "relevanceReason": "financial_market_legal_story",
+      "summary": "It allows institutions to decide in advance how much capital to deploy, including setting limits on daily transactions executed by artificial intelligence agents and trading algorithms. The latest product comes as prediction market products face a roadblock: Perpetual futures — derivative contracts that never expire — trade nonstop, while traditional banking systems do not. Disclosure: CNBC and Kalshi have a commercial relationship that includes customer acquisition and a minority investment.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-06T21:38:01+08:00"
+    },
+    {
+      "id": "2154a29b716fe6c3d34780010eb8452ba457c9b1c0707207bf67f4d85d0f2d98",
+      "source": "CNBC",
+      "title": "DeepSeek considers doubling latest funding round to up to $15 billion, sources say",
+      "publishedAtSgt": "2026-10-06T20:59:10+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/deepseek-funding-round.html",
+      "category": "MARKET",
+      "relevanceScore": 95,
+      "relevanceReason": "business_market_event",
+      "summary": "China's DeepSeek is considering expanding its latest funding round to as much as 100 billion yuan ($14.9 billion), double its earlier target, with state-backed funds and corporate investors jostling for stakes, people familiar with the matter told CNBC. The AI startup has fielded strong interest from state-backed funds, investment arms of listed Chinese companies and venture capital firms, according to the two people, who asked not to be named because they were not authorized to discuss the...",
+      "feeds": [
+        "latest",
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-06T21:38:01+08:00"
+    },
+    {
+      "id": "859ff367e12db63c4145f505c147d120e7c25d0ec45bca5f3f6e19c697bf9940",
+      "source": "CNBC",
+      "title": "Jim Cramer's top 10 things to watch in the stock market Tuesday",
+      "publishedAtSgt": "2026-10-06T20:47:59+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/06/jim-cramers-top-10-things-to-watch-in-the-stock-market-tuesday.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Who knew that oil prices and bond yields could actually go down? The maker of custom AI chips and networking gear could raise its long-term financial targets substantially, with big reverberations through the hyperscaler and chip worlds. They expect a strong quarter, led by Google Cloud revenue growth of 142% year over year, with some benefit from fledgling external sales of its custom AI chips known as TPUs.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-06T21:38:02+08:00"
+    },
+    {
+      "id": "18be524555ba6dc3f19014d71f14d777eb59724d36fb8dfe3e0ff1159945f29e",
+      "source": "CNBC",
+      "title": "Paramount-WBD merger, Musk's return to trillionaire, AI researchers' warning and more in Morning Squawk",
+      "publishedAtSgt": "2026-10-06T20:46:42+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/5-things-to-know-before-the-stock-market-opens.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Treasury yield kicked off the week with a fresh 24-year high, but investors weren't spooked. Stocks closed the session higher, with artificial intelligence names boosting the technology-heavy Nasdaq Composite to intraday and closing records. SpaceX shares jumped almost 8%, lifting the stock to its highest level since June and returning CEO Elon Musk to trillionaire status.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-06T21:38:02+08:00"
+    },
+    {
+      "id": "9806875c4810a0a461699c92a8dd78052f2831ebf61bf0be6f16ad1365739234",
+      "source": "CNBC",
+      "title": "Car buyers are stretching loans to afford payments — it's a 'potential warning light,' analyst says",
+      "publishedAtSgt": "2026-10-06T20:15:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/car-loans-are-getting-longer-as-monthly-payments-hit-record-highs.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "\"Monthly payments are rising because buyers are borrowing significantly more money overall,\" said Joseph Yoon, consumer insights analyst at Edmunds. \"But that gap could become harder to sustain if energy costs remain elevated and the conflict in the Middle East remains unresolved.\" High oil prices in the global market have driven U.S.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-06T21:38:01+08:00"
+    },
+    {
+      "id": "6a3dcb7019d4405c801b82fcab79ad65c04e1dc6951d5c4fcff327f6a8f2cd4f",
+      "source": "CNBC",
+      "title": "Unsure how long this AI bull has? Bonds now offer a cushion at the best values in years",
+      "publishedAtSgt": "2026-10-06T19:08:28+08:00",
+      "url": "https://www.cnbc.com/2026/10/06/unsure-how-long-this-ai-bull-has-bonds-now-offer-a-cushion-at-the-best-values-in-years.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "The S&P forward P/E has compressed from 23 a year ago to 19 today, which can be read as a signal both that investors are reluctant to pay up for current record profit margins and next year's decelerating growth — and that rising government-bond yields are relevant to the aggregate cost of capital for companies.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-06T21:38:01+08:00"
+    },
+    {
       "id": "41877e23ea510b7bb2a9375971a9dba5414a938caeb6ca7be409d9f66f2dc391",
       "source": "CNBC",
       "title": "Barbie maker Mattel faces investor pressure to consider a sale amid stagnating growth",
@@ -209,6 +331,6 @@
       "collectedAtSgt": "2026-10-06T06:24:28+08:00"
     }
   ],
-  "articleCount": 13,
-  "updatedAtSgt": "2026-10-06T18:36:54+08:00"
+  "articleCount": 21,
+  "updatedAtSgt": "2026-10-06T21:38:02+08:00"
 }
