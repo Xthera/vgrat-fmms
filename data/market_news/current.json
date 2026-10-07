@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-10-07T12:38:36+08:00",
+  "generatedAtSgt": "2026-10-07T15:37:52+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,21 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "5d20cb98b9eabf860fc9fd9c78c1348fd792f9b38f9d1bc51aaf05b3795633c1",
+      "source": "CNBC",
+      "title": "CNBC Daily Open: AI rally defies bond market rout",
+      "publishedAtSgt": "2026-10-07T14:28:35+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/daily-open-ai-rally-bond-market-rout.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "The AI bulls are trampling the bond market canaries in the coal mine. Temasek, Singapore's state-owned investment giant, has cautioned that a reversal in the AI trade poses the biggest risk to markets right now. Inflation in India has been rising for 10 straight months, while economic growth has remained strong despite external challenges.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-07T15:37:52+08:00"
+    },
     {
       "id": "8bef1830b0236a99635de826b197d5c9f5c513072ae93423b14707cae2e8052f",
       "source": "CNBC",
@@ -1542,21 +1557,6 @@
         "finance"
       ],
       "collectedAtSgt": "2026-10-02T12:09:48+08:00"
-    },
-    {
-      "id": "fdc37d4078f6164344955f48e262146deed0172c4b7af46bcc4e2ded87da74a3",
-      "source": "CNBC",
-      "title": "Ex-Disney CEO Bob Chapek says he raised concerns with the board 'weekly' during Iger power battle",
-      "publishedAtSgt": "2026-09-29T00:02:17+08:00",
-      "url": "https://www.cnbc.com/2026/09/28/disney-bob-chapek-bob-iger-power-battle-board.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "Former Disney CEO Bob Chapek said Monday he voiced concerns about then-Executive Chairman Bob Iger to the company's board \"weekly\" during his brief tenure as head of the House of Mouse. Chapek has remained tight-lipped about his firing from the media giant nearly four years ago, but opened up about his experience in a new tell-all memoir, \"Behind the Castle Walls: My Thirty Years at the Happiest Place on Earth,\" and in an interview with CNBC's \"Squawk Box.\" Once head of Disney's theme park and...",
-      "feeds": [
-        "business"
-      ],
-      "collectedAtSgt": "2026-10-02T12:09:47+08:00"
     }
   ]
 }

@@ -5,6 +5,21 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "5d20cb98b9eabf860fc9fd9c78c1348fd792f9b38f9d1bc51aaf05b3795633c1",
+      "source": "CNBC",
+      "title": "CNBC Daily Open: AI rally defies bond market rout",
+      "publishedAtSgt": "2026-10-07T14:28:35+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/daily-open-ai-rally-bond-market-rout.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "The AI bulls are trampling the bond market canaries in the coal mine. Temasek, Singapore's state-owned investment giant, has cautioned that a reversal in the AI trade poses the biggest risk to markets right now. Inflation in India has been rising for 10 straight months, while economic growth has remained strong despite external challenges.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-07T15:37:52+08:00"
+    },
+    {
       "id": "8bef1830b0236a99635de826b197d5c9f5c513072ae93423b14707cae2e8052f",
       "source": "CNBC",
       "title": "India’s central bank hikes rates for the first time since 2023 as inflation creeps up",
@@ -176,6 +191,6 @@
       "collectedAtSgt": "2026-10-07T03:35:34+08:00"
     }
   ],
-  "articleCount": 11,
-  "updatedAtSgt": "2026-10-07T12:38:36+08:00"
+  "articleCount": 12,
+  "updatedAtSgt": "2026-10-07T15:37:52+08:00"
 }
