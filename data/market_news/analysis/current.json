@@ -1,10 +1,72 @@
 {
-  "generatedAtSgt": "2026-10-07T18:52:56.145251+08:00",
+  "generatedAtSgt": "2026-10-07T21:55:13.548169+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 117,
+  "articleCount": 119,
   "analyses": [
+    {
+      "articleId": "82603bc50af84126603713e90ee936a57b85d55a7fb345bb759828733424ba90",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Unrest in France intensifies economic and political challenges as the budget deficit topped 5.1% of GDP last year, while the Bank of France Governor dismissed the notion of imminent ECB assistance.",
+      "assetClasses": [
+        "Bonds",
+        "Equities"
+      ],
+      "geographies": [
+        "France",
+        "Europe"
+      ],
+      "sectors": [
+        "Financials",
+        "Government"
+      ],
+      "investorImpact": "Investors holding French sovereign debt and European equities face heightened volatility and risk premiums due to fiscal deficits, political deadlock, and student protests.",
+      "reasoning": "Classified as MARKET due to the direct mention of bond markets, fiscal deficits, and central bank commentary. It is important for monitoring European sovereign risk.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "France is caught between angry students and unforgiving bond markets",
+      "publishedAtSgt": "2026-10-07T21:23:31+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/french-student-protests-budget-deadlock.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-07T21:38:54+08:00"
+    },
+    {
+      "articleId": "20d2dbf98b8817b92ff81c653b85e8ebb5adb37ac883bf6e5d7d92889ff827b5",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "According to the U.S. Energy Information Administration's Winter Fuels Outlook, home heating oil prices are projected to average $5.26 a gallon, representing a 34% increase from last winter and causing winter bills for users to potentially rise by 21%.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Utilities",
+        "Consumer Discretionary"
+      ],
+      "investorImpact": "The surge in heating oil prices signals localized inflationary pressures and increased energy costs for consumers, which may affect discretionary spending and energy sector dynamics.",
+      "reasoning": "The article is classified as MARKET because it details commodity price forecasts and consumer cost increases reported by the EIA, making it relevant for energy market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Home heating oil prices are soaring — and users' winter bills could rise 21%, federal outlook shows",
+      "publishedAtSgt": "2026-10-07T20:35:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/home-heating-oil-costs-winter.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-07T21:38:55+08:00"
+    },
     {
       "articleId": "4cc006f7f306dfdd48d59d4238886269bcfcff9feb1300a4dfa1611867175d8d",
       "relevant": true,
