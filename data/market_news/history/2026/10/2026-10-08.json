@@ -5,6 +5,68 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "793e9a5e6e9c9a4ded33510815d46c981442b79fae3cd7fb707d0b99a0357b24",
+      "source": "CNBC",
+      "title": "Anthropic will be 'most ridiculous IPO' of year, analyst says",
+      "publishedAtSgt": "2026-10-08T06:29:41+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/anthropic-will-be-most-ridiculous-ipo-of-year-analyst-says.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "As Anthropic barrels toward a potential $2 trillion market cap on the Nasdaq, one research firm is valuing the artificial intelligence company at a mere $150 billion and says Wall Street is about to face an \"unprecedented test of investor gullibility.\" In a report on Tuesday, independent financial research provider New Constructs called Anthropic's upcoming offering the \"most ridiculous IPO of 2026.\" To reach its desired valuation, the firm estimates Anthropic would need to record double the...",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-08T06:34:52+08:00"
+    },
+    {
+      "id": "78d587064c304ce13b13246c84e2172d2b96fc504402c29645fc97ccc8604be4",
+      "source": "CNBC",
+      "title": "Cramer says higher rates are splitting the market in two — and AI stocks have a big advantage",
+      "publishedAtSgt": "2026-10-08T06:22:32+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/jim-cramer-spacex-wall-street-bull-case.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "CNBC's Jim Cramer said Wednesday that rising borrowing costs are dividing the stock market into two camps: companies constrained by the bond market and artificial intelligence businesses that seem largely insulated from higher rates. The \"Mad Money\" host said Wednesday's 10-year Treasury note auction reminded him of his hedge fund days, when investors waited for the results of government bond sales before buying stocks because a poorly received sale could send rates higher and equities lower.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-08T06:34:52+08:00"
+    },
+    {
+      "id": "4507a16d6594e0abefbc0f219d477425015f43aa51b50173fdf744b1b73e9253",
+      "source": "CNBC",
+      "title": "Levi Strauss hikes profit guidance after tariff refunds, but its sales outlook is less optimistic",
+      "publishedAtSgt": "2026-10-08T05:31:40+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/levi-strauss-levi-q3-2026-earnings.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Levi Strauss on Wednesday increased its profit outlook after it received tariff refunds, but gave less rosy revenue guidance. The company also lowered its net revenue growth guidance for the full year to 7%, the bottom of its previously provided range of a 7% to 7.5% increase. Shares of Levi were roughly flat in extended trading after initially rising.",
+      "feeds": [
+        "latest",
+        "business",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-08T06:34:51+08:00"
+    },
+    {
+      "id": "a38801f88bd2c8de4584795f39c18fb1e1ffdb8ad7ca4e139d9b44d639d6c170",
+      "source": "CNBC",
+      "title": "SpaceX’s plans to buy more Nvidia GPUs is keeping Jim Cramer bullish on the chip stock",
+      "publishedAtSgt": "2026-10-08T04:24:48+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/07/spacexs-plans-to-buy-more-nvidia-gpus-is-keeping-jim-cramer-bullish-on-the-chip-stock-.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "The FT said the deal could include $10 billion in bank loans and an additional $30 billion in investment-grade debt. So, that tells you something about the productivity of Nvidia's technology and the rentability of it.\" While dropping roughly 2.5% in Wednesday's tough market for tech stocks, SpaceX has been on the march lately — up nearly 60% since its all-time low of roughly $105 on Aug.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-08T06:34:51+08:00"
+    },
+    {
       "id": "0876b463a9777873103ef8f66800210374168371a51d41bc9e6ad2f4230d831b",
       "source": "CNBC",
       "title": "Modelo owner Constellation is getting creative to bring back beer drinkers as overall demand weakens",
@@ -87,6 +149,6 @@
       "collectedAtSgt": "2026-10-08T00:39:17+08:00"
     }
   ],
-  "articleCount": 5,
-  "updatedAtSgt": "2026-10-08T03:35:16+08:00"
+  "articleCount": 9,
+  "updatedAtSgt": "2026-10-08T06:34:52+08:00"
 }

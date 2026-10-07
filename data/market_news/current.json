@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-10-08T03:35:16+08:00",
+  "generatedAtSgt": "2026-10-08T06:34:52+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,68 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "793e9a5e6e9c9a4ded33510815d46c981442b79fae3cd7fb707d0b99a0357b24",
+      "source": "CNBC",
+      "title": "Anthropic will be 'most ridiculous IPO' of year, analyst says",
+      "publishedAtSgt": "2026-10-08T06:29:41+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/anthropic-will-be-most-ridiculous-ipo-of-year-analyst-says.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "As Anthropic barrels toward a potential $2 trillion market cap on the Nasdaq, one research firm is valuing the artificial intelligence company at a mere $150 billion and says Wall Street is about to face an \"unprecedented test of investor gullibility.\" In a report on Tuesday, independent financial research provider New Constructs called Anthropic's upcoming offering the \"most ridiculous IPO of 2026.\" To reach its desired valuation, the firm estimates Anthropic would need to record double the...",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-08T06:34:52+08:00"
+    },
+    {
+      "id": "78d587064c304ce13b13246c84e2172d2b96fc504402c29645fc97ccc8604be4",
+      "source": "CNBC",
+      "title": "Cramer says higher rates are splitting the market in two — and AI stocks have a big advantage",
+      "publishedAtSgt": "2026-10-08T06:22:32+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/jim-cramer-spacex-wall-street-bull-case.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "CNBC's Jim Cramer said Wednesday that rising borrowing costs are dividing the stock market into two camps: companies constrained by the bond market and artificial intelligence businesses that seem largely insulated from higher rates. The \"Mad Money\" host said Wednesday's 10-year Treasury note auction reminded him of his hedge fund days, when investors waited for the results of government bond sales before buying stocks because a poorly received sale could send rates higher and equities lower.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-08T06:34:52+08:00"
+    },
+    {
+      "id": "4507a16d6594e0abefbc0f219d477425015f43aa51b50173fdf744b1b73e9253",
+      "source": "CNBC",
+      "title": "Levi Strauss hikes profit guidance after tariff refunds, but its sales outlook is less optimistic",
+      "publishedAtSgt": "2026-10-08T05:31:40+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/levi-strauss-levi-q3-2026-earnings.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Levi Strauss on Wednesday increased its profit outlook after it received tariff refunds, but gave less rosy revenue guidance. The company also lowered its net revenue growth guidance for the full year to 7%, the bottom of its previously provided range of a 7% to 7.5% increase. Shares of Levi were roughly flat in extended trading after initially rising.",
+      "feeds": [
+        "latest",
+        "business",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-08T06:34:51+08:00"
+    },
+    {
+      "id": "a38801f88bd2c8de4584795f39c18fb1e1ffdb8ad7ca4e139d9b44d639d6c170",
+      "source": "CNBC",
+      "title": "SpaceX’s plans to buy more Nvidia GPUs is keeping Jim Cramer bullish on the chip stock",
+      "publishedAtSgt": "2026-10-08T04:24:48+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/07/spacexs-plans-to-buy-more-nvidia-gpus-is-keeping-jim-cramer-bullish-on-the-chip-stock-.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "The FT said the deal could include $10 billion in bank loans and an additional $30 billion in investment-grade debt. So, that tells you something about the productivity of Nvidia's technology and the rentability of it.\" While dropping roughly 2.5% in Wednesday's tough market for tech stocks, SpaceX has been on the march lately — up nearly 60% since its all-time low of roughly $105 on Aug.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-08T06:34:51+08:00"
+    },
     {
       "id": "0876b463a9777873103ef8f66800210374168371a51d41bc9e6ad2f4230d831b",
       "source": "CNBC",
@@ -1506,66 +1568,6 @@
       "relevanceScore": 91,
       "relevanceReason": "strong_market_title",
       "summary": "CNBC's Jim Cramer said Wednesday that investors shouldn't jump ship despite signs of slowing activity across key parts of the economy. Shares of Morgan Stanley and Goldman Sachs — the premier investment banks on Wall Street — both declined roughly 12% in the month of September and set their highs for the year in July.",
-      "feeds": [
-        "technology"
-      ],
-      "collectedAtSgt": "2026-10-02T12:10:01+08:00"
-    },
-    {
-      "id": "1c1a298668eca3bfedca3f10f89f21e0e1cf0f4aad3cec22ed54c74ad4f80ae8",
-      "source": "CNBC",
-      "title": "Trump's meeting with tech leaders leaves AI safety more unsettled than ever",
-      "publishedAtSgt": "2026-10-01T06:26:49+08:00",
-      "url": "https://www.cnbc.com/2026/09/30/after-trump-meeting-with-tech-leaders-ai-safety-in-more-chaotic-state.html",
-      "category": "TECHNOLOGY",
-      "relevanceScore": 81,
-      "relevanceReason": "technology_business_or_infrastructure",
-      "summary": "After President Donald Trump's lunch with AI leaders on Tuesday, the leading artificial intelligence companies are right where they were before: policing themselves. Mark Warner, D-Va., said Tuesday that he's introduced legislation to require \"rigorous testing and evaluation\" of leading AI technology and to strengthen security and reporting \"before the most powerful models are deployed.\" \"The companies building the most powerful AI systems are warning us that the technology is advancing faster...",
-      "feeds": [
-        "technology"
-      ],
-      "collectedAtSgt": "2026-10-02T12:10:02+08:00"
-    },
-    {
-      "id": "1796cd95e0dbd119e157a729dc0ae8277fc034f50223972530a93cfdce056b0e",
-      "source": "CNBC",
-      "title": "Blue Origin's first outside funding round is 'oversubscribed' and not closed yet, CEO says",
-      "publishedAtSgt": "2026-10-01T05:55:01+08:00",
-      "url": "https://www.cnbc.com/2026/09/30/blue-origin-funding-round.html",
-      "category": "MARKET",
-      "relevanceScore": 92,
-      "relevanceReason": "strong_market_title",
-      "summary": "Blue Origin CEO Dave Limp said the company's first-ever outside capital raise is not closed yet and is drawing heavy investor interest, describing the funding round as \"oversubscribed.\" \"I'm so amazed the investor community embraces space this much. Last week, the Wall Street Journal reported that the company had already raised $10 billion at a valuation of $140 billion.",
-      "feeds": [
-        "technology"
-      ],
-      "collectedAtSgt": "2026-10-02T12:10:01+08:00"
-    },
-    {
-      "id": "7f7ce7f4baeea72bebc4c974b5acc3f9b1a7d7d598960814a7061839c424a83c",
-      "source": "CNBC",
-      "title": "Meta stock enjoys best month since 2022 on AI momentum",
-      "publishedAtSgt": "2026-10-01T05:36:47+08:00",
-      "url": "https://www.cnbc.com/2026/09/30/meta-stock-best-month-2013-ai.html",
-      "category": "TECHNOLOGY",
-      "relevanceScore": 52,
-      "relevanceReason": "supporting_technology_description",
-      "summary": "Meta's stock just wrapped its best month since 2022 as investors cheer the social media giant's recent momentum in artificial intelligence. The company's shares closed at $725.18 Wednesday, representing a 27% increase from the closing price of $572.34 at the end of August. 8 debut of its Muse personal AI agent app, which became a major hit and topped rival OpenAI's ChatGPT in Apple iOS downloads.",
-      "feeds": [
-        "technology"
-      ],
-      "collectedAtSgt": "2026-10-02T12:10:01+08:00"
-    },
-    {
-      "id": "0102f9a2b8aebfba5561ea65fd3e369811490758b582c470001131c07ed8e06d",
-      "source": "CNBC",
-      "title": "Grindr expands beyond dating with $250 million telehealth acquisition of PurposeMed",
-      "publishedAtSgt": "2026-10-01T04:45:01+08:00",
-      "url": "https://www.cnbc.com/2026/09/30/grindr-purposemed-freddie-telehealth-acquisition.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "The LGBTQ-focused dating platform will pay $190 million in cash and $60 million in Grindr common stock, according to the terms of the agreement. \"My hope and dream here is that we'll take the 10% growth in PrEP that we see today per year, and maybe double that,\" Arison said. \"If you did that, you're getting about 300,000 more people on PrEP over the next five years, and that's roughly about 5,000 patients not getting HIV.\" The expansion into healthcare also comes as investors have focused on...",
       "feeds": [
         "technology"
       ],
