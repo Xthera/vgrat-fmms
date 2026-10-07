@@ -1,10 +1,105 @@
 {
-  "generatedAtSgt": "2026-10-07T09:52:29.508066+08:00",
+  "generatedAtSgt": "2026-10-07T12:54:14.912115+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 110,
+  "articleCount": 113,
   "analyses": [
+    {
+      "articleId": "8bef1830b0236a99635de826b197d5c9f5c513072ae93423b14707cae2e8052f",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "India's central bank has hiked interest rates for the first time since 2023 in response to creeping inflation, while the World Bank projects India's economic growth to slow to 7.1% for the financial year ending March 2027.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Currencies"
+      ],
+      "geographies": [
+        "India"
+      ],
+      "sectors": [
+        "Financials",
+        "Banking"
+      ],
+      "investorImpact": "Higher interest rates and slowing economic growth in India may weigh on domestic equities and borrowing costs while impacting currency valuations.",
+      "reasoning": "The article discusses critical macroeconomic shifts in an emerging market, specifically interest rate hikes and slowing GDP growth projections, which are key for fund and market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "India’s central bank hikes rates for the first time since 2023 as inflation creeps up",
+      "publishedAtSgt": "2026-10-07T12:38:00+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/india-rbi-interest-rates-inflation.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-07T12:38:36+08:00"
+    },
+    {
+      "articleId": "bf08ea2a60b1277b2f99d2d8f446d9cd2a7c7cc823387cb410c262fef22691c7",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Oil prices rose as renewed concerns over Houthi attacks on Saudi Arabia and Iranian actions targeting tankers in the Strait of Hormuz eclipsed the supply recovery from the East-West Pipeline.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "Saudi Arabia",
+        "Iran",
+        "Middle East"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "Geopolitical tensions in the Middle East and threats to critical shipping lanes like the Strait of Hormuz create upward price pressure and volatility for crude oil markets, impacting energy sector equities and inflation expectations.",
+      "reasoning": "The article details geopolitical supply risks directly affecting global oil prices and trade routes, making it a high-importance market event relevant for commodity and energy sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Oil rises as concerns over Houthi attacks on Saudi Arabia eclipse supply recovery",
+      "publishedAtSgt": "2026-10-07T12:24:10+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/oil-prices-today-brent-wti-hormuz.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-07T12:38:36+08:00"
+    },
+    {
+      "articleId": "966b707e980554a555ab6453f4d3b7e55fcf8353ead5020ac6b05c9438b6b99e",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Singapore's Foreign Minister Vivian Balakrishnan stated that President Donald Trump is not completely wrong in suggesting that Strait of Hormuz energy flow disruptions are primarily an Asian problem, given that Asian economies are major importers of energy passing through the crucial waterway.",
+      "assetClasses": [
+        "Commodities",
+        "Equities"
+      ],
+      "geographies": [
+        "Asia",
+        "Singapore",
+        "Middle East"
+      ],
+      "sectors": [
+        "Energy",
+        "Transportation"
+      ],
+      "investorImpact": "Potential disruptions to the Strait of Hormuz pose a significant risk to energy supplies in Asia, which could drive up energy prices, increase operational costs for energy-dependent sectors, and create volatility in regional equity and commodity markets.",
+      "reasoning": "Classified as GEOPOLITICAL due to its focus on Middle East energy routes and Asian foreign policy commentary. It is important for investors tracking energy security and supply chain vulnerabilities in Asia.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump isn't ‘completely wrong’: Hormuz disruption is Asia’s problem, says Singapore's foreign minister",
+      "publishedAtSgt": "2026-10-07T10:10:52+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/hormuz-iran-war-singapore-vivian-balakrishnan.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-07T12:38:36+08:00"
+    },
     {
       "articleId": "125ab71a8d3397be59d510c69403a6a5c5fa5d3045d188f5d5be24630b595367",
       "relevant": true,
