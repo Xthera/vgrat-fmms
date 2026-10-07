@@ -1,10 +1,188 @@
 {
-  "generatedAtSgt": "2026-10-07T21:55:13.548169+08:00",
+  "generatedAtSgt": "2026-10-08T03:50:58.244385+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 119,
+  "articleCount": 122,
   "analyses": [
+    {
+      "articleId": "0876b463a9777873103ef8f66800210374168371a51d41bc9e6ad2f4230d831b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "LOW",
+      "summary": "Constellation Brands, owner of Modelo, is using creative strategies to attract beer drinkers as overall demand weakens and beer depletions decline slightly during the quarter, signaling softer consumer demand.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Staples",
+        "Beverages"
+      ],
+      "investorImpact": "Investors should note softening demand trends in the beverage sector, which could impact revenue growth and sales volumes for consumer goods companies.",
+      "reasoning": "Classified as MARKET because it reports on consumer demand trends and sales metrics for a major beverage corporation. Significance is LOW as it is a single-company earnings/demand report without broader systemic impact.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Modelo owner Constellation is getting creative to bring back beer drinkers as overall demand weakens",
+      "publishedAtSgt": "2026-10-08T03:14:03+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/constellation-brands-earnings-beer-demand.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-08T03:35:16+08:00"
+    },
+    {
+      "articleId": "0b7931a8be02be61f0184f735b2786a52edeec9629ee69b83cd542fb52b22935",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Microsoft has announced the preorder for its new $2,599 Surface Laptop Ultra featuring an Nvidia AI chip, marking a push toward on-device artificial intelligence workloads rather than relying solely on cloud infrastructure.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Highlights the ongoing hardware upgrade cycle driven by edge AI deployment, benefiting major technology and semiconductor companies like Microsoft and Nvidia.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on new AI hardware releases and edge computing trends. It holds medium importance for illustrating the commercialization of on-device AI capabilities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Microsoft to sell $2,599 Surface Laptop Ultra containing Nvidia AI chip",
+      "publishedAtSgt": "2026-10-08T02:55:10+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/microsoft-starts-taking-preorders-for-2599-surface-laptop-ultra.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 83,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-08T03:35:16+08:00"
+    },
+    {
+      "articleId": "efec4a58773d665c524112a9d53651d0a0223ac331deed2591896d49029b2aba",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "The S&P 500 closed at record highs as investors remain optimistic that AI capital expenditures will remain strong despite higher bond yields, with UBS forecasting the index to reach 8,400 by June next year.",
+      "assetClasses": [
+        "Equities",
+        "Bonds"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Investors are encouraged to remain positioned for market upside, as booming profits and robust AI-related capital expenditures are expected to propel equity markets higher despite macroeconomic headwinds like higher bond yields.",
+      "reasoning": "The article discusses major stock index performance, macroeconomic sentiment, and earnings forecasts which are vital for portfolio management and equity positioning, thus making it highly relevant for market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Here comes third-quarter earnings season. Booming profits could propel the S&P 500 to new heights",
+      "publishedAtSgt": "2026-10-08T02:19:53+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/here-comes-third-quarter-earnings-season-booming-profits-could-propel-the-sp-500-to-new-heights.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-08T03:35:16+08:00"
+    },
+    {
+      "articleId": "2436a58842b160e5ee2f096b3c26a635307a7821ea4fab8238b909c6fb7308b8",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Apollo and various banks are in talks to finance SpaceX's $40 billion Nvidia GPU purchase, following strong demand for bond sales from major tech companies like Meta, Amazon, and Google as the cost of the AI infrastructure buildout escalates.",
+      "assetClasses": [
+        "Fixed Income",
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials",
+        "Telecommunications"
+      ],
+      "investorImpact": "Highlights the massive and growing capital requirements for AI infrastructure financing, impacting fixed-income debt issuance supply and tech sector capital expenditure trends.",
+      "reasoning": "Classified as MARKET because it details major corporate debt and asset-backed financing talks for AI hardware purchases involving major financial institutions and tech companies.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Apollo, banks in talks to finance SpaceX's $40 billion Nvidia GPU purchase",
+      "publishedAtSgt": "2026-10-08T00:32:30+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/spacex-nvidia-chips-apollo-financing.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-08T03:35:16+08:00"
+    },
+    {
+      "articleId": "c115ad42df074921bf481b238dd2f349887081688c73a5f48d560d41a94628d8",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "According to the Federal Reserve's Survey of Consumer Expectations, the median view for inflation over the next 12 months rose to 3.9%, marking the highest level since May 2023, driven primarily by surging energy costs.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Energy"
+      ],
+      "investorImpact": "Rising inflation expectations complicate the Federal Reserve's monetary policy path, increasing the likelihood of higher-for-longer interest rates and creating headwinds for both equity and fixed income valuations.",
+      "reasoning": "The article highlights rising consumer inflation expectations reported by the Federal Reserve, which directly impacts macroeconomic outlook, interest rate projections, and asset pricing across multiple classes.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Inflation fears on the rise as one-year outlook in Fed survey hits highest level since May 2023",
+      "publishedAtSgt": "2026-10-08T00:18:22+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/inflation-fears-on-the-rise-as-one-year-outlook-in-fed-survey-hits-highest-since-may-2023.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-08T00:39:17+08:00"
+    },
+    {
+      "articleId": "f8adf627601199801f0e7d6186aba090e3781da0130a3b197ef7c8494702516c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Despite stocks hitting a record high and the Cboe VIX Index slipping below 15, options data showed significant bearish positioning, highlighted by a large SPY put spread trade targeting a drop of more than 18% in the S&P 500.",
+      "assetClasses": [
+        "Equities",
+        "Options"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors should note the underlying skepticism in the options market despite record equity highs, indicating potential downside protection strategies being deployed by large market participants.",
+      "reasoning": "The article discusses heavy bearish positioning in options despite record equity highs, highlighting market sentiment divergence that is valuable for portfolio risk management.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Stocks made a record high. Two big bearish trades point to skepticism",
+      "publishedAtSgt": "2026-10-07T21:59:16+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/stocks-made-a-record-high-two-big-bearish-trades-point-to-skepticism.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-08T00:39:20+08:00"
+    },
     {
       "articleId": "82603bc50af84126603713e90ee936a57b85d55a7fb345bb759828733424ba90",
       "relevant": true,
@@ -3523,103 +3701,6 @@
       "collectorRelevanceScore": 101,
       "collectorRelevanceReason": "strong_economic_title",
       "collectedAtSgt": "2026-10-02T12:09:50+08:00"
-    },
-    {
-      "articleId": "0ac4218ac5fe55cb86de1bd69dd543a6858aa841ae1bfa11f771990abe8ab8b4",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "POSITIVE",
-      "importance": "HIGH",
-      "summary": "China's Commerce Ministry confirmed that senior trade negotiators held their first AI talks with the U.S. and discussed reducing tariffs and extending trade arrangements agreed upon in Kuala Lumpur.",
-      "assetClasses": [
-        "Equities",
-        "Commodities"
-      ],
-      "geographies": [
-        "China",
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Trade"
-      ],
-      "investorImpact": "The opening of official AI talks and potential trade truce extensions between the U.S. and China reduce regulatory and tariff uncertainties, which is broadly positive for global equities, particularly technology and multinational trade sectors.",
-      "reasoning": "The article details a major geopolitical development involving bilateral negotiations on critical technology and trade between the world's two largest economies, making it highly relevant for monitoring global market risks and macroeconomic trends.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "China confirms first AI talks with U.S. have taken place, hints at trade truce extension",
-      "publishedAtSgt": "2026-09-24T22:16:27+08:00",
-      "url": "https://www.cnbc.com/2026/09/24/china-confirms-first-ai-talks-with-us-have-taken-place-hints-at-trade-truce-extension.html",
-      "collectorCategory": "GEOPOLITICAL",
-      "collectorRelevanceScore": 71,
-      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
-      "collectedAtSgt": "2026-10-02T12:09:50+08:00"
-    },
-    {
-      "articleId": "243f68871f37c3d9ab99f078f53e6addc4f250d4f1a25e10123505a23200f68d",
-      "relevant": true,
-      "category": "ECONOMIC",
-      "sentiment": "NEUTRAL",
-      "importance": "MEDIUM",
-      "summary": "Switzerland's central bank maintained its key interest rate at 0%, diverging from peers like the Fed, Bank of England, and ECB, which helps curb imported inflation through foreign capital inflows supporting the Swiss franc.",
-      "assetClasses": [
-        "Currencies",
-        "Fixed Income"
-      ],
-      "geographies": [
-        "Switzerland",
-        "Europe",
-        "United States",
-        "United Kingdom"
-      ],
-      "sectors": [
-        "Financials",
-        "Banking"
-      ],
-      "investorImpact": "Investors holding Swiss assets or trading currencies should note the diverging monetary policy stance of the Swiss National Bank compared to other major central banks, affecting currency valuations and inflation dynamics.",
-      "reasoning": "Classified as ECONOMIC because it concerns central bank monetary policy decisions and inflation rates. Significance is MEDIUM as it impacts currency markets and comparative global interest rate strategies.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Switzerland is keeping rates at 0% — for now",
-      "publishedAtSgt": "2026-09-24T19:34:56+08:00",
-      "url": "https://www.cnbc.com/2026/09/24/swiss-national-bank-interest-rates-inflation.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 58,
-      "collectorRelevanceReason": "supporting_market_description",
-      "collectedAtSgt": "2026-10-02T12:09:53+08:00"
-    },
-    {
-      "articleId": "07028f72c38995842ad7266d96a6d0c1e1ba6afa7701b80de64d22661e101d6d",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "POSITIVE",
-      "importance": "HIGH",
-      "summary": "The U.S.-China trade truce has been extended for two months as Chinese President Xi begins a state visit, following discussions and previous agreements between Xi and Trump.",
-      "assetClasses": [
-        "Equities",
-        "Commodities",
-        "Currencies"
-      ],
-      "geographies": [
-        "United States",
-        "China",
-        "South Korea"
-      ],
-      "sectors": [
-        "International Trade",
-        "General"
-      ],
-      "investorImpact": "The extension of the U.S.-China trade truce reduces near-term geopolitical and trade tensions, providing stability for global equity markets, supply chains, and cross-border commerce.",
-      "reasoning": "Classified as GEOPOLITICAL due to the high-level state visit and trade truce between the U.S. and China. It is highly relevant to market sentiment and fund monitoring as it averts immediate escalation of trade barriers.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "U.S.-China trade truce extended for two months, Bessent says, as Xi begins state visit",
-      "publishedAtSgt": "2026-09-24T12:55:59+08:00",
-      "url": "https://www.cnbc.com/2026/09/24/us-china-trade-truce-bessent-trump-xi.html",
-      "collectorCategory": "GEOPOLITICAL",
-      "collectorRelevanceScore": 71,
-      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
-      "collectedAtSgt": "2026-10-02T12:09:51+08:00"
     }
   ]
 }
