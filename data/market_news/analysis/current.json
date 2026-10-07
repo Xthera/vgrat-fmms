@@ -1,10 +1,42 @@
 {
-  "generatedAtSgt": "2026-10-07T12:54:14.912115+08:00",
+  "generatedAtSgt": "2026-10-07T15:53:23.695587+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 113,
+  "articleCount": 114,
   "analyses": [
+    {
+      "articleId": "5d20cb98b9eabf860fc9fd9c78c1348fd792f9b38f9d1bc51aaf05b3795633c1",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "The AI stock rally continues to defy a broader bond market rout, while Singapore's Temasek warns that an AI trade reversal is a major market risk. Additionally, India's inflation has risen for ten consecutive months alongside strong economic growth.",
+      "assetClasses": [
+        "Equities",
+        "Bonds"
+      ],
+      "geographies": [
+        "Singapore",
+        "India",
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors face conflicting signals as strong AI-driven equity momentum counters bond market weakness and inflation pressures in key emerging markets like India, alongside systemic warnings regarding AI concentration risk from major institutional investors.",
+      "reasoning": "Classified as MARKET because it covers broader market dynamics, specifically the tension between the AI equity rally and bond market stress. Sentiment is MIXED due to strong growth and AI momentum offset by bond routs, rising inflation in India, and warnings of an AI trade reversal. It is important for fund monitoring given its focus on systemic risks in major tech sectors and macroeconomic indicators.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "CNBC Daily Open: AI rally defies bond market rout",
+      "publishedAtSgt": "2026-10-07T14:28:35+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/daily-open-ai-rally-bond-market-rout.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-07T15:37:52+08:00"
+    },
     {
       "articleId": "8bef1830b0236a99635de826b197d5c9f5c513072ae93423b14707cae2e8052f",
       "relevant": true,
