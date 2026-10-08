@@ -1669,6 +1669,17 @@ function initializePerformanceTabs() {
 }
 
 
+/* Funds still running. Closed funds (past prices only) are shown in
+   the Fund Explorer and comparison, but never ranked or monitored. */
+function activeFunds() {
+
+    return state.data.funds.filter(
+        fund => !fund?.closed
+    );
+
+}
+
+
 function buildPerformanceResults() {
 
     if (
@@ -1708,7 +1719,7 @@ function buildPerformanceResults() {
     state.performance =
         calculateAllPerformance(
 
-            state.data.funds,
+            activeFunds(),
 
             state.data.bidHistory,
 
@@ -1725,7 +1736,7 @@ function buildPerformanceResults() {
     try {
 
         initializeMonitoring({
-            funds: state.data.funds,
+            funds: activeFunds(),
             historyIndex,
             openProfile: id => openFundProfile(id)
         });
@@ -1744,7 +1755,7 @@ function buildPerformanceResults() {
     try {
 
         initializeReports({
-            funds: state.data.funds,
+            funds: activeFunds(),
             historyIndex
         });
 
@@ -3711,7 +3722,7 @@ function initializeNewsFundLinks() {
 
         fundLinker =
             createFundLinker(
-                state.data.funds
+                activeFunds()
             );
 
     } catch (error) {
@@ -3754,7 +3765,7 @@ function initializeNewsFundLinks() {
 function updateFundUniverseStatus() {
 
     const fundCount =
-        state.data.funds.length;
+        activeFunds().length;
 
 
     const element =
