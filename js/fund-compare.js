@@ -657,7 +657,7 @@ function renderTable(model) {
                     <td>
                         <div class="compare-fund-cell">
                             <span class="compare-swatch" style="background:${color}"></span>
-                            <span class="compare-fund-name">${escapeHtml(item.fund.fundName ?? item.id)}${item.fund.closed ? ` <span class="explorer-closed-tag">Closed</span>` : ""}</span>
+                            <span class="compare-fund-name">${escapeHtml(item.fund.fundName ?? item.id)}</span>
                         </div>
                     </td>
                     <td class="fund-code-cell" data-label="Code">${escapeHtml(item.fund.fundCode ?? "—")}</td>
@@ -746,7 +746,7 @@ function renderSuggestions() {
                     data-add-fund="${escapeHtml(fundId(fund))}"
                 >
                     <span class="compare-suggestion-name">${escapeHtml(fund.fundName ?? "")}</span>
-                    <span class="compare-suggestion-code">${escapeHtml(fund.fundCode ?? "")}${fund.closed ? ` · <span class="explorer-closed-tag">Closed</span>` : ""}</span>
+                    <span class="compare-suggestion-code">${escapeHtml(fund.fundCode ?? "")}</span>
                 </li>
             `)
             .join("");
