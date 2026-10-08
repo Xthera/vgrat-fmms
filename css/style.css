@@ -8625,3 +8625,30 @@ html[data-theme="light"] .palette-swatch {
 .rpt-table.rpt-table-wide td:first-child {
     width: 22%;
 }
+
+/* Footer: Feedback button, right of the version number */
+.footer-feedback {
+    flex-shrink: 0;
+
+    display: inline-flex;
+    align-items: center;
+
+    height: calc(24px * var(--font-scale, 1));
+    padding: 0 10px;
+
+    border: 1px solid var(--border-medium);
+    border-radius: 999px;
+
+    color: var(--text-secondary);
+    text-decoration: none;
+
+    font-size: calc(11px * var(--font-scale, 1));
+    font-weight: 700;
+    line-height: 1;
+}
+
+.footer-feedback:hover,
+.footer-feedback:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+}
