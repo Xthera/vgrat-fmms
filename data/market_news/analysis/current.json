@@ -1,10 +1,67 @@
 {
-  "generatedAtSgt": "2026-10-08T06:50:23.977025+08:00",
+  "generatedAtSgt": "2026-10-08T09:52:48.248435+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 126,
+  "articleCount": 128,
   "analyses": [
+    {
+      "articleId": "7757b47376c9b848108e0bbad134190c7803e6307ea86f8a89086de14f86ee32",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Samsung forecasts a record third-quarter profit of $80 billion driven by robust AI-fueled chip demand, yet the results still fell short of elevated market expectations. Analysts note that tight memory supply and AI infrastructure spending continue to support the broader semiconductor sector despite the demanding expectations.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "South Korea",
+        "Asia"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors should note that even record profits from memory giants can lead to muted stock reactions if expectations are excessively high, reflecting volatility risks in the AI hardware trade.",
+      "reasoning": "The article is classified as MARKET because it details corporate earnings and market reactions for a major global tech bellwether. Sentiment is MIXED due to record profits offset by missing overly demanding analyst expectations. It is important for monitoring semiconductor and AI infrastructure trends.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Samsung forecasts record third-quarter profit of $80 billion as AI boom fuels chip demand",
+      "publishedAtSgt": "2026-10-08T08:51:23+08:00",
+      "url": "https://www.cnbc.com/2026/10/08/samsung-q3-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-08T09:37:08+08:00"
+    },
+    {
+      "articleId": "fead37a43eede596056634a208a40ca720adfb30ce3a266fc600f71611c55a05",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "Trump trade chief Jamieson Greer reported higher cash holdings and significant law firm pay in his newly obtained 2025 annual financial disclosure, offering a look at his finances after leaving King & Spalding to join the administration.",
+      "assetClasses": [],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Government",
+        "Legal Services"
+      ],
+      "investorImpact": "The financial disclosure of a key U.S. trade official provides transparency regarding personal holdings but has minimal direct impact on asset prices or broader macroeconomic trends.",
+      "reasoning": "Classified as GEOPOLITICAL due to its focus on a top government trade official, but deemed of low overall importance and not critical for immediate fund monitoring as it details personal financial disclosures rather than sweeping policy shifts.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Trump trade chief Greer reports higher cash holdings as law firm pay topped $650K",
+      "publishedAtSgt": "2026-10-08T07:10:54+08:00",
+      "url": "https://www.cnbc.com/2026/10/07/jamieson-greer-financial-disclosure-coupang.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-08T09:37:08+08:00"
+    },
     {
       "articleId": "793e9a5e6e9c9a4ded33510815d46c981442b79fae3cd7fb707d0b99a0357b24",
       "relevant": true,
