@@ -926,7 +926,6 @@ function dividendSection(details) {
     }
 
     const period = payoutPeriod(history);
-    const latest = [...history].sort((a, b) => String(b.exDate).localeCompare(String(a.exDate)))[0];
     const usualMonths = period.label === "Monthly"
         ? "every month"
         : period.months.length && period.label !== "Irregular"
@@ -942,11 +941,6 @@ function dividendSection(details) {
                     <span>Payout frequency</span>
                     <strong>${escapeHtml(period.label)}</strong>
                     ${usualMonths ? `<em>${period.label === "Monthly" ? "Paid every month" : `Usually ${escapeHtml(usualMonths)}`}</em>` : period.label === "Not enough history" ? `<em>Only one payout on record</em>` : ""}
-                </div>
-                <div class="fund-payout-item">
-                    <span>Last payout</span>
-                    <strong>${escapeHtml(formatIsoDate(latest?.exDate))}</strong>
-                    <em>${escapeHtml(formatRate(latest?.rate, unit))}</em>
                 </div>
             </div>
 
