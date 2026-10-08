@@ -8652,3 +8652,33 @@ html[data-theme="light"] .palette-swatch {
     border-color: var(--accent);
     color: var(--accent);
 }
+
+/* Fund popup — dividend history: date above rate, all text kept inside its box */
+.fund-dividends {
+    grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
+}
+
+.fund-dividend {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 2px;
+
+    min-width: 0;
+    overflow: hidden;
+}
+
+.fund-dividend span,
+.fund-dividend strong {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.fund-dividend span {
+    color: var(--text-muted);
+    font-size: calc(11px * var(--font-scale, 1));
+}
+
+.fund-dividend strong {
+    font-size: calc(13px * var(--font-scale, 1));
+}
