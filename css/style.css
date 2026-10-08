@@ -8682,3 +8682,35 @@ html[data-theme="light"] .palette-swatch {
 .fund-dividend strong {
     font-size: calc(13px * var(--font-scale, 1));
 }
+
+/* Fund Explorer: fund whose latest data update failed (last good data shown) */
+.explorer-stale-tag {
+    color: #d4a017;
+    font-weight: 650;
+}
+
+.news-badge.explorer-stale-badge {
+    border-color: rgba(212, 160, 23, 0.45);
+    background: rgba(212, 160, 23, 0.12);
+    color: #d4a017;
+}
+
+html[data-theme="light"] .explorer-stale-tag,
+html[data-theme="light"] .news-badge.explorer-stale-badge {
+    color: #8a6400;
+}
+
+/* Closed funds (past prices only) */
+.explorer-closed-tag {
+    color: var(--text-muted, #9aa4b2);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-size: .85em;
+}
+
+.news-badge.explorer-closed-badge {
+    background: rgba(154, 164, 178, .16);
+    color: var(--text-muted, #9aa4b2);
+    border: 1px solid rgba(154, 164, 178, .35);
+}
