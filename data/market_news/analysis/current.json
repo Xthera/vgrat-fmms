@@ -1,10 +1,189 @@
 {
-  "generatedAtSgt": "2026-10-09T18:53:45.388695+08:00",
+  "generatedAtSgt": "2026-10-09T21:55:28.501992+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 145,
+  "articleCount": 151,
   "analyses": [
+    {
+      "articleId": "87694e741d20f9cd7aa008418897934680439a3261ffa1f42770163cc5341941",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Tech stocks have shown unexpected resilience amid surging interest rates and questions regarding the AI complex. Analysis of the options market shows that the ratio has been moving in favor of puts since August, despite big-tech stock prices climbing to all-time highs.",
+      "assetClasses": [
+        "Equities",
+        "Options"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors should note the divergence between rising big-tech equity prices and increasing put option demand, which signals underlying caution and potential hedging against a pullback despite recent all-time highs.",
+      "reasoning": "Classified as MARKET due to its focus on equity and options market dynamics for technology stocks. Sentiment is MIXED as strong equity prices contrast with growing bearish put option trends. It is relevant for fund monitoring as it provides insights into sentiment shifts and risk positioning in the tech sector.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Tech stocks' resilience has puzzled investors. The options market could hold some clues",
+      "publishedAtSgt": "2026-10-09T21:07:30+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/tech-stocks-resilience-has-puzzled-investors-the-options-market-could-hold-some-clues.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-09T21:39:46+08:00"
+    },
+    {
+      "articleId": "fe0c0ae60bbcafce23d4f6af51e50475619740aac96045bf3a550fd583abbb9c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Retail and regular investors are increasingly participating in Wall Street's record stock borrowing binge by trading on margin while living with their parents, raising concerns about portfolio concentration and market risk as equities rise.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Rising margin debt and retail borrowing signal heightened market leverage and systemic vulnerability, prompting caution regarding overconcentration and potential sudden liquidations during market downturns.",
+      "reasoning": "Classified as MARKET due to its focus on margin debt and stock borrowing trends. It is important and fund-monitoring relevant as elevated leverage levels among investors can exacerbate market volatility and risk.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Living with Mom and trading on margin. The regular investor gets in on Wall Street's record stock borrowing binge",
+      "publishedAtSgt": "2026-10-09T21:03:19+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/margin-debt-stock-market-risk.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-09T21:39:47+08:00"
+    },
+    {
+      "articleId": "909968f0210cfb126a9cb33adac6bbc9e2d0d0c419a26ed7abbdc6226717e8ff",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "Jim Cramer outlines top things to watch in the stock market on Friday, noting calm oil prices and bond yields, alongside an Nvidia-backed AI infrastructure company scrapping its Australia IPO due to valuation concerns.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "Global",
+        "Australia"
+      ],
+      "sectors": [
+        "Technology",
+        "Energy"
+      ],
+      "investorImpact": "Investors should monitor broader market sentiment indicators like bond yields and oil prices, while noting that AI infrastructure valuations face scrutiny following a canceled IPO.",
+      "reasoning": "The article highlights daily market watch items and broader sentiment regarding AI sector valuations, making it relevant for general market monitoring but of low direct portfolio impact.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Jim Cramer's top 10 things to watch in the stock market Friday",
+      "publishedAtSgt": "2026-10-09T21:01:32+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/09/jim-cramers-top-10-things-to-watch-in-the-stock-market-friday.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-09T21:39:46+08:00"
+    },
+    {
+      "articleId": "4a802c1bf799f1a28524f04770862141c65c3802bc5faf9009d6702e0c4ea5da",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "OpenAI's revenue details and pressure to justify its valuation ahead of a potential IPO led to a tech sector slide, pushing the Nasdaq Composite down more than 1% in its worst day since mid-August.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "The decline in major AI and tech names impacts technology-heavy portfolios and highlights investor sensitivity to high valuations and revenue realities in the AI ecosystem.",
+      "reasoning": "Classified as MARKET due to the direct impact on equity indices like the Nasdaq and broad tech sector movement driven by OpenAI valuation and revenue concerns.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "OpenAI's revenue scare, Delta earnings, what investors think of a Starbucks-Chipotle deal and more in Morning Squawk",
+      "publishedAtSgt": "2026-10-09T20:40:30+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/5-things-to-know-before-the-stock-market-opens.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 93,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-09T21:39:47+08:00"
+    },
+    {
+      "articleId": "f1af98ea26a4a2ad4c6fb1e315ed7b7d0ca3e511e648d8ddedf97d54eac1bc9d",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Ferrari chairman John Elkann expressed optimism for the long-term artificial intelligence buildout and shrugged off bubble concerns, but warned that an AI supply and demand mismatch could pose market risks.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Automotive"
+      ],
+      "investorImpact": "Investors should note that while long-term demand for AI infrastructure remains strong, potential supply-demand mismatches could introduce volatility in technology and related equity sectors.",
+      "reasoning": "The article discusses high-level industry perspectives on artificial intelligence valuation and market risks from a prominent industrialist and tech board member, making it relevant for technology sector and broader market sentiment analysis.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Ferrari’s chairman is bullish on AI. He’s less certain how businesses will cash in",
+      "publishedAtSgt": "2026-10-09T19:54:21+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/john-elkann-ferrari-ai-technology.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-09T21:39:47+08:00"
+    },
+    {
+      "articleId": "2b33a53cec6d483647a023e73030eb5a36e3a7b2e8465a7644c290a6fb9e652b",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Kalshi traders show a 75% probability that the number of planned or operating data centers will exceed 5,100 before 2027, up from 60% in two weeks, despite rising public backlash against data center construction.",
+      "assetClasses": [
+        "Equities",
+        "Real Estate",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Utilities",
+        "Real Estate"
+      ],
+      "investorImpact": "High demand and growth projections for data centers indicate continued strong capital expenditure in technology and infrastructure sectors, while also highlighting potential regulatory or public relations headwinds.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on data center infrastructure growth trends tracked via prediction markets. It is relevant for fund monitoring as it reflects sentiment and market expectations regarding AI and tech infrastructure expansion.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Kalshi traders see high odds that more than 5,100 data centers will be planned or operating before 2027",
+      "publishedAtSgt": "2026-10-09T19:54:04+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/kalshi-traders-see-high-odds-of-5000-plus-data-centers-by-2027.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-09T21:39:47+08:00"
+    },
     {
       "articleId": "b1a4554a95d710b8544a3f3d5dd1dbb5a8efe5b7d5147516fe1f7909b0100a9b",
       "relevant": true,
