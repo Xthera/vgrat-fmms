@@ -1,10 +1,132 @@
 {
-  "generatedAtSgt": "2026-10-09T21:55:28.501992+08:00",
+  "generatedAtSgt": "2026-10-10T00:53:19.156489+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 151,
+  "articleCount": 155,
   "analyses": [
+    {
+      "articleId": "ac91a3d6a3d92cf5590af7c79493320d4d42f6170288964a8fff3aecc7dfca89",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer discusses a buy level for Starbucks, reviews recent purchases of defensive stocks, and highlights how rising bond yields, flat oil prices, and inflation concerns are capping broader market gains while putting pressure on AI and technology shares like Nvidia.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Technology",
+        "Energy"
+      ],
+      "investorImpact": "Investors should note the rotational pressure toward defensive names as elevated bond yields and inflation concerns weigh on high-growth technology sectors like AI.",
+      "reasoning": "Classified as MARKET because it covers stock portfolio strategy, commentary on major indices like the S&P 500 and Nasdaq, and reactions to macroeconomic pressures such as rising bond yields.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer sets a Starbucks buy level — plus his take on 3 stocks we just bought",
+      "publishedAtSgt": "2026-10-09T23:47:15+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/09/cramer-sets-starbucks-buy-level-and-reviews-3-stocks-we-bought.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-10T00:37:48+08:00"
+    },
+    {
+      "articleId": "c89fd811db30888d623947ff14dd195ee72706b32f8ba7803d76024d1a60cd4e",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Wall Street investors are increasingly targeting AI data centers as a major real estate investment opportunity, funded largely by institutional investors like pension funds. However, accumulating risks and rising public opposition are presenting challenges to these physical infrastructure bets.",
+      "assetClasses": [
+        "Real Estate",
+        "Alternative Investments"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Real Estate",
+        "Infrastructure"
+      ],
+      "investorImpact": "Investors should weigh the high growth potential of AI infrastructure against mounting physical, regulatory, and public relations risks that could impact project timelines and real estate valuations.",
+      "reasoning": "The article discusses the intersection of AI infrastructure investments and real estate, categorized under technology and market relevance. Sentiment is mixed due to enthusiastic institutional backing clashing with growing risks and public pushback.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Wall Street is pitching data centers as a major real estate bet. The risks are piling up",
+      "publishedAtSgt": "2026-10-09T23:08:20+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/ai-data-centers-investing.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-10T00:37:48+08:00"
+    },
+    {
+      "articleId": "9a1dec385bbead20172815d7bcb7b2e1a57bcaa1849f9e0e5bec6b81f0496fc2",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "European trade commissioner Maroš Sefčovič announced that China has agreed to halve its exports of hybrid cars to the European Union, following earlier pushback from Beijing regarding voluntary export reductions.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "China",
+        "Europe"
+      ],
+      "sectors": [
+        "Automotive"
+      ],
+      "investorImpact": "The voluntary agreement to halve hybrid vehicle exports from China to Europe may alter competitive dynamics for European automakers and affect export volumes for Chinese manufacturers.",
+      "reasoning": "The article is classified under geopolitical trade negotiations impacting the automotive sector between major economic blocs, providing meaningful context for sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China and Europe agree to cut Chinese hybrid vehicle exports by half",
+      "publishedAtSgt": "2026-10-09T23:03:10+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/china-europe-hybrid-vehicle-exports-deal.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-10T00:37:48+08:00"
+    },
+    {
+      "articleId": "6be74b1d25d841a4b553cb834d111e13a79483bf56e4dcb0544a301960db34fa",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "The article discusses the shift from generative AI to agentic AI, such as AI shopping agents like Muse, and examines the implications and questions raised for retail companies and their investors.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Retail",
+        "Technology"
+      ],
+      "investorImpact": "Investors in retail and technology stocks must monitor the emergence of agentic AI, as automated shopping agents could significantly alter consumer behavior, retail margins, and competitive dynamics.",
+      "reasoning": "Classified as MARKET because it directly addresses the investment implications of emerging AI shopping agents on retail stocks. Sentiment is neutral as it highlights questions and evolution rather than a definitive positive or negative outcome.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AI agents like Muse can shop for you. Here's what that means for retail stocks",
+      "publishedAtSgt": "2026-10-09T22:15:38+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/09/ai-agents-could-soon-shop-for-consumers-what-it-means-for-retail-stocks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-10T00:37:48+08:00"
+    },
     {
       "articleId": "87694e741d20f9cd7aa008418897934680439a3261ffa1f42770163cc5341941",
       "relevant": true,
