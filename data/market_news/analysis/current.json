@@ -1,10 +1,164 @@
 {
-  "generatedAtSgt": "2026-10-10T00:53:19.156489+08:00",
+  "generatedAtSgt": "2026-10-10T03:51:36.609094+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 155,
+  "articleCount": 157,
   "analyses": [
+    {
+      "articleId": "bd46d0a8057427f9d0d7a9617b7d01bab5271e3ec39b2626375f494c62c4e9c2",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "President Donald Trump announced the creation of a committee to evaluate whether to fire Federal Reserve Governor Lisa Cook, appointing Kevin Hassett, Keith Sonderling, and Andrea R. to review the evidence.",
+      "assetClasses": [
+        "Currencies",
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Potential political interference with the Federal Reserve introduces regulatory and monetary policy uncertainty, which can impact bond yields, currency valuations, and broad equity market sentiment.",
+      "reasoning": "The article discusses a governance challenge regarding a Federal Reserve Governor initiated by the executive branch. This falls under political and institutional developments that can indirectly affect macroeconomic policy and financial markets, making it relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump created a committee to dig into the Fed's Lisa Cook. What is it and what comes next?",
+      "publishedAtSgt": "2026-10-10T03:19:00+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/trump-lisa-cook-fed-firing-committee-explained.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 58,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-10T03:36:01+08:00"
+    },
+    {
+      "articleId": "4624eaac00be92e45ae2206362911f6c3bb67df70b5df180da89c73ac2fcc30c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Tech stocks experienced a recovery rally supported by tame bond yields and oil prices, while Elon Musk had a strong week.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Energy"
+      ],
+      "investorImpact": "Investors can use insights on recovery rallies in tech stocks driven by macroeconomic factors like bond yields and oil prices to inform equity portfolio positioning.",
+      "reasoning": "The article discusses overall market movements, specifically a tech stock recovery supported by favorable bond yields and oil prices, which directly impacts market sentiment and equity asset classes.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "What's behind the recovery rally in tech stocks — plus, Elon Musk's very good week",
+      "publishedAtSgt": "2026-10-10T03:02:29+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/09/whats-behind-the-recovery-rally-in-tech-stocks-plus-musks-good-week.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-10T03:36:02+08:00"
+    },
+    {
+      "articleId": "fde44a9ae4c3d87170461d86e7a3b6b97cbbeb7e07f635b9d2bece50cc45d341",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Attacks on oil tankers transiting the Strait of Hormuz have surged to wartime highs as Iran attempts to choke off crude exports, threatening a vital global trade route despite a recent rebound in Middle Eastern oil exports.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "Middle East",
+        "Strait of Hormuz",
+        "Iran"
+      ],
+      "sectors": [
+        "Energy",
+        "Shipping",
+        "Oil and Gas"
+      ],
+      "investorImpact": "The escalation of attacks in the Strait of Hormuz poses a severe threat to global oil supplies and shipping logistics, likely driving up crude oil prices and shipping insurance costs, which impacts energy sector equities and broad inflationary trends.",
+      "reasoning": "The article details a major geopolitical and security escalation directly impacting global energy supply chains and commodities markets, making it highly relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Tanker attacks in Strait of Hormuz surge to wartime high as Iran tries to choke off oil exports",
+      "publishedAtSgt": "2026-10-10T02:52:49+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/iran-war-strait-hormuz-tanker-attack-oil.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-10T03:36:03+08:00"
+    },
+    {
+      "articleId": "b831d7d8d2e89ed9f98deeccc0f8b60f5245a7e9708e05a73b477f269e0faa8c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Bearish positions continue to build up against the semiconductor group, highlighted by notable large options trades in Micron and Nvidia that question the recent rally in chip stocks.",
+      "assetClasses": [
+        "Equities",
+        "Options"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Semiconductors",
+        "Technology"
+      ],
+      "investorImpact": "Investors with exposure to the semiconductor sector should monitor potential bearish sentiment shifts and heavy options activity in major chip stocks like Nvidia and Micron, which could signal increased volatility or a pullback in tech equities.",
+      "reasoning": "Classified under MARKET due to the focus on large trading activity and investor positioning in major equity options. Sentiment is NEGATIVE given the bearish buildup and questioning of the chip sector's recent gains. Importance is MEDIUM as it highlights sector-specific options flow rather than macro market shifts.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Two massive trades just happened in Micron and Nvidia. What they could mean for chips",
+      "publishedAtSgt": "2026-10-10T02:50:21+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/two-massive-trades-just-happened-in-micron-and-nvidia-what-they-could-mean-for-chips.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-10T03:36:01+08:00"
+    },
+    {
+      "articleId": "95dc7af24e1f81101b71e63c524307509e46b3b15b38be6c0a0a23031038d340",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "Despite a stagnant used car market, investment strategies involving stocks like CarMax (KMX) suggest using options strategies such as put-assignment or short strangles around key price levels.",
+      "assetClasses": [
+        "Equities",
+        "Options"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Automotive"
+      ],
+      "investorImpact": "Provides tactical options trading ideas for specific retail or institutional equities like CarMax amid a flat used car sector, but carries limited broader macroeconomic significance.",
+      "reasoning": "Classified as MARKET because it discusses stock pricing and options strategies for automotive retail. Importance is LOW as it focuses on a niche trading setup rather than major structural market movements.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "The used car market is stagnant. Here's how to profit anyway",
+      "publishedAtSgt": "2026-10-10T01:37:31+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/the-used-car-market-is-stagnant-heres-how-to-profit-anyway.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-10T03:36:02+08:00"
+    },
     {
       "articleId": "ac91a3d6a3d92cf5590af7c79493320d4d42f6170288964a8fff3aecc7dfca89",
       "relevant": true,
@@ -4595,98 +4749,6 @@
       "collectorRelevanceScore": 93,
       "collectorRelevanceReason": "strong_market_title",
       "collectedAtSgt": "2026-10-02T12:09:49+08:00"
-    },
-    {
-      "articleId": "1cadc10a62db385691afa73eeba5d2948668694fb713e9b3fdbd013eb4e14a27",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "MEDIUM",
-      "summary": "Matthews Asia portfolio manager Andrew Mattock argues that investors aiming to maximize exposure to artificial intelligence should specifically target China, noting that broad emerging market strategies are insufficient because funds like the iShares MSCI Emerging Markets ETF are heavily weighted in South Korea and Taiwan while lacking dedicated Chinese AI exposure.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "China",
-        "Taiwan",
-        "South Korea"
-      ],
-      "sectors": [
-        "Technology",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "Investors seeking comprehensive AI exposure may need to look beyond broad emerging market ETFs and consider targeted allocations to Chinese equities to capture potential growth.",
-      "reasoning": "The article provides strategic portfolio management insights regarding artificial intelligence exposure in emerging markets, specifically highlighting China as a key component often missed by standard broad indexes, making it relevant for market strategy and asset allocation monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "This may be the ‘missing piece’ for investors looking to boost AI exposure",
-      "publishedAtSgt": "2026-09-26T23:00:01+08:00",
-      "url": "https://www.cnbc.com/2026/09/26/ai-portfolios-may-need-china-to-grab-the-biggest-gains.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-02T12:09:50+08:00"
-    },
-    {
-      "articleId": "61ea3c09d6cdb4805f262b6d6e2b80b10c1cc83c01f5062afaac8a9c26bc49d9",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "The benchmark 10-year Treasury yield surged to its highest level since 2007, climbing above 5% due to factors including sticky inflation, expectations of additional Federal Reserve tightening, and heavy bond issuance.",
-      "assetClasses": [
-        "Fixed Income",
-        "Bonds",
-        "Treasurys"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials",
-        "Government"
-      ],
-      "investorImpact": "Rising Treasury yields increase borrowing costs across the economy, put downward pressure on equity valuations, and signal shifting expectations regarding monetary policy and debt issuance.",
-      "reasoning": "The article discusses a major macroeconomic and market event--the 10-year Treasury yield hitting a nearly two-decade high--which is critical for multi-asset fund monitoring and fixed income strategies.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "The 10-year Treasury yield is at its highest in nearly two decades. How we got here",
-      "publishedAtSgt": "2026-09-26T21:30:06+08:00",
-      "url": "https://www.cnbc.com/2026/09/26/10-year-treasury-yield-is-at-its-highest-in-19-years-how-we-got-here.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-02T12:09:50+08:00"
-    },
-    {
-      "articleId": "4ff36f7a8af21a91101a9114ddae9e22d65b4504a1c7554b159f7bd9e60a9ea8",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "LOW",
-      "summary": "Coca-Cola has hired Rob Gehring, the head of Monster Energy's Americas business, to lead its North American operations as the company aims to sustain growth.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States",
-        "North America"
-      ],
-      "sectors": [
-        "Consumer Staples",
-        "Food and Beverage"
-      ],
-      "investorImpact": "The executive change highlights leadership adjustments within major beverage companies, though the direct impact on stock performance for Coca-Cola or Monster Energy is limited.",
-      "reasoning": "Classified under MARKET because it concerns corporate leadership changes for publicly traded consumer goods companies, but given the operational nature it is of low overall importance for macroeconomic fund monitoring.",
-      "fundMonitoringRelevant": false,
-      "source": "CNBC",
-      "title": "Coca-Cola hires Rob Gehring from Monster Energy to run its North American operations",
-      "publishedAtSgt": "2026-09-26T05:02:20+08:00",
-      "url": "https://www.cnbc.com/2026/09/25/monster-coca-cola-rob-gehring.html",
-      "collectorCategory": "GEOPOLITICAL",
-      "collectorRelevanceScore": 71,
-      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
-      "collectedAtSgt": "2026-10-02T12:09:47+08:00"
     }
   ]
 }
