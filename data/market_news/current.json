@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-10-09T15:38:13+08:00",
+  "generatedAtSgt": "2026-10-09T18:38:15+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,21 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "b1a4554a95d710b8544a3f3d5dd1dbb5a8efe5b7d5147516fe1f7909b0100a9b",
+      "source": "CNBC",
+      "title": "CNBC Daily Open: What happened to the $20 billion?",
+      "publishedAtSgt": "2026-10-09T14:49:02+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/cnbc-daily-open-what-happened-to-the-20-billion.html",
+      "category": "MARKET",
+      "relevanceScore": 58,
+      "relevanceReason": "supporting_market_description",
+      "summary": "OpenAI's latest annual revenue estimate, confirmed by CNBC, has spooked investors by falling short of previous statements, and the market has taken it out on technology stocks. First revealed by the Financial Times, the discrepancy spooked investors, who flocked to sell AI stocks from Nvidia to Oracle to CoreWeave. CEO Sam Altman has confirmed the group will not try to IPO this year, but the company is still looking to justify a valuation that tops $850 billion.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-09T18:38:15+08:00"
+    },
     {
       "id": "afce54fea57e52c8166821e3e555c3708a969c033b7dca7b541df1a3dd8f56b4",
       "source": "CNBC",
@@ -39,6 +54,21 @@
         "world"
       ],
       "collectedAtSgt": "2026-10-09T09:38:03+08:00"
+    },
+    {
+      "id": "0032a9ce6f04d015409d999c48420a4dd375e571025ffffdd3dd0864a5ec69ff",
+      "source": "CNBC",
+      "title": "Pepsi shares rallied despite cutting profit guidance. Where Cramer stands on the stock now",
+      "publishedAtSgt": "2026-10-09T06:50:36+08:00",
+      "url": "https://www.cnbc.com/2026/10/08/pepsico-earnings-guidance-cramer.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "Shares rallied 3% following the report, as investors focused on improving sales trends and a guidance cut that had been widely anticipated. However, given the reason for the forecast cut and the stock's relatively low valuation, \"I'm feeling a lot better about this story. More recently, rising inflation, oil prices and interest rates added to the pressure, sending PepsiCo shares down nearly 10% in September alone.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-09T18:38:15+08:00"
     },
     {
       "id": "1c5e4c09377a497166fd6adaf00ecb7d2fa5096117642eca2d7560e5295ba92f",
@@ -1551,37 +1581,6 @@
         "world"
       ],
       "collectedAtSgt": "2026-10-02T15:13:53+08:00"
-    },
-    {
-      "id": "9f3e19cb195f3b357565eebc6d8c9c7d2f751180b943ed14693dd1f4f52d2cba",
-      "source": "CNBC",
-      "title": "War, $100 oil and a bond sell-off reshaped markets in the third quarter",
-      "publishedAtSgt": "2026-10-02T13:29:21+08:00",
-      "url": "https://www.cnbc.com/2026/10/01/q3-markets-stocks-oil-iran-war.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "The Strait of Hormuz remained blocked, fueling fears for energy markets and of inflation, but equities broadly notched returns in the third quarter. In September, AI and tech stocks struggled amid calls from prominent AI figures — including Anthropic chief Dario Amodei and OpenAI CEO Sam Altman — to slow down how fast the technology is developed amid safety concerns.",
-      "feeds": [
-        "world"
-      ],
-      "collectedAtSgt": "2026-10-02T15:13:55+08:00"
-    },
-    {
-      "id": "c76418e21ce9c16998f9605652a403ea657083b37e5eaa77417485352d6d7e18",
-      "source": "CNBC",
-      "title": "U.S. trade representative Greer says deal with India not 'imminent' after Modi-Trump call",
-      "publishedAtSgt": "2026-10-02T12:07:54+08:00",
-      "url": "https://www.cnbc.com/2026/10/02/us-india-trade-modi-trump-russia-oil.html",
-      "category": "GEOPOLITICAL",
-      "relevanceScore": 71,
-      "relevanceReason": "geopolitical_with_direct_economic_impact",
-      "summary": "On Wednesday, Modi said his conversation with Trump was \"productive,\" and the two leaders not only reviewed bilateral trade, defense, energy and critical technologies but also discussed \"ongoing efforts to advance global peace and security.\" While the Iran war has threatened India's energy security, pushing it to increase its reliance on Russian oil, the U.S. had imposed a 25% punitive tariff on India last August for buying Russian oil, raising the duties on imports from New Delhi to 50%.",
-      "feeds": [
-        "latest",
-        "world"
-      ],
-      "collectedAtSgt": "2026-10-02T12:09:44+08:00"
     }
   ]
 }
