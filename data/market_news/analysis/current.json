@@ -1,10 +1,39 @@
 {
-  "generatedAtSgt": "2026-10-10T21:50:30.874572+08:00",
+  "generatedAtSgt": "2026-10-11T00:50:53.370062+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 161,
+  "articleCount": 162,
   "analyses": [
+    {
+      "articleId": "4449b9b14efd303673d8c660ccef1203b00f43a35f6acea6f4f98b88b8907b55",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Stocks reached fresh record highs early last week, though renewed volatility in the artificial intelligence trade highlighted investor fickleness. AI-related stocks whipsawed following a Financial Times report questioning OpenAI's growth, which also impacted telecom stocks and highlighted broader market dynamics.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Telecommunications"
+      ],
+      "investorImpact": "Investors face heightened volatility in AI and related sectors, underscoring the risk of sentiment shifts based on news reports regarding major AI players.",
+      "reasoning": "Classified as MARKET due to its focus on stock market movements, record highs, and sector volatility driven by AI trade updates. Important for monitoring portfolio risk in technology and growth assets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Stocks saw new highs and big declines: How the volatile AI trade moved last week's market",
+      "publishedAtSgt": "2026-10-10T23:30:51+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/10/stocks-saw-new-highs-and-big-declines-how-the-volatile-ai-trade-moved-last-weeks-market.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-11T00:35:20+08:00"
+    },
     {
       "articleId": "4f5d40783493df82d3fba24d7582974134b3579f676efebbd06f1527d29d6961",
       "relevant": true,
