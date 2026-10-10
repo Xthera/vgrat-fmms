@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-10-10T21:35:03+08:00",
+  "generatedAtSgt": "2026-10-11T00:35:20+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,21 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "4449b9b14efd303673d8c660ccef1203b00f43a35f6acea6f4f98b88b8907b55",
+      "source": "CNBC",
+      "title": "Stocks saw new highs and big declines: How the volatile AI trade moved last week's market",
+      "publishedAtSgt": "2026-10-10T23:30:51+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/10/stocks-saw-new-highs-and-big-declines-how-the-volatile-ai-trade-moved-last-weeks-market.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Stocks climbed to fresh record highs early last week, but renewed volatility in the artificial intelligence trade showed just how fickle investors can be in this market. The news slammed telecom stocks Friday and opened another potential avenue for growth beyond rockets, satellites, and AI infrastructure for SpaceX. OpenAI rattles the AI trade, and reinforces a key investing lesson AI stocks whipsawed last week after a Financial Times report raised questions about OpenAI's growth.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-11T00:35:20+08:00"
+    },
     {
       "id": "4f5d40783493df82d3fba24d7582974134b3579f676efebbd06f1527d29d6961",
       "source": "CNBC",
@@ -1556,21 +1571,6 @@
       "relevanceScore": 91,
       "relevanceReason": "strong_market_title",
       "summary": "We certainly expect the oil and bond markets to continue their heavy influence on how stocks trade this week. Though we don't own the name, the company is a direct competitor to Broadcom in the custom semiconductor space, and it has an exciting optical networking business that's important for future generations of Nvidia technology and AI computing more broadly.",
-      "feeds": [
-        "latest"
-      ],
-      "collectedAtSgt": "2026-10-05T01:07:33+08:00"
-    },
-    {
-      "id": "47ef9f01e413c9ca1fd1336b6dc6570427ecc9d9bfa78a8fc8904d6266a93dcb",
-      "source": "CNBC",
-      "title": "Top Wall Street analysts are upbeat about the prospects for these 3 stocks",
-      "publishedAtSgt": "2026-10-04T21:24:16+08:00",
-      "url": "https://www.cnbc.com/2026/10/04/top-analysts-are-upbeat-about-the-prospects-for-these-3-stocks.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "Markets remained on edge with higher oil prices and Treasury yields weighing on investor sentiment and triggering fears of additional interest rate hikes. In this climate, investors with a long-term horizon can track recommendations from top Wall Street analysts to find stocks with solid growth prospects. CRWV stock performance has been underwhelming as investors worry about high capital spending, the analyst noted.",
       "feeds": [
         "latest"
       ],
