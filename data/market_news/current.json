@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-10-10T06:36:19+08:00",
+  "generatedAtSgt": "2026-10-10T09:36:51+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,22 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "4f5d40783493df82d3fba24d7582974134b3579f676efebbd06f1527d29d6961",
+      "source": "CNBC",
+      "title": "Trump's diesel agreement with Putin accused of contradicting Russia sanctions law",
+      "publishedAtSgt": "2026-10-10T07:16:50+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/trump-putin-diesel-russia-sanctions-ukraine.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "President Donald Trump's Friday announcement that Russia will supply diesel fuel to the global market marked an apparent pivot from recent efforts to pressure Moscow to end the Ukraine war by targeting Russian energy exports. Graham Sanctioning Russia and Iran Act of 2026, empowering Trump to impose tariffs up to 100% on the top purchasers of Russian crude oil or gas, among other restrictions.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-10T09:36:51+08:00"
+    },
     {
       "id": "7dcc6a4eac891b7b53076322383e26854ac8f715e8d4be7e6f2af34146a86d77",
       "source": "CNBC",
@@ -1559,22 +1575,6 @@
         "latest"
       ],
       "collectedAtSgt": "2026-10-05T01:07:33+08:00"
-    },
-    {
-      "id": "451ac4b844ee4f498375d4bd491466405a775b8b47ea593bf5fe27fce809d2cf",
-      "source": "CNBC",
-      "title": "A 'weird' IPO pull, a tainted reputation and the stalled breakout moment for AI wearables",
-      "publishedAtSgt": "2026-10-04T21:22:39+08:00",
-      "url": "https://www.cnbc.com/2026/10/04/ai-wearables-oura-ipo-privacy.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "I was also scared to go on dates after that as openly as I did before.\" Apple, Google, Meta and a swarm of other tech contenders are betting that new artificial intelligence wearables in the form of glasses, rings, charms and pendants can push the market toward its category-defining moment. But as the gadgets have grown in notoriety, they've also been met with privacy backlash and doubts about whether the technology is beneficial enough to become a fixture in everyday life.",
-      "feeds": [
-        "latest",
-        "technology"
-      ],
-      "collectedAtSgt": "2026-10-05T01:07:32+08:00"
     }
   ]
 }
