@@ -1,10 +1,41 @@
 {
-  "generatedAtSgt": "2026-10-10T06:51:54.352452+08:00",
+  "generatedAtSgt": "2026-10-10T09:52:21.342546+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 160,
+  "articleCount": 161,
   "analyses": [
+    {
+      "articleId": "4f5d40783493df82d3fba24d7582974134b3579f676efebbd06f1527d29d6961",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "President Donald Trump's announcement that Russia will supply diesel fuel to the global market appears to contradict recent efforts to pressure Moscow through energy sanctions, raising questions regarding the Graham Sanctioning Russia and Iran Act of 2026.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "Russia",
+        "Global"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "Investors in the energy sector should monitor potential shifts in global diesel supply dynamics and regulatory compliance risks tied to the Graham Sanctioning Russia and Iran Act of 2026.",
+      "reasoning": "The article is classified as GEOPOLITICAL because it covers a high-level policy shift and potential contradiction with existing Russian sanctions legislation, carrying significant implications for global energy markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump's diesel agreement with Putin accused of contradicting Russia sanctions law",
+      "publishedAtSgt": "2026-10-10T07:16:50+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/trump-putin-diesel-russia-sanctions-ukraine.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-10T09:36:51+08:00"
+    },
     {
       "articleId": "7dcc6a4eac891b7b53076322383e26854ac8f715e8d4be7e6f2af34146a86d77",
       "relevant": true,
