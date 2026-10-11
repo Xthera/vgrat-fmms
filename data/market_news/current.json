@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-10-11T12:37:29+08:00",
+  "generatedAtSgt": "2026-10-11T15:36:24+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,21 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "fb5b0b6c8af8a537554303112bd929eb63b07a97c5c9c3ba7942a63b26e127bb",
+      "source": "CNBC",
+      "title": "After France, is Italy next? Goldman Sachs flags bond risks as Rome's deficit widens",
+      "publishedAtSgt": "2026-10-11T13:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/11/italy-government-bonds-sovereign-debt-giorgia-meloni.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "The Italian government will next week present a budget encompassing recently approved allocations to defense and energy, which are set to widen the country's deficit over the next two years and put Italy's debt-to-GDP ratio on track to become the highest in Europe, according to analysts at Goldman Sachs.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-11T15:36:19+08:00"
+    },
     {
       "id": "4449b9b14efd303673d8c660ccef1203b00f43a35f6acea6f4f98b88b8907b55",
       "source": "CNBC",
@@ -1560,21 +1575,6 @@
         "latest"
       ],
       "collectedAtSgt": "2026-10-05T05:26:43+08:00"
-    },
-    {
-      "id": "1062414f59ff578e98df8787ce1310e124e20018d65d1abeded5ee92df90ca56",
-      "source": "CNBC",
-      "title": "Here are 3 things we're watching in the stock market in the week ahead",
-      "publishedAtSgt": "2026-10-04T23:33:05+08:00",
-      "url": "https://www.cnbc.com/investingclub/2026/10/04/here-are-3-things-were-watching-in-the-stock-market-in-the-week-ahead.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "We certainly expect the oil and bond markets to continue their heavy influence on how stocks trade this week. Though we don't own the name, the company is a direct competitor to Broadcom in the custom semiconductor space, and it has an exciting optical networking business that's important for future generations of Nvidia technology and AI computing more broadly.",
-      "feeds": [
-        "latest"
-      ],
-      "collectedAtSgt": "2026-10-05T01:07:33+08:00"
     }
   ]
 }
