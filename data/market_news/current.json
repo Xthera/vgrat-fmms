@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-10-11T18:35:29+08:00",
+  "generatedAtSgt": "2026-10-11T21:35:45+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,23 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "83c4589de40439e6b41867956e72427c77b8dc2ff35e9b8b5567f13c2a70f27f",
+      "source": "CNBC",
+      "title": "AI’s quiet safety gatekeepers are stepping into the spotlight",
+      "publishedAtSgt": "2026-10-11T19:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/11/ais-quiet-safety-gatekeepers-are-stepping-into-the-spotlight.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 80,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "Their primary role has been to assess AI model capabilities and risks, and to call attention to instances where the technology behaves badly. President Trump recently lauded AI executives for their \"tremendous self-policing,\" and signaled that he intends to leave companies to their own devices, unwilling to impede the growth of the industry that's driving the economy and stock market.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-11T21:35:45+08:00"
+    },
     {
       "id": "fb5b0b6c8af8a537554303112bd929eb63b07a97c5c9c3ba7942a63b26e127bb",
       "source": "CNBC",
@@ -1560,21 +1577,6 @@
         "world"
       ],
       "collectedAtSgt": "2026-10-05T12:45:12+08:00"
-    },
-    {
-      "id": "2e98323f01b596216c6a46a9d8ec89ab3a81f366c83cc1eb6ba2f4f6394fa623",
-      "source": "CNBC",
-      "title": "Trump reiterates pledge to send $5,000 checks, and hands out smaller payments, as midterm elections loom",
-      "publishedAtSgt": "2026-10-05T04:28:47+08:00",
-      "url": "https://www.cnbc.com/2026/10/04/trump-5000-checks-cash-payments-midterms.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "On Friday, Trump announced one-time $90 payments to 20.8 million Medicare beneficiaries. Trump hasn't provided any details on who would authorize the payments and where the money would come from. Together, the flurry of offers of direct cash payments comes as Republicans head into the final stretch of a midterm campaign dominated by concerns about prices and the economy.",
-      "feeds": [
-        "latest"
-      ],
-      "collectedAtSgt": "2026-10-05T05:26:43+08:00"
     }
   ]
 }
