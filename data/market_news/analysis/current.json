@@ -1,10 +1,38 @@
 {
-  "generatedAtSgt": "2026-10-11T18:50:54.689707+08:00",
+  "generatedAtSgt": "2026-10-11T21:51:12.440576+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 162,
+  "articleCount": 163,
   "analyses": [
+    {
+      "articleId": "83c4589de40439e6b41867956e72427c77b8dc2ff35e9b8b5567f13c2a70f27f",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "AI safety gatekeepers are gaining prominence as they assess model capabilities and risks. Meanwhile, President Trump has praised AI executives for self-policing and signaled a hands-off regulatory approach to avoid hindering the industry driving the economy and stock market.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "The absence of imminent heavy regulation or government intervention is a positive signal for technology sector valuations and AI-driven growth stocks, allowing companies to continue unhindered development.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on artificial intelligence safety and industry self-governance. Sentiment is POSITIVE because of supportive political commentary toward industry self-policing and minimal expected regulatory interference.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AI’s quiet safety gatekeepers are stepping into the spotlight",
+      "publishedAtSgt": "2026-10-11T19:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/11/ais-quiet-safety-gatekeepers-are-stepping-into-the-spotlight.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 80,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-11T21:35:45+08:00"
+    },
     {
       "articleId": "fb5b0b6c8af8a537554303112bd929eb63b07a97c5c9c3ba7942a63b26e127bb",
       "relevant": true,
