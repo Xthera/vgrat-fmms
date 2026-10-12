@@ -1,10 +1,191 @@
 {
-  "generatedAtSgt": "2026-10-12T15:58:44.385322+08:00",
+  "generatedAtSgt": "2026-10-12T18:56:14.484486+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 163,
+  "articleCount": 169,
   "analyses": [
+    {
+      "articleId": "cfca6d5d8b242984f4bb5d69bab6700bd624d111c9debf5bc3a664f3bc917b89",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "India's headline retail inflation rose to 5.54% in September from 4.82% in August, exceeding market estimates and remaining above the Reserve Bank of India's 4% medium-term target, adding pressure for further monetary policy tightening.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Currencies"
+      ],
+      "geographies": [
+        "India"
+      ],
+      "sectors": [
+        "Consumer Goods",
+        "Financials"
+      ],
+      "investorImpact": "Higher than expected inflation in India increases the likelihood of monetary policy tightening by the Reserve Bank of India, which could weigh on domestic equities, pressure bond yields, and impact the Indian Rupee.",
+      "reasoning": "The article reports a significant macroeconomic data release for India, showing inflation exceeding estimates and staying above target, which directly impacts monetary policy and financial markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "India’s retail inflation jumps to 5.54% in September, above estimates",
+      "publishedAtSgt": "2026-10-12T18:36:23+08:00",
+      "url": "https://www.cnbc.com/2026/10/12/india-inflation-oil-energy-iran-war.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-12T18:40:41+08:00"
+    },
+    {
+      "articleId": "9618a78a53cfd395b7ce97ccd80a0247ef1b7b29c5ac96aac802556cbf447243",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "A survey reveals that 85% of family offices rank artificial intelligence as their top investment theme, even though 75% expect an AI bubble to burst within five years, driven by a mix of cautious optimism and fear of missing out.",
+      "assetClasses": [
+        "Equities",
+        "Private Equity",
+        "Venture Capital"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Highlights significant private wealth allocation towards AI driven by FOMO despite acknowledged bubble risks, indicating potential volatility and speculative valuation pressures in the technology sector.",
+      "reasoning": "Classified as MARKET due to family office investment trends in AI. Sentiment is MIXED as high allocation enthusiasm is countered by widespread bubble concerns. Important for tracking private market sentiment and capital flows.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AI FOMO driving some family offices into tech investments, survey suggests",
+      "publishedAtSgt": "2026-10-12T18:25:28+08:00",
+      "url": "https://www.cnbc.com/2026/10/12/ai-fomo-driving-some-family-offices-to-ai-investments-survey-suggests.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-12T18:40:40+08:00"
+    },
+    {
+      "articleId": "9800bbd26162d83e8f3d5bd52f451f39d055cae72746689d4a143cabcbbf2a42",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "Robert E. Hall and Michael Woodford were jointly awarded the Nobel prize in economics for their research into the microeconomic foundations of macroeconomic stabilisation.",
+      "assetClasses": [],
+      "geographies": [
+        "United States",
+        "Sweden"
+      ],
+      "sectors": [
+        "Academia"
+      ],
+      "investorImpact": "The award recognizes theoretical contributions to macroeconomics and stabilization policy, but it has no direct, immediate impact on financial markets, asset prices, or portfolio management.",
+      "reasoning": "Classified as ECONOMIC because it concerns macroeconomic research and theory recognized by the Nobel prize, but marked as low importance and not fund monitoring relevant since it describes an academic honor rather than a tradable market event.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Nobel prize in economics awarded to Robert E. Hall and Michael Woodford",
+      "publishedAtSgt": "2026-10-12T18:24:47+08:00",
+      "url": "https://www.cnbc.com/2026/10/12/nobel-economics-prize-winner-woodford-hall.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-12T18:40:40+08:00"
+    },
+    {
+      "articleId": "7b0be4ec77446f569227a256f9d303bcbaddba553301007ae751d48c55f0cbb1",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Ukrainian President Volodymyr Zelenskyy has expressed readiness to agree to a U.S.-brokered energy ceasefire, provided Russia does the same. If Russia fails to comply, Ukraine warned it will respond.",
+      "assetClasses": [
+        "Commodities",
+        "Equities"
+      ],
+      "geographies": [
+        "Ukraine",
+        "Russia",
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Utilities"
+      ],
+      "investorImpact": "Potential energy ceasefires can reduce supply volatility and lower energy prices, directly impacting energy sector equities and commodity markets depending on compliance from both nations.",
+      "reasoning": "The article is classified under GEOPOLITICAL because it covers diplomatic negotiations and conflict developments regarding energy infrastructure, which carries direct economic and market implications for energy commodities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Zelenskyy says Ukraine is ready to agree to energy ceasefire, but warns Russia must do same",
+      "publishedAtSgt": "2026-10-12T18:23:23+08:00",
+      "url": "https://www.cnbc.com/2026/10/12/russia-ukraine-energy-ceasefire-trump.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-12T18:40:41+08:00"
+    },
+    {
+      "articleId": "5444a6f0ff77bbcf5c7836b8bb93a4687e18ae14991136450e94c596d81e6664",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Policymakers and global institutions like the World Bank and IMF are issuing stark warnings regarding AI-led job disruption, calling for crisis-era employment support measures, even as AI-related investments and trade continue to drive global economic output and growth.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Employment Services"
+      ],
+      "investorImpact": "Investors must weigh the strong growth and output driven by AI-related investments against the impending regulatory and social pressures of AI-led labor disruption and potential policy interventions.",
+      "reasoning": "The article addresses macroeconomic trends involving artificial intelligence, employment policy, and global growth, making it highly relevant for economic monitoring and investment strategy.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "World Bank jobs council urges 'crisis-era' employment support measures as IMF warns of AI ‘tsunami’",
+      "publishedAtSgt": "2026-10-12T16:58:54+08:00",
+      "url": "https://www.cnbc.com/2026/10/12/imf-world-bank-ai-jobs-inflation-.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-12T18:40:41+08:00"
+    },
+    {
+      "articleId": "a5331317c9a7ce2661d3587e752e76968010b6927cadb94fc698e532f9faa341",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Intel and Broadcom CEOs warn that a capital crunch and rising borrowing costs could become the biggest bottleneck for AI infrastructure development, potentially pressuring long-term project returns.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors",
+        "Financials"
+      ],
+      "investorImpact": "Investors in AI infrastructure and semiconductor companies should monitor financing costs and capital availability, as rising yields and borrowing expenses could delay major tech projects and weigh on sector valuations.",
+      "reasoning": "The article highlights critical macroeconomic and technology headwinds affecting AI sector growth and infrastructure financing, making it highly relevant for market and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Intel, Broadcom CEOs warn capital crunch could become AI's biggest bottleneck",
+      "publishedAtSgt": "2026-10-12T16:27:52+08:00",
+      "url": "https://www.cnbc.com/2026/10/12/intel-broadcom-ceos-warn-capital-crunch-could-become-ai-bottleneck.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 80,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-12T18:40:40+08:00"
+    },
     {
       "articleId": "061232717e426342cbe2366c5b023e615d4c775ffe0448ed87860152bd43b92c",
       "relevant": true,
