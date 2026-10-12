@@ -1,10 +1,44 @@
 {
-  "generatedAtSgt": "2026-10-12T09:55:09.118888+08:00",
+  "generatedAtSgt": "2026-10-12T12:56:32.319471+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 162,
+  "articleCount": 163,
   "analyses": [
+    {
+      "articleId": "061232717e426342cbe2366c5b023e615d4c775ffe0448ed87860152bd43b92c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Oil prices fell following President Donald Trump's announcement of an 'energy ceasefire' between Russia and Ukraine, preventing attacks on energy facilities, alongside diplomatic overtures between Iran and Saudi Arabia.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "Russia",
+        "Ukraine",
+        "Iran",
+        "Saudi Arabia",
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil & Gas"
+      ],
+      "investorImpact": "The decline in oil prices impacts energy sector equities and commodity portfolios, offering potential relief to inflation-sensitive assets while creating headwinds for oil producers.",
+      "reasoning": "The article is classified under MARKET due to its direct impact on oil prices and energy commodities driven by geopolitical developments. It is highly important for fund monitoring as shifts in crude supply dynamics affect broad market sentiment and energy sector positioning.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Oil falls after Trump declares 'energy ceasefire' between Russia and Ukraine",
+      "publishedAtSgt": "2026-10-12T12:21:21+08:00",
+      "url": "https://www.cnbc.com/2026/10/12/oil-prics-today-iran-us-saudi-arabia-crude-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-12T12:41:03+08:00"
+    },
     {
       "articleId": "8d8059af18024f174d16d3d92a5938c9f466e9f0c106f89ff9c0e57137376860",
       "relevant": true,
