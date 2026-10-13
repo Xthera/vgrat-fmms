@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-10-13T06:36:41+08:00",
+  "generatedAtSgt": "2026-10-13T09:40:14+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,23 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "ba826ebda82a56747f2cf7a06f0c4818475f7d658de8041ffd3af5b23b862150",
+      "source": "CNBC",
+      "title": "'Boring is not bad': CEO of Southeast Asia's largest bank pitches Singapore as a haven amid global turmoil",
+      "publishedAtSgt": "2026-10-13T09:26:41+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/singapore-war-geopolitics-dbs-bank-ceo.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "SINGAPORE — Southeast Asia's biggest bank by assets is making a pitch to investors that Singapore and its businesses can help them navigate many of the uncertainties around the globe. \"In this huge time of volatility, 'boring' is not bad, right?\" The investing and business climate worldwide has been upended by everything from trade wars and El Niño-related weather issues to the Iran conflict and the Russia-Ukraine war.",
+      "feeds": [
+        "latest",
+        "finance",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-13T09:40:14+08:00"
+    },
     {
       "id": "d06d5e6b5d26e9833f3fbdd7cb5e22ab0d84b4f70db53d7152b0f399af901805",
       "source": "CNBC",
@@ -1564,21 +1581,6 @@
         "technology"
       ],
       "collectedAtSgt": "2026-10-06T21:38:02+08:00"
-    },
-    {
-      "id": "9806875c4810a0a461699c92a8dd78052f2831ebf61bf0be6f16ad1365739234",
-      "source": "CNBC",
-      "title": "Car buyers are stretching loans to afford payments — it's a 'potential warning light,' analyst says",
-      "publishedAtSgt": "2026-10-06T20:15:01+08:00",
-      "url": "https://www.cnbc.com/2026/10/06/car-loans-are-getting-longer-as-monthly-payments-hit-record-highs.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "\"Monthly payments are rising because buyers are borrowing significantly more money overall,\" said Joseph Yoon, consumer insights analyst at Edmunds. \"But that gap could become harder to sustain if energy costs remain elevated and the conflict in the Middle East remains unresolved.\" High oil prices in the global market have driven U.S.",
-      "feeds": [
-        "latest"
-      ],
-      "collectedAtSgt": "2026-10-06T21:38:01+08:00"
     }
   ]
 }
