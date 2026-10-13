@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-10-14T00:41:09+08:00",
+  "generatedAtSgt": "2026-10-14T03:51:35+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,53 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "b42a7f7c487b977f09d73b0ad7736bc17ef4472b45b44bcb41457607e4f13d2b",
+      "source": "CNBC",
+      "title": "Meta shares rise for a second straight day as new AI model family impresses",
+      "publishedAtSgt": "2026-10-14T02:55:33+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/13/meta-shares-rise-for-a-second-straight-day-as-new-ai-model-family-impresses.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Stocks are lower across the board Tuesday afternoon, as key members of the AI buildout trade continue to struggle. The AI trade was wobbling even before being confronted by these headlines. The Fed's Beige Book — the central bank's periodic update on current economic conditions in the country, gathered by the 12 regional Fed arms — is due out at 2 p.m.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-14T03:51:35+08:00"
+    },
+    {
+      "id": "fb9dcbe418b17799d7d83d3c85aa0d3962596c873e00a7f0d682873e6ef6d294",
+      "source": "CNBC",
+      "title": "The latest inflation data is expected to show price increases are accelerating",
+      "publishedAtSgt": "2026-10-14T02:05:57+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/september-consumer-price-index-inflation.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "So-called core inflation, which strips out volatile food and energy prices, is expected to increase 0.2% from August and 2.5% on a 12-month basis. Energy costs have been among the biggest drivers of inflation since the U.S. \"Typically, when we have these moves in inflation, everyone's models undershoot the actual outcome.\" Sticky oil prices could also push up costs for items in other, non-energy categories, according to Robert Sockin, chief U.S.",
+      "feeds": [
+        "latest",
+        "economy"
+      ],
+      "collectedAtSgt": "2026-10-14T03:51:35+08:00"
+    },
+    {
+      "id": "641c076fbd72a22d7dfd656f5009bd7477f798ea526bc1c30c94436079758fea",
+      "source": "CNBC",
+      "title": "The AI trade is cracking. Here's how to profit",
+      "publishedAtSgt": "2026-10-14T00:44:21+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/the-ai-trade-is-cracking-heres-how-to-profit.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Despite the Magnificent Seven making record highs, the AI trade is showing signs of cracks. Concerns over OpenAI's revenue growth have hit neocloud stocks, and chips are selling off Tuesday on concerns about Chinese competition. The biggest risks are on the calendar: CPI on Wednesday, bank and Taiwan Semiconductor earnings this week, and Microsoft and Alphabet reporting alongside the Fed decision on Oct.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-14T03:51:35+08:00"
+    },
     {
       "id": "59a13c5bfe46e2ceabca508372af98604b264511cf5da6c3c30fd0660deba749",
       "source": "CNBC",
@@ -1543,53 +1590,6 @@
         "world"
       ],
       "collectedAtSgt": "2026-10-07T18:37:24+08:00"
-    },
-    {
-      "id": "38e36bb45f28ce8a74229f4543d580b212c2aaae584a59df96c1a2c470183236",
-      "source": "CNBC",
-      "title": "Google ordered to halt work on two data centers in ‘Texas of Europe’",
-      "publishedAtSgt": "2026-10-07T17:26:02+08:00",
-      "url": "https://www.cnbc.com/2026/10/07/google-finland-data-center-halt.html",
-      "category": "TECHNOLOGY",
-      "relevanceScore": 82,
-      "relevanceReason": "technology_business_or_infrastructure",
-      "summary": "Google has been ordered to halt work on two data centers it's developing in Finland, a month after the tech giant committed to investing $15 billion in AI infrastructure in the country. Finland has emerged as a key location for data centers amid the AI boom, with hyperscalers and developers eyeing its available land and power, which is in short supply throughout most of Europe.",
-      "feeds": [
-        "latest",
-        "technology",
-        "world"
-      ],
-      "collectedAtSgt": "2026-10-07T18:37:23+08:00"
-    },
-    {
-      "id": "5d20cb98b9eabf860fc9fd9c78c1348fd792f9b38f9d1bc51aaf05b3795633c1",
-      "source": "CNBC",
-      "title": "CNBC Daily Open: AI rally defies bond market rout",
-      "publishedAtSgt": "2026-10-07T14:28:35+08:00",
-      "url": "https://www.cnbc.com/2026/10/07/daily-open-ai-rally-bond-market-rout.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "The AI bulls are trampling the bond market canaries in the coal mine. Temasek, Singapore's state-owned investment giant, has cautioned that a reversal in the AI trade poses the biggest risk to markets right now. Inflation in India has been rising for 10 straight months, while economic growth has remained strong despite external challenges.",
-      "feeds": [
-        "world"
-      ],
-      "collectedAtSgt": "2026-10-07T15:37:52+08:00"
-    },
-    {
-      "id": "8bef1830b0236a99635de826b197d5c9f5c513072ae93423b14707cae2e8052f",
-      "source": "CNBC",
-      "title": "India’s central bank hikes rates for the first time since 2023 as inflation creeps up",
-      "publishedAtSgt": "2026-10-07T12:38:00+08:00",
-      "url": "https://www.cnbc.com/2026/10/07/india-rbi-interest-rates-inflation.html",
-      "category": "ECONOMIC",
-      "relevanceScore": 101,
-      "relevanceReason": "strong_economic_title",
-      "summary": "The markets need to see a \"credible\" hike from India's central bank that shows its ability to raise rates again to contain inflation, HSBC said in a report on Monday. The World Bank expects India's economic growth to slow to 7.1% in the financial year ending March 2027 as compared to 7.8% in the previous year, it said in a report on Tuesday.",
-      "feeds": [
-        "world"
-      ],
-      "collectedAtSgt": "2026-10-07T12:38:36+08:00"
     }
   ]
 }
