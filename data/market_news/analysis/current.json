@@ -1,10 +1,133 @@
 {
-  "generatedAtSgt": "2026-10-13T09:55:39.143312+08:00",
+  "generatedAtSgt": "2026-10-13T12:57:09.178884+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 179,
+  "articleCount": 183,
   "analyses": [
+    {
+      "articleId": "efd53779629cbacc1b81217d4c41dcb40d2b16d98da775dbc557f0d82b9df7b3",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Oil prices fell as investors assessed the potential for increased Russian diesel supply and monitored geopolitical risks involving the Saudi-Houthi conflict. Additionally, political comments regarding EU spending on Russian energy highlighted ongoing supply dynamics.",
+      "assetClasses": [
+        "Commodities"
+      ],
+      "geographies": [
+        "Global",
+        "Europe",
+        "Russia",
+        "Middle East"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil & Gas"
+      ],
+      "investorImpact": "Decresting oil prices can impact energy sector equities and commodity portfolios, while offering relief to inflation-sensitive consumer and industrial sectors.",
+      "reasoning": "The article details direct market movements in oil prices driven by supply expectations and geopolitical conflicts, making it relevant for commodity and energy sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Oil prices fall as traders assess Russian diesel supply prospects and Saudi-Houthi conflict",
+      "publishedAtSgt": "2026-10-13T11:49:23+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/oil-prices-today-brent-wti-hormuz.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-13T12:41:37+08:00"
+    },
+    {
+      "articleId": "d773371c395ba9f2f2f87e1b5db485ee9ffc0e814540fd884d1e724d2e4f9a2f",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The IMF warns that government bond yields could experience a disorderly spike driven by escalating inflation, rising government debt, and AI-related borrowings. Advanced economies are seeing multidecade highs in bond yields due to energy cost pressures from Middle East conflicts and expectations of tighter monetary policy.",
+      "assetClasses": [
+        "Fixed Income",
+        "Bonds",
+        "Sovereign Debt"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Government",
+        "Financials"
+      ],
+      "investorImpact": "Investors face heightened volatility in fixed income markets and potential capital losses on sovereign bonds as yields rise disorderly, which may also increase borrowing costs across other asset classes.",
+      "reasoning": "Classified as ECONOMIC because it focuses on IMF warnings regarding macroeconomic debt and inflation risks. It is important (HIGH) due to its direct systemic implications for global bond markets and monetary conditions, making it highly relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "IMF warns bond yields could see a 'disorderly' spike as debt, inflation risks worsen",
+      "publishedAtSgt": "2026-10-13T11:19:43+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/treasury-yields-imf-debt-inflation-.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-13T12:41:36+08:00"
+    },
+    {
+      "articleId": "b3388d781cab11c558a8473e6ec2678d75999b9f4f5e3ffd85d6c81de2048353",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Asian technology stocks and major chipmakers such as SK Hynix and Samsung Electronics experienced severe sell-offs, plunging over 7% to 8% as regional markets tracked a Wall Street chip sell-off driven by concerns over artificial intelligence financing and intensifying competition.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Asia",
+        "South Korea",
+        "Japan"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors with exposure to Asian equities, semiconductor manufacturers, and AI-related infrastructure should monitor this broad-based tech sell-off closely for signs of a deeper correction or shifting sentiment regarding AI financing.",
+      "reasoning": "Classified as MARKET due to the significant downward price movement in major regional equities driven by broader tech sector sentiment and Wall Street trends, with high importance for technology and chip-focused portfolios.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "SK Hynix, SoftBank shares plunge as tech stocks in Asia track Wall Street chip sell-off",
+      "publishedAtSgt": "2026-10-13T10:49:17+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/sk-hynix-softbank-samsung-electronics-shares-tech-stocks-fall.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-13T12:41:37+08:00"
+    },
+    {
+      "articleId": "5cebc5646c759c3c1ea224a73f1729c2971ed380ec940f8dd1160001beec8fb0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Shares of Six Flags Entertainment plunged over 10% in after-hours trading following reports of a deadly roller coaster incident at an amusement park in Georgia, reversing earlier gains during the regular session.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Entertainment"
+      ],
+      "investorImpact": "The sudden drop in Six Flags share price signals heightened short-term downside risk and potential negative sentiment for the company and broader amusement park operators due to safety concerns and liability risks.",
+      "reasoning": "Classified as MARKET due to the direct impact on a publicly traded company's stock price following a major operational incident. Sentiment is NEGATIVE given the plunge in share value and tragic nature of the event, making it important for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Six Flags shares plunge after-hours following report of deadly roller coaster incident",
+      "publishedAtSgt": "2026-10-13T10:29:14+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/six-flags-shares-plunge-after-hours-deadly-roller-coaster-incident-goliath-georgia.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-13T12:41:37+08:00"
+    },
     {
       "articleId": "ba826ebda82a56747f2cf7a06f0c4818475f7d658de8041ffd3af5b23b862150",
       "relevant": true,
