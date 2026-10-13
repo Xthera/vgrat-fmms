@@ -1,10 +1,99 @@
 {
-  "generatedAtSgt": "2026-10-14T04:07:21.686359+08:00",
+  "generatedAtSgt": "2026-10-14T07:04:34.628838+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 191,
+  "articleCount": 194,
   "analyses": [
+    {
+      "articleId": "6ff63d635bb3b2b1db4cd60c47b0d1c5d38b899e1e8859f7fa9fe3ace080d3a6",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer remains optimistic about semiconductor stocks despite a recent 7.2% decline in the VanEck Semiconductor ETF over six sessions, while warning that rising oil prices and interest rates may extend the market sell-off.",
+      "assetClasses": [
+        "Equities",
+        "ETFs"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors in technology and semiconductor sectors should monitor rising interest rates and oil prices as potential catalysts for extended volatility, while weighing long-term structural demand against near-term headwinds.",
+      "reasoning": "Classified as MARKET due to its focus on sector-specific stock sell-offs, ETF performance, and broader macro drivers like interest rates and oil prices. Sentiment is MIXED because it balances near-term sell-off warnings with a fundamentally resilient long-term outlook.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer isn't giving up on semiconductor stocks despite the sell off. Here's why",
+      "publishedAtSgt": "2026-10-14T06:19:29+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/jim-cramer-semiconductor-stocks-sell-off.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T06:48:59+08:00"
+    },
+    {
+      "articleId": "d39519b7982f6132a353dde7c104897e1c0263c5fb42332c1f3e5c548b5b17df",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "As investors await the latest Consumer Price Index data, this article highlights hedging strategies against inflation using Treasury Inflation-Protected Securities (TIPS), commodities, and infrastructure funds.",
+      "assetClasses": [
+        "Fixed Income",
+        "Commodities",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors can use the mentioned asset classes like TIPS, commodities, and infrastructure funds to protect portfolios against the eroding effects of inflation.",
+      "reasoning": "Classified as ECONOMIC because it focuses on inflation metrics and hedging strategies involving TIPS and commodities. It is relevant for portfolio management and fund monitoring regarding inflation risk.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Don't let inflation bite — how to hedge with TIPS, commodities and infrastructure funds",
+      "publishedAtSgt": "2026-10-14T04:52:22+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/inflation-hedge-tips-commodities-infrastructure.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T06:48:59+08:00"
+    },
+    {
+      "articleId": "e5f4df7254d1347a7df5afcfba099e19be775b1dd9c1961f2f280bc354253123",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Bank of America has been fined $1.2 billion over money-laundering violations, causing its stock to drop about 2% in after-hours trading and challenging the bank's long-standing emphasis on responsible growth.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors in Bank of America face potential downward pressure on shares and regulatory headwinds following the hefty $1.2 billion fine, which undermines management's past focus on responsible growth and risk reduction.",
+      "reasoning": "Classified as MARKET due to direct stock price impact and major corporate governance news involving a top-tier financial institution. Importance is HIGH given the massive $1.2 billion fine and immediate negative market reaction.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bank of America fined $1.2 billion over money-laundering violations",
+      "publishedAtSgt": "2026-10-14T04:45:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/bank-of-america-treasury-money-laundering.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T06:48:59+08:00"
+    },
     {
       "articleId": "b42a7f7c487b977f09d73b0ad7736bc17ef4472b45b44bcb41457607e4f13d2b",
       "relevant": true,
