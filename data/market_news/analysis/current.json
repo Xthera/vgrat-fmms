@@ -1,10 +1,105 @@
 {
-  "generatedAtSgt": "2026-10-14T10:07:42.775108+08:00",
+  "generatedAtSgt": "2026-10-14T13:09:43.066875+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 199,
+  "articleCount": 202,
   "analyses": [
+    {
+      "articleId": "6e93d3e93539d42802d353cb02da2d835b01950b4f2a7dc9b5c302f8cb11f12e",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "The Philippine central bank is preparing for a severe 'Godzilla' El Nino combined with ongoing oil shocks, which threaten to disrupt inflation forecasts and drive up prices between November and February as maintaining price stability remains a priority.",
+      "assetClasses": [
+        "Currencies",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "Philippines",
+        "Southeast Asia"
+      ],
+      "sectors": [
+        "Agriculture",
+        "Energy",
+        "Central Banking"
+      ],
+      "investorImpact": "Investors should monitor potential inflationary pressures in the Philippines driven by weather and oil shocks, which may influence central bank monetary policy decisions and impact Philippine peso stability and local fixed income markets.",
+      "reasoning": "The article details macroeconomic pressures from weather events and commodity shocks affecting inflation and monetary policy in a key emerging market economy, making it relevant for economic and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "'Godzilla El Niño' is wreaking havoc with Philippine central bank's inflation forecasts",
+      "publishedAtSgt": "2026-10-14T12:24:28+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/godzilla-el-nino-asia-inflation-philippines.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T12:54:06+08:00"
+    },
+    {
+      "articleId": "8c5e3680462f8e448668ccdb60725ec227064da2849ccb3955075489bd1520a4",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Oil prices rose on Wednesday due to escalating Middle East tensions, specifically fighting between Iran-backed Houthis and Saudi Arabia, which involved airstrikes on energy terminals and fuel reserves in Yemen, raising concerns over potential supply disruptions.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "Middle East",
+        "Saudi Arabia",
+        "Yemen",
+        "Iran"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "The escalation of geopolitical conflict in the Middle East directly threatens global oil supply lines, driving up crude prices and increasing input costs for energy-sensitive sectors, which can impact broader market volatility and inflation expectations.",
+      "reasoning": "Classified as GEOPOLITICAL due to the military conflicts and strikes involving Saudi Arabia and Iran-backed Houthis in Yemen, with HIGH importance because of its direct transmission to oil prices and supply disruption fears.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Oil rises amid growing Mideast tensions between Iran-backed Houthis and Saudi Arabia",
+      "publishedAtSgt": "2026-10-14T12:07:00+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/oil-rises-amid-growing-tensions-between-saudis-and-iran-backed-houthis.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T12:54:06+08:00"
+    },
+    {
+      "articleId": "0b101207959432bb320fe9e89df7d316d114f1c4eb59f6f5356f4f58623a0f08",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "South Korea's Hyundai Motor Group has announced a strategic investment of $15.5 billion in India spanning from 2026 to 2032, reinforcing its long-term commitment to the region as a core emerging market for growth.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "South Korea",
+        "India"
+      ],
+      "sectors": [
+        "Automotive"
+      ],
+      "investorImpact": "The massive capital injection signals strong growth opportunities within India's automotive and manufacturing sectors, making it of interest to investors focused on emerging markets and foreign direct investment in South Asia.",
+      "reasoning": "Classified as MARKET due to the direct corporate investment announcement by a major automaker into an emerging market economy, presenting clear sector and geographic implications.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "South Korean carmaker Hyundai plans 'strategic' investment of $15.5 billion in India by 2032",
+      "publishedAtSgt": "2026-10-14T10:04:47+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/korea-india-hyundai-cars-investment.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T12:54:07+08:00"
+    },
     {
       "articleId": "1695484a07ff07a3b45a18573d5b3a4a2ed14073ea86f2e19ecaedd0fe385662",
       "relevant": true,
