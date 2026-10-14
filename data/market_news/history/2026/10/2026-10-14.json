@@ -5,6 +5,38 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "4d4280d28ec839d6c32cfb681147f19b37f096996fd93af50daa088b13da2de3",
+      "source": "CNBC",
+      "title": "Here's the inflation breakdown for September 2026 — in one chart",
+      "publishedAtSgt": "2026-10-14T22:56:25+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/cpi-inflation-breakdown-september-2026.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "The inflation rate increased in September on the back of higher gasoline and energy prices amid the Iran war, further squeezing households' budgets and perhaps putting pressure on the Federal Reserve to raise interest rates, economists said. central bank, which uses interest-rate policy as a lever to control the trajectory of inflation — may choose to increase its benchmark interest rate at upcoming policy meetings to rein in persistently high inflation, economists said.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-15T02:03:42+08:00"
+    },
+    {
+      "id": "a09df48d3643844f737786decb22f9e4305ebcdc8576d762391b9711ac9050ca",
+      "source": "CNBC",
+      "title": "Bending Spoons skyrockets 35% as Berkshire Hathaway makes $330 million investment",
+      "publishedAtSgt": "2026-10-14T22:39:21+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/berkshire-hathaway-investment-bending-spoons.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Shares of Bending Spoons skyrocketed 35% after a new securities filing revealed that Berkshire Hathaway made a fresh $330 million investment into the company. The latest infusion follows the conglomerate's $600 million investment from July, when the Italy-based serial acquirer went public on the Nasdaq.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-15T02:03:42+08:00"
+    },
+    {
       "id": "8ed00ac1b16f0bc2cb704e342fc293080a237565d8143cce1e0c44b8d7f716ba",
       "source": "CNBC",
       "title": "Bank of America shares drop 7% after third-quarter revenue miss and regulatory penalty",
@@ -372,6 +404,6 @@
       "collectedAtSgt": "2026-10-14T00:41:06+08:00"
     }
   ],
-  "articleCount": 23,
-  "updatedAtSgt": "2026-10-14T20:56:07+08:00"
+  "articleCount": 25,
+  "updatedAtSgt": "2026-10-15T02:03:42+08:00"
 }
