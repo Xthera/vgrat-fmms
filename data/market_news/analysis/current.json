@@ -1,10 +1,97 @@
 {
-  "generatedAtSgt": "2026-10-15T02:20:34.437616+08:00",
+  "generatedAtSgt": "2026-10-15T06:38:10.340626+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 204,
+  "articleCount": 207,
   "analyses": [
+    {
+      "articleId": "51bd4a796cfda1ff03bccb42903be9c65772029de54e0e8fcbbeacb7c7216fe3",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Dell shares dropped 11% and triggered a broader data center hardware sell-off after Barclays downgraded Dell, HPE, and NetApp due to concerns regarding enterprise AI spending timing and ROI.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Hardware"
+      ],
+      "investorImpact": "Investors holding data center equipment and enterprise hardware stocks face near-term volatility and downward pressure as market sentiment shifts to question the timing and profitability of enterprise AI infrastructure investments.",
+      "reasoning": "The article is classified under TECHNOLOGY as it addresses enterprise AI hardware and infrastructure spending. Sentiment is NEGATIVE due to sharp stock plunges and downgrades by major analysts. Importance is HIGH because it highlights a sector-wide re-evaluation of AI buildout sustainability.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Dell stock plunges 11%, leading data center sell-off as fears mount about 'enterprise AI timing'",
+      "publishedAtSgt": "2026-10-15T04:19:25+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/dell-stock-barclays-enterprise-ai.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-15T06:22:39+08:00"
+    },
+    {
+      "articleId": "7d1c4d5106c15d6e7e607c5a9cbc4554da0a721e2e276ad1bc4e4f674761453d",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Bank of America hired 1,000 contractors to patch software vulnerabilities exposed by advanced AI models like Anthropic's Mythos, contributing to a temporary spending increase and an 8% slump in the bank's shares.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Technology"
+      ],
+      "investorImpact": "The significant rise in operational costs due to AI-exposed software flaws and the immediate negative stock reaction highlight emerging financial and operational risks for major financial institutions utilizing or exposed to advanced AI technologies.",
+      "reasoning": "Classified as MARKET because the event directly impacted Bank of America's stock price and highlighted emerging operational expenses linked to AI security vulnerabilities. It is relevant for fund monitoring due to the intersection of banking, operational costs, and artificial intelligence integration.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bank of America hired 1,000 contractors to patch software flaws exposed by Anthropic's Mythos",
+      "publishedAtSgt": "2026-10-15T04:06:28+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/anthropic-mythos-bank-of-america-hiring-cost.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-15T06:22:39+08:00"
+    },
+    {
+      "articleId": "7730ef90e26af97497c2061a2d760dbc16e371730ae960d5288875c49e8abc4c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "AI infrastructure stocks have tumbled amid rising market odds of an interest rate hike by the central bank at its upcoming October meeting, alongside upcoming financial results from AI labs that could impact chip and infrastructure stocks.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors holding AI infrastructure and chip stocks face heightened volatility due to macroeconomic interest rate concerns and sector-specific earnings pressures.",
+      "reasoning": "The article discusses a market sell-off in AI infrastructure stocks driven by shifting macroeconomic expectations regarding interest rates and upcoming industry earnings, making it relevant for market and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AI infrastructure stocks tumble. Here's a few reasons for the sell-off",
+      "publishedAtSgt": "2026-10-15T02:41:11+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/14/ai-infrastructure-stocks-tumble-heres-a-few-reasons-for-the-sell-off-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-15T06:22:40+08:00"
+    },
     {
       "articleId": "8841ae13cf38ef529ec672a60b90cd5c557b158b56096194a807225de29cbf9e",
       "relevant": true,
