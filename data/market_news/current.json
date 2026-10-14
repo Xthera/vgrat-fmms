@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-10-15T02:03:42+08:00",
+  "generatedAtSgt": "2026-10-15T06:22:40+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,55 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "51bd4a796cfda1ff03bccb42903be9c65772029de54e0e8fcbbeacb7c7216fe3",
+      "source": "CNBC",
+      "title": "Dell stock plunges 11%, leading data center sell-off as fears mount about 'enterprise AI timing'",
+      "publishedAtSgt": "2026-10-15T04:19:25+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/dell-stock-barclays-enterprise-ai.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "Dell shares plummeted 11% on Wednesday and dragged down other data center equipment names on mounting concerns that enterprise spending on artificial intelligence won't justify the AI buildout. In a report to clients on Wednesday, analysts at Barclays downgraded its rating on Dell, HPE and NetApp, \"after a significant run and on enterprise AI timing.\" Makers of data center servers and other backend equipment have been favored on Wall Street this year on optimism that they'll be selling huge...",
+      "feeds": [
+        "latest",
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-15T06:22:39+08:00"
+    },
+    {
+      "id": "7d1c4d5106c15d6e7e607c5a9cbc4554da0a721e2e276ad1bc4e4f674761453d",
+      "source": "CNBC",
+      "title": "Bank of America hired 1,000 contractors to patch software flaws exposed by Anthropic's Mythos",
+      "publishedAtSgt": "2026-10-15T04:06:28+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/anthropic-mythos-bank-of-america-hiring-cost.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Bank of America has hired an army of external contractors to help it patch software vulnerabilities exposed by advanced artificial intelligence models including Anthropic's Mythos, the bank's CEO, Brian Moynihan, told CNBC on Wednesday. Still, Moynihan — speaking as his company's shares slumped as much as 8% Wednesday — sought to reassure investors that the spending increase was temporary.",
+      "feeds": [
+        "latest",
+        "business",
+        "finance",
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-15T06:22:39+08:00"
+    },
+    {
+      "id": "7730ef90e26af97497c2061a2d760dbc16e371730ae960d5288875c49e8abc4c",
+      "source": "CNBC",
+      "title": "AI infrastructure stocks tumble. Here's a few reasons for the sell-off",
+      "publishedAtSgt": "2026-10-15T02:41:11+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/14/ai-infrastructure-stocks-tumble-heres-a-few-reasons-for-the-sell-off-.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "(Later in the day, yields reversed slightly into the red.) According to the CME FedWatch tool, the market odds of an interest rate rise at the central bank's upcoming October meeting increased to roughly 37% for a 25-basis-point rate hike, up from 22% on Tuesday and about 18% one week ago. If we do see better-than-expected financials from the AI lab, that could take some of the pressure off chip stocks and other AI infrastructure-related names.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-15T06:22:40+08:00"
+    },
     {
       "id": "8841ae13cf38ef529ec672a60b90cd5c557b158b56096194a807225de29cbf9e",
       "source": "CNBC",
@@ -1543,55 +1592,6 @@
         "latest"
       ],
       "collectedAtSgt": "2026-10-09T06:36:04+08:00"
-    },
-    {
-      "id": "0c22ce18ebd364dee9263dfbe0cf5c527371dfc3cf724055099c673cd3fafcf5",
-      "source": "CNBC",
-      "title": "Why a Starbucks takeover of Chipotle would — and wouldn't — make sense for both companies",
-      "publishedAtSgt": "2026-10-09T03:15:26+08:00",
-      "url": "https://www.cnbc.com/2026/10/08/starbucks-chipotle-acquisition.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "Starbucks has reportedly explored buying Chipotle Mexican Grill, but investors are split on whether the megadeal would make sense for both companies. The report sent Chipotle stock up about 7% in afternoon trading, while shares of Starbucks fell roughly 4%. It is not unusual for deal rumors to lower the potential acquirer's value and increase the target's share price, but investor reactions show that a prospective takeover comes with pros and cons for each side of the deal.",
-      "feeds": [
-        "latest",
-        "business",
-        "world"
-      ],
-      "collectedAtSgt": "2026-10-09T03:36:31+08:00"
-    },
-    {
-      "id": "77b96050d8b754b679c913aaf2501551c86f1fca26143a8d8f6de85a25df951a",
-      "source": "CNBC",
-      "title": "Nvidia, Oracle, CoreWeave and other AI stocks sink on OpenAI revenue report",
-      "publishedAtSgt": "2026-10-09T02:18:31+08:00",
-      "url": "https://www.cnbc.com/2026/10/08/open-ai-revenue-nvidia-oracle-coreweave.html",
-      "category": "MARKET",
-      "relevanceScore": 92,
-      "relevanceReason": "strong_market_title",
-      "summary": "Shares of Nvidia, Oracle, CoreWeave and other artificial intelligence names sank lower on Thursday after the market learned more details about OpenAI's revenue. The company is under pressure to justify its $852 billion valuation to investors as it gears up for what is widely expected to be a blockbuster IPO. In the interim, OpenAI is engaging in early stage discussions with investors about a potential new funding round.",
-      "feeds": [
-        "latest",
-        "technology",
-        "world"
-      ],
-      "collectedAtSgt": "2026-10-09T03:36:31+08:00"
-    },
-    {
-      "id": "f23381c2e9feb8deb6ef887c61208059f7287dd080e3c2d10fa3747fd4c87fc6",
-      "source": "CNBC",
-      "title": "Treasury sanctions 17 tankers linked to Iran's 'shadow fleet' in economic pressure campaign",
-      "publishedAtSgt": "2026-10-09T01:13:32+08:00",
-      "url": "https://www.cnbc.com/2026/10/08/iran-treasury-sanctions-shadow-fleet.html",
-      "category": "GEOPOLITICAL",
-      "relevanceScore": 71,
-      "relevanceReason": "geopolitical_with_direct_economic_impact",
-      "summary": "Treasury Department is sanctioning 17 additional vessels it says are connected to Iran's \"shadow fleet\" used to transport oil and gas out of the country, as Washington tries to choke Tehran's economy to end the war that began over seven months ago. has long said Iran uses illicit oil revenues to fund its regime and related terror proxies and hopes to cripple Tehran's economy by stemming that revenue.",
-      "feeds": [
-        "latest"
-      ],
-      "collectedAtSgt": "2026-10-09T03:36:31+08:00"
     }
   ]
 }

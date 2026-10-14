@@ -5,6 +5,55 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "51bd4a796cfda1ff03bccb42903be9c65772029de54e0e8fcbbeacb7c7216fe3",
+      "source": "CNBC",
+      "title": "Dell stock plunges 11%, leading data center sell-off as fears mount about 'enterprise AI timing'",
+      "publishedAtSgt": "2026-10-15T04:19:25+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/dell-stock-barclays-enterprise-ai.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "Dell shares plummeted 11% on Wednesday and dragged down other data center equipment names on mounting concerns that enterprise spending on artificial intelligence won't justify the AI buildout. In a report to clients on Wednesday, analysts at Barclays downgraded its rating on Dell, HPE and NetApp, \"after a significant run and on enterprise AI timing.\" Makers of data center servers and other backend equipment have been favored on Wall Street this year on optimism that they'll be selling huge...",
+      "feeds": [
+        "latest",
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-15T06:22:39+08:00"
+    },
+    {
+      "id": "7d1c4d5106c15d6e7e607c5a9cbc4554da0a721e2e276ad1bc4e4f674761453d",
+      "source": "CNBC",
+      "title": "Bank of America hired 1,000 contractors to patch software flaws exposed by Anthropic's Mythos",
+      "publishedAtSgt": "2026-10-15T04:06:28+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/anthropic-mythos-bank-of-america-hiring-cost.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Bank of America has hired an army of external contractors to help it patch software vulnerabilities exposed by advanced artificial intelligence models including Anthropic's Mythos, the bank's CEO, Brian Moynihan, told CNBC on Wednesday. Still, Moynihan — speaking as his company's shares slumped as much as 8% Wednesday — sought to reassure investors that the spending increase was temporary.",
+      "feeds": [
+        "latest",
+        "business",
+        "finance",
+        "technology"
+      ],
+      "collectedAtSgt": "2026-10-15T06:22:39+08:00"
+    },
+    {
+      "id": "7730ef90e26af97497c2061a2d760dbc16e371730ae960d5288875c49e8abc4c",
+      "source": "CNBC",
+      "title": "AI infrastructure stocks tumble. Here's a few reasons for the sell-off",
+      "publishedAtSgt": "2026-10-15T02:41:11+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/14/ai-infrastructure-stocks-tumble-heres-a-few-reasons-for-the-sell-off-.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "(Later in the day, yields reversed slightly into the red.) According to the CME FedWatch tool, the market odds of an interest rate rise at the central bank's upcoming October meeting increased to roughly 37% for a 25-basis-point rate hike, up from 22% on Tuesday and about 18% one week ago. If we do see better-than-expected financials from the AI lab, that could take some of the pressure off chip stocks and other AI infrastructure-related names.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-10-15T06:22:40+08:00"
+    },
+    {
       "id": "8841ae13cf38ef529ec672a60b90cd5c557b158b56096194a807225de29cbf9e",
       "source": "CNBC",
       "title": "How high inflation became a 'fact of life' in the U.S.",
@@ -117,6 +166,6 @@
       "collectedAtSgt": "2026-10-15T02:03:37+08:00"
     }
   ],
-  "articleCount": 7,
-  "updatedAtSgt": "2026-10-15T02:03:38+08:00"
+  "articleCount": 10,
+  "updatedAtSgt": "2026-10-15T06:22:40+08:00"
 }
