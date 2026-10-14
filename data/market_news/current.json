@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-10-14T09:48:23+08:00",
+  "generatedAtSgt": "2026-10-14T12:54:07+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,55 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "6e93d3e93539d42802d353cb02da2d835b01950b4f2a7dc9b5c302f8cb11f12e",
+      "source": "CNBC",
+      "title": "'Godzilla El Niño' is wreaking havoc with Philippine central bank's inflation forecasts",
+      "publishedAtSgt": "2026-10-14T12:24:28+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/godzilla-el-nino-asia-inflation-philippines.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "BANGKOK — The Philippine central bank is planning for a \"Godzilla\" El Niño on top of a prolonged oil shock, as the Southeast Asian nation tries to rein in inflation from three-year highs. The worst of El Niño's impact on prices is still to come, with the effects expected from November through February, he said, adding that maintaining price stability remains the central bank's priority.",
+      "feeds": [
+        "latest",
+        "economy",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-14T12:54:06+08:00"
+    },
+    {
+      "id": "8c5e3680462f8e448668ccdb60725ec227064da2849ccb3955075489bd1520a4",
+      "source": "CNBC",
+      "title": "Oil rises amid growing Mideast tensions between Iran-backed Houthis and Saudi Arabia",
+      "publishedAtSgt": "2026-10-14T12:07:00+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/oil-rises-amid-growing-tensions-between-saudis-and-iran-backed-houthis.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Oil rises Wednesday, amid worries over supply disruptions as tensions continue to escalate in the Middle East with fighting between Iran-backed Houthis and Saudi Arabia. According to Al Jazeera, Houthi energy terminals and fuel reserves in Yemen were struck by a Saudi-led coalition, though a spokesperson said that precautions were taken to avoid \"collateral damage on civilians.\" Meanwhile, tensions also continued to simmer between the U.S.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-14T12:54:06+08:00"
+    },
+    {
+      "id": "0b101207959432bb320fe9e89df7d316d114f1c4eb59f6f5356f4f58623a0f08",
+      "source": "CNBC",
+      "title": "South Korean carmaker Hyundai plans 'strategic' investment of $15.5 billion in India by 2032",
+      "publishedAtSgt": "2026-10-14T10:04:47+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/korea-india-hyundai-cars-investment.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "South Korea's Hyundai Motor Group on Tuesday said it plans to invest $15.5 billion from 2026 through 2032 in India, a market it considers core to the company's emerging-market growth and expansion. He added that this investment \"reaffirms\" the company's commitment to the Indian market for the next 30 years and beyond.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-14T12:54:07+08:00"
+    },
     {
       "id": "1695484a07ff07a3b45a18573d5b3a4a2ed14073ea86f2e19ecaedd0fe385662",
       "source": "CNBC",
@@ -1541,54 +1590,6 @@
         "world"
       ],
       "collectedAtSgt": "2026-10-08T06:34:51+08:00"
-    },
-    {
-      "id": "a38801f88bd2c8de4584795f39c18fb1e1ffdb8ad7ca4e139d9b44d639d6c170",
-      "source": "CNBC",
-      "title": "SpaceX’s plans to buy more Nvidia GPUs is keeping Jim Cramer bullish on the chip stock",
-      "publishedAtSgt": "2026-10-08T04:24:48+08:00",
-      "url": "https://www.cnbc.com/investingclub/2026/10/07/spacexs-plans-to-buy-more-nvidia-gpus-is-keeping-jim-cramer-bullish-on-the-chip-stock-.html",
-      "category": "TECHNOLOGY",
-      "relevanceScore": 81,
-      "relevanceReason": "technology_business_or_infrastructure",
-      "summary": "The FT said the deal could include $10 billion in bank loans and an additional $30 billion in investment-grade debt. So, that tells you something about the productivity of Nvidia's technology and the rentability of it.\" While dropping roughly 2.5% in Wednesday's tough market for tech stocks, SpaceX has been on the march lately — up nearly 60% since its all-time low of roughly $105 on Aug.",
-      "feeds": [
-        "latest"
-      ],
-      "collectedAtSgt": "2026-10-08T06:34:51+08:00"
-    },
-    {
-      "id": "0876b463a9777873103ef8f66800210374168371a51d41bc9e6ad2f4230d831b",
-      "source": "CNBC",
-      "title": "Modelo owner Constellation is getting creative to bring back beer drinkers as overall demand weakens",
-      "publishedAtSgt": "2026-10-08T03:14:03+08:00",
-      "url": "https://www.cnbc.com/2026/10/07/constellation-brands-earnings-beer-demand.html",
-      "category": "MARKET",
-      "relevanceScore": 57,
-      "relevanceReason": "supporting_market_description",
-      "summary": "However, the company said beer depletions, a measure of sales from distributors to retailers and other customers, declined slightly during the quarter, indicating consumer demand was softer than shipment growth suggests. Kirk has a buy rating and $209 price target on the stock, compared with the roughly $116 a share price as of Wednesday.",
-      "feeds": [
-        "latest",
-        "business"
-      ],
-      "collectedAtSgt": "2026-10-08T03:35:16+08:00"
-    },
-    {
-      "id": "0b7931a8be02be61f0184f735b2786a52edeec9629ee69b83cd542fb52b22935",
-      "source": "CNBC",
-      "title": "Microsoft to sell $2,599 Surface Laptop Ultra containing Nvidia AI chip",
-      "publishedAtSgt": "2026-10-08T02:55:10+08:00",
-      "url": "https://www.cnbc.com/2026/10/07/microsoft-starts-taking-preorders-for-2599-surface-laptop-ultra.html",
-      "category": "TECHNOLOGY",
-      "relevanceScore": 83,
-      "relevanceReason": "technology_business_or_infrastructure",
-      "summary": "Microsoft said its new laptop containing an Nvidia AI chip will start at $2,599, as the software maker tries to bring more artificial intelligence capabilities to its consumer devices. As the AI boom matures and chip technology advances, tech giants including Microsoft, Apple and Google are aiming to allow users to run more AI workloads from their devices rather than relying on the cloud.",
-      "feeds": [
-        "latest",
-        "technology",
-        "world"
-      ],
-      "collectedAtSgt": "2026-10-08T03:35:16+08:00"
     }
   ]
 }

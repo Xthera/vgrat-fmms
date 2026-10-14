@@ -5,6 +5,55 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "6e93d3e93539d42802d353cb02da2d835b01950b4f2a7dc9b5c302f8cb11f12e",
+      "source": "CNBC",
+      "title": "'Godzilla El Niño' is wreaking havoc with Philippine central bank's inflation forecasts",
+      "publishedAtSgt": "2026-10-14T12:24:28+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/godzilla-el-nino-asia-inflation-philippines.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "BANGKOK — The Philippine central bank is planning for a \"Godzilla\" El Niño on top of a prolonged oil shock, as the Southeast Asian nation tries to rein in inflation from three-year highs. The worst of El Niño's impact on prices is still to come, with the effects expected from November through February, he said, adding that maintaining price stability remains the central bank's priority.",
+      "feeds": [
+        "latest",
+        "economy",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-14T12:54:06+08:00"
+    },
+    {
+      "id": "8c5e3680462f8e448668ccdb60725ec227064da2849ccb3955075489bd1520a4",
+      "source": "CNBC",
+      "title": "Oil rises amid growing Mideast tensions between Iran-backed Houthis and Saudi Arabia",
+      "publishedAtSgt": "2026-10-14T12:07:00+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/oil-rises-amid-growing-tensions-between-saudis-and-iran-backed-houthis.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Oil rises Wednesday, amid worries over supply disruptions as tensions continue to escalate in the Middle East with fighting between Iran-backed Houthis and Saudi Arabia. According to Al Jazeera, Houthi energy terminals and fuel reserves in Yemen were struck by a Saudi-led coalition, though a spokesperson said that precautions were taken to avoid \"collateral damage on civilians.\" Meanwhile, tensions also continued to simmer between the U.S.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-14T12:54:06+08:00"
+    },
+    {
+      "id": "0b101207959432bb320fe9e89df7d316d114f1c4eb59f6f5356f4f58623a0f08",
+      "source": "CNBC",
+      "title": "South Korean carmaker Hyundai plans 'strategic' investment of $15.5 billion in India by 2032",
+      "publishedAtSgt": "2026-10-14T10:04:47+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/korea-india-hyundai-cars-investment.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "South Korea's Hyundai Motor Group on Tuesday said it plans to invest $15.5 billion from 2026 through 2032 in India, a market it considers core to the company's emerging-market growth and expansion. He added that this investment \"reaffirms\" the company's commitment to the Indian market for the next 30 years and beyond.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-10-14T12:54:07+08:00"
+    },
+    {
       "id": "1695484a07ff07a3b45a18573d5b3a4a2ed14073ea86f2e19ecaedd0fe385662",
       "source": "CNBC",
       "title": "China's exports likely grew by double-digits in September",
@@ -194,6 +243,6 @@
       "collectedAtSgt": "2026-10-14T00:41:06+08:00"
     }
   ],
-  "articleCount": 12,
-  "updatedAtSgt": "2026-10-14T09:48:23+08:00"
+  "articleCount": 15,
+  "updatedAtSgt": "2026-10-14T12:54:07+08:00"
 }
