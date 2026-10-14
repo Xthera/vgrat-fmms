@@ -1,10 +1,257 @@
 {
-  "generatedAtSgt": "2026-10-14T13:09:43.066875+08:00",
+  "generatedAtSgt": "2026-10-14T21:11:44.403270+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 202,
+  "articleCount": 210,
   "analyses": [
+    {
+      "articleId": "8ed00ac1b16f0bc2cb704e342fc293080a237565d8143cce1e0c44b8d7f716ba",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Bank of America shares fell over 7% in premarket trading after reporting a third-quarter revenue miss due to lower-than-expected trading results and a regulatory penalty, despite a slight beat in net interest income.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Banking"
+      ],
+      "investorImpact": "Investors holding Bank of America stock or exposed to the US banking sector face immediate negative pressure following the revenue miss, lower trading performance, and regulatory penalties.",
+      "reasoning": "The article details a significant single-stock market event with a major financial institution missing revenue targets and facing regulatory penalties, leading to a sharp share price drop. This is highly relevant for market monitoring and financial sector exposure.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bank of America shares drop 7% after third-quarter revenue miss and regulatory penalty",
+      "publishedAtSgt": "2026-10-14T20:54:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/bank-of-america-bac-q3-2026-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 93,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T20:56:06+08:00"
+    },
+    {
+      "articleId": "ae2f7f9f377405cb139465c673d51120b8f11daf87caa0e34aff9d583d204076",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The 10-year Treasury note yield rose after September core inflation came in hotter than expected at 2.6% annualized versus the 2.5% consensus estimate, coming just two weeks before the Federal Reserve's next interest rate decision.",
+      "assetClasses": [
+        "Fixed Income",
+        "Treasuries"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Higher-than-expected inflation drives Treasury yields up and weighs on bond prices, while signaling potential caution for future Federal Reserve interest rate cuts.",
+      "reasoning": "The article reports critical U.S. inflation data and its direct impact on Treasury yields ahead of an FOMC meeting, which is highly relevant for macroeconomic tracking and portfolio positioning.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "10-year Treasury yield jumps as September core inflation is hotter than expected",
+      "publishedAtSgt": "2026-10-14T20:51:44+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/us-treasury-yields-cpi-inflation-report.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T20:56:07+08:00"
+    },
+    {
+      "articleId": "a7959648d7369708387461dd7dd27dbb670151d3086450f43136f6c841672b64",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Morgan Stanley reported third-quarter results that beat expectations, driven by a blockbuster 41% increase in equities trading revenue to $5.8 billion, which exceeded estimates by $909 million.",
+      "assetClasses": [
+        "Equities",
+        "Stocks"
+      ],
+      "geographies": [
+        "Global",
+        "Asia"
+      ],
+      "sectors": [
+        "Financials",
+        "Banking"
+      ],
+      "investorImpact": "The strong earnings report from a major financial institution signals robust market activity and trading revenues, which can boost investor sentiment in the financial sector and broader equity markets.",
+      "reasoning": "The article details strong quarterly financial results and trading revenue beats for a major global bank, making it highly relevant for market monitoring and sector analysis.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Morgan Stanley tops estimates as equities trading revenue beats expectations by $909 million",
+      "publishedAtSgt": "2026-10-14T20:49:45+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/morgan-stanley-ms-q3-2026-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T20:56:06+08:00"
+    },
+    {
+      "articleId": "f18696246144a8f7d475c88138e66856e81b58d04a11dbcf225397896c78822d",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Rising energy costs continue to drive inflation following the Iran war, with higher oil prices driven by expected diesel supply tightness. Meanwhile, New York Fed President John Williams noted ongoing disinflationary forces, suggesting the central bank may avoid rate hikes in 2027.",
+      "assetClasses": [
+        "Commodities",
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Energy"
+      ],
+      "investorImpact": "Investors must weigh the upward pressure on inflation from sustained energy and diesel supply constraints against dovish central bank signals that 2027 rate hikes may not be necessary.",
+      "reasoning": "Classified as ECONOMIC because it directly addresses macroeconomic data concerning inflation, energy supply constraints, and Federal Reserve monetary policy outlooks. It is important for monitoring broader market trends and asset allocation.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Inflation data, Bank of America's penalty, Apple's new home hub and more in Morning Squawk",
+      "publishedAtSgt": "2026-10-14T20:45:09+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/5-things-to-know-before-the-stock-market-opens.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T20:56:07+08:00"
+    },
+    {
+      "articleId": "9687c09f1fb558ca0eedb660915f42daee85dfaf17b6cfd64cc0bf01e9efb8b6",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Mortgage rates rose to their highest level in nearly three years, causing overall demand to drop as 30-year fixed-rate mortgage averages increased to 7.50% and borrowers increasingly turned to riskier mortgage products due to crushed affordability.",
+      "assetClasses": [
+        "Real Estate",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Real Estate",
+        "Financials"
+      ],
+      "investorImpact": "Higher interest rates and reduced housing affordability could weigh on real estate transaction volumes, housing-related equities, and mortgage lenders, while increasing default risks if borrowers lean on riskier loan products.",
+      "reasoning": "The article discusses significant trends in the US mortgage and housing market driven by rising interest rates, directly impacting market conditions and housing sector fundamentals, warranting inclusion as a MARKET category event.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Even more borrowers choose riskier mortgages, as higher interest rates crush affordability",
+      "publishedAtSgt": "2026-10-14T20:01:31+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/even-more-borrowers-choose-riskier-mortgages-as-higher-interest-rates-crush-affordability.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T20:56:07+08:00"
+    },
+    {
+      "articleId": "3f2d1e173780899cd15758090fadd4302ae828570bfde6c8f6ae986b3b1274cb",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Tariffs and trade tensions involving Canada are impacting Michigan's Senate race as local industries, including agriculture, manufacturing, and tourism, face economic headwinds from ongoing trade disputes.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "Canada",
+        "Michigan"
+      ],
+      "sectors": [
+        "Agriculture",
+        "Manufacturing",
+        "Tourism"
+      ],
+      "investorImpact": "Trade disputes and tariffs create operational headwinds for manufacturing, agriculture, and tourism sectors operating in cross-border regions, potentially impacting regional equities and supply chain costs.",
+      "reasoning": "Classified as GEOPOLITICAL due to the focus on trade wars, tariffs, and retaliatory measures affecting cross-border commerce between the U.S. and Canada, with direct economic implications for key sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "How Trump’s tariffs and Iran war are becoming liabilities in Michigan’s Senate race",
+      "publishedAtSgt": "2026-10-14T18:30:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/mike-rogers-trump-tariffs-michigan-senate-election.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-14T20:56:07+08:00"
+    },
+    {
+      "articleId": "aefc7adc04ff322b41c44abf7f010b5a3180049fe3e39b1b5498e72fb0754e99",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Ukraine warns that SpaceX Starlink speed limits on terminals in motion are disrupting military operations amid intensified Russian attacks on Ukraine's energy infrastructure, despite a proposed energy ceasefire.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "Ukraine",
+        "Russia",
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Technology",
+        "Aerospace & Defense"
+      ],
+      "investorImpact": "Escalating attacks on energy infrastructure and defense disruptions in Ukraine can affect European energy markets and sentiment in the defense and technology sectors.",
+      "reasoning": "The article details ongoing geopolitical conflict affecting critical energy infrastructure and defense technology integration, which carries broader market implications for energy and defense sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Ukraine warns Starlink limits are disrupting military operations as Russia pounds its energy infrastructure",
+      "publishedAtSgt": "2026-10-14T17:18:18+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/russia-ukraine-energy-ceasefire-power-outages.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-14T20:56:06+08:00"
+    },
+    {
+      "articleId": "0ece6cf5dd4dd8fb8886dbbd918d806d730943e3fbc3083873036ad84545ed0c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "ASML reported profits that beat expectations and noted order interest stretching through 2030, driven by strong AI-related chip demand. The company's stock rose about 2% in early European trade, while China continues to ramp up its domestic semiconductor supply chain.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Europe",
+        "China",
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Strong order interest through 2030 and better-than-expected profits reinforce positive sentiment for AI infrastructure demand and semiconductor equipment manufacturers, benefiting technology sector investors.",
+      "reasoning": "Classified as MARKET due to strong earnings and share price movement, and positive sentiment based on beating expectations and durable AI-driven order interest. Highly relevant for technology sector portfolio monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "ASML says it's getting order interest through 2030 as profit smashes expectations",
+      "publishedAtSgt": "2026-10-14T16:45:13+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/asml-3q-earnings-ai-demand-orders-capacity.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T20:56:06+08:00"
+    },
     {
       "articleId": "6e93d3e93539d42802d353cb02da2d835b01950b4f2a7dc9b5c302f8cb11f12e",
       "relevant": true,
