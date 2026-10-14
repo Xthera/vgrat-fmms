@@ -1,10 +1,164 @@
 {
-  "generatedAtSgt": "2026-10-14T07:04:34.628838+08:00",
+  "generatedAtSgt": "2026-10-14T10:07:42.775108+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 194,
+  "articleCount": 199,
   "analyses": [
+    {
+      "articleId": "1695484a07ff07a3b45a18573d5b3a4a2ed14073ea86f2e19ecaedd0fe385662",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "China's exports for September are forecast to grow by double digits, supported by strong global demand for AI data center parts and stabilizing U.S. trade relations, while import growth is expected to moderate slightly.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "China",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Industrials",
+        "Trade"
+      ],
+      "investorImpact": "Strong export growth in China highlights resilience in global tech and manufacturing supply chains, particularly related to AI infrastructure demand, which can benefit multinational tech and industrial sectors.",
+      "reasoning": "The article provides macroeconomic data and forecasts regarding Chinese trade, which is critical for assessing global manufacturing and technology demand.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China's exports likely grew by double-digits in September",
+      "publishedAtSgt": "2026-10-14T09:16:02+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/chinas-exports-likely-grew-by-double-digits-in-september.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T09:48:22+08:00"
+    },
+    {
+      "articleId": "9abe7fb7b44cd59f0e9e127b0e1ab60ba217c231dc86edbcac20ee36b02228c1",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Major banks such as JPMorgan Chase, Wells Fargo, Goldman Sachs, and Citigroup report mixed financial results amid concerns over growing borrowing costs, artificial intelligence, and elevated oil prices, while investors closely monitor interest rate outlooks following Federal Reserve comments.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Energy",
+        "Technology"
+      ],
+      "investorImpact": "Investors should navigate heightened market volatility driven by conflicting signals on interest rates, mixed banking sector earnings, and ongoing concerns regarding high energy prices and borrowing costs.",
+      "reasoning": "The article is highly relevant for fund monitoring as it covers major banking earnings, macroeconomic headwinds like borrowing costs and oil prices, and Federal Reserve policy outlooks affecting multiple asset classes.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "CNBC Daily Open: Diesel deal may not be enough to curb high energy prices",
+      "publishedAtSgt": "2026-10-14T09:09:16+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/cnbc-daily-open-diesel-energy-apple-anthropic-imf.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-14T09:48:23+08:00"
+    },
+    {
+      "articleId": "a7e64b15720dea128b02752d3644657d241f767564bff5fec1808586184a65ee",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Singapore's third-quarter GDP growth for 2026 decelerated to 5.4% from a four-year high, though it still beat analyst estimates, supported by AI-related sectors and exports.",
+      "assetClasses": [
+        "Equities",
+        "Currencies"
+      ],
+      "geographies": [
+        "Singapore"
+      ],
+      "sectors": [
+        "Technology",
+        "Exports"
+      ],
+      "investorImpact": "The better-than-expected GDP growth indicates continued economic resilience in Singapore, bolstering confidence in regional equities and the Singapore dollar, particularly for AI and export-driven sectors.",
+      "reasoning": "Classified as ECONOMIC because it reports official quarterly GDP figures and economic growth forecasts. The sentiment is POSITIVE as growth beat estimates despite softening. It is relevant for fund monitoring given its macroeconomic implications for Southeast Asian markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Singapore third-quarter GDP growth softens from four-year high but beats estimates",
+      "publishedAtSgt": "2026-10-14T08:28:34+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/singapore-gdp-q3.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T09:48:22+08:00"
+    },
+    {
+      "articleId": "bdf6f1188c14cb253ca3d66d519a56be86f226833f6ba08ce71549b2e35e96c7",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Goldman Sachs reports that equity investors are increasingly skeptical of rapid overseas expansion by Chinese companies, shifting focus toward profitable growth rather than just scale.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "China",
+        "Global"
+      ],
+      "sectors": [
+        "Financials",
+        "Consumer Discretionary",
+        "Technology"
+      ],
+      "investorImpact": "Investors allocating to Chinese equities should prioritize firms demonstrating clear profitability in their international expansion strategies rather than mere top-line growth.",
+      "reasoning": "Classified as MARKET because it discusses equity investor sentiment and valuation criteria for Chinese companies expanding abroad. It is relevant for fund monitoring as it provides insights into shifting valuation metrics in international markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Goldman says investors are looking for 'profitable' Chinese business growth overseas",
+      "publishedAtSgt": "2026-10-14T07:05:12+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/goldman-says-investors-seek-profitable-chinese-business-growth-abroad.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T09:48:22+08:00"
+    },
+    {
+      "articleId": "a1da7d0e0bffbdd4431917fd1dc75636d3673592198b47c3948566322cd9611d",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "LOW",
+      "summary": "CNBC's Jim Cramer advised investors to keep newly public AI infrastructure stock Accelevation Holdings at arm's length due to caution surrounding data center stocks ahead of mid-term elections and a preference for established companies.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors in newly public AI infrastructure or data center plays may face increased scrutiny or volatility, as prominent market commentators advise caution in favor of established sector leaders.",
+      "reasoning": "The article discusses market sentiment regarding a specific newly public AI infrastructure stock based on commentary from a media personality, making it relevant to technology sector monitoring but of low overall strategic importance for macro fund monitoring.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Here's where Jim Cramer stands on this newly public AI infrastructure stock",
+      "publishedAtSgt": "2026-10-14T06:47:07+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/jim-cramer-accelevation-stock.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-14T09:48:22+08:00"
+    },
     {
       "articleId": "6ff63d635bb3b2b1db4cd60c47b0d1c5d38b899e1e8859f7fa9fe3ace080d3a6",
       "relevant": true,
