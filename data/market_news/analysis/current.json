@@ -1,10 +1,124 @@
 {
-  "generatedAtSgt": "2026-10-16T02:04:50.485227+08:00",
+  "generatedAtSgt": "2026-10-16T06:42:52.901317+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 205,
+  "articleCount": 209,
   "analyses": [
+    {
+      "articleId": "d7168869c4171ab52a3b2ebb9b88a3dd474b27a8f80d43c4016eb1292ff27326",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer highlighted that the recent artificial intelligence stock sell-off serves as a reminder for investors on the importance of portfolio diversification, showing the benefits for those holding exposure outside of the hottest AI trades.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Highlights the risk of over-concentration in AI infrastructure and the defensive value of cross-sector diversification during market pullbacks.",
+      "reasoning": "Classified as MARKET due to its focus on sector rotation, stock sell-offs, and portfolio strategy. Sentiment is MIXED as it acknowledges market turbulence in AI while praising the stability provided by diversification. It is fund monitoring relevant as a commentary on risk management.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer says this week's AI sell-off offers a crucial lesson for investors",
+      "publishedAtSgt": "2026-10-16T06:16:13+08:00",
+      "url": "https://www.cnbc.com/2026/10/15/jim-cramer-ai-stocks-diversification.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-16T06:27:21+08:00"
+    },
+    {
+      "articleId": "559314ba915886ed12e6bb4177b502358812ba526a2e1c7cfd9ce3ea9e2e4d25",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "A monthly portfolio update highlights specific stocks to buy, noting that Amazon shares could rise if AI investments show profitability and capex growth moderates, while Goldman Sachs reported strong quarterly results despite trading at lower valuations.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials",
+        "Consumer Discretionary"
+      ],
+      "investorImpact": "Provides specific stock recommendations and valuation insights for major companies like Amazon and Goldman Sachs, offering actionable ideas for equity portfolios.",
+      "reasoning": "Classified as MARKET because it discusses specific equity stock recommendations and performance updates for major companies. It is relevant for investment monitoring as it provides actionable insights on portfolio holdings.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Here's our monthly update on our 32 stocks, including 2 more names to buy",
+      "publishedAtSgt": "2026-10-16T03:08:05+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/15/heres-our-monthly-update-on-our-32-stocks-including-2-more-names-to-buy.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-16T06:27:21+08:00"
+    },
+    {
+      "articleId": "b8f1efd3aacf2b111c23428dde3fcb916e94e1d59bc105f0f7b9cc211e8619d5",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "Democratic Texas Senate candidate James Talarico raised $64 million in the third quarter, setting a campaign fundraising record as Republicans counter with outside money to support GOP nominee Ken Paxton in the 2026 midterm election.",
+      "assetClasses": [],
+      "geographies": [
+        "United States",
+        "Texas"
+      ],
+      "sectors": [
+        "Government"
+      ],
+      "investorImpact": "Political fundraising records in a high-profile Senate race signal increased campaign spending and heightened political competition, but lack direct near-term implications for broad asset classes or corporate sectors.",
+      "reasoning": "Classified as GEOPOLITICAL due to its focus on domestic political campaigns and elections, though it has limited direct impact on standard portfolio asset management, keeping fund monitoring relevance low.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Democrat Talarico says he raised record $64 million over summer in Texas Senate race",
+      "publishedAtSgt": "2026-10-16T02:35:25+08:00",
+      "url": "https://www.cnbc.com/2026/10/15/james-talarico-texas-senate-fundraising-ken-paxton.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 95,
+      "collectorRelevanceReason": "business_market_event",
+      "collectedAtSgt": "2026-10-16T06:27:21+08:00"
+    },
+    {
+      "articleId": "2f4031991ed525deea2fac134115862ec6ae057939e5105d3da610cf662ea0d2",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "With equal-weight strategies struggling and technology stocks showing renewed volatility, experts discuss how investors can mitigate S&P 500 concentration risk through sector-level equal-weight approaches or alternative diversification strategies.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors facing high concentration risks in mega-cap technology stocks may need to adjust portfolio allocations, potentially adopting equal-weight sector ETFs to manage volatility.",
+      "reasoning": "The article addresses broad market concentration risks and offers portfolio management alternatives, making it highly relevant for market intelligence and risk monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Equal-weight failed. Now tech stocks look shaky again. So what should you do about S&P 500 risk?",
+      "publishedAtSgt": "2026-10-16T02:02:23+08:00",
+      "url": "https://www.cnbc.com/2026/10/15/spx-sp500-tech-stocks-invest.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-16T06:27:21+08:00"
+    },
     {
       "articleId": "80edb1b1010dfb8248fe0363e0dec228b916a79d9e681b4d508f9c3d2634287c",
       "relevant": true,
