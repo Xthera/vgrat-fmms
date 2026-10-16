@@ -1,10 +1,73 @@
 {
-  "generatedAtSgt": "2026-10-16T14:16:20.390816+08:00",
+  "generatedAtSgt": "2026-10-16T20:47:45.800289+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 210,
+  "articleCount": 212,
   "analyses": [
+    {
+      "articleId": "771262fd74308bfd204265cefc43150142aa48a318dc28749893539a8acd18bf",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Shares of European satellite group Eutelsat rose significantly, gaining 19% in a single day and 25% over five days, following concerns regarding SpaceX's Starshield access restrictions in Ukraine, which analysts noted highlights the sovereign value of European satellite networks.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Europe",
+        "France",
+        "Ukraine"
+      ],
+      "sectors": [
+        "Telecommunications",
+        "Aerospace & Defense",
+        "Technology"
+      ],
+      "investorImpact": "Investors in European aerospace, defense, and telecommunications sectors may see increased capital flows into regional satellite alternatives as geopolitical risks highlight the importance of sovereign network infrastructure.",
+      "reasoning": "The article details a significant market move in a major European satellite stock driven by geopolitical events affecting a competitor, making it relevant for market and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Europe's answer to SpaceX pops 19% as Ukraine's Starshield limits raise concerns",
+      "publishedAtSgt": "2026-10-16T20:16:24+08:00",
+      "url": "https://www.cnbc.com/2026/10/16/eutelsat-starshield-ukraine-spacex.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-16T20:32:08+08:00"
+    },
+    {
+      "articleId": "fa122f862c3b185bf5baef990328008b01c43a5ef0af38eba4bc81373b8fbce0",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Nvidia CEO Jensen Huang announced investments in five U.K. companies during a London event, highlighting Nvidia's expanding investment footprint in 2026. Simultaneously, credit default swaps for CoreWeave hit distress levels as investor sentiment soured on AI-related debt.",
+      "assetClasses": [
+        "Equities",
+        "Credit"
+      ],
+      "geographies": [
+        "United Kingdom",
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "The article highlights aggressive corporate venture activity by Nvidia in the AI space balanced against emerging distress in AI debt financing, signaling divergent investor sentiment across tech hardware equity and AI-linked credit.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on Nvidia and AI infrastructure investments. Sentiment is mixed because strong corporate engagement contrasts with distress in AI debt markets. It is relevant for fund monitoring as it touches on AI sector health and credit risks.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "I watched Nvidia's Jensen Huang work the room in London. He brought big checks — and a blunt message",
+      "publishedAtSgt": "2026-10-16T19:33:44+08:00",
+      "url": "https://www.cnbc.com/2026/10/16/nvidia-jensen-huang-london.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 52,
+      "collectorRelevanceReason": "supporting_technology_description",
+      "collectedAtSgt": "2026-10-16T20:32:08+08:00"
+    },
     {
       "articleId": "4ce3fdba1d96702d937601b8a051a8f315a35b6c121fe111d6239053b6b5322a",
       "relevant": true,
