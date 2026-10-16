@@ -1,10 +1,41 @@
 {
-  "generatedAtSgt": "2026-10-16T06:42:52.901317+08:00",
+  "generatedAtSgt": "2026-10-16T14:11:56.087725+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 209,
+  "articleCount": 210,
   "analyses": [
+    {
+      "articleId": "4ce3fdba1d96702d937601b8a051a8f315a35b6c121fe111d6239053b6b5322a",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Federal Reserve Chairman Kevin Warsh refrained from signaling a future rate hike at the upcoming meeting, while acknowledging synchronous global central bank tightening.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Currencies"
+      ],
+      "geographies": [
+        "United States",
+        "Global"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors receive no clear directional steer regarding the Fed's next rate decision, maintaining uncertainty for rate-sensitive asset classes.",
+      "reasoning": "The article covers direct commentary from the Fed Chair regarding monetary policy and global rate tightening, which is highly relevant to market and economic conditions.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Fed's Warsh withholds Fed rate signal, praises recent global tightening with 'no free riders'",
+      "publishedAtSgt": "2026-10-16T13:07:20+08:00",
+      "url": "https://www.cnbc.com/2026/10/16/feds-warsh-says-ai-development-path-will-be-very-bumpy-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 59,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-16T13:56:30+08:00"
+    },
     {
       "articleId": "d7168869c4171ab52a3b2ebb9b88a3dd474b27a8f80d43c4016eb1292ff27326",
       "relevant": true,
