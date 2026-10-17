@@ -1,10 +1,44 @@
 {
-  "generatedAtSgt": "2026-10-17T13:56:32.941858+08:00",
+  "generatedAtSgt": "2026-10-17T19:56:02.275940+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 223,
+  "articleCount": 224,
   "analyses": [
+    {
+      "articleId": "0c6abbda7fa2f4fc7e57541a2c7e15786d0d7ce7b2935f7a261b53a33aac7fa3",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "President Trump waived broad new Russia-related sanctions and tariffs mandated by the Graham Act, citing national interest. The legislation had targeted Russia over its invasion of Ukraine and required high tariffs on major purchasers of Russian crude oil and gas such as China and India.",
+      "assetClasses": [
+        "Commodities",
+        "Equities",
+        "Currencies"
+      ],
+      "geographies": [
+        "United States",
+        "Russia",
+        "China",
+        "India"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "The waiver prevents immediate heavy tariff disruptions and secondary sanctions on major economies like China and India, lowering potential geopolitical trade friction shocks for global energy and equity markets.",
+      "reasoning": "The article is classified as GEOPOLITICAL and of HIGH importance because it directly addresses major U.S. sanctions and tariff policy shifts regarding Russia, China, and India, impacting global trade and energy markets. It is relevant for fund monitoring as it averts immediate trade policy escalation.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump waives broad new Russia sanctions and tariffs under Graham Act, citing national interest",
+      "publishedAtSgt": "2026-10-17T18:20:44+08:00",
+      "url": "https://www.cnbc.com/2026/10/17/trump-waives-russia-related-sanctions-tariffs-before-they-take-effect-.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 72,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-17T19:40:35+08:00"
+    },
     {
       "articleId": "98e99f82e68aca65256e2a9b2d1ddd3af2a95d24b6c05c33582e0ad64cbdc4c7",
       "relevant": true,
