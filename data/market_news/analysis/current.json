@@ -1,10 +1,69 @@
 {
-  "generatedAtSgt": "2026-10-18T14:18:36.312491+08:00",
+  "generatedAtSgt": "2026-10-18T20:22:34.665898+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 225,
+  "articleCount": 227,
   "analyses": [
+    {
+      "articleId": "8d39f5c53975da68bd02f06973baabb4311ab294ff9b2db4d4903479b2520a0a",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "LOW",
+      "summary": "New AI-powered, always-listening devices and wearables are pushing legal limits regarding wiretap laws and privacy concerns as users navigate continuous recording features.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Regulatory and legal scrutiny around privacy for always-listening AI devices could create compliance headwinds and reputational risks for consumer hardware companies.",
+      "reasoning": "The article discusses emerging legal and privacy challenges related to AI hardware, falling into the TECHNOLOGY category with a negative sentiment around privacy risks. However, its immediate financial impact is low, making it marginally relevant for broad tech sector monitoring.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Always on, always listening: New AI devices are pushing legal limits and could put users in jeopardy",
+      "publishedAtSgt": "2026-10-18T20:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/18/ai-wearables-privacy-wiretap-laws.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 53,
+      "collectorRelevanceReason": "supporting_technology_description",
+      "collectedAtSgt": "2026-10-18T20:06:38+08:00"
+    },
+    {
+      "articleId": "4d94fd80c625d30706a450ac1fd89f71e2a639426530d0cd88ab027991fed610",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Bank of England deputy governor Sarah Breeden warned that hedge funds' growing presence and use of leverage in global bond markets increase the probability of localized market turmoil turning into broader financial stress.",
+      "assetClasses": [
+        "Fixed Income",
+        "Bonds"
+      ],
+      "geographies": [
+        "Global",
+        "United Kingdom"
+      ],
+      "sectors": [
+        "Financials",
+        "Hedge Funds"
+      ],
+      "investorImpact": "Investors holding fixed income assets or utilizing leverage should remain vigilant, as systemic volatility in bond markets driven by hedge fund positioning could trigger sudden liquidity crunches and broader financial stress.",
+      "reasoning": "The article highlights systemic vulnerabilities in global bond markets stemming from hedge fund leverage and participation, making it highly relevant for risk management and fixed income strategy.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Why hedge funds could be making a bond market shock more likely",
+      "publishedAtSgt": "2026-10-18T14:13:05+08:00",
+      "url": "https://www.cnbc.com/2026/10/18/hedge-funds-bond-market-turmoil.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-18T20:06:38+08:00"
+    },
     {
       "articleId": "6b63170b95b64e4cfa29f40695b1abfb1a4a61ddf910640ff0bb6d1a955ccc55",
       "relevant": true,
