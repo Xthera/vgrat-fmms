@@ -1,10 +1,134 @@
 {
-  "generatedAtSgt": "2026-10-20T14:23:22.562039+08:00",
+  "generatedAtSgt": "2026-10-20T21:03:49.004630+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 230,
+  "articleCount": 234,
   "analyses": [
+    {
+      "articleId": "13b7b0c3f6ba937f2c231d47380ef20a56c695ea03d533f83fb1bd2e9ebbb55c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "U.S. Treasury yields fell on Tuesday following weak housing data as investors assessed economic conditions and the inflation outlook ahead of the Federal Reserve's upcoming interest rate decision. The 10-year Treasury yield dropped over 4 basis points to 5.092% and the 30-year yield fell over 5 basis points to 5.415%.",
+      "assetClasses": [
+        "Fixed Income",
+        "Bonds"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Real Estate",
+        "Financials"
+      ],
+      "investorImpact": "The decline in Treasury yields reflects market reactions to soft housing data and anticipation of the Federal Reserve's interest rate path, which directly influences borrowing costs, fixed-income valuations, and broader asset pricing.",
+      "reasoning": "The article is classified under MARKET as it tracks the daily price and yield movements of U.S. Treasuries in response to macroeconomic data releases. It is important for monitoring broader macroeconomic trends and fixed-income portfolio positioning.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "U.S. Treasury yields move lower after weak housing data",
+      "publishedAtSgt": "2026-10-20T20:43:20+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/us-treasury-yields-investors-economy.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-20T20:47:58+08:00"
+    },
+    {
+      "articleId": "9a83c310a5a6b78fb19d4acfd413ccd7f3b6c171c0d49fa537360a9999b02212",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Data center and AI-dedicated computing stocks experienced declines following a 30% plunge in the market debut of South Korean cloud company Elice, driven by investor concerns regarding potential overcapacity in the sector.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "South Korea",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Data Centers",
+        "Cloud Computing"
+      ],
+      "investorImpact": "Investors should note growing caution and valuation pressures on artificial intelligence and data center infrastructure providers due to overcapacity fears.",
+      "reasoning": "Classified as MARKET because it details equity price movements and IPO performance in the data center and tech sector. Significance is medium given broader spillover effects on AI sentiment.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Data center stocks slide as Korea IPO plunges 30%, pressuring tech sentiment",
+      "publishedAtSgt": "2026-10-20T20:36:51+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/data-center-stocks-slide-as-korea-ipo-plunges-30percent-pressuring-tech-sentiment.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-20T20:47:58+08:00"
+    },
+    {
+      "articleId": "f7c9de4e49e967b04d0327b9ca0d44b3f00e6ce25995766f3a668fa705508639",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Stock futures retreated from overnight optimism following a bounceback in AI stocks, as persistent jitters in Asian markets and a sharp 30% drop in South Korean AI data center firm Elice's debut IPO weighed on technology sentiment.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "South Korea",
+        "Asia",
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors should note ongoing volatility and fragility in technology and AI-related public offerings, which could signal broader cooling or valuation sensitivity in the sector.",
+      "reasoning": "The article is classified as MARKET and NEGATIVE because it highlights fading momentum in AI stocks and weak debut performance for a tech IPO, signaling continued investor caution. It is relevant for fund monitoring given potential sentiment spillover into broader technology allocations.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AI rally fades away from Wall Street as a tiny IPO makes big waves",
+      "publishedAtSgt": "2026-10-20T19:34:03+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/ai-rally-fades-elice-ipo-dives.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-20T20:47:58+08:00"
+    },
+    {
+      "articleId": "d787c3d6da1af667f22c3fd2b0a49613b86e1bac48b040c0f7cd4b06201380f8",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "HSBC CEO Georges Elhedery stated that while artificial intelligence is a transformational investment opportunity, investors must exercise selectivity regarding data center investments as not all data centers will be successful bets.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials",
+        "Real Estate"
+      ],
+      "investorImpact": "Investors financing data centers and AI infrastructure should exercise caution and selectivity rather than assuming every project will succeed amid the current AI boom.",
+      "reasoning": "The article discusses financing and investment selectivity in AI data centers from a major banking executive's perspective, making it relevant for technology and infrastructure asset monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "HSBC CEO warns the AI boom won’t make every data center a good bet",
+      "publishedAtSgt": "2026-10-20T18:39:17+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/data-center-financing-ai-debt-hsbc.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-20T20:47:58+08:00"
+    },
     {
       "articleId": "654a846e91558b6fd6f14192f6c957bba5c914bb837c8273a911fd16461f1e2e",
       "relevant": true,
