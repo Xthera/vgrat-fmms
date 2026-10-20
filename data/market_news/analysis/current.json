@@ -1,10 +1,101 @@
 {
-  "generatedAtSgt": "2026-10-20T05:24:37.369247+08:00",
+  "generatedAtSgt": "2026-10-20T09:22:34.970651+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 219,
+  "articleCount": 222,
   "analyses": [
+    {
+      "articleId": "0d7b6e2b4d60c2db6e1eaa32cb6923c03004ee41e2abca579edbc3377ada3e4a",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "At the IMF-World Bank meetings in Bangkok, finance chiefs debated major global risks including sovereign debt, artificial intelligence, and trade imbalances, with the IMF warning of severe economic consequences if AI fails to deliver productivity gains.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Global Macro"
+      ],
+      "geographies": [
+        "Global",
+        "Asia"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials",
+        "Government"
+      ],
+      "investorImpact": "Investors should monitor global sovereign debt levels and macroeconomic policy shifts coming out of international summits, as well as valuation risks in technology sectors if anticipated AI productivity gains do not materialize.",
+      "reasoning": "The article is classified under ECONOMIC due to its focus on high-level macroeconomic discussions from IMF-World Bank meetings regarding global debt, trade, and AI productivity risks that affect broader market sentiment and fund allocation.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Three big takeaways from the IMF-World Bank meetings",
+      "publishedAtSgt": "2026-10-20T08:33:34+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/imf-debt-yields-russia-china-takeaway-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-20T09:06:59+08:00"
+    },
+    {
+      "articleId": "a262265326ebeb0a33d272e3211a487d966878d15d032494a4a55d8af78688e0",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "China's GDP picked up speed with a 4.5% increase in Q3, driven by surging exports and better-than-expected September retail sales growth of 1.1%, even as the country navigates a difficult transition away from real estate toward technology development.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Real Estate",
+        "Consumer Discretionary"
+      ],
+      "investorImpact": "Investors monitoring Chinese markets should note the Q3 GDP growth of 4.5% and stronger retail sales, balanced against ongoing structural transition challenges away from the real estate sector.",
+      "reasoning": "The article provides macroeconomic updates regarding China's Q3 GDP growth and retail sales, making it relevant for economic assessment and fund monitoring, though it serves as a general newsletter overview.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "CNBC's The China Connection newsletter: Navigating a tech-heavy world",
+      "publishedAtSgt": "2026-10-20T07:00:02+08:00",
+      "url": "https://www.cnbc.com/2026/10/19/cnbcs-the-china-connection-newsletter-navigating-a-tech-heavy-world.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-20T09:07:00+08:00"
+    },
+    {
+      "articleId": "5e1dbb197945de9751578c7dc6584c19ac8ea3746b9a82a8692cd68c6b9571f7",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "CNBC's Jim Cramer advises investors not to chase the recent AI stock rebound too quickly following a tech sector rout, noting that upcoming events like Anthropic's IPO could create market shifts and potentially divert capital away from existing AI stocks.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors should exercise caution before jumping back into battered AI and technology stocks, keeping an eye on upcoming IPOs that could alter capital allocation across the sector.",
+      "reasoning": "The article discusses near-term market sentiment and sector rotation risks regarding artificial intelligence stocks, providing useful context for equity market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer says don't chase the AI rebound just yet. Here's what needs to happen first",
+      "publishedAtSgt": "2026-10-20T06:46:33+08:00",
+      "url": "https://www.cnbc.com/2026/10/19/jim-cramer-dont-chase-ai-rebound-yet.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-20T09:06:59+08:00"
+    },
     {
       "articleId": "e21a17103393cd595aaf06b824a1c11a8964369b736dd86fef6091834de5c1bd",
       "relevant": true,
