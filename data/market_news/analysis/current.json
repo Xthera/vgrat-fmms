@@ -1,10 +1,68 @@
 {
-  "generatedAtSgt": "2026-10-21T02:19:04.871919+08:00",
+  "generatedAtSgt": "2026-10-21T06:40:02.194648+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 224,
+  "articleCount": 226,
   "analyses": [
+    {
+      "articleId": "e0883bd89c44e62fe12623cfea2313c6b8e70a930b89290de91343adf12d516a",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "United Airlines slashed its 2026 profit outlook due to rising fuel costs, with fourth-quarter expectations falling below Wall Street estimates, though passenger bookings remain resilient despite higher fares.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Airlines",
+        "Transportation"
+      ],
+      "investorImpact": "Investors in airlines may face near-term headwinds due to compressed profit margins driven by elevated fuel costs, despite continued strong consumer demand for travel.",
+      "reasoning": "The article details corporate earnings guidance updates, cost pressures, and consumer demand trends within the airline sector, making it relevant for equity market and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "United Airlines slashes 2026 profit outlook on fuel prices, but travelers keep booking despite higher fares",
+      "publishedAtSgt": "2026-10-21T04:23:58+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/united-airlines-ual-3q-2026-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-21T06:24:25+08:00"
+    },
+    {
+      "articleId": "c240be6aade98945aeb8b5b49b603bb84332afb9975558f2397ffdde8a9a8015",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "Jim Cramer's Charitable Trust is booking profits by selling shares of Broadcom to reduce AI exposure and trimming shares of credit-exposed bank Capital One Financial.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Provides insight into tactical portfolio rebalancing and risk management within specific equity holdings, though individual portfolio moves have limited broad market impact.",
+      "reasoning": "The article details specific trades made by a charitable trust regarding individual stocks like Broadcom and Capital One, reflecting tactical profit-taking in AI and risk reduction in financials.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "We're booking big profits in an AI stock and trimming a credit-exposed bank",
+      "publishedAtSgt": "2026-10-21T04:00:22+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/20/were-booking-big-profits-in-an-ai-stock-and-trimming-a-credit-exposed-bank.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-21T06:24:25+08:00"
+    },
     {
       "articleId": "bdbbccd6f38e5a366d16a84b8acb6b1841a438a2eeb2c1e2068ab2a40b14745e",
       "relevant": true,
