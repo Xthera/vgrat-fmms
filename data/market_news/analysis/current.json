@@ -1,10 +1,256 @@
 {
-  "generatedAtSgt": "2026-10-20T09:22:34.970651+08:00",
+  "generatedAtSgt": "2026-10-20T14:23:22.562039+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 222,
+  "articleCount": 230,
   "analyses": [
+    {
+      "articleId": "654a846e91558b6fd6f14192f6c957bba5c914bb837c8273a911fd16461f1e2e",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Copper is outshining gold this year due to strong structural demand driven by artificial intelligence, power-grid investments, and defense spending, with investors expressing confidence that the rally can persist despite broader AI market corrections.",
+      "assetClasses": [
+        "Commodities",
+        "Metals"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Mining",
+        "Technology",
+        "Utilities",
+        "Defense"
+      ],
+      "investorImpact": "Highlights strong secular demand for industrial metals like copper, driven by AI infrastructure and green energy transitions, offering portfolio diversification opportunities away from traditional precious metals.",
+      "reasoning": "Classified as MARKET due to the focus on commodity pricing and investor sentiment. Marked as HIGH importance because copper's structural demand trends impact broader industrial and technology sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Copper is outshining gold this year. Investors say the rally can survive an AI correction",
+      "publishedAtSgt": "2026-10-20T13:57:34+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/copper-prices-ai-spending-demand.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-20T14:07:41+08:00"
+    },
+    {
+      "articleId": "1cd37d6933b998f257185be4790d6094f1f76844c0f4ace50566373f98cc0577",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Shares of several Singapore-listed agricultural companies fell after Senior Minister K Shanmugam warned that firms will not escape responsibility for their role in the regional haze, revealing that seven companies have been questioned by the Singapore Exchange.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Singapore",
+        "Indonesia",
+        "Malaysia"
+      ],
+      "sectors": [
+        "Agriculture",
+        "Consumer Staples"
+      ],
+      "investorImpact": "Investors in Singapore-listed agricultural companies face regulatory and operational risks as authorities crack down on haze-related accountability, leading to immediate downward pressure on stock prices.",
+      "reasoning": "The article is classified under MARKET as it directly reports on stock price movements and regulatory scrutiny affecting listed agricultural companies in Singapore, making it relevant for regional fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "'Cannot play hide and seek': Minister's warning over haze sends Singapore agricultural stocks lower",
+      "publishedAtSgt": "2026-10-20T12:48:52+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/singapore-haze-shanmugam-indonesia-malaysia.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-20T14:07:42+08:00"
+    },
+    {
+      "articleId": "ecfe30a1bae6427b8cd3407ec03e262295f78f7b4462375cc455ac737a4f568f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "General Motors is set to report its Q3 2026 earnings before the bell, with investors closely watching for potential updates to its 2026 guidance and early expectations for 2027 amid expectations of a difficult upcoming year.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Automotive",
+        "Consumer Discretionary"
+      ],
+      "investorImpact": "Investors in General Motors and the broader automotive sector should monitor the earnings report and particularly management commentary on 2027 guidance, as Wall Street anticipates a challenging environment ahead.",
+      "reasoning": "The article previews a major corporate earnings report for a prominent U.S. auto manufacturer, which is relevant for market and sector monitoring but currently centers on expectations rather than realized results.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "General Motors is set to report earnings before the bell. Here's what Wall Street expects",
+      "publishedAtSgt": "2026-10-20T12:01:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/general-motors-gm-earnings-q3-2026.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-20T14:07:42+08:00"
+    },
+    {
+      "articleId": "0a803bde734cc6d7cd3fa454b3e3dd6242f4e9ea7f3ccb4799398ba4fe1f75cc",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Bank Indonesia is under growing pressure to raise interest rates following an MSCI threat to downgrade the country's stock market from emerging-market status, triggering a sell-off in Indonesian equities and the rupiah.",
+      "assetClasses": [
+        "Equities",
+        "Currencies",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "Indonesia"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors with exposure to Indonesian equities and the rupiah face increased volatility and potential downside risk due to the market rout and prospective monetary tightening.",
+      "reasoning": "Classified as MARKET and high importance because the combination of a potential MSCI downgrade and currency/equity sell-offs directly impacts emerging market portfolios and forces monetary policy shifts.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bank Indonesia faces mounting pressure to hike after MSCI threat fuels market rout",
+      "publishedAtSgt": "2026-10-20T11:59:35+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/indonesia-msci-inflation-interest-rate-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-20T14:07:42+08:00"
+    },
+    {
+      "articleId": "535128d9f5d5578d0d497221da6c48cb82703d67f337b8eeb844ee44a5f02901",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Jio Platforms finalized the allocation of 72.47 million equity shares to anchor investors at 1,119 rupees a share, drawing major institutional investors like BlackRock and GIC with anchor bids exceeding $26 billion ahead of its IPO.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "India"
+      ],
+      "sectors": [
+        "Telecommunications",
+        "Technology"
+      ],
+      "investorImpact": "High institutional interest and a massive $26 billion anchor book signal strong market demand for Indian telecom and technology equities, potentially boosting broader IPO market sentiment in the region.",
+      "reasoning": "Classified as MARKET due to major institutional capital allocation into a high-profile IPO. Sentiment is POSITIVE given the massive oversubscription and participation of heavyweight investors like BlackRock and GIC.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "BlackRock, GIC among investors chasing Indian telecom major Jio's IPO as anchor bids top $26 billion",
+      "publishedAtSgt": "2026-10-20T10:44:35+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/jio-ipo-gic-blackrock-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-20T14:07:41+08:00"
+    },
+    {
+      "articleId": "5728abdc8b0c601fa0b4a7aab811a8db0accaa360fc305c72d3e1cbcb741c464",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Nvidia is increasing its investments in Europe's artificial intelligence sector by backing four German startups, including Agile Robots and Avelios Medical, as Germany urges businesses to embrace AI.",
+      "assetClasses": [
+        "Equities",
+        "Venture Capital"
+      ],
+      "geographies": [
+        "Germany",
+        "Europe"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence",
+        "Healthcare",
+        "Manufacturing"
+      ],
+      "investorImpact": "Investors in AI, semiconductor, and European technology sectors should note increasing venture capital activity and corporate backing in German industrial AI startups, signaling growth opportunities in the region.",
+      "reasoning": "The article highlights significant tech investments by Nvidia and political pushes for AI adoption in Germany, making it relevant for technology sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "‘Open your doors for AI’: German chancellor urges businesses to embrace AI as Nvidia announces new investments",
+      "publishedAtSgt": "2026-10-20T10:16:25+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/german-chancellor-urges-businesses-to-embrace-ai.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-20T14:07:41+08:00"
+    },
+    {
+      "articleId": "731fc80e1af505a6a1fd7cdf6c60ef84268bcdfab8e27f7f23570bc582e0e043",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Venture capitalist Jenny Lee of Granite Asia reports that Asian startups are accelerating toward IPOs at a younger age of four to five years, while also focusing on energy-related technologies such as storage.",
+      "assetClasses": [
+        "Private Equity",
+        "Venture Capital",
+        "Equities"
+      ],
+      "geographies": [
+        "Asia"
+      ],
+      "sectors": [
+        "Technology",
+        "Energy",
+        "Financials"
+      ],
+      "investorImpact": "The acceleration of Asian startups toward earlier IPOs suggests improving exit environments for venture capital and private equity investors, while investments in energy storage highlight emerging sectoral opportunities.",
+      "reasoning": "The article provides valuable insights into the Asian venture capital and IPO landscape from a prominent investor, making it relevant for market and fund monitoring regarding early-stage exits and technology trends.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Top venture capitalist Jenny Lee says Asian startups are speeding toward IPOs",
+      "publishedAtSgt": "2026-10-20T09:52:05+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/venture-capital-jenny-lee-granite-asia-startups.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-20T14:07:42+08:00"
+    },
+    {
+      "articleId": "69ef4b54318fbab3807d66fffc1ed62f4a825e76e8a6976369ed2f17430c8089",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Tech investors returned to buy the dip following a bruising week for the sector, pushing the Nasdaq Composite to rally overnight despite lingering debt concerns and previous worries over AI financing, competition, and chip supply.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Investors should monitor ongoing debt concerns and shifting sentiment in the technology sector, as high volatility in AI and chip stocks may create both risks and dip-buying opportunities.",
+      "reasoning": "Classified as MARKET because it details broader tech sector trading dynamics, rallies, and investor sentiment shifts. It is relevant for fund monitoring due to its coverage of technology equities and macroeconomic debt concerns affecting market portfolios.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "CNBC Daily Open: Tech investors buy the dip — but debt remains a concern",
+      "publishedAtSgt": "2026-10-20T09:13:25+08:00",
+      "url": "https://www.cnbc.com/2026/10/20/cnbc-daily-open-tech-nasdaq-trump-ukraine-anthropic.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-20T14:07:42+08:00"
+    },
     {
       "articleId": "0d7b6e2b4d60c2db6e1eaa32cb6923c03004ee41e2abca579edbc3377ada3e4a",
       "relevant": true,
