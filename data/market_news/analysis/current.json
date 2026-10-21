@@ -1,10 +1,193 @@
 {
-  "generatedAtSgt": "2026-10-21T06:40:02.194648+08:00",
+  "generatedAtSgt": "2026-10-21T14:23:19.653799+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 226,
+  "articleCount": 232,
   "analyses": [
+    {
+      "articleId": "5f0c6c27d993a5bea5b48b9fae6dea524f8a1069476a6f8c12c630b1a6dc52ae",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Oil prices climbed due to supply disruption worries in the Middle East, driven by attacks near the Strait of Hormuz and Saudi energy facilities, which also caused shipping costs to soar.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "Middle East",
+        "Saudi Arabia"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas",
+        "Transportation"
+      ],
+      "investorImpact": "Rising oil prices and escalating shipping costs can pressure profit margins across multiple sectors, increase inflationary pressures, and cause volatility in energy commodities.",
+      "reasoning": "The article details significant supply risks and price increases in the global oil market due to geopolitical tensions and attacks in the Middle East, making it highly relevant for market and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Oil prices climb as traders assess Middle East developments",
+      "publishedAtSgt": "2026-10-21T13:27:19+08:00",
+      "url": "https://www.cnbc.com/2026/10/21/oil-price-today-wti-brent-rise-on-middle-east-worries.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-21T14:07:37+08:00"
+    },
+    {
+      "articleId": "9bc8a978d2df6002fda3e057ab311dc29080948579ac56ee8d8c3150464bc41b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Shares of Australian data center operator NextDC plunged nearly 40% after the company slashed its annual earnings forecast due to power supply delays at its Melbourne facility, driven by community and stakeholder opposition. In response, Treasurer Jim Chalmers announced the government is working to establish national investment standards.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Australia"
+      ],
+      "sectors": [
+        "Technology",
+        "Real Estate",
+        "Utilities"
+      ],
+      "investorImpact": "Investors in data center operators and related infrastructure face heightened regulatory and operational risks, particularly regarding power supply delays and local community opposition.",
+      "reasoning": "The article details a major equity sell-off and earnings downgrade for a notable data center operator, combined with regulatory developments, which directly impacts market sentiment and sector valuation.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Australian data center operator NextDC's shares plunge 40% after it slashes earnings forecast",
+      "publishedAtSgt": "2026-10-21T10:55:38+08:00",
+      "url": "https://www.cnbc.com/2026/10/21/australia-data-center-operator-nexdc-datacenter.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-21T14:07:37+08:00"
+    },
+    {
+      "articleId": "9eed713baa35b7861d9ead3b35b8d4390cb9f6e15ae7042d587a853e557a8c30",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "The bruising stock market debut of South Korean AI infrastructure provider Elice indicates that investors are increasingly scrutinizing heavy AI spending and expansion plans in search of clear profitability, impacting Asia's semiconductor and memory-chip reliant technology markets.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "South Korea",
+        "Asia"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors should note growing market skepticism regarding heavy AI infrastructure spending without clear paths to profitability, which could increase volatility in regional technology and semiconductor equities.",
+      "reasoning": "The article is classified as MARKET and NEGATIVE because it highlights rising investor caution and stock volatility surrounding AI infrastructure spending, making it relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Elice's huge stock swings show AI's spending boom is getting more investor scrutiny",
+      "publishedAtSgt": "2026-10-21T09:02:36+08:00",
+      "url": "https://www.cnbc.com/2026/10/21/ai-boom-spending-profit.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-21T14:07:37+08:00"
+    },
+    {
+      "articleId": "682ac9b8bb351c3a277defcc9be8e748dd68709f4e09b270dbf7e26da8c878b9",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Japan's September exports posted a huge miss as growth slowed to 16.7%, though growth was supported by continued strong semiconductor exports up 49.4% year on year. Semiconductor-related machinery shipments rose 43.9% and power generation machinery exports climbed 22.6%, with exports remaining the main driver of Japan's growth for the first two quarters of 2026.",
+      "assetClasses": [
+        "Equities",
+        "Currencies"
+      ],
+      "geographies": [
+        "Japan"
+      ],
+      "sectors": [
+        "Technology",
+        "Industrials",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors should note that while overall export growth slowed with a huge miss, the strong continued demand for semiconductors and related machinery provides resilience for tech and industrial sectors in Japan.",
+      "reasoning": "Classified as ECONOMIC because it deals with macroeconomic trade data and export growth figures for Japan, impacting regional market sentiment and sector performance.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Japan exports post huge miss in September as growth slows to 16.7%",
+      "publishedAtSgt": "2026-10-21T08:44:16+08:00",
+      "url": "https://www.cnbc.com/2026/10/21/japan-trade-exports-semiconductor-yen.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-21T14:07:37+08:00"
+    },
+    {
+      "articleId": "2aedec4eeff29d2d932e53bc228550c8cdd35e0739356151bcb0cf61937afbfc",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "LOW",
+      "summary": "Capital One reported a strong quarter with progress on its Discover integration, resulting in a positive after-hours reaction on Wall Street despite higher expenses weighing on profits.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "The positive quarterly performance and progress in integrating Discover highlight resilience in consumer finance, though broader credit risks from oil price spikes remain a consideration for bank holdings.",
+      "reasoning": "The article discusses the strong financial results and market reception of a major financial institution, providing relevant context for equity markets and the financial sector, but has limited macro importance.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Capital One's strong quarter and progressing Discover integration are rewarded on Wall Street",
+      "publishedAtSgt": "2026-10-21T07:34:14+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/20/capital-one-strong-quarter-and-progressing-discover-integration-are-rewarded.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-21T14:07:38+08:00"
+    },
+    {
+      "articleId": "4af13d1ca2b230a747f4a5edd5d7cd80e9f42fc2061370958f214968e3db257d",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "The article highlights that investors should look beyond the crowded AI and data-center trade to find strong opportunities in other market sectors, noting favorable trends like falling oil prices, a resilient bond market supported by high mortgage rates, and robust earnings growth in industrial stocks such as GE Aerospace.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Industrials",
+        "Energy",
+        "Real Estate"
+      ],
+      "investorImpact": "Investors can benefit by diversifying their portfolios away from exclusive concentration on AI and data centers, identifying thriving opportunities in alternative sectors like industrials and cyclical assets.",
+      "reasoning": "Classified as MARKET because it discusses broader equity market trends, sector rotation away from AI, and specific macroeconomic developments like oil price reversals and earnings growth. The significance is medium as it offers strategic diversification perspectives.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Obsessed with CoreWeave and the AI trade? You're missing out on some great stocks",
+      "publishedAtSgt": "2026-10-21T05:17:47+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/20/obsessed-with-the-ai-trade-youre-missing-out-on-some-great-stocks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-21T14:07:38+08:00"
+    },
     {
       "articleId": "e0883bd89c44e62fe12623cfea2313c6b8e70a930b89290de91343adf12d516a",
       "relevant": true,
