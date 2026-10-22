@@ -1,10 +1,197 @@
 {
-  "generatedAtSgt": "2026-10-22T06:43:28.021901+08:00",
+  "generatedAtSgt": "2026-10-22T14:26:14.560279+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 229,
+  "articleCount": 235,
   "analyses": [
+    {
+      "articleId": "dbbe73854e83910002467c9943b137fb921add37a059350c69b916b01d103bfe",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Oil prices climbed following concerns over Middle East escalation and potential U.S. and Israeli strikes on Iran, though analysts note the broader economic fallout may be cushioned compared to past decades.",
+      "assetClasses": [
+        "Commodities",
+        "Equities"
+      ],
+      "geographies": [
+        "Middle East",
+        "USA",
+        "Iran",
+        "Israel"
+      ],
+      "sectors": [
+        "Energy"
+      ],
+      "investorImpact": "Rising oil prices driven by geopolitical tensions can increase energy sector profitability while potentially posing cost pressures for broader equities, though mitigated by lower consumer vulnerability.",
+      "reasoning": "The article is classified under GEOPOLITICAL and MARKET importance due to the direct impact of Middle East conflict on global oil prices and energy markets, which is highly relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Oil prices jump on Middle East worries as U.S., Israel reportedly weigh fresh Iran strikes",
+      "publishedAtSgt": "2026-10-22T13:18:24+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/oil-prices-today-wti-brent-saudi-arabia.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-22T14:10:37+08:00"
+    },
+    {
+      "articleId": "93da5cc09308ee00b171983f71b2f256cae5b6e0b7b66a8ae54cb1f3f2d1a883",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "China's stock market entered bear territory as the CSI 300 index extended its rout to 10 consecutive weeks, driven by the slowest economic growth in over three years, a multiyear property sector slowdown, and weak consumer demand.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "China"
+      ],
+      "sectors": [
+        "Real Estate",
+        "Consumer Goods"
+      ],
+      "investorImpact": "Investors with exposure to Chinese equities face sustained downside risk and heightened volatility due to macroeconomic headwinds and prolonged market declines, prompting potential capital reallocation.",
+      "reasoning": "The article reports on a major market entering bear territory in the world's second-largest economy, carrying high significance for global equity allocation and risk management.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China's stock market sinks into bear territory as CSI 300 extends 10-week rout",
+      "publishedAtSgt": "2026-10-22T12:02:18+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/chinas-stock-market-csi-300-bear-market.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-22T14:10:37+08:00"
+    },
+    {
+      "articleId": "03cc2d99eb81becf06a65ac7d9ed582ed104aaa69df6dd638eb6ad04b37d8b26",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Sovereign wealth funds' investments in China and Hong Kong have surged by 190% following a previous slump, as investors look past geopolitical tensions to pursue opportunities in technology, biotechnology, consumer businesses, advanced manufacturing, and industrial supply chains.",
+      "assetClasses": [
+        "Equities",
+        "Private Equity"
+      ],
+      "geographies": [
+        "China",
+        "Hong Kong",
+        "Indonesia"
+      ],
+      "sectors": [
+        "Technology",
+        "Biotechnology",
+        "Consumer Goods",
+        "Advanced Manufacturing",
+        "Mining and Metals"
+      ],
+      "investorImpact": "The significant resurgence of sovereign wealth fund investments into China and Hong Kong signals recovering capital flows and improving investor confidence in specific regional sectors despite lingering geopolitical tensions.",
+      "reasoning": "Classified as MARKET due to the substantial 190% surge in cross-border sovereign investments. It is highly important and fund-monitoring relevant as it highlights shifting capital allocation trends toward Asian markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Sovereign wealth funds' China and Hong Kong investments surge 190% after a bruising slump",
+      "publishedAtSgt": "2026-10-22T10:20:50+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/sovereign-wealth-funds-china-hong-kong.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-22T14:10:37+08:00"
+    },
+    {
+      "articleId": "c26f419d479193dd0c62d3c310a927875cff2b81bd7173e3e03cda553fe4b0c2",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "South Korea's central bank held its policy rate steady at 3% following calls to boost housing supply, while maintaining a restrictive monetary stance to combat elevated inflation.",
+      "assetClasses": [
+        "Fixed Income",
+        "Equities",
+        "Real Estate"
+      ],
+      "geographies": [
+        "South Korea"
+      ],
+      "sectors": [
+        "Banking",
+        "Real Estate"
+      ],
+      "investorImpact": "Investors in South Korean assets should note the steady policy rate and continued restrictive monetary stance, which impacts borrowing costs, real estate market dynamics, and overall equity valuations.",
+      "reasoning": "Classified as MARKET because it details a central bank rate decision and its interplay with the housing supply and monetary stance. It is relevant for monitoring regional monetary policy and asset valuations in South Korea.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bank of Korea holds rates after President Lee calls for boosting housing supply",
+      "publishedAtSgt": "2026-10-22T10:18:29+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/bok-rate-decision-seoul-property.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-22T14:10:37+08:00"
+    },
+    {
+      "articleId": "92ac0eb0ca0e9d4f3aab5330aac9958142e845b7286a103dbc7fd38a70ec0897",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Google and OpenAI highlighted the growing role of artificial intelligence in identifying and addressing cybersecurity threats, with Google utilizing AI models and its Gemini AI to find vulnerabilities, assess flaws, and verify patches, while OpenAI researchers used AI models to help uncover critical PHP vulnerabilities.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Cybersecurity"
+      ],
+      "investorImpact": "Highlights the growing integration and commercial importance of artificial intelligence tools in enterprise cybersecurity, potentially impacting valuations and competitive advantages for tech giants like Google, OpenAI, and Amazon.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on web security vulnerabilities and the operational use of AI by major tech companies. It is relevant to fund monitoring given the industry-wide implications of cybersecurity and AI deployment.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Critical web security flaws spark global alarm as Google, OpenAI and Amazon respond",
+      "publishedAtSgt": "2026-10-22T09:05:15+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/php-google-openai-and-amazon-cyber.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 53,
+      "collectorRelevanceReason": "supporting_technology_description",
+      "collectedAtSgt": "2026-10-22T14:10:37+08:00"
+    },
+    {
+      "articleId": "f044bb32ef1dbb0a6851b41314541701459095b2cf1fb284bf25c1bbe3e88430",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "India's data center market is addressing concerns regarding power and water use while experiencing rapid growth. Meanwhile, Indian telecom major Jio Platforms has seen its IPO anchor investor quota oversubscribed over 30 times, drawing over $26 billion in bids from major asset managers like BlackRock and Capital Group.",
+      "assetClasses": [
+        "Equities",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "India"
+      ],
+      "sectors": [
+        "Technology",
+        "Telecommunications",
+        "Real Estate"
+      ],
+      "investorImpact": "The massive oversubscription of Jio's IPO anchor quota highlights robust institutional investor appetite for Indian technology and telecom assets, signaling strong market confidence and liquidity.",
+      "reasoning": "The article covers major infrastructure development in India's data center market and a high-profile, highly subscribed IPO by Jio Platforms, making it highly relevant for technology, market, and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Inside India newsletter: Asia’s hottest data center market aims to quell concerns over water and power use",
+      "publishedAtSgt": "2026-10-22T08:07:48+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/india-data-center-google-amazon.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-22T14:10:37+08:00"
+    },
     {
       "articleId": "23bafda12193920beb9425329042130070e5fd13dd1435308f59c3cac9d5d46e",
       "relevant": true,
