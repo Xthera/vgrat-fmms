@@ -1,10 +1,225 @@
 {
-  "generatedAtSgt": "2026-10-22T14:26:14.560279+08:00",
+  "generatedAtSgt": "2026-10-22T21:20:47.605265+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 235,
+  "articleCount": 242,
   "analyses": [
+    {
+      "articleId": "ea82f01942bbe12d6b4430e8362183f1763661aa491fb5f2b351de10067ade4c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "France is experiencing mounting pressure on its bond market and public finances amid ongoing protests and spiraling debt servicing payments, raising concerns over potential European Central Bank intervention if borrowing costs widen further against Germany.",
+      "assetClasses": [
+        "Fixed Income",
+        "Sovereign Bonds",
+        "Currencies"
+      ],
+      "geographies": [
+        "France",
+        "Germany",
+        "Europe"
+      ],
+      "sectors": [
+        "Government",
+        "Financials"
+      ],
+      "investorImpact": "Rising sovereign bond yields and widening spreads for France relative to Germany signal increasing fiscal risk in the eurozone, impacting European fixed income portfolios and regional currency stability.",
+      "reasoning": "The article directly addresses sovereign debt stress, widening borrowing cost spreads, and potential ECB intervention, which are critical market-moving developments for macro funds.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "France protests: Macron condemns 'stupid' comments from Trump, others as bond market pressure builds",
+      "publishedAtSgt": "2026-10-22T20:52:48+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/macron-trump-france-protests.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-22T21:02:34+08:00"
+    },
+    {
+      "articleId": "1e5230c909862caf88b58f0f8c09f85cd97951bcef0992a54efc29a29975bc65",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Comcast beat earnings expectations for the quarter as media revenue successfully offset weakness in its connectivity segment, while the company continues to refocus on its mobile business and strategic separation plans.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Telecommunications",
+        "Media"
+      ],
+      "investorImpact": "Investors in Comcast and the broader telecommunications and media sectors can gauge the relative strength of traditional media offsets against broadband stagnation.",
+      "reasoning": "The article reports quarterly earnings results and strategic shifts for a major media and connectivity corporation, making it relevant for market and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Comcast beats earnings expectations as media revenue offsets weakness in connectivity",
+      "publishedAtSgt": "2026-10-22T20:17:59+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/comcast-cmcsa-earnings-q3-2026.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-22T21:02:34+08:00"
+    },
+    {
+      "articleId": "11c5c7c21958973fc947a8f45376fff31eca764dbb4df8f42d57fa72890cf4a5",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Procter & Gamble reported an earnings beat with a 4% increase in sales and a 2.4% rise in volume growth, driven by strength in laundry and home products, leading to a more than 2% rise in premarket shares.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Consumer Staples"
+      ],
+      "investorImpact": "The positive earnings and volume growth signal healthy demand in consumer staples, supporting short-term stock performance and investor confidence in Procter & Gamble.",
+      "reasoning": "Classified as MARKET because it details a major corporate earnings report and stock price movement. It is important for monitoring consumer staples equity performance.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Procter & Gamble earnings beat as sales rise 4%, boosted by laundry and home products",
+      "publishedAtSgt": "2026-10-22T20:01:13+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/procter-gamble-pg-q1-2027-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-22T21:02:34+08:00"
+    },
+    {
+      "articleId": "3baa3b5c17f08c3db09310c18491cff93369fae448eb36d28ae34abfcabe5300",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Futures are declining with chip stocks under pressure, and Tesla shares are falling in premarket trading despite better-than-expected third-quarter results. Additionally, Chinese stocks are experiencing a bear market.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "China",
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Consumer Discretionary",
+        "Semiconductors"
+      ],
+      "investorImpact": "The downturn in tech and chip stocks alongside a bear market in Chinese equities indicates a challenging environment for growth-oriented equity allocations and could pressure near-term portfolio performance.",
+      "reasoning": "The article details broad market pressures including declining futures, weakness in key technology and semiconductor sectors, and a bear market in China, making it highly relevant for market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Sellers are back in tech, while bear market grips Chinese stocks",
+      "publishedAtSgt": "2026-10-22T19:50:48+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/sellers-are-back-in-tech-while-bear-market-grips-chinese-stocks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-22T21:02:35+08:00"
+    },
+    {
+      "articleId": "1e77f950c933ae65e86184468afde75b6ef59bfe20de81781989183b1c23092e",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Disputes between the White House and Elon Musk over Starlink service suspensions in Ukraine introduce reliability concerns, potentially benefiting competitors who can offer greater certainty.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "Ukraine"
+      ],
+      "sectors": [
+        "Technology",
+        "Aerospace & Defense"
+      ],
+      "investorImpact": "Unreliability in monopoly service providers creates market openings for competitors like Blue Origin to capture market share by offering operational certainty.",
+      "reasoning": "Classified as Geopolitical due to the involvement of the White House and Ukraine, with negative sentiment regarding business risks and monopoly reliability issues.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Ukraine Starlink slowdown raises business risks for Elon Musk partners",
+      "publishedAtSgt": "2026-10-22T18:43:38+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/ukraine-starlink-slowdown-musk-business-risk.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-22T21:02:35+08:00"
+    },
+    {
+      "articleId": "d3d45183d6ebae106b1fa86d7b77f747aebf7bf463fbe88ad30e195dbb8cab8b",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "LOW",
+      "summary": "Tariffs and trade tensions with Canada are heavily impacting Maine's economy, where over 40 percent of exports go to Canada, compounding rising costs for goods and home heating oil.",
+      "assetClasses": [
+        "Commodities",
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "Canada",
+        "Maine"
+      ],
+      "sectors": [
+        "Energy",
+        "Exports",
+        "Trade"
+      ],
+      "investorImpact": "Investors with exposure to Maine-based exporters or regional supply chains vulnerable to U.S.-Canada trade friction face rising cost pressures and margin compression.",
+      "reasoning": "Classified as Geopolitical due to its focus on trade wars and tariffs impacting cross-border commerce, with local economic consequences in Maine.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Trump’s tariffs loom over Maine Senate race between Collins and Jackson",
+      "publishedAtSgt": "2026-10-22T18:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/maine-senate-election-trump-tariffs.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-22T21:02:34+08:00"
+    },
+    {
+      "articleId": "8d6d2c946708f9c302fc14b5d446b17f54c6c027a38183b4534adc92dc7a125d",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Norway's sovereign wealth fund, the world's largest, reported a $30 billion loss in the third quarter due to rising interest rates impacting bond returns.",
+      "assetClasses": [
+        "Bonds",
+        "Equities"
+      ],
+      "geographies": [
+        "Norway",
+        "Global"
+      ],
+      "sectors": [
+        "Financials",
+        "Sovereign Wealth"
+      ],
+      "investorImpact": "Highlights the ongoing vulnerability of fixed income and large-scale portfolios to rising interest rates and bond market turbulence, signaling broader valuation pressures across institutional holdings.",
+      "reasoning": "The world's largest sovereign wealth fund posting a significant quarterly loss due to bond market turbulence is a high-impact market event that serves as a bellwether for institutional portfolio performance.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "World's largest wealth fund posts $30 billion loss after bond market turbulence",
+      "publishedAtSgt": "2026-10-22T17:25:09+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/norges-bank-nbim-wealth-fund-q3-results.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-22T21:02:34+08:00"
+    },
     {
       "articleId": "dbbe73854e83910002467c9943b137fb921add37a059350c69b916b01d103bfe",
       "relevant": true,
