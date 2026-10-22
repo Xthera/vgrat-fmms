@@ -1,10 +1,102 @@
 {
-  "generatedAtSgt": "2026-10-22T21:20:47.605265+08:00",
+  "generatedAtSgt": "2026-10-23T02:18:30.201211+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 242,
+  "articleCount": 225,
   "analyses": [
+    {
+      "articleId": "704c10189eeda17f75f762da12e930d1f912c2f6d478e8120296601179cf986c",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Pershing Square CEO Bill Ackman predicts that 2027 will be an exceptional year for equities as current headwinds from geopolitical conflicts, inflation, and high interest rates begin to dissipate.",
+      "assetClasses": [
+        "Equities",
+        "Energy"
+      ],
+      "geographies": [
+        "Global",
+        "Ukraine",
+        "Russia",
+        "Iran"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors should note that prominent fund managers view current geopolitical and inflationary pressures as temporary overhangs, pointing to potential long-term bullish catalysts for stock markets heading toward 2027.",
+      "reasoning": "The article provides macroeconomic outlook commentary from a notable market participant regarding inflation, geopolitics, and equity market trajectories, making it relevant for macroeconomic and market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bill Ackman says 2027 will be an amazing year for stocks as wars, inflation ease",
+      "publishedAtSgt": "2026-10-23T01:53:08+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/bill-ackman-talks-meta-and-markets-with-cnbc.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-23T02:02:48+08:00"
+    },
+    {
+      "articleId": "f26a634003a25736af653f168147dd2e0f127116c399c65a603b41cf8b86d706",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer's Charitable Trust is increasing its position in GEV, raising its weighting to about 2.15% from 1.9%, as part of a renewed investment in the data center trade. This move occurs amidst broader market concerns regarding the availability of capital to support ongoing data center buildouts, which has weighed heavily on AI-related semiconductors and industrial stocks.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Industrials"
+      ],
+      "investorImpact": "Investors face conflicting signals regarding AI infrastructure investments, balancing long-term secular growth in data centers against near-term market anxieties regarding capital funding sources for semiconductor and industrial supply chains.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on data center investments and AI infrastructure trends. Sentiment is MIXED as it highlights strong commitment from institutional portfolios alongside broader sector-wide selling pressure driven by capital funding concerns.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "We're dipping back into the AI trade with our first data center buy in weeks",
+      "publishedAtSgt": "2026-10-23T01:28:19+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/22/were-dipping-back-into-the-data-center-trade-with-small-buy.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-23T02:02:49+08:00"
+    },
+    {
+      "articleId": "6fc1935dc4ae88d18c0603911daa44a3d37d6d7241d6a902d55d66a9a77ff263",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "As oil prices jump and Iran's currency depreciates amid rising economic concerns and inflation, energy investors are discussing under-the-radar stocks to navigate the next phase of the energy trade.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "Global",
+        "Iran"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "Investors in the energy sector should monitor rising oil prices and geopolitical developments in Iran, which present both opportunities in under-the-radar stocks and risks due to economic volatility.",
+      "reasoning": "The article discusses market strategies and under-the-radar stock plays within the energy sector driven by jumping oil prices and geopolitical/economic factors, making it relevant for market and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Under-the-radar stocks to play the next leg of the energy trade with oil prices jumping again",
+      "publishedAtSgt": "2026-10-22T23:16:05+08:00",
+      "url": "https://www.cnbc.com/2026/10/22/under-the-radar-stocks-to-play-the-next-leg-of-the-energy-trade-with-oil-prices-jumping-again.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-23T02:02:53+08:00"
+    },
     {
       "articleId": "ea82f01942bbe12d6b4430e8362183f1763661aa491fb5f2b351de10067ade4c",
       "relevant": true,
@@ -6739,606 +6831,6 @@
       "collectorRelevanceScore": 91,
       "collectorRelevanceReason": "strong_market_title",
       "collectedAtSgt": "2026-10-10T03:36:02+08:00"
-    },
-    {
-      "articleId": "ac91a3d6a3d92cf5590af7c79493320d4d42f6170288964a8fff3aecc7dfca89",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Jim Cramer discusses a buy level for Starbucks, reviews recent purchases of defensive stocks, and highlights how rising bond yields, flat oil prices, and inflation concerns are capping broader market gains while putting pressure on AI and technology shares like Nvidia.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income",
-        "Commodities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Consumer Discretionary",
-        "Technology",
-        "Energy"
-      ],
-      "investorImpact": "Investors should note the rotational pressure toward defensive names as elevated bond yields and inflation concerns weigh on high-growth technology sectors like AI.",
-      "reasoning": "Classified as MARKET because it covers stock portfolio strategy, commentary on major indices like the S&P 500 and Nasdaq, and reactions to macroeconomic pressures such as rising bond yields.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Jim Cramer sets a Starbucks buy level — plus his take on 3 stocks we just bought",
-      "publishedAtSgt": "2026-10-09T23:47:15+08:00",
-      "url": "https://www.cnbc.com/investingclub/2026/10/09/cramer-sets-starbucks-buy-level-and-reviews-3-stocks-we-bought.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-10T00:37:48+08:00"
-    },
-    {
-      "articleId": "c89fd811db30888d623947ff14dd195ee72706b32f8ba7803d76024d1a60cd4e",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Wall Street investors are increasingly targeting AI data centers as a major real estate investment opportunity, funded largely by institutional investors like pension funds. However, accumulating risks and rising public opposition are presenting challenges to these physical infrastructure bets.",
-      "assetClasses": [
-        "Real Estate",
-        "Alternative Investments"
-      ],
-      "geographies": [
-        "Global",
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Real Estate",
-        "Infrastructure"
-      ],
-      "investorImpact": "Investors should weigh the high growth potential of AI infrastructure against mounting physical, regulatory, and public relations risks that could impact project timelines and real estate valuations.",
-      "reasoning": "The article discusses the intersection of AI infrastructure investments and real estate, categorized under technology and market relevance. Sentiment is mixed due to enthusiastic institutional backing clashing with growing risks and public pushback.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Wall Street is pitching data centers as a major real estate bet. The risks are piling up",
-      "publishedAtSgt": "2026-10-09T23:08:20+08:00",
-      "url": "https://www.cnbc.com/2026/10/09/ai-data-centers-investing.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 81,
-      "collectorRelevanceReason": "technology_business_or_infrastructure",
-      "collectedAtSgt": "2026-10-10T00:37:48+08:00"
-    },
-    {
-      "articleId": "9a1dec385bbead20172815d7bcb7b2e1a57bcaa1849f9e0e5bec6b81f0496fc2",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "NEUTRAL",
-      "importance": "MEDIUM",
-      "summary": "European trade commissioner Maroš Sefčovič announced that China has agreed to halve its exports of hybrid cars to the European Union, following earlier pushback from Beijing regarding voluntary export reductions.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "China",
-        "Europe"
-      ],
-      "sectors": [
-        "Automotive"
-      ],
-      "investorImpact": "The voluntary agreement to halve hybrid vehicle exports from China to Europe may alter competitive dynamics for European automakers and affect export volumes for Chinese manufacturers.",
-      "reasoning": "The article is classified under geopolitical trade negotiations impacting the automotive sector between major economic blocs, providing meaningful context for sector monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "China and Europe agree to cut Chinese hybrid vehicle exports by half",
-      "publishedAtSgt": "2026-10-09T23:03:10+08:00",
-      "url": "https://www.cnbc.com/2026/10/09/china-europe-hybrid-vehicle-exports-deal.html",
-      "collectorCategory": "ECONOMIC",
-      "collectorRelevanceScore": 101,
-      "collectorRelevanceReason": "strong_economic_title",
-      "collectedAtSgt": "2026-10-10T00:37:48+08:00"
-    },
-    {
-      "articleId": "6be74b1d25d841a4b553cb834d111e13a79483bf56e4dcb0544a301960db34fa",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEUTRAL",
-      "importance": "MEDIUM",
-      "summary": "The article discusses the shift from generative AI to agentic AI, such as AI shopping agents like Muse, and examines the implications and questions raised for retail companies and their investors.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Global"
-      ],
-      "sectors": [
-        "Retail",
-        "Technology"
-      ],
-      "investorImpact": "Investors in retail and technology stocks must monitor the emergence of agentic AI, as automated shopping agents could significantly alter consumer behavior, retail margins, and competitive dynamics.",
-      "reasoning": "Classified as MARKET because it directly addresses the investment implications of emerging AI shopping agents on retail stocks. Sentiment is neutral as it highlights questions and evolution rather than a definitive positive or negative outcome.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "AI agents like Muse can shop for you. Here's what that means for retail stocks",
-      "publishedAtSgt": "2026-10-09T22:15:38+08:00",
-      "url": "https://www.cnbc.com/investingclub/2026/10/09/ai-agents-could-soon-shop-for-consumers-what-it-means-for-retail-stocks.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-10T00:37:48+08:00"
-    },
-    {
-      "articleId": "87694e741d20f9cd7aa008418897934680439a3261ffa1f42770163cc5341941",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Tech stocks have shown unexpected resilience amid surging interest rates and questions regarding the AI complex. Analysis of the options market shows that the ratio has been moving in favor of puts since August, despite big-tech stock prices climbing to all-time highs.",
-      "assetClasses": [
-        "Equities",
-        "Options"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology"
-      ],
-      "investorImpact": "Investors should note the divergence between rising big-tech equity prices and increasing put option demand, which signals underlying caution and potential hedging against a pullback despite recent all-time highs.",
-      "reasoning": "Classified as MARKET due to its focus on equity and options market dynamics for technology stocks. Sentiment is MIXED as strong equity prices contrast with growing bearish put option trends. It is relevant for fund monitoring as it provides insights into sentiment shifts and risk positioning in the tech sector.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Tech stocks' resilience has puzzled investors. The options market could hold some clues",
-      "publishedAtSgt": "2026-10-09T21:07:30+08:00",
-      "url": "https://www.cnbc.com/2026/10/09/tech-stocks-resilience-has-puzzled-investors-the-options-market-could-hold-some-clues.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-09T21:39:46+08:00"
-    },
-    {
-      "articleId": "fe0c0ae60bbcafce23d4f6af51e50475619740aac96045bf3a550fd583abbb9c",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Retail and regular investors are increasingly participating in Wall Street's record stock borrowing binge by trading on margin while living with their parents, raising concerns about portfolio concentration and market risk as equities rise.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials"
-      ],
-      "investorImpact": "Rising margin debt and retail borrowing signal heightened market leverage and systemic vulnerability, prompting caution regarding overconcentration and potential sudden liquidations during market downturns.",
-      "reasoning": "Classified as MARKET due to its focus on margin debt and stock borrowing trends. It is important and fund-monitoring relevant as elevated leverage levels among investors can exacerbate market volatility and risk.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Living with Mom and trading on margin. The regular investor gets in on Wall Street's record stock borrowing binge",
-      "publishedAtSgt": "2026-10-09T21:03:19+08:00",
-      "url": "https://www.cnbc.com/2026/10/09/margin-debt-stock-market-risk.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-09T21:39:47+08:00"
-    },
-    {
-      "articleId": "909968f0210cfb126a9cb33adac6bbc9e2d0d0c419a26ed7abbdc6226717e8ff",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEUTRAL",
-      "importance": "LOW",
-      "summary": "Jim Cramer outlines top things to watch in the stock market on Friday, noting calm oil prices and bond yields, alongside an Nvidia-backed AI infrastructure company scrapping its Australia IPO due to valuation concerns.",
-      "assetClasses": [
-        "Equities",
-        "Commodities",
-        "Fixed Income"
-      ],
-      "geographies": [
-        "Global",
-        "Australia"
-      ],
-      "sectors": [
-        "Technology",
-        "Energy"
-      ],
-      "investorImpact": "Investors should monitor broader market sentiment indicators like bond yields and oil prices, while noting that AI infrastructure valuations face scrutiny following a canceled IPO.",
-      "reasoning": "The article highlights daily market watch items and broader sentiment regarding AI sector valuations, making it relevant for general market monitoring but of low direct portfolio impact.",
-      "fundMonitoringRelevant": false,
-      "source": "CNBC",
-      "title": "Jim Cramer's top 10 things to watch in the stock market Friday",
-      "publishedAtSgt": "2026-10-09T21:01:32+08:00",
-      "url": "https://www.cnbc.com/investingclub/2026/10/09/jim-cramers-top-10-things-to-watch-in-the-stock-market-friday.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-09T21:39:46+08:00"
-    },
-    {
-      "articleId": "4a802c1bf799f1a28524f04770862141c65c3802bc5faf9009d6702e0c4ea5da",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "OpenAI's revenue details and pressure to justify its valuation ahead of a potential IPO led to a tech sector slide, pushing the Nasdaq Composite down more than 1% in its worst day since mid-August.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Global",
-        "United States"
-      ],
-      "sectors": [
-        "Technology"
-      ],
-      "investorImpact": "The decline in major AI and tech names impacts technology-heavy portfolios and highlights investor sensitivity to high valuations and revenue realities in the AI ecosystem.",
-      "reasoning": "Classified as MARKET due to the direct impact on equity indices like the Nasdaq and broad tech sector movement driven by OpenAI valuation and revenue concerns.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "OpenAI's revenue scare, Delta earnings, what investors think of a Starbucks-Chipotle deal and more in Morning Squawk",
-      "publishedAtSgt": "2026-10-09T20:40:30+08:00",
-      "url": "https://www.cnbc.com/2026/10/09/5-things-to-know-before-the-stock-market-opens.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 93,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-09T21:39:47+08:00"
-    },
-    {
-      "articleId": "f1af98ea26a4a2ad4c6fb1e315ed7b7d0ca3e511e648d8ddedf97d54eac1bc9d",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Ferrari chairman John Elkann expressed optimism for the long-term artificial intelligence buildout and shrugged off bubble concerns, but warned that an AI supply and demand mismatch could pose market risks.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Global"
-      ],
-      "sectors": [
-        "Technology",
-        "Automotive"
-      ],
-      "investorImpact": "Investors should note that while long-term demand for AI infrastructure remains strong, potential supply-demand mismatches could introduce volatility in technology and related equity sectors.",
-      "reasoning": "The article discusses high-level industry perspectives on artificial intelligence valuation and market risks from a prominent industrialist and tech board member, making it relevant for technology sector and broader market sentiment analysis.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Ferrari’s chairman is bullish on AI. He’s less certain how businesses will cash in",
-      "publishedAtSgt": "2026-10-09T19:54:21+08:00",
-      "url": "https://www.cnbc.com/2026/10/09/john-elkann-ferrari-ai-technology.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 57,
-      "collectorRelevanceReason": "supporting_market_description",
-      "collectedAtSgt": "2026-10-09T21:39:47+08:00"
-    },
-    {
-      "articleId": "2b33a53cec6d483647a023e73030eb5a36e3a7b2e8465a7644c290a6fb9e652b",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "POSITIVE",
-      "importance": "MEDIUM",
-      "summary": "Kalshi traders show a 75% probability that the number of planned or operating data centers will exceed 5,100 before 2027, up from 60% in two weeks, despite rising public backlash against data center construction.",
-      "assetClasses": [
-        "Equities",
-        "Real Estate",
-        "Infrastructure"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Utilities",
-        "Real Estate"
-      ],
-      "investorImpact": "High demand and growth projections for data centers indicate continued strong capital expenditure in technology and infrastructure sectors, while also highlighting potential regulatory or public relations headwinds.",
-      "reasoning": "Classified as TECHNOLOGY due to its focus on data center infrastructure growth trends tracked via prediction markets. It is relevant for fund monitoring as it reflects sentiment and market expectations regarding AI and tech infrastructure expansion.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Kalshi traders see high odds that more than 5,100 data centers will be planned or operating before 2027",
-      "publishedAtSgt": "2026-10-09T19:54:04+08:00",
-      "url": "https://www.cnbc.com/2026/10/09/kalshi-traders-see-high-odds-of-5000-plus-data-centers-by-2027.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 81,
-      "collectorRelevanceReason": "technology_business_or_infrastructure",
-      "collectedAtSgt": "2026-10-09T21:39:47+08:00"
-    },
-    {
-      "articleId": "b1a4554a95d710b8544a3f3d5dd1dbb5a8efe5b7d5147516fe1f7909b0100a9b",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "OpenAI's latest annual revenue estimate has fallen short of previous expectations, causing investor concern and a sell-off in technology and AI-related stocks. CEO Sam Altman confirmed that the group will not attempt an IPO this year, while the company continues to work on justifying its valuation above $850 billion.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Global"
-      ],
-      "sectors": [
-        "Technology",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "Investors holding AI and technology sector equities face heightened volatility and downward pressure as market sentiment reacts to lower-than-expected revenue estimates and delayed IPO plans for major industry players like OpenAI.",
-      "reasoning": "Classified as MARKET due to the direct impact on stock prices and investor sentiment across technology and AI stocks following revenue and valuation updates from OpenAI. It is relevant for fund monitoring given its broad sector implications.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "CNBC Daily Open: What happened to the $20 billion?",
-      "publishedAtSgt": "2026-10-09T14:49:02+08:00",
-      "url": "https://www.cnbc.com/2026/10/09/cnbc-daily-open-what-happened-to-the-20-billion.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 58,
-      "collectorRelevanceReason": "supporting_market_description",
-      "collectedAtSgt": "2026-10-09T18:38:15+08:00"
-    },
-    {
-      "articleId": "afce54fea57e52c8166821e3e555c3708a969c033b7dca7b541df1a3dd8f56b4",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "POSITIVE",
-      "importance": "HIGH",
-      "summary": "A U.S. East Asian envoy states that investors are overestimating the risk of conflict across the Taiwan Strait, following discussions between U.S. and Chinese leadership regarding Taiwan and domestic semiconductor manufacturing subsidies.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Taiwan",
-        "U.S.",
-        "China"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors"
-      ],
-      "investorImpact": "Investors may be overly cautious regarding geopolitical risk in Taiwan, suggesting potential buying opportunities or reduced risk premiums in Asian equities and semiconductor stocks.",
-      "reasoning": "The article addresses geopolitical risk pricing in a critical technology-producing region, directly affecting investor sentiment and risk assessment for global tech supply chains.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "U.S. East Asian envoy says investors are overpricing Taiwan risk",
-      "publishedAtSgt": "2026-10-09T09:37:01+08:00",
-      "url": "https://www.cnbc.com/2026/10/09/taiwan-trump-china-militia-boat-tsmc-.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-09T09:38:03+08:00"
-    },
-    {
-      "articleId": "16c77922d91dd19fa27deab67994034db050a2a7434e4aefe1f977e5aadd82e7",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Australian AI data center operator Firmus, backed by Nvidia, has withdrawn its planned $5 billion initial public offering due to market volatility and conditions.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Australia"
-      ],
-      "sectors": [
-        "Technology",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "The withdrawal of a major IPO due to market volatility signals weaker investor appetite for large-scale tech offerings, which could weigh on sentiment in the regional equity market and AI sector.",
-      "reasoning": "The article is classified as MARKET and HIGH importance because the cancellation of a historic $5 billion IPO reflects adverse market conditions affecting major technology and AI listings.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Nvidia-backed Aussie AI firm Firmus withdraws historic IPO, citing market volatility",
-      "publishedAtSgt": "2026-10-09T09:02:38+08:00",
-      "url": "https://www.cnbc.com/2026/10/09/nvidia-ai-firmus-ipo-.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-09T09:38:03+08:00"
-    },
-    {
-      "articleId": "0032a9ce6f04d015409d999c48420a4dd375e571025ffffdd3dd0864a5ec69ff",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "PepsiCo shares rallied 3% despite cutting profit guidance, as investors focused on improving sales trends and anticipated weakness. Rising inflation, oil prices, and interest rates had previously added pressure, sending shares down nearly 10% in September.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Consumer Staples"
-      ],
-      "investorImpact": "Investors are weighing the impact of macroeconomic pressures like inflation and interest rates against improving sales trends, leading to a mixed sentiment where a guidance cut was already priced in.",
-      "reasoning": "The article is classified under MARKET because it discusses stock price movements, earnings guidance, and market reactions for PepsiCo. It is relevant for fund monitoring due to its insights on consumer staples and macroeconomic factors.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Pepsi shares rallied despite cutting profit guidance. Where Cramer stands on the stock now",
-      "publishedAtSgt": "2026-10-09T06:50:36+08:00",
-      "url": "https://www.cnbc.com/2026/10/08/pepsico-earnings-guidance-cramer.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-09T18:38:15+08:00"
-    },
-    {
-      "articleId": "1c5e4c09377a497166fd6adaf00ecb7d2fa5096117642eca2d7560e5295ba92f",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Shares of major telecommunications companies AT&T, Verizon, and T-Mobile dropped in extended trading following news of a SpaceX deal to acquire a spectrum license.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Telecommunications",
-        "Technology"
-      ],
-      "investorImpact": "Investors holding shares in traditional telecommunication companies face downside risk and increased competitive pressure from expanding space and wireless capabilities of new market entrants like SpaceX.",
-      "reasoning": "Classified as MARKET due to the immediate negative share price reaction of major telecom stocks following a major corporate transaction by SpaceX. Highly significant for monitoring telecom and tech sector exposures.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "SpaceX deal to acquire spectrum license hammers shares of AT&T, Verizon and T-Mobile",
-      "publishedAtSgt": "2026-10-09T06:30:26+08:00",
-      "url": "https://www.cnbc.com/2026/10/08/spacex-spectrum-license-att-verizon-tmobile.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-09T06:36:04+08:00"
-    },
-    {
-      "articleId": "d6fff1a9cbc4e448676a7d0cff6011fc01273bb9f47e72c52650b7fa84d878d0",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Global bond market yields have risen significantly amid expectations that central banks may hike interest rates and corporations continue borrowing for AI infrastructure. Traders price in a high likelihood of a Fed rate increase at the December meeting.",
-      "assetClasses": [
-        "Bonds",
-        "Fixed Income",
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials",
-        "Technology"
-      ],
-      "investorImpact": "Rising Treasury yields and potential rate hikes increase borrowing costs for corporations and consumers, pressuring equity valuations and altering fixed income attractiveness.",
-      "reasoning": "The article is classified under MARKET due to its direct focus on Treasury yields, interest rate expectations, and market pricing for Fed actions, which are high-importance drivers for asset pricing.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Treasury yields are 'really, really high' but can come down soon, Bessent's new advisor says",
-      "publishedAtSgt": "2026-10-09T04:06:31+08:00",
-      "url": "https://www.cnbc.com/2026/10/08/treasury-yields-david-zervos.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-09T06:36:04+08:00"
-    },
-    {
-      "articleId": "0c22ce18ebd364dee9263dfbe0cf5c527371dfc3cf724055099c673cd3fafcf5",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Reports indicate Starbucks has explored a potential takeover of Chipotle Mexican Grill, sending Chipotle shares up about 7% and Starbucks shares down roughly 4%. Investors are split on the strategic logic of the megadeal for both companies.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Consumer Discretionary",
-        "Restaurants"
-      ],
-      "investorImpact": "The rumored acquisition creates divergent stock price movements, boosting the target company's shares while weighing on the potential acquirer, reflecting investor uncertainty regarding large-scale restaurant consolidation.",
-      "reasoning": "Classified as MARKET due to corporate M&A speculation affecting stock prices. Sentiment is MIXED as the target gained while the acquirer fell. Important for sector monitoring regarding corporate strategy and restaurant industry consolidation.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Why a Starbucks takeover of Chipotle would — and wouldn't — make sense for both companies",
-      "publishedAtSgt": "2026-10-09T03:15:26+08:00",
-      "url": "https://www.cnbc.com/2026/10/08/starbucks-chipotle-acquisition.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-09T03:36:31+08:00"
-    },
-    {
-      "articleId": "77b96050d8b754b679c913aaf2501551c86f1fca26143a8d8f6de85a25df951a",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Shares of Nvidia, Oracle, CoreWeave, and other AI-related stocks dropped following new details regarding OpenAI's revenue and its valuation pressures ahead of a potential IPO and new funding round.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Global",
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "Investors in AI infrastructure and related equities face heightened volatility and valuation scrutiny following concerns over OpenAI's financials and upcoming funding dynamics.",
-      "reasoning": "Classified as MARKET due to direct equity price reactions across major AI stocks following revenue and valuation revelations from OpenAI.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Nvidia, Oracle, CoreWeave and other AI stocks sink on OpenAI revenue report",
-      "publishedAtSgt": "2026-10-09T02:18:31+08:00",
-      "url": "https://www.cnbc.com/2026/10/08/open-ai-revenue-nvidia-oracle-coreweave.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-09T03:36:31+08:00"
-    },
-    {
-      "articleId": "f23381c2e9feb8deb6ef887c61208059f7287dd080e3c2d10fa3747fd4c87fc6",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "NEGATIVE",
-      "importance": "MEDIUM",
-      "summary": "The U.S. Treasury Department has sanctioned 17 additional vessels linked to Iran's shadow fleet used to transport oil and gas, as part of an economic pressure campaign to restrict illicit oil revenues and end the ongoing conflict.",
-      "assetClasses": [
-        "Commodities",
-        "Energy"
-      ],
-      "geographies": [
-        "United States",
-        "Iran",
-        "Middle East"
-      ],
-      "sectors": [
-        "Energy",
-        "Oil and Gas",
-        "Shipping"
-      ],
-      "investorImpact": "Sanctions targeting Iran's shadow fleet can disrupt illicit oil supply chains, potentially causing localized volatility in global oil prices and increasing operational costs or compliance risks for shipping and energy logistics firms.",
-      "reasoning": "Classified as GEOPOLITICAL due to U.S. sanctions on Iranian shipping assets. It is relevant for fund monitoring as it directly impacts global energy supplies and maritime logistics.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Treasury sanctions 17 tankers linked to Iran's 'shadow fleet' in economic pressure campaign",
-      "publishedAtSgt": "2026-10-09T01:13:32+08:00",
-      "url": "https://www.cnbc.com/2026/10/08/iran-treasury-sanctions-shadow-fleet.html",
-      "collectorCategory": "GEOPOLITICAL",
-      "collectorRelevanceScore": 71,
-      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
-      "collectedAtSgt": "2026-10-09T03:36:31+08:00"
-    },
-    {
-      "articleId": "647ba5b0c7f10e0ab80ba0f47cb5fd731f517514c14be1d14b1194ee7faf1709",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEUTRAL",
-      "importance": "MEDIUM",
-      "summary": "The 10-year Treasury yield held relatively steady as traders absorbed Fed Governor Christopher Waller's remarks indicating that further rate hikes will be necessary to control inflation, while also keeping an eye on an upcoming 30-year bond auction.",
-      "assetClasses": [
-        "Fixed Income",
-        "Bonds"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials",
-        "Government"
-      ],
-      "investorImpact": "Investors in fixed income should monitor ongoing commentary from Federal Reserve officials regarding future rate hikes and upcoming Treasury auctions, as these factors directly influence bond yields and borrowing costs.",
-      "reasoning": "Classified as MARKET because it discusses Treasury yield movements and bond auction dynamics influenced by Federal Reserve commentary, which is directly relevant to fixed income monitoring and macroeconomic trends.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "10-year Treasury yield is little changed as Fed's Waller says more hikes needed, investors await 30-year auction",
-      "publishedAtSgt": "2026-10-09T00:22:51+08:00",
-      "url": "https://www.cnbc.com/2026/10/08/us-treasury-yields-30-year-bond-auction.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-09T00:40:40+08:00"
     }
   ]
 }
