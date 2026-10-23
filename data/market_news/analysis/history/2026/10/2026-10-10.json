@@ -1,0 +1,312 @@
+{
+  "date": "2026-10-10",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "articleCount": 10,
+  "analyses": [
+    {
+      "articleId": "4449b9b14efd303673d8c660ccef1203b00f43a35f6acea6f4f98b88b8907b55",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Stocks reached fresh record highs early last week, though renewed volatility in the artificial intelligence trade highlighted investor fickleness. AI-related stocks whipsawed following a Financial Times report questioning OpenAI's growth, which also impacted telecom stocks and highlighted broader market dynamics.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Telecommunications"
+      ],
+      "investorImpact": "Investors face heightened volatility in AI and related sectors, underscoring the risk of sentiment shifts based on news reports regarding major AI players.",
+      "reasoning": "Classified as MARKET due to its focus on stock market movements, record highs, and sector volatility driven by AI trade updates. Important for monitoring portfolio risk in technology and growth assets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Stocks saw new highs and big declines: How the volatile AI trade moved last week's market",
+      "publishedAtSgt": "2026-10-10T23:30:51+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/10/stocks-saw-new-highs-and-big-declines-how-the-volatile-ai-trade-moved-last-weeks-market.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-11T00:35:20+08:00"
+    },
+    {
+      "articleId": "4f5d40783493df82d3fba24d7582974134b3579f676efebbd06f1527d29d6961",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "President Donald Trump's announcement that Russia will supply diesel fuel to the global market appears to contradict recent efforts to pressure Moscow through energy sanctions, raising questions regarding the Graham Sanctioning Russia and Iran Act of 2026.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "Russia",
+        "Global"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "Investors in the energy sector should monitor potential shifts in global diesel supply dynamics and regulatory compliance risks tied to the Graham Sanctioning Russia and Iran Act of 2026.",
+      "reasoning": "The article is classified as GEOPOLITICAL because it covers a high-level policy shift and potential contradiction with existing Russian sanctions legislation, carrying significant implications for global energy markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump's diesel agreement with Putin accused of contradicting Russia sanctions law",
+      "publishedAtSgt": "2026-10-10T07:16:50+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/trump-putin-diesel-russia-sanctions-ukraine.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-10T09:36:51+08:00"
+    },
+    {
+      "articleId": "7dcc6a4eac891b7b53076322383e26854ac8f715e8d4be7e6f2af34146a86d77",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer previews the upcoming earnings season, highlighting that financial reports from banks and chipmakers will provide clarity on corporate performance and the strength of the artificial intelligence trade following a volatile week in the markets.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Technology"
+      ],
+      "investorImpact": "Investors should watch upcoming bank and chipmaker earnings reports for signals on corporate strength and the health of the AI trade, which can guide asset allocation as market volatility continues.",
+      "reasoning": "Classified as MARKET because it discusses upcoming stock earnings and market reactions to recent volatility. Importance is set to MEDIUM as it offers a forward-looking preview of earnings season rather than a major breaking macroeconomic announcement.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Cramer’s week ahead: Earnings kick off as banks and chipmakers face big tests",
+      "publishedAtSgt": "2026-10-10T06:22:35+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/jim-cramer-week-ahead-bank-earnings-ai-chips.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-10T06:36:19+08:00"
+    },
+    {
+      "articleId": "231ccc8975d8e141dd8bf5b9464fd26e13e0a506fe6d6328405c5e754e4d57f0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Junk bonds are flashing warning signs as yields jump across the curve due to rising inflation expectations driven by high fossil fuel prices from the Iran war, deficits nearing $2 trillion, and stronger-than-expected economic growth.",
+      "assetClasses": [
+        "Fixed Income",
+        "High Yield Bonds",
+        "Bonds"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Financial"
+      ],
+      "investorImpact": "Investors in high yield or junk bonds should closely monitor rising yields and widening spreads, as inflation pressures from high energy prices and growing deficits increase credit risks.",
+      "reasoning": "The article discusses critical market dynamics regarding junk bonds flashing warning signs and rising yields due to macroeconomic inflation pressures, making it highly relevant for fixed-income fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Junk bonds are 'flashing yellow.' Watch these warning signs",
+      "publishedAtSgt": "2026-10-10T04:51:25+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/junk-bonds-are-flashing-yellow-watch-these-warning-signs.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-10T06:36:18+08:00"
+    },
+    {
+      "articleId": "92cfdc782c2b53abefe70c216893eae93084a13be7ed17876b4869a97318c22f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Telecommunications stocks plummeted following SpaceX's announcement of a nationwide spectrum portfolio acquisition to expand Starlink mobile services, with Verizon recording its worst day since 2002, and T-Mobile and AT&T suffering steep losses.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Telecommunications",
+        "Technology"
+      ],
+      "investorImpact": "Investors holding legacy telecommunication stocks face significant downside risk and volatility as disruptive satellite-based mobile competition emerges from SpaceX.",
+      "reasoning": "Classified as MARKET due to the severe equity sell-off in major telecommunications providers driven by a competitive threat from SpaceX, impacting sector valuations and market sentiment significantly.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Verizon posts worst day since 2002 as SpaceX U.S. network plans whack cell provider stocks",
+      "publishedAtSgt": "2026-10-10T04:16:58+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/verizon-att-tmobile-stocks-spacex-network.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-10T06:36:18+08:00"
+    },
+    {
+      "articleId": "bd46d0a8057427f9d0d7a9617b7d01bab5271e3ec39b2626375f494c62c4e9c2",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "President Donald Trump announced the creation of a committee to evaluate whether to fire Federal Reserve Governor Lisa Cook, appointing Kevin Hassett, Keith Sonderling, and Andrea R. to review the evidence.",
+      "assetClasses": [
+        "Currencies",
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Potential political interference with the Federal Reserve introduces regulatory and monetary policy uncertainty, which can impact bond yields, currency valuations, and broad equity market sentiment.",
+      "reasoning": "The article discusses a governance challenge regarding a Federal Reserve Governor initiated by the executive branch. This falls under political and institutional developments that can indirectly affect macroeconomic policy and financial markets, making it relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump created a committee to dig into the Fed's Lisa Cook. What is it and what comes next?",
+      "publishedAtSgt": "2026-10-10T03:19:00+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/trump-lisa-cook-fed-firing-committee-explained.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 58,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-10T03:36:01+08:00"
+    },
+    {
+      "articleId": "4624eaac00be92e45ae2206362911f6c3bb67df70b5df180da89c73ac2fcc30c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Tech stocks experienced a recovery rally supported by tame bond yields and oil prices, while Elon Musk had a strong week.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Energy"
+      ],
+      "investorImpact": "Investors can use insights on recovery rallies in tech stocks driven by macroeconomic factors like bond yields and oil prices to inform equity portfolio positioning.",
+      "reasoning": "The article discusses overall market movements, specifically a tech stock recovery supported by favorable bond yields and oil prices, which directly impacts market sentiment and equity asset classes.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "What's behind the recovery rally in tech stocks — plus, Elon Musk's very good week",
+      "publishedAtSgt": "2026-10-10T03:02:29+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/09/whats-behind-the-recovery-rally-in-tech-stocks-plus-musks-good-week.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-10T03:36:02+08:00"
+    },
+    {
+      "articleId": "fde44a9ae4c3d87170461d86e7a3b6b97cbbeb7e07f635b9d2bece50cc45d341",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Attacks on oil tankers transiting the Strait of Hormuz have surged to wartime highs as Iran attempts to choke off crude exports, threatening a vital global trade route despite a recent rebound in Middle Eastern oil exports.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "Middle East",
+        "Strait of Hormuz",
+        "Iran"
+      ],
+      "sectors": [
+        "Energy",
+        "Shipping",
+        "Oil and Gas"
+      ],
+      "investorImpact": "The escalation of attacks in the Strait of Hormuz poses a severe threat to global oil supplies and shipping logistics, likely driving up crude oil prices and shipping insurance costs, which impacts energy sector equities and broad inflationary trends.",
+      "reasoning": "The article details a major geopolitical and security escalation directly impacting global energy supply chains and commodities markets, making it highly relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Tanker attacks in Strait of Hormuz surge to wartime high as Iran tries to choke off oil exports",
+      "publishedAtSgt": "2026-10-10T02:52:49+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/iran-war-strait-hormuz-tanker-attack-oil.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-10T03:36:03+08:00"
+    },
+    {
+      "articleId": "b831d7d8d2e89ed9f98deeccc0f8b60f5245a7e9708e05a73b477f269e0faa8c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Bearish positions continue to build up against the semiconductor group, highlighted by notable large options trades in Micron and Nvidia that question the recent rally in chip stocks.",
+      "assetClasses": [
+        "Equities",
+        "Options"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Semiconductors",
+        "Technology"
+      ],
+      "investorImpact": "Investors with exposure to the semiconductor sector should monitor potential bearish sentiment shifts and heavy options activity in major chip stocks like Nvidia and Micron, which could signal increased volatility or a pullback in tech equities.",
+      "reasoning": "Classified under MARKET due to the focus on large trading activity and investor positioning in major equity options. Sentiment is NEGATIVE given the bearish buildup and questioning of the chip sector's recent gains. Importance is MEDIUM as it highlights sector-specific options flow rather than macro market shifts.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Two massive trades just happened in Micron and Nvidia. What they could mean for chips",
+      "publishedAtSgt": "2026-10-10T02:50:21+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/two-massive-trades-just-happened-in-micron-and-nvidia-what-they-could-mean-for-chips.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-10T03:36:01+08:00"
+    },
+    {
+      "articleId": "95dc7af24e1f81101b71e63c524307509e46b3b15b38be6c0a0a23031038d340",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "Despite a stagnant used car market, investment strategies involving stocks like CarMax (KMX) suggest using options strategies such as put-assignment or short strangles around key price levels.",
+      "assetClasses": [
+        "Equities",
+        "Options"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Automotive"
+      ],
+      "investorImpact": "Provides tactical options trading ideas for specific retail or institutional equities like CarMax amid a flat used car sector, but carries limited broader macroeconomic significance.",
+      "reasoning": "Classified as MARKET because it discusses stock pricing and options strategies for automotive retail. Importance is LOW as it focuses on a niche trading setup rather than major structural market movements.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "The used car market is stagnant. Here's how to profit anyway",
+      "publishedAtSgt": "2026-10-10T01:37:31+08:00",
+      "url": "https://www.cnbc.com/2026/10/09/the-used-car-market-is-stagnant-heres-how-to-profit-anyway.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-10T03:36:02+08:00"
+    }
+  ]
+}
