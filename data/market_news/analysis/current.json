@@ -1,10 +1,164 @@
 {
-  "generatedAtSgt": "2026-10-24T02:09:54.423557+08:00",
+  "generatedAtSgt": "2026-10-24T06:36:19.694044+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 236,
+  "articleCount": 241,
   "analyses": [
+    {
+      "articleId": "3f434b88bf545f94e98b790c48219a91d030bede8e7a2423b76967d6dc63f1cf",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Moody's has maintained France's credit rating amid political turmoil and civil unrest, while the country's 10-year bond yields surpassed 5% for the first time since 2002.",
+      "assetClasses": [
+        "Fixed Income",
+        "Sovereign Debt"
+      ],
+      "geographies": [
+        "France",
+        "Euro Zone"
+      ],
+      "sectors": [
+        "Government",
+        "Financial Services"
+      ],
+      "investorImpact": "The decision provides temporary relief against mounting sovereign risk and rising borrowing costs, but surging bond yields and political turmoil highlight ongoing risks for European fixed income investors.",
+      "reasoning": "Classified as MARKET due to its focus on sovereign credit ratings and bond yield movements in a major euro zone economy. Importance is HIGH because France's 10-year bond yield crossing 5% is a significant macroeconomic event with implications for European debt markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Moody's holds steady on France's credit rating as country grapples with turmoil and higher yields",
+      "publishedAtSgt": "2026-10-24T06:18:10+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/moodys-holds-steady-on-frances-credit-rating-as-country-grapples-with-turmoil-and-higher-yields.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-24T06:20:44+08:00"
+    },
+    {
+      "articleId": "ea6625d87d15c023c63b5efd50894eb44c0686d31055c87f9771f0296e08d935",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The AI infrastructure trade faces turmoil as neoclouds encounter financial pressure, credit risks increase, and Solidigm pulls its IPO amid rising skepticism over the return on capital expenditures for AI investments.",
+      "assetClasses": [
+        "Equities",
+        "Credit",
+        "IPOs"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Cloud Computing",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors are increasingly exposed to credit risks and valuation pressures in the AI infrastructure sector, prompting hedging strategies and signaling potential cooling in capital-intensive AI deployment.",
+      "reasoning": "Classified as MARKET due to direct impacts on public equities, IPO pipelines, and credit risks within the technology and AI infrastructure sectors, carrying high importance for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Turmoil hits AI buildout as neoclouds face pressure, credit risks mount and Solidigm pulls IPO",
+      "publishedAtSgt": "2026-10-24T05:49:08+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/ai-turmoil-neoclouds-struggle-credit-risks-jump-solidigm-pulls-ipo.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-24T06:20:44+08:00"
+    },
+    {
+      "articleId": "0ab95f08ae80238bd577eeade9de3e671226a781627b226e0759bfa2e806ca01",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Senator Susan Collins announced that the Trump administration has issued tariff exemptions for several categories of Canadian imports crucial to Maine industries, while simultaneously indicating plans to replace them with other product tariffs as part of ongoing bilateral trade negotiations.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States",
+        "Canada",
+        "Maine"
+      ],
+      "sectors": [
+        "Trade",
+        "Manufacturing"
+      ],
+      "investorImpact": "Investors with exposure to cross-border US-Canada trade and Maine-specific industries should monitor shifting tariff exemptions and replacements, as these policy adjustments create localized sector benefits alongside broader trade uncertainty.",
+      "reasoning": "The article is categorized as GEOPOLITICAL because it deals with international trade policy and tariffs between the US and Canada. Sentiment is MIXED due to relief from specific exemptions offset by the implementation of replacement tariffs. Importance is MEDIUM as it impacts regional and bilateral trade sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump dropping some Canada tariffs but 'replacing' them with other products",
+      "publishedAtSgt": "2026-10-24T05:26:59+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/trump-tariffs-canada-susan-collins.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-24T06:20:44+08:00"
+    },
+    {
+      "articleId": "311f80f730c8cbc630fe1c0fcd6eadef264347a8812c378d1c2c80df8f505c5f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "President Donald Trump signed an executive order targeting mortgage insurance and refinance costs to improve homeownership affordability amid rising interest rates and inflation. The private mortgage insurance industry acknowledged the focus on reducing costs for homeowners.",
+      "assetClasses": [
+        "Real Estate",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Real Estate"
+      ],
+      "investorImpact": "The executive order could impact mortgage insurers and refinancing activity by altering cost structures, which may affect revenues for financial institutions operating in the mortgage and housing sectors.",
+      "reasoning": "Classified as MARKET because the executive order directly impacts the mortgage insurance and housing finance sectors. It is relevant for fund monitoring due to potential regulatory impacts on financial sector equities and mortgage-backed securities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump's executive order targets mortgage insurance, refinance costs. What it means for borrowers",
+      "publishedAtSgt": "2026-10-24T03:53:13+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/trump-mortgage-executive-order-costs.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-24T06:20:44+08:00"
+    },
+    {
+      "articleId": "ed02e0632454d3bd59246b105ea4e23a5944f918ae664568589fbd51dbe2574e",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Meta shares fell 9% over four sessions, wiping $135 billion from its market cap due to concerns over AI buildout expenses, while analyst Mike Khouw views the drop as a buying opportunity and highlights Meta's new active digital assistant AI agent.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Communication Services"
+      ],
+      "investorImpact": "Investors face short-term volatility and valuation pressures from heavy AI infrastructure spending by major tech firms, balanced by potential long-term opportunities if AI products like Meta's digital assistant succeed.",
+      "reasoning": "Classified as MARKET because it discusses stock price movements, market capitalization changes, and analyst buying strategies regarding Meta amidst broader technology sector AI spending concerns.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Meta shares are down 9% this week. Here's why Mike Khouw is buying now",
+      "publishedAtSgt": "2026-10-24T03:25:18+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/meta-shares-rough-week-mike-khouw-is-buying.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-24T06:20:44+08:00"
+    },
     {
       "articleId": "c30ee4c3577e9318a8f295fb8f0cc1bbcc39c84de271a58c6f6e89962c0d212a",
       "relevant": true,
