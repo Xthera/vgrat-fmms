@@ -1,10 +1,130 @@
 {
-  "generatedAtSgt": "2026-10-24T20:19:57.274349+08:00",
+  "generatedAtSgt": "2026-10-25T00:58:03.753731+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 242,
+  "articleCount": 244,
   "analyses": [
+    {
+      "articleId": "f2ae5a4294f4e9637d77457cb7b95bd83cf1df5c406902be4cc25cd1bac1fb53",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Wall Street experienced volatility as investors weighed robust demand against growing concerns over how companies will finance the massive infrastructure buildout for artificial intelligence, though chip and cyber stocks saw some buying interest.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Cybersecurity",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors are reassessing portfolio allocations amid rising uncertainty regarding AI infrastructure financing, signaling potential volatility in technology and semiconductor holdings.",
+      "reasoning": "The article discusses market reactions and portfolio adjustments in response to AI funding concerns, directly impacting market sentiment and sector allocation strategies.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AI funding fears rattle Wall Street. Here's how we're adjusting our portfolio",
+      "publishedAtSgt": "2026-10-25T00:14:00+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/24/ai-funding-fears-rattle-wall-street-heres-how-were-adjusting-our-portfolio.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-25T00:42:25+08:00"
+    },
+    {
+      "articleId": "6a271ff09c351091754409d20a11419bf8dfb72315769b912166c5f0fb759668",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "Former hedge fund manager and Elm Wealth founder Victor Haghani warned that retail investors trying to beat the market via individual stocks and complex ETFs may underperform and would likely be better off using broad market index funds.",
+      "assetClasses": [
+        "Equities",
+        "ETFs"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Financials",
+        "Asset Management"
+      ],
+      "investorImpact": "Serves as a general reminder on retail investor behavior and the ongoing debate between active stock picking and passive index investing, though it introduces no new macroeconomic data.",
+      "reasoning": "The article discusses general retail investing behavior and market strategy rather than concrete financial market catalysts or company-specific news. It is categorized as MARKET due to its focus on stock picking and index funds.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Retail investors are not more sophisticated than 30 years ago, says former hedge fund manager",
+      "publishedAtSgt": "2026-10-24T23:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/24/stock-picking-could-hurt-investors-warns-former-hedge-fund-manager.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-25T00:42:28+08:00"
+    },
+    {
+      "articleId": "e60cbf16084c0088e1c3e31d6dc3519661e6536fb3ca3e46bbfc19b273f0d6b8",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Berkshire Hathaway shares reached new all-time highs as investors rotate out of high-flying tech and AI stocks due to concerns over infrastructure spending. CEO Greg Abel noted that supplying energy to AI data centers presents a significant opportunity for the company, provided rates remain stable for existing customers.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Conglomerates",
+        "Energy",
+        "Technology"
+      ],
+      "investorImpact": "Investors may view Berkshire Hathaway as a strong defensive alternative amidst ongoing tech and AI sector rotation, especially given its strategic positioning in energy supply for data centers.",
+      "reasoning": "The article highlights Berkshire Hathaway reaching all-time highs amid a broader market sector rotation away from tech and AI stocks, which is relevant for market and portfolio monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Berkshire shares shake the Buffett blues with new all-time highs",
+      "publishedAtSgt": "2026-10-24T20:48:32+08:00",
+      "url": "https://www.cnbc.com/2026/10/24/berkshire-record-high-without-buffett.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-25T00:42:28+08:00"
+    },
+    {
+      "articleId": "e50ec86be72c30bf5d713b84846f368a46dd24e37340d886f6f7fb51900bf153",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "With U.S. midterm elections approaching, voter sentiment regarding the economy and inflation remains heavily pessimistic, comparable to post-pandemic levels.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Financials"
+      ],
+      "investorImpact": "Persistent negative sentiment surrounding the economy and inflation ahead of elections can impact consumer spending behavior and heighten market volatility, influencing sector-specific allocations.",
+      "reasoning": "The article is classified under ECONOMIC due to its focus on voter and consumer sentiment regarding the economy and inflation. Sentiment is NEGATIVE given the gloomy outlook reported. It is important for monitoring broader macroeconomic conditions and political risk.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "America by the numbers: How voters feel about the economy, inflation, AI and Trump",
+      "publishedAtSgt": "2026-10-24T18:58:30+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/america-by-the-numbers-how-voters-feel-about-the-economy-inflation-ai-and-trump.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-25T00:42:28+08:00"
+    },
     {
       "articleId": "676f9758cf949191b92a9d838368093ffa56eb6d887679ee03e3d1ad91b61b0b",
       "relevant": true,
@@ -7295,66 +7415,6 @@
       "collectorRelevanceScore": 71,
       "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
       "collectedAtSgt": "2026-10-12T06:35:34+08:00"
-    },
-    {
-      "articleId": "83c4589de40439e6b41867956e72427c77b8dc2ff35e9b8b5567f13c2a70f27f",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "POSITIVE",
-      "importance": "MEDIUM",
-      "summary": "AI safety gatekeepers are gaining prominence as they assess model capabilities and risks. Meanwhile, President Trump has praised AI executives for self-policing and signaled a hands-off regulatory approach to avoid hindering the industry driving the economy and stock market.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology"
-      ],
-      "investorImpact": "The absence of imminent heavy regulation or government intervention is a positive signal for technology sector valuations and AI-driven growth stocks, allowing companies to continue unhindered development.",
-      "reasoning": "Classified as TECHNOLOGY due to its focus on artificial intelligence safety and industry self-governance. Sentiment is POSITIVE because of supportive political commentary toward industry self-policing and minimal expected regulatory interference.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "AI’s quiet safety gatekeepers are stepping into the spotlight",
-      "publishedAtSgt": "2026-10-11T19:00:01+08:00",
-      "url": "https://www.cnbc.com/2026/10/11/ais-quiet-safety-gatekeepers-are-stepping-into-the-spotlight.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 80,
-      "collectorRelevanceReason": "technology_business_or_infrastructure",
-      "collectedAtSgt": "2026-10-11T21:35:45+08:00"
-    },
-    {
-      "articleId": "fb5b0b6c8af8a537554303112bd929eb63b07a97c5c9c3ba7942a63b26e127bb",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Goldman Sachs warns that Italy's upcoming budget, which includes increased allocations to defense and energy, will widen the country's deficit and push its debt-to-GDP ratio to become the highest in Europe.",
-      "assetClasses": [
-        "Fixed Income",
-        "Sovereign Bonds"
-      ],
-      "geographies": [
-        "Italy",
-        "Europe"
-      ],
-      "sectors": [
-        "Government",
-        "Defense",
-        "Energy"
-      ],
-      "investorImpact": "Investors holding Italian sovereign debt face increased risk of widening yield spreads and potential downgrades as fiscal deficits expand, mirroring concerns seen in France.",
-      "reasoning": "The article is classified as MARKET and HIGH importance because sovereign debt risks and widening deficits in major Eurozone economies directly impact bond yields and broader European financial stability.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "After France, is Italy next? Goldman Sachs flags bond risks as Rome's deficit widens",
-      "publishedAtSgt": "2026-10-11T13:00:01+08:00",
-      "url": "https://www.cnbc.com/2026/10/11/italy-government-bonds-sovereign-debt-giorgia-meloni.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-11T15:36:19+08:00"
     }
   ]
 }
