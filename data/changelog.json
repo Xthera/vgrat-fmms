@@ -15,10 +15,12 @@
             "Market News: shows the indices each story may affect, filters by index, and can show all news, funds only or indices only.",
             "Annex (footer): Prudential product brochures in English and Chinese, grouped the way Prudential sorts them. Plans can sit in several categories and carry any number of tags. Brochures open in a popup with zoom and download, and the plan name opens its product page. The list refreshes every 2 weeks.",
             "Calculator (footer): a PRUShield premium calculator. Age next birthday can be picked from a list, typed in, or worked out from a date of birth.",
+            "Feedback (footer): Feedback opens a Google forms allowing users to drop in feedbacks and/or reporting issues.",
             "Calculator: a PruCredit$ calculator. Add plans by typing, pasting, dropping a screenshot or taking a photo (a screen capture on computers, the camera on phones and tablets). It includes a multiplier reference and a breakdown you can download once a plan is added.",
             "Report Generation, step 6 – Fund switching: switch a percentage of units between funds. A 100% switch also redirects future top-ups. Generated reports list the switches carried out.",
             "Report Generation: BID prices can be changed for purchases, end dates and switches. Published prices are used unless you change them, and any you enter are noted in the report.",
-            "Changelog: click the version number in the footer to see what changed."
+            "Changelog: click the version number in the footer to see what changed.",
+            "User guide: Settings > Help opens a guide to every page, with screenshots, in a popup you can zoom."
           ]
         },
         {
@@ -31,12 +33,7 @@
             "Clearer tag contrast in every theme and colour palette."
           ]
         },
-        {
-          "title": "Removed",
-          "items": [
-            "The fund data source line in the footer."
-          ]
-        }
+       
       ]
     }
   ]
