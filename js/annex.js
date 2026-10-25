@@ -387,7 +387,7 @@ function ensurePdfDialog() {
             </header>
 
             <div class="annex-pdf-body">
-                <div class="annex-pdf-loading" data-annex-pdf-loading>Loading brochure…</div>
+                <div class="annex-pdf-loading" data-annex-pdf-loading>Loading PDF…</div>
                 <div class="annex-pdf-pages" data-annex-pdf-pages></div>
                 <iframe
                     class="annex-pdf-frame"
@@ -590,7 +590,7 @@ function showOnlinePdf(dialog, url) {
     frame.src = src;
 }
 
-function openPdf(url, file, title, label) {
+function openPdf(url, file, title, label, options = {}) {
     if (!safeUrl(url) && !file) return;
 
     const dialog = ensurePdfDialog();
@@ -609,7 +609,7 @@ function openPdf(url, file, title, label) {
     // Saved copy: a real download. Not saved yet: Prudential's file
     // opens in a new tab, where it can be saved (their site doesn't
     // allow downloading it from another website directly).
-    download.hidden = false;
+    download.hidden = options.download === false;
     download.href = file || url;
     download.target = "_blank";
     download.rel = "noopener noreferrer";
@@ -706,5 +706,6 @@ function openAnnex() {
 
 
 export {
-    openAnnex
+    openAnnex,
+    openPdf
 };
