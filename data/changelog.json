@@ -1,0 +1,41 @@
+{
+  "versions": [
+    {
+      "version": "V2.0.0",
+      "date": "2026-10-26",
+      "summary": "Annex, Calculator, index tracking across the site, and fund switching in reports.",
+      "sections": [
+        {
+          "title": "New",
+          "items": [
+            "Annex (footer): Prudential product brochures in English and Chinese, grouped the way Prudential sorts them. Plans can sit in several categories and carry any number of tags. Brochures open in a popup with zoom and download, and the plan name opens its product page. The list refreshes every 2 weeks.",
+            "Calculator (footer): the PRUShield premium calculator now lives here, alongside a new PruCredit$ calculator.",
+            "PruCredit$ calculator: add plans by typing, pasting, dropping a screenshot or taking a photo (a screen capture on computers, the camera on phones and tablets). A breakdown can be downloaded once a plan is added.",
+            "Market indices: Market Performance shows Top 10 and Lower 10 performers for both funds and indices.",
+            "Market News: shows the indices each story may affect, filters by index, and can show all news, funds only or indices only.",
+            "Report Generation, step 6 – Fund switching: switch a percentage of units between funds. A 100% switch also redirects future top-ups.",
+            "Report Generation: BID prices can be changed for purchases, end dates and switches. Published prices are used unless you change them.",
+            "Changelog: click the version number in the footer to see what changed."
+          ]
+        },
+        {
+          "title": "Improved",
+          "items": [
+            "PRUShield: age next birthday can be chosen from a list, typed in, or worked out from a date of birth.",
+            "Generated reports list the fund switches carried out and any BID prices you entered.",
+            "Lower 10 performers stay hidden until you open them, and hide again on refresh.",
+            "Monitoring: watchlist and alerts show 1M, 3M and 6M by default for funds and indices.",
+            "Clearer tag contrast in every theme and colour palette."
+          ]
+        },
+        {
+          "title": "Removed",
+          "items": [
+            "PRUShield from the main navigation (now under Calculator).",
+            "The fund data source line in the footer."
+          ]
+        }
+      ]
+    }
+  ]
+}
