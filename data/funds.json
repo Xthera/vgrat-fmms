@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAtUtc": "2026-10-25T09:54:28+00:00",
+  "generatedAtUtc": "2026-10-25T19:47:48+00:00",
   "source": "Funds Links.xlsm",
   "fundCount": 67,
   "research": {
@@ -237,7 +237,12 @@
     "bidHistoryFunds": 67,
     "bidHistoryUnresolved": 0,
     "totalBidObservations": 152112,
-    "unresolvedCount": 0
+    "unresolvedCount": 0,
+    "failedFundCount": 0,
+    "staleFunds": [],
+    "skippedFunds": [],
+    "fundsWithoutHoldings": [],
+    "failedFunds": []
   },
   "funds": [
     {
@@ -328,6 +333,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -406,6 +415,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -496,6 +509,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -580,6 +597,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -707,6 +728,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -834,6 +859,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -959,6 +988,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -1079,6 +1112,10 @@
           }
         ],
         "sourceFile": "output_holdings_recovery_2/funds/9_PRULink_Asian_American_Managed_Fund/top_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -1205,6 +1242,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -1331,6 +1372,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -1550,6 +1595,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -1678,6 +1727,10 @@
           }
         ],
         "sourceFile": "output_holdings_recovery/funds/13_prulink-asian-income-and-growth-fund-accumulation/top_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -1909,6 +1962,10 @@
           }
         ],
         "sourceFile": "output_holdings_recovery/funds/14_prulink-asian-income-and-growth-fund-distribution/top_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -2034,6 +2091,10 @@
           }
         ],
         "sourceFile": "output_holdings_recovery/funds/15_prulink-asian-income-and-growth-fund-usd-accumulation/top_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -2301,6 +2362,10 @@
           }
         ],
         "sourceFile": "output_holdings_recovery/funds/16_prulink-asian-income-fund/top_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -2421,6 +2486,10 @@
           }
         ],
         "sourceFile": "output_holdings_recovery_2/funds/17_PRULink_Asian_Low_Volatility_Equity_Fund_Accumulation/top_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -2547,6 +2616,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -2766,6 +2839,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -2985,6 +3062,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -3111,6 +3192,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -3238,6 +3323,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -3364,6 +3453,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -3446,6 +3539,10 @@
         "count": 0,
         "holdings": [],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -3574,6 +3671,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -3656,6 +3757,10 @@
         "count": 0,
         "holdings": [],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -3782,6 +3887,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -3917,6 +4026,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -4243,6 +4356,10 @@
           }
         ],
         "sourceFile": "output_holdings_recovery/funds/29_prulink-global-dividend-wealth-fund-distribution/top_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -4308,6 +4425,10 @@
         "count": 0,
         "holdings": [],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -4435,6 +4556,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -4691,6 +4816,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -4816,6 +4945,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -4936,6 +5069,10 @@
           }
         ],
         "sourceFile": "output_holdings_recovery_2/funds/34_PRULink_Global_Equity_Growth_SGD_Accumulation/top_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -5062,6 +5199,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -5187,6 +5328,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -5313,6 +5458,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -5439,6 +5588,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -5565,6 +5718,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -5691,6 +5848,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -5819,6 +5980,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -6070,6 +6235,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -6196,6 +6365,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -6415,6 +6588,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -6634,6 +6811,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -6760,6 +6941,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -6886,6 +7071,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -7012,6 +7201,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -7270,6 +7463,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -7384,6 +7581,10 @@
           }
         ],
         "sourceFile": "output_holdings_recovery_2/funds/50_PRULink_Global_Technology_Fund/top_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -7511,6 +7712,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -7636,6 +7841,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -7763,6 +7972,10 @@
           }
         ],
         "sourceFile": "output_holdings_recovery_2/funds/53_PRULink_India_Opportunity_Equity_Fund_Accumulation/top_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -7889,6 +8102,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -8016,6 +8233,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -8144,6 +8365,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -8270,6 +8495,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -8396,6 +8625,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -8524,6 +8757,10 @@
           }
         ],
         "sourceFile": "output_holdings_recovery_3/funds/59_PRULink_Singapore_Dynamic_Bond_Fund_Accumulation/top_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -8755,6 +8992,10 @@
           }
         ],
         "sourceFile": "output_holdings_recovery_3/funds/60_PRULink_Singapore_Dynamic_Bond_Fund_Distribution/top_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -8882,6 +9123,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -9022,6 +9267,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -9162,6 +9411,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -9484,6 +9737,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -9754,6 +10011,10 @@
           }
         ],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -9819,6 +10080,10 @@
         "count": 0,
         "holdings": [],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -9884,6 +10149,10 @@
         "count": 0,
         "holdings": [],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     },
     {
@@ -9949,6 +10218,10 @@
         "count": 0,
         "holdings": [],
         "sourceFile": "output_holdings/all_holdings.json"
+      },
+      "updateStatus": {
+        "status": "updated",
+        "lastSuccessfulUpdateUtc": "2026-10-25T19:47:48+00:00"
       }
     }
   ]
