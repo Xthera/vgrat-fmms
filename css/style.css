@@ -10967,3 +10967,31 @@ button.footer-version:hover {
 .changelog-list li::marker {
     color: var(--text-faint);
 }
+
+
+/* ============================================================
+   USER GUIDE (Settings > Help)
+   ============================================================ */
+
+.settings-guide-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 14px;
+
+    margin-top: 12px;
+}
+
+.settings-guide-open {
+    border-width: 2px;
+    border-color: var(--accent);
+
+    font-weight: 600;
+}
+
+
+/* The user guide popup has no Download button */
+.annex-pdf-button[hidden] {
+    display: none;
+}
