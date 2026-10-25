@@ -1,10 +1,43 @@
 {
-  "generatedAtSgt": "2026-10-26T01:21:41.846652+08:00",
+  "generatedAtSgt": "2026-10-26T06:09:32.224389+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 233,
+  "articleCount": 234,
   "analyses": [
+    {
+      "articleId": "cfeb9f03fb4bfd22668434ce3a793952056f9c73b321656ecfc1fa32e3188f11",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The article discusses a severe downturn in the artificial intelligence trade, highlighted by a sharp decline in CoreWeave's stock and high-yield debt, raising concerns about the continued funding of data center projects that drive current economic growth and market performance.",
+      "assetClasses": [
+        "Equities",
+        "Debt",
+        "High-Yield Debt"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence",
+        "Data Centers"
+      ],
+      "investorImpact": "Investors holding AI-related equities and high-yield debt must carefully assess default risks and liquidity concerns in data center financing, as weakening confidence threatens broader market growth.",
+      "reasoning": "Classified as MARKET due to its focus on stock declines and debt market pressures within the AI sector. It is highly important and fund-monitoring relevant because it directly addresses systemic risks in a dominant market trade.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "More pain may be coming for the AI trade. Why I’m not giving up on it",
+      "publishedAtSgt": "2026-10-26T05:13:50+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/25/jim-cramer-ai-trade-nvidia-coreweave.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-26T05:53:50+08:00"
+    },
     {
       "articleId": "1cfe53d1ea6392b5e1a4290aec1d17b799eadfa9b1b828566fefb7c3cc554b13",
       "relevant": true,
