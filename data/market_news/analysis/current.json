@@ -1,10 +1,226 @@
 {
-  "generatedAtSgt": "2026-10-26T14:40:04.229134+08:00",
+  "generatedAtSgt": "2026-10-26T22:42:49.477174+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 237,
+  "articleCount": 244,
   "analyses": [
+    {
+      "articleId": "96865b3288d9003bb2f8538ace15a674e3d289066b30981439dd7739179639f0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Brazilian stocks plunged and trading was halted by an automatic circuit breaker following Lula's victory in the presidential election, amid concerns over the country's fiscal deficit and debt-to-GDP ratio.",
+      "assetClasses": [
+        "Equities",
+        "Bonds"
+      ],
+      "geographies": [
+        "Brazil",
+        "Latin America"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors with exposure to Brazilian assets face immediate volatility, market halts, and heightened downside risk driven by political shifts and fiscal vulnerability.",
+      "reasoning": "The article details a major market-moving political event in Brazil resulting in an equity plunge and trading halts, making it highly relevant for market monitoring and risk assessment.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Brazilian stocks rocked as Lula wins presidential election, Bolsonaro reportedly refuses to concede",
+      "publishedAtSgt": "2026-10-26T22:09:38+08:00",
+      "url": "https://www.cnbc.com/2026/10/26/brazil-lula-win-presidential-election-runoff-vote.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-26T22:23:29+08:00"
+    },
+    {
+      "articleId": "f69c8a2ea1e8aacc06d2a95db4bdcc57540d9f6afb41bc74db3d2ef8a8594254",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Meta announced a plan to raise $95 billion via a mix of operating cash flow, investment-grade debt, partnerships, and equity capital to fund its artificial intelligence infrastructure and superintelligence initiatives.",
+      "assetClasses": [
+        "Equities",
+        "Debt"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Telecommunications"
+      ],
+      "investorImpact": "The massive capital raise highlights the immense ongoing costs of the AI infrastructure arms race, which may impact Meta's equity valuation and debt profile while creating opportunities across the technology and hardware sectors.",
+      "reasoning": "The article is classified under TECHNOLOGY as it addresses Meta's substantial capital expenditure plans for AI expansion. It is important due to the large scale of the offering ($95 billion) and its direct implications for tech sector financing and equity/debt markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Meta announces $95 billion stock offering to fund AI expansion",
+      "publishedAtSgt": "2026-10-26T22:05:36+08:00",
+      "url": "https://www.cnbc.com/2026/10/26/meta-stock-offering-ai.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-26T22:23:29+08:00"
+    },
+    {
+      "articleId": "78333aba42d03b2ffbc2a3932fb592e415f3ad0cce1e7f7ed00ebf184a80d41d",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Mortgage rates remaining above 7% are characterized as the new normal due to persistently elevated inflation running above the Fed's 2% target, which causes investors to demand higher long-term bond yields.",
+      "assetClasses": [
+        "Fixed Income",
+        "Real Estate"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Real Estate",
+        "Financials"
+      ],
+      "investorImpact": "Persistent high mortgage rates impact housing market affordability, real estate sector activity, and long-term bond yield expectations.",
+      "reasoning": "The article discusses macroeconomic factors driving interest rates and yields higher, which is relevant for fixed income and real estate portfolio monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Mortgage rates above 7% are the 'new normal'—here's why",
+      "publishedAtSgt": "2026-10-26T22:00:01+08:00",
+      "url": "https://www.cnbc.com/make-it/2026/10/26/mortgage-rates-above-7percent-are-the-new-normalheres-why.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-26T22:23:30+08:00"
+    },
+    {
+      "articleId": "e5ca5a5c70a8a1b17d105b709020c24088fbb0c037535dde22fad1eba97d775d",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Shares of neocloud companies like Nebius and CoreWeave declined after Elon Musk stated that over 200 firms in the sector face potential collapse, exacerbating investor worries regarding debt-financed expansion and AI infrastructure returns.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Cloud Computing",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors in neocloud and AI infrastructure stocks face heightened downward pressure and volatility as concerns grow over overcapacity, debt-fueled expansion, and sector consolidation.",
+      "reasoning": "The article is classified under MARKET with a NEGATIVE sentiment due to the direct sell-off in neocloud equities following pessimistic commentary from an influential industry figure, highlighting broader valuation and financing risks in the AI infrastructure buildout.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Neocloud stocks fall as Elon Musk says more than 200 of them face 'guppy-level death'",
+      "publishedAtSgt": "2026-10-26T21:43:14+08:00",
+      "url": "https://www.cnbc.com/2026/10/26/neocloud-stocks-today-coreweave-nebius-iren-elon-musk.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-26T22:23:29+08:00"
+    },
+    {
+      "articleId": "3a7255fd82ce421c9c4642c964df159afca50802a4f866f3e3fb5e05dbdc2554",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Apollo Global Management is finalizing an agreement to acquire a nearly 10% equity stake in Mubadala Capital, the alternative asset management arm of Abu Dhabi's sovereign wealth fund Mubadala Investment Co.",
+      "assetClasses": [
+        "Private Equity",
+        "Alternative Investments"
+      ],
+      "geographies": [
+        "Abu Dhabi",
+        "United Arab Emirates",
+        "Global"
+      ],
+      "sectors": [
+        "Financials",
+        "Asset Management"
+      ],
+      "investorImpact": "This strategic partnership highlights ongoing consolidation and cross-border expansion trends within the alternative asset management industry, offering insights into sovereign wealth fund and private equity co-investments.",
+      "reasoning": "Classified under MARKET because it involves a major corporate acquisition between two prominent global asset managers. It is significant for fund monitoring due to the scale and cross-border nature of the deal within alternative investments.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Apollo to buy nearly 10% stake in Abu Dhabi-backed alternative asset manager Mubadala Capital",
+      "publishedAtSgt": "2026-10-26T21:09:26+08:00",
+      "url": "https://www.cnbc.com/2026/10/26/apollo-mubadala-capital-stake.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-26T22:23:29+08:00"
+    },
+    {
+      "articleId": "631327277cb5226e3c9c1e9bf59172a8b44d703f1be72a3d11b5400fadf992fd",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "As investors look to hedge against a potential decline in AI demand and falling share prices in the AI complex, a fintech startup is building a spot marketplace for tradable GPU computing power to allow traders to hedge AI risk.",
+      "assetClasses": [
+        "Equities",
+        "Alternative Investments"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Provides investors and funds exposed to the AI sector with a potential new hedging mechanism via tradable GPU computing power marketplaces to mitigate downside risk.",
+      "reasoning": "Classified as MARKET because it discusses new trading instruments and market solutions designed to hedge AI-related equity risks following declines in tech shares. It is fund-monitoring relevant as it highlights emerging risk management tools for tech-heavy portfolios.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Cracking AI trade has Wall Street looking for a hedge. An ex-Citadel quant may have the answer",
+      "publishedAtSgt": "2026-10-26T20:08:13+08:00",
+      "url": "https://www.cnbc.com/2026/10/26/gpu-futures-ai-hedge-hyperbolic.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-26T22:23:29+08:00"
+    },
+    {
+      "articleId": "2b8b94da330af17311dde355a7f7a8fd23af0b263af0df0d7967ed1187ea2c8e",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Brazilian stocks suffered a severe market shock, with major U.S.-listed shares like Petrobras, Itaú Unibanco, and Ambev plunging significantly premarket. Additionally, IEA Executive Director Fatih Birol noted readiness to act to support oil markets and indicated energy markets may not return to pre-war levels in 2027.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "Brazil",
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Financials",
+        "Consumer Goods"
+      ],
+      "investorImpact": "Investors with exposure to Brazilian equities face heavy losses following a steep selloff in major regional stocks, while ongoing uncertainty in global energy markets signals prolonged high energy pricing pressures.",
+      "reasoning": "The article details significant market-moving events including a major plunge in Brazilian equities and important commentary on global energy supplies from the IEA, making it highly relevant for market and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "A shock in Brazil sends stocks plunging, while neoclouds take another hit",
+      "publishedAtSgt": "2026-10-26T18:39:46+08:00",
+      "url": "https://www.cnbc.com/2026/10/26/brazil-stocks-neoclouds-selloff.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-26T22:23:30+08:00"
+    },
     {
       "articleId": "9562eefa366f0f20578617cfda45f022ca2699746bd5f61f92a965705cd9ccb9",
       "relevant": true,
