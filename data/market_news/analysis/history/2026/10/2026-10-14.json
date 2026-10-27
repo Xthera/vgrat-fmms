@@ -1,0 +1,775 @@
+{
+  "date": "2026-10-14",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "articleCount": 25,
+  "analyses": [
+    {
+      "articleId": "4d4280d28ec839d6c32cfb681147f19b37f096996fd93af50daa088b13da2de3",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The September 2026 inflation rate increased due to higher gasoline and energy prices driven by the Iran war, squeezing household budgets and potentially pressuring the Federal Reserve to consider interest rate hikes.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States",
+        "Global"
+      ],
+      "sectors": [
+        "Energy",
+        "Consumer Discretionary"
+      ],
+      "investorImpact": "Rising inflation and potential Federal Reserve interest rate hikes can lead to increased volatility across equity and fixed income markets, negatively impacting growth sectors and consumer-dependent businesses.",
+      "reasoning": "The article discusses critical macroeconomic inflation data driven by geopolitical conflict, impacting monetary policy expectations and broad market asset classes, making it highly relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Here's the inflation breakdown for September 2026 — in one chart",
+      "publishedAtSgt": "2026-10-14T22:56:25+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/cpi-inflation-breakdown-september-2026.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-15T02:03:42+08:00"
+    },
+    {
+      "articleId": "a09df48d3643844f737786decb22f9e4305ebcdc8576d762391b9711ac9050ca",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Shares of Bending Spoons rose 35% following a securities filing revealing a $330 million investment by Berkshire Hathaway, adding to a prior $600 million investment made in July when the company went public on the Nasdaq.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States",
+        "Italy"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors in Bending Spoons benefit from a significant boost in share price and validation from a major institutional investor like Berkshire Hathaway, highlighting strong market interest in tech serial acquirers.",
+      "reasoning": "Classified as MARKET because it details a significant equity price movement driven by a major corporate investment. Berkshire Hathaway's involvement makes it relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bending Spoons skyrockets 35% as Berkshire Hathaway makes $330 million investment",
+      "publishedAtSgt": "2026-10-14T22:39:21+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/berkshire-hathaway-investment-bending-spoons.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-15T02:03:42+08:00"
+    },
+    {
+      "articleId": "8ed00ac1b16f0bc2cb704e342fc293080a237565d8143cce1e0c44b8d7f716ba",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Bank of America shares fell over 7% in premarket trading after reporting a third-quarter revenue miss due to lower-than-expected trading results and a regulatory penalty, despite a slight beat in net interest income.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Banking"
+      ],
+      "investorImpact": "Investors holding Bank of America stock or exposed to the US banking sector face immediate negative pressure following the revenue miss, lower trading performance, and regulatory penalties.",
+      "reasoning": "The article details a significant single-stock market event with a major financial institution missing revenue targets and facing regulatory penalties, leading to a sharp share price drop. This is highly relevant for market monitoring and financial sector exposure.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bank of America shares drop 7% after third-quarter revenue miss and regulatory penalty",
+      "publishedAtSgt": "2026-10-14T20:54:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/bank-of-america-bac-q3-2026-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 93,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T20:56:06+08:00"
+    },
+    {
+      "articleId": "ae2f7f9f377405cb139465c673d51120b8f11daf87caa0e34aff9d583d204076",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The 10-year Treasury note yield rose after September core inflation came in hotter than expected at 2.6% annualized versus the 2.5% consensus estimate, coming just two weeks before the Federal Reserve's next interest rate decision.",
+      "assetClasses": [
+        "Fixed Income",
+        "Treasuries"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Higher-than-expected inflation drives Treasury yields up and weighs on bond prices, while signaling potential caution for future Federal Reserve interest rate cuts.",
+      "reasoning": "The article reports critical U.S. inflation data and its direct impact on Treasury yields ahead of an FOMC meeting, which is highly relevant for macroeconomic tracking and portfolio positioning.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "10-year Treasury yield jumps as September core inflation is hotter than expected",
+      "publishedAtSgt": "2026-10-14T20:51:44+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/us-treasury-yields-cpi-inflation-report.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T20:56:07+08:00"
+    },
+    {
+      "articleId": "a7959648d7369708387461dd7dd27dbb670151d3086450f43136f6c841672b64",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Morgan Stanley reported third-quarter results that beat expectations, driven by a blockbuster 41% increase in equities trading revenue to $5.8 billion, which exceeded estimates by $909 million.",
+      "assetClasses": [
+        "Equities",
+        "Stocks"
+      ],
+      "geographies": [
+        "Global",
+        "Asia"
+      ],
+      "sectors": [
+        "Financials",
+        "Banking"
+      ],
+      "investorImpact": "The strong earnings report from a major financial institution signals robust market activity and trading revenues, which can boost investor sentiment in the financial sector and broader equity markets.",
+      "reasoning": "The article details strong quarterly financial results and trading revenue beats for a major global bank, making it highly relevant for market monitoring and sector analysis.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Morgan Stanley tops estimates as equities trading revenue beats expectations by $909 million",
+      "publishedAtSgt": "2026-10-14T20:49:45+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/morgan-stanley-ms-q3-2026-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T20:56:06+08:00"
+    },
+    {
+      "articleId": "f18696246144a8f7d475c88138e66856e81b58d04a11dbcf225397896c78822d",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Rising energy costs continue to drive inflation following the Iran war, with higher oil prices driven by expected diesel supply tightness. Meanwhile, New York Fed President John Williams noted ongoing disinflationary forces, suggesting the central bank may avoid rate hikes in 2027.",
+      "assetClasses": [
+        "Commodities",
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Energy"
+      ],
+      "investorImpact": "Investors must weigh the upward pressure on inflation from sustained energy and diesel supply constraints against dovish central bank signals that 2027 rate hikes may not be necessary.",
+      "reasoning": "Classified as ECONOMIC because it directly addresses macroeconomic data concerning inflation, energy supply constraints, and Federal Reserve monetary policy outlooks. It is important for monitoring broader market trends and asset allocation.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Inflation data, Bank of America's penalty, Apple's new home hub and more in Morning Squawk",
+      "publishedAtSgt": "2026-10-14T20:45:09+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/5-things-to-know-before-the-stock-market-opens.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T20:56:07+08:00"
+    },
+    {
+      "articleId": "9687c09f1fb558ca0eedb660915f42daee85dfaf17b6cfd64cc0bf01e9efb8b6",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Mortgage rates rose to their highest level in nearly three years, causing overall demand to drop as 30-year fixed-rate mortgage averages increased to 7.50% and borrowers increasingly turned to riskier mortgage products due to crushed affordability.",
+      "assetClasses": [
+        "Real Estate",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Real Estate",
+        "Financials"
+      ],
+      "investorImpact": "Higher interest rates and reduced housing affordability could weigh on real estate transaction volumes, housing-related equities, and mortgage lenders, while increasing default risks if borrowers lean on riskier loan products.",
+      "reasoning": "The article discusses significant trends in the US mortgage and housing market driven by rising interest rates, directly impacting market conditions and housing sector fundamentals, warranting inclusion as a MARKET category event.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Even more borrowers choose riskier mortgages, as higher interest rates crush affordability",
+      "publishedAtSgt": "2026-10-14T20:01:31+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/even-more-borrowers-choose-riskier-mortgages-as-higher-interest-rates-crush-affordability.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T20:56:07+08:00"
+    },
+    {
+      "articleId": "3f2d1e173780899cd15758090fadd4302ae828570bfde6c8f6ae986b3b1274cb",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Tariffs and trade tensions involving Canada are impacting Michigan's Senate race as local industries, including agriculture, manufacturing, and tourism, face economic headwinds from ongoing trade disputes.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "Canada",
+        "Michigan"
+      ],
+      "sectors": [
+        "Agriculture",
+        "Manufacturing",
+        "Tourism"
+      ],
+      "investorImpact": "Trade disputes and tariffs create operational headwinds for manufacturing, agriculture, and tourism sectors operating in cross-border regions, potentially impacting regional equities and supply chain costs.",
+      "reasoning": "Classified as GEOPOLITICAL due to the focus on trade wars, tariffs, and retaliatory measures affecting cross-border commerce between the U.S. and Canada, with direct economic implications for key sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "How Trump’s tariffs and Iran war are becoming liabilities in Michigan’s Senate race",
+      "publishedAtSgt": "2026-10-14T18:30:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/mike-rogers-trump-tariffs-michigan-senate-election.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-14T20:56:07+08:00"
+    },
+    {
+      "articleId": "aefc7adc04ff322b41c44abf7f010b5a3180049fe3e39b1b5498e72fb0754e99",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Ukraine warns that SpaceX Starlink speed limits on terminals in motion are disrupting military operations amid intensified Russian attacks on Ukraine's energy infrastructure, despite a proposed energy ceasefire.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "Ukraine",
+        "Russia",
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Technology",
+        "Aerospace & Defense"
+      ],
+      "investorImpact": "Escalating attacks on energy infrastructure and defense disruptions in Ukraine can affect European energy markets and sentiment in the defense and technology sectors.",
+      "reasoning": "The article details ongoing geopolitical conflict affecting critical energy infrastructure and defense technology integration, which carries broader market implications for energy and defense sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Ukraine warns Starlink limits are disrupting military operations as Russia pounds its energy infrastructure",
+      "publishedAtSgt": "2026-10-14T17:18:18+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/russia-ukraine-energy-ceasefire-power-outages.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-14T20:56:06+08:00"
+    },
+    {
+      "articleId": "0ece6cf5dd4dd8fb8886dbbd918d806d730943e3fbc3083873036ad84545ed0c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "ASML reported profits that beat expectations and noted order interest stretching through 2030, driven by strong AI-related chip demand. The company's stock rose about 2% in early European trade, while China continues to ramp up its domestic semiconductor supply chain.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Europe",
+        "China",
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Strong order interest through 2030 and better-than-expected profits reinforce positive sentiment for AI infrastructure demand and semiconductor equipment manufacturers, benefiting technology sector investors.",
+      "reasoning": "Classified as MARKET due to strong earnings and share price movement, and positive sentiment based on beating expectations and durable AI-driven order interest. Highly relevant for technology sector portfolio monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "ASML says it's getting order interest through 2030 as profit smashes expectations",
+      "publishedAtSgt": "2026-10-14T16:45:13+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/asml-3q-earnings-ai-demand-orders-capacity.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T20:56:06+08:00"
+    },
+    {
+      "articleId": "6e93d3e93539d42802d353cb02da2d835b01950b4f2a7dc9b5c302f8cb11f12e",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "The Philippine central bank is preparing for a severe 'Godzilla' El Nino combined with ongoing oil shocks, which threaten to disrupt inflation forecasts and drive up prices between November and February as maintaining price stability remains a priority.",
+      "assetClasses": [
+        "Currencies",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "Philippines",
+        "Southeast Asia"
+      ],
+      "sectors": [
+        "Agriculture",
+        "Energy",
+        "Central Banking"
+      ],
+      "investorImpact": "Investors should monitor potential inflationary pressures in the Philippines driven by weather and oil shocks, which may influence central bank monetary policy decisions and impact Philippine peso stability and local fixed income markets.",
+      "reasoning": "The article details macroeconomic pressures from weather events and commodity shocks affecting inflation and monetary policy in a key emerging market economy, making it relevant for economic and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "'Godzilla El Niño' is wreaking havoc with Philippine central bank's inflation forecasts",
+      "publishedAtSgt": "2026-10-14T12:24:28+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/godzilla-el-nino-asia-inflation-philippines.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T12:54:06+08:00"
+    },
+    {
+      "articleId": "8c5e3680462f8e448668ccdb60725ec227064da2849ccb3955075489bd1520a4",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Oil prices rose on Wednesday due to escalating Middle East tensions, specifically fighting between Iran-backed Houthis and Saudi Arabia, which involved airstrikes on energy terminals and fuel reserves in Yemen, raising concerns over potential supply disruptions.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "Middle East",
+        "Saudi Arabia",
+        "Yemen",
+        "Iran"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "The escalation of geopolitical conflict in the Middle East directly threatens global oil supply lines, driving up crude prices and increasing input costs for energy-sensitive sectors, which can impact broader market volatility and inflation expectations.",
+      "reasoning": "Classified as GEOPOLITICAL due to the military conflicts and strikes involving Saudi Arabia and Iran-backed Houthis in Yemen, with HIGH importance because of its direct transmission to oil prices and supply disruption fears.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Oil rises amid growing Mideast tensions between Iran-backed Houthis and Saudi Arabia",
+      "publishedAtSgt": "2026-10-14T12:07:00+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/oil-rises-amid-growing-tensions-between-saudis-and-iran-backed-houthis.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T12:54:06+08:00"
+    },
+    {
+      "articleId": "0b101207959432bb320fe9e89df7d316d114f1c4eb59f6f5356f4f58623a0f08",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "South Korea's Hyundai Motor Group has announced a strategic investment of $15.5 billion in India spanning from 2026 to 2032, reinforcing its long-term commitment to the region as a core emerging market for growth.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "South Korea",
+        "India"
+      ],
+      "sectors": [
+        "Automotive"
+      ],
+      "investorImpact": "The massive capital injection signals strong growth opportunities within India's automotive and manufacturing sectors, making it of interest to investors focused on emerging markets and foreign direct investment in South Asia.",
+      "reasoning": "Classified as MARKET due to the direct corporate investment announcement by a major automaker into an emerging market economy, presenting clear sector and geographic implications.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "South Korean carmaker Hyundai plans 'strategic' investment of $15.5 billion in India by 2032",
+      "publishedAtSgt": "2026-10-14T10:04:47+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/korea-india-hyundai-cars-investment.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T12:54:07+08:00"
+    },
+    {
+      "articleId": "1695484a07ff07a3b45a18573d5b3a4a2ed14073ea86f2e19ecaedd0fe385662",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "China's exports for September are forecast to grow by double digits, supported by strong global demand for AI data center parts and stabilizing U.S. trade relations, while import growth is expected to moderate slightly.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "China",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Industrials",
+        "Trade"
+      ],
+      "investorImpact": "Strong export growth in China highlights resilience in global tech and manufacturing supply chains, particularly related to AI infrastructure demand, which can benefit multinational tech and industrial sectors.",
+      "reasoning": "The article provides macroeconomic data and forecasts regarding Chinese trade, which is critical for assessing global manufacturing and technology demand.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China's exports likely grew by double-digits in September",
+      "publishedAtSgt": "2026-10-14T09:16:02+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/chinas-exports-likely-grew-by-double-digits-in-september.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T09:48:22+08:00"
+    },
+    {
+      "articleId": "9abe7fb7b44cd59f0e9e127b0e1ab60ba217c231dc86edbcac20ee36b02228c1",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Major banks such as JPMorgan Chase, Wells Fargo, Goldman Sachs, and Citigroup report mixed financial results amid concerns over growing borrowing costs, artificial intelligence, and elevated oil prices, while investors closely monitor interest rate outlooks following Federal Reserve comments.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Energy",
+        "Technology"
+      ],
+      "investorImpact": "Investors should navigate heightened market volatility driven by conflicting signals on interest rates, mixed banking sector earnings, and ongoing concerns regarding high energy prices and borrowing costs.",
+      "reasoning": "The article is highly relevant for fund monitoring as it covers major banking earnings, macroeconomic headwinds like borrowing costs and oil prices, and Federal Reserve policy outlooks affecting multiple asset classes.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "CNBC Daily Open: Diesel deal may not be enough to curb high energy prices",
+      "publishedAtSgt": "2026-10-14T09:09:16+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/cnbc-daily-open-diesel-energy-apple-anthropic-imf.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-14T09:48:23+08:00"
+    },
+    {
+      "articleId": "a7e64b15720dea128b02752d3644657d241f767564bff5fec1808586184a65ee",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Singapore's third-quarter GDP growth for 2026 decelerated to 5.4% from a four-year high, though it still beat analyst estimates, supported by AI-related sectors and exports.",
+      "assetClasses": [
+        "Equities",
+        "Currencies"
+      ],
+      "geographies": [
+        "Singapore"
+      ],
+      "sectors": [
+        "Technology",
+        "Exports"
+      ],
+      "investorImpact": "The better-than-expected GDP growth indicates continued economic resilience in Singapore, bolstering confidence in regional equities and the Singapore dollar, particularly for AI and export-driven sectors.",
+      "reasoning": "Classified as ECONOMIC because it reports official quarterly GDP figures and economic growth forecasts. The sentiment is POSITIVE as growth beat estimates despite softening. It is relevant for fund monitoring given its macroeconomic implications for Southeast Asian markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Singapore third-quarter GDP growth softens from four-year high but beats estimates",
+      "publishedAtSgt": "2026-10-14T08:28:34+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/singapore-gdp-q3.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T09:48:22+08:00"
+    },
+    {
+      "articleId": "bdf6f1188c14cb253ca3d66d519a56be86f226833f6ba08ce71549b2e35e96c7",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Goldman Sachs reports that equity investors are increasingly skeptical of rapid overseas expansion by Chinese companies, shifting focus toward profitable growth rather than just scale.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "China",
+        "Global"
+      ],
+      "sectors": [
+        "Financials",
+        "Consumer Discretionary",
+        "Technology"
+      ],
+      "investorImpact": "Investors allocating to Chinese equities should prioritize firms demonstrating clear profitability in their international expansion strategies rather than mere top-line growth.",
+      "reasoning": "Classified as MARKET because it discusses equity investor sentiment and valuation criteria for Chinese companies expanding abroad. It is relevant for fund monitoring as it provides insights into shifting valuation metrics in international markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Goldman says investors are looking for 'profitable' Chinese business growth overseas",
+      "publishedAtSgt": "2026-10-14T07:05:12+08:00",
+      "url": "https://www.cnbc.com/2026/10/14/goldman-says-investors-seek-profitable-chinese-business-growth-abroad.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T09:48:22+08:00"
+    },
+    {
+      "articleId": "a1da7d0e0bffbdd4431917fd1dc75636d3673592198b47c3948566322cd9611d",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "LOW",
+      "summary": "CNBC's Jim Cramer advised investors to keep newly public AI infrastructure stock Accelevation Holdings at arm's length due to caution surrounding data center stocks ahead of mid-term elections and a preference for established companies.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors in newly public AI infrastructure or data center plays may face increased scrutiny or volatility, as prominent market commentators advise caution in favor of established sector leaders.",
+      "reasoning": "The article discusses market sentiment regarding a specific newly public AI infrastructure stock based on commentary from a media personality, making it relevant to technology sector monitoring but of low overall strategic importance for macro fund monitoring.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Here's where Jim Cramer stands on this newly public AI infrastructure stock",
+      "publishedAtSgt": "2026-10-14T06:47:07+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/jim-cramer-accelevation-stock.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-10-14T09:48:22+08:00"
+    },
+    {
+      "articleId": "6ff63d635bb3b2b1db4cd60c47b0d1c5d38b899e1e8859f7fa9fe3ace080d3a6",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer remains optimistic about semiconductor stocks despite a recent 7.2% decline in the VanEck Semiconductor ETF over six sessions, while warning that rising oil prices and interest rates may extend the market sell-off.",
+      "assetClasses": [
+        "Equities",
+        "ETFs"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors in technology and semiconductor sectors should monitor rising interest rates and oil prices as potential catalysts for extended volatility, while weighing long-term structural demand against near-term headwinds.",
+      "reasoning": "Classified as MARKET due to its focus on sector-specific stock sell-offs, ETF performance, and broader macro drivers like interest rates and oil prices. Sentiment is MIXED because it balances near-term sell-off warnings with a fundamentally resilient long-term outlook.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer isn't giving up on semiconductor stocks despite the sell off. Here's why",
+      "publishedAtSgt": "2026-10-14T06:19:29+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/jim-cramer-semiconductor-stocks-sell-off.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T06:48:59+08:00"
+    },
+    {
+      "articleId": "d39519b7982f6132a353dde7c104897e1c0263c5fb42332c1f3e5c548b5b17df",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "As investors await the latest Consumer Price Index data, this article highlights hedging strategies against inflation using Treasury Inflation-Protected Securities (TIPS), commodities, and infrastructure funds.",
+      "assetClasses": [
+        "Fixed Income",
+        "Commodities",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors can use the mentioned asset classes like TIPS, commodities, and infrastructure funds to protect portfolios against the eroding effects of inflation.",
+      "reasoning": "Classified as ECONOMIC because it focuses on inflation metrics and hedging strategies involving TIPS and commodities. It is relevant for portfolio management and fund monitoring regarding inflation risk.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Don't let inflation bite — how to hedge with TIPS, commodities and infrastructure funds",
+      "publishedAtSgt": "2026-10-14T04:52:22+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/inflation-hedge-tips-commodities-infrastructure.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T06:48:59+08:00"
+    },
+    {
+      "articleId": "e5f4df7254d1347a7df5afcfba099e19be775b1dd9c1961f2f280bc354253123",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Bank of America has been fined $1.2 billion over money-laundering violations, causing its stock to drop about 2% in after-hours trading and challenging the bank's long-standing emphasis on responsible growth.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors in Bank of America face potential downward pressure on shares and regulatory headwinds following the hefty $1.2 billion fine, which undermines management's past focus on responsible growth and risk reduction.",
+      "reasoning": "Classified as MARKET due to direct stock price impact and major corporate governance news involving a top-tier financial institution. Importance is HIGH given the massive $1.2 billion fine and immediate negative market reaction.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bank of America fined $1.2 billion over money-laundering violations",
+      "publishedAtSgt": "2026-10-14T04:45:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/bank-of-america-treasury-money-laundering.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T06:48:59+08:00"
+    },
+    {
+      "articleId": "b42a7f7c487b977f09d73b0ad7736bc17ef4472b45b44bcb41457607e4f13d2b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Meta shares rose for a second consecutive day due to an impressive new AI model family, even as broader stocks traded lower and parts of the AI buildout trade struggled ahead of the Federal Reserve's Beige Book release.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Communication Services"
+      ],
+      "investorImpact": "Investors see divergence within the AI trade, where specific outperformers like Meta can rally on company-specific product innovation despite broader market weakness and sector headwinds.",
+      "reasoning": "The article is classified under MARKET with a MIXED sentiment as it captures both the positive momentum in Meta shares due to AI model releases and the broader market and AI trade struggles leading up to the Fed's Beige Book update.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Meta shares rise for a second straight day as new AI model family impresses",
+      "publishedAtSgt": "2026-10-14T02:55:33+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/13/meta-shares-rise-for-a-second-straight-day-as-new-ai-model-family-impresses.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T03:51:35+08:00"
+    },
+    {
+      "articleId": "fb9dcbe418b17799d7d83d3c85aa0d3962596c873e00a7f0d682873e6ef6d294",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Upcoming inflation data is expected to show accelerating price increases, driven in part by sticky oil prices and energy costs which may also push up costs in non-energy categories.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Energy"
+      ],
+      "investorImpact": "Accelerating inflation and sticky energy costs can lead to higher interest rate expectations, impacting equity valuations and fixed income yields.",
+      "reasoning": "The article discusses critical macroeconomic data regarding inflation trends and energy costs, which are foundational for market-wide asset valuation and monetary policy expectations.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "The latest inflation data is expected to show price increases are accelerating",
+      "publishedAtSgt": "2026-10-14T02:05:57+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/september-consumer-price-index-inflation.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-14T03:51:35+08:00"
+    },
+    {
+      "articleId": "641c076fbd72a22d7dfd656f5009bd7477f798ea526bc1c30c94436079758fea",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "The article discusses emerging cracks in the AI trade despite record highs for the Magnificent Seven. Key concerns include OpenAI's revenue growth impacting neocloud stocks, semiconductor sell-offs due to Chinese competition fears, and upcoming macroeconomic events such as the CPI release, major bank earnings, Taiwan Semiconductor earnings, Microsoft and Alphabet reports, and a Federal Reserve decision.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "USA",
+        "Taiwan"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors",
+        "Financials"
+      ],
+      "investorImpact": "Investors should prepare for heightened volatility in the technology sector, particularly in AI-related stocks, chips, and neocloud providers, while monitoring upcoming macroeconomic data and major earnings releases.",
+      "reasoning": "Classified as MARKET because it covers broader market sentiment shifts and sector-specific selling pressure in AI and tech stocks. Importance is HIGH due to the systemic importance of the AI trade and the heavy calendar of macroeconomic and earnings events.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "The AI trade is cracking. Here's how to profit",
+      "publishedAtSgt": "2026-10-14T00:44:21+08:00",
+      "url": "https://www.cnbc.com/2026/10/13/the-ai-trade-is-cracking-heres-how-to-profit.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T03:51:35+08:00"
+    },
+    {
+      "articleId": "59a13c5bfe46e2ceabca508372af98604b264511cf5da6c3c30fd0660deba749",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Stocks fell on Tuesday as investors digested major bank earnings and severe pressure on memory stocks like Micron, though Goldman Sachs posted a strong earnings beat and Jim Cramer issued three buy recommendations despite overall market negativity.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Technology"
+      ],
+      "investorImpact": "Investors face mixed market conditions with broader market negativity and pressure on memory stocks offsetting strong bank earnings and specific buy recommendations.",
+      "reasoning": "The article discusses general market movements driven by bank earnings and stock pressure, alongside analyst recommendations, making it relevant for market monitoring but of medium importance due to its reliance on pundit commentary.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer bucks all the stock market negativity with 3 buy recommendations",
+      "publishedAtSgt": "2026-10-14T00:07:20+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/13/jim-cramer-bucks-all-the-stock-market-negativity-with-3-buy-recommendations.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-14T00:41:06+08:00"
+    }
+  ]
+}
