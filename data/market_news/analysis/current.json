@@ -1,10 +1,215 @@
 {
-  "generatedAtSgt": "2026-10-29T03:14:21.769505+08:00",
+  "generatedAtSgt": "2026-10-29T07:36:22.716591+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 227,
+  "articleCount": 234,
   "analyses": [
+    {
+      "articleId": "1ff90cd183fc18c054a731f434be822c9c11d5ae46b6296b006e35e65ca99ab2",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer highlighted SK Hynix's strong quarterly earnings as proof that artificial intelligence stocks can still rally despite growing investor skepticism regarding data center spending.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "South Korea"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "The article demonstrates that strong foundational AI hardware earnings can ease broader market skepticism about data center ROI, supporting tech sector sentiment.",
+      "reasoning": "Classified as MARKET because it discusses stock market sentiment and reactions to major corporate earnings within the technology sector, validated by Jim Cramer's commentary.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer sees major implications from SK Hynix's home-run quarter",
+      "publishedAtSgt": "2026-10-29T07:00:27+08:00",
+      "url": "https://www.cnbc.com/2026/10/28/cramer-sk-hynix-ai-chip-stocks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-29T07:20:39+08:00"
+    },
+    {
+      "articleId": "5f853042979c1c1f2a069c6a336405a9a43ef7323711a712ca3448d33feb743b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "FedEx reported quarterly earnings that beat Wall Street expectations on both top and bottom lines and raised its full-year outlook, increasing its 2026 revenue growth expectation to roughly 12% year-over-year.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Industrials",
+        "Transportation"
+      ],
+      "investorImpact": "The earnings beat and guidance raise indicate robust delivery and logistics demand, which can serve as a positive sentiment indicator for the broader industrial and transportation sector, though minor after-hours share price weakness suggests market expectations may have already been elevated.",
+      "reasoning": "The article is classified as MARKET because it details corporate earnings and outlook revisions for a major publicly traded company. Sentiment is POSITIVE due to beating estimates and raising guidance, despite a minor pullback in after-hours trading.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "FedEx beats expectations, raises outlook in first report since calendar adjustment",
+      "publishedAtSgt": "2026-10-29T06:27:00+08:00",
+      "url": "https://www.cnbc.com/2026/10/28/fedex-fdx-sept-2026-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T07:20:38+08:00"
+    },
+    {
+      "articleId": "097af80691731aaf70ba7e84031d17c54066a4189097d2a868b8787bc408ce83",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Chipotle shares rose 7% in extended trading after the CEO stated that same-store sales growth will continue, supported by the company's recipe for growth strategy despite broader consumer and industry headwinds.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Restaurants"
+      ],
+      "investorImpact": "Investors in Chipotle Mexican Grill or the broader restaurant sector receive positive signals regarding resilient same-store sales growth despite challenging consumer environments.",
+      "reasoning": "Classified as MARKET because it details stock price movement and earnings outlook for a major publicly traded company. Sentiment is POSITIVE due to the 7% share price rise and optimistic CEO commentary.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Chipotle shares rise 7% after CEO says same-store sales growth will continue",
+      "publishedAtSgt": "2026-10-29T06:12:28+08:00",
+      "url": "https://www.cnbc.com/2026/10/28/chipotle-mexican-grill-cmg-q3-2026-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T07:20:38+08:00"
+    },
+    {
+      "articleId": "6d097427e4762fbd2b4d9f0abd9ae32b8df704ddb2871fba1214bea71095b7a0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Anthropic's structure as a public benefit corporation (PBC) creates unusual risks and raises critical questions for investors ahead of the AI lab's anticipated blockbuster IPO targeting a valuation of $1.5 trillion or more.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors must weigh the governance and fiduciary risks of a public benefit corporation structure against the potential growth of a major frontier AI lab entering the public markets.",
+      "reasoning": "Classified as MARKET due to its focus on an upcoming IPO and valuation risks. Sentiment is NEUTRAL as it highlights structural characteristics and risks without declaring a positive or negative market outlook. Importance is HIGH given the massive valuation target and precedent-setting nature for frontier AI lab IPOs.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Anthropic’s public benefit structure creates unusual risks for IPO investors",
+      "publishedAtSgt": "2026-10-29T05:48:17+08:00",
+      "url": "https://www.cnbc.com/2026/10/28/anthropic-pbc-what-its-structure-means-for-investors-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T07:20:39+08:00"
+    },
+    {
+      "articleId": "3c87e44da9ddc718ef61fd0de5a3bfc12ff1eb7d77d447db294d5fe452366f47",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Shares of neocloud providers such as CoreWeave and Nebius declined in extended trading after Microsoft reported capital expenditures below expectations, signaling potential delays in data center capacity delivery for AI infrastructure partners.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Cloud Computing"
+      ],
+      "investorImpact": "Investors holding neocloud or AI infrastructure stocks face headwinds as lower major tech capex figures suggest slower monetization or delayed capacity delivery, potentially pressuring near-term valuations.",
+      "reasoning": "Classified as MARKET due to direct impacts on stock prices and capital expenditure trends of major tech and neocloud players. Sentiment is NEGATIVE owing to declining share prices and lower-than-expected capex. Importance is HIGH because it affects the broader AI infrastructure trade and high-growth cloud stocks.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "CoreWeave and other neocloud stocks drop after Microsoft capex comes in below expectations",
+      "publishedAtSgt": "2026-10-29T05:14:08+08:00",
+      "url": "https://www.cnbc.com/2026/10/28/neocloud-stocks-drop-after-microsoft-revises-capex-down.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T07:20:39+08:00"
+    },
+    {
+      "articleId": "b60c5f0c7b93c02788d5f04bea171a2a19f522f442cc7552997a3a7f2c91fc9e",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Prominent bond investor Jeff Gundlach questioned the Federal Reserve's decision to pause interest rate cuts following the October meeting, pointing to a strong economy and a rising commodity bull market as reasons for the central bank to act.",
+      "assetClasses": [
+        "Fixed Income",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors should monitor commentary from prominent figures like Jeff Gundlach regarding Fed policy expectations, as differing views on rate pauses versus cuts can impact bond yields and commodity market sentiment.",
+      "reasoning": "The article captures notable market commentary from a major investor regarding the Federal Reserve's monetary policy decisions and interest rate outlook, making it relevant for market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bond investor Jeff Gundlach on Fed's rate pause: 'What are you waiting for?'",
+      "publishedAtSgt": "2026-10-29T03:53:50+08:00",
+      "url": "https://www.cnbc.com/2026/10/28/bond-investor-jeff-gundlach-talks-feds-rate-pause-with-cnbc.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T07:20:38+08:00"
+    },
+    {
+      "articleId": "0383b43910a9f490f7b85b41c3aafb3827ad025e923a45808cf1f6a098d14433",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Federal Reserve Chairman Kevin Warsh reiterated the central bank's firm 2% inflation target during a post-meeting news conference. Meanwhile, Micron saw a strong rally with US-traded shares up over 12.5%, and upcoming economic data releases include the September PCE price index and the first read on Q3 GDP.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Fed commentary on inflation combined with impending major economic releases like PCE and GDP signals potential market volatility, requiring investors to monitor macroeconomic indicators closely alongside specific stock rallies.",
+      "reasoning": "The article covers critical macroeconomic policy statements from the Fed Chairman regarding inflation targets and upcoming vital economic releases, alongside notable tech stock movements, making it highly relevant for economic and market surveillance.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Fed chairman talks tough on inflation — plus, what's behind Micron's big rally",
+      "publishedAtSgt": "2026-10-29T03:17:35+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/28/fed-chairman-talks-tough-on-inflation-plus-whats-behind-microns-big-rally.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-29T07:20:39+08:00"
+    },
     {
       "articleId": "54214e8a4bc9f6a7ccde872a82530b2f77236383d340102bc5a253446aa01ba0",
       "relevant": true,
