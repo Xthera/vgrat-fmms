@@ -1,10 +1,155 @@
 {
-  "generatedAtSgt": "2026-10-29T07:36:22.716591+08:00",
+  "generatedAtSgt": "2026-10-29T15:30:33.301829+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 234,
+  "articleCount": 239,
   "analyses": [
+    {
+      "articleId": "ce4536b28d7c9572df5e504f1a73d412701b3718a5620f1d409af272775ec089",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Tencent and Visa are expanding their partnership in cross-border payments and AI-powered commerce following a regulatory green light, combining Tencent's AI capabilities with Visa's global network to enhance China's payments market.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "China"
+      ],
+      "sectors": [
+        "Financials",
+        "Technology"
+      ],
+      "investorImpact": "The deepening partnership signals growth opportunities in China's digital payments and cross-border commerce sectors, benefiting fintech and technology investors by opening up AI-powered payment channels.",
+      "reasoning": "Classified as MARKET due to corporate partnerships affecting financial services and digital payments in China. Sentiment is POSITIVE because regulatory approval and strategic expansion facilitate business growth. Fund monitoring relevance is true as it impacts sector exposures in technology and financials.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Tencent, Visa deepen payments push in China after regulatory green light",
+      "publishedAtSgt": "2026-10-29T15:01:50+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/tencent-visa-citi-mastercard-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T15:14:57+08:00"
+    },
+    {
+      "articleId": "8829a4793c8f47ec4131add6720dbaa985b53057f6f5ab8d609fa78c7bd07deb",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Samsung Electronics reported record third-quarter profits and revenue in its semiconductor business, driven by strong demand for AI-related memory chips, yet its shares slid as investors have come to view record results as the bare minimum for the AI trade.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "South Korea",
+        "Asia"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors holding Samsung or broader AI-linked semiconductor equities face a scenario where record earnings are already priced in, signaling potential volatility and high expectations within the tech sector.",
+      "reasoning": "Classified as MARKET due to the stock price movement following earnings, and MIXED sentiment because record profits coincided with a share price decline. It is important and fund-monitoring relevant as it highlights current market sentiment and valuation pressures on major AI hardware players.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Samsung Electronics shares slid despite record profit in the third-quarter",
+      "publishedAtSgt": "2026-10-29T14:53:19+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/samsung-electronics-third-quarter-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T15:14:57+08:00"
+    },
+    {
+      "articleId": "9e353b5f3e5312982756aca7230a44764c4cb0d91242b8c7c94384a8d09f629c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Jio Platforms, a Meta- and Google-backed company, listed on Wednesday at a premium of over 25% to its IPO price, reaching a market capitalization of 13.05 trillion rupees ($137.1 billion) and becoming the second most valued Indian firm.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "India"
+      ],
+      "sectors": [
+        "Technology",
+        "Telecommunications"
+      ],
+      "investorImpact": "The successful debut and high valuation of Jio Platforms highlight strong investor appetite for Indian technology and telecom assets, potentially boosting broader market sentiment for regional IPOs.",
+      "reasoning": "Classified as MARKET due to the significant IPO listing and valuation milestone for a major firm, which is of interest to equity investors monitoring the Indian market.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Billionaire Ambani cries tears of joy as Jio Platforms becomes the second most valued Indian firm",
+      "publishedAtSgt": "2026-10-29T12:55:17+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/ambani-billionaire-jio-ipo-india.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-29T15:14:57+08:00"
+    },
+    {
+      "articleId": "c9cfd61c7dfcb8d09c8366f5d281efb83c785f3f92cee74ae4048046517fc6fe",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "China's technology stocks on the STAR Market are experiencing a sell-off as investors question whether the domestic artificial intelligence boom can yield sufficient profits to justify high valuations.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors with exposure to Chinese equities or technology sectors should exercise caution as valuation pressures and skepticism regarding AI monetization weigh on high-tech shares.",
+      "reasoning": "Classified as MARKET due to the focus on stock sell-offs and equity valuations within China's technology sector. Sentiment is NEGATIVE given the declining enthusiasm and questioning of profit sustainability.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China’s tech darlings are losing their shine. Here’s what’s behind the sell-off",
+      "publishedAtSgt": "2026-10-29T10:14:14+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/china-tech-stocks-selloff.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 58,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-10-29T15:14:57+08:00"
+    },
+    {
+      "articleId": "e4ae919022bf65b9c5fa251da5d7c9eb894a42142c62c724897be975b61f7410",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Alphabet's earnings disappointed investors across nearly every category, overshadowing positive developments in its AI initiatives such as Gemini 4 Argon and Carbon.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "The widespread earnings misses from a major mega-cap technology stock like Alphabet may weigh heavily on tech sector sentiment and broader market indices.",
+      "reasoning": "Classified as MARKET due to its focus on corporate earnings performance and stock valuation impact, with NEGATIVE sentiment driven by widespread misses despite AI advancements.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Our next steps for Alphabet stock after earnings disappoint at nearly every turn",
+      "publishedAtSgt": "2026-10-29T09:11:10+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/28/our-next-steps-for-alphabet-stock-after-earnings-disappoint-at-nearly-every-turn.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T15:14:57+08:00"
+    },
     {
       "articleId": "1ff90cd183fc18c054a731f434be822c9c11d5ae46b6296b006e35e65ca99ab2",
       "relevant": true,
