@@ -1,10 +1,524 @@
 {
-  "generatedAtSgt": "2026-10-29T15:30:33.301829+08:00",
+  "generatedAtSgt": "2026-10-29T22:51:53.779530+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 239,
+  "articleCount": 256,
   "analyses": [
+    {
+      "articleId": "a43e8631f6101f7a25d2035bcfb1f1a506232a0b4e021975d62621e24fb988b9",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "The European Central Bank voted to keep its key interest rate on hold at 2.5%, meeting expectations despite euro zone inflation rising to a three-year high.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Currencies"
+      ],
+      "geographies": [
+        "Europe",
+        "Euro Zone"
+      ],
+      "sectors": [
+        "Financials",
+        "Energy"
+      ],
+      "investorImpact": "The decision to hold rates steady amid rising inflation provides stability for European markets, though ongoing risks from energy prices and growth concerns may influence future monetary policy adjustments.",
+      "reasoning": "Classified as ECONOMIC because it concerns central bank monetary policy and macroeconomic indicators like inflation and interest rates. It is of high importance for fund monitoring due to its broad impact on European asset classes.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "European Central Bank keeps key interest rate on hold at 2.5%",
+      "publishedAtSgt": "2026-10-29T22:18:44+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/european-central-bank-interest-rates.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 93,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:09+08:00"
+    },
+    {
+      "articleId": "8f86c7ddc7ff2daa7964197839aebb5b532f724c27e85b05bd604a16bda9ab9f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Steve Eisman, known from \"The Big Short,\" has adopted a more conservative portfolio stance as he believes the artificial intelligence trade is approaching a tipping point, though he cautions against shorting it due to its deep integration with the broader market and economy.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Investors should note market sentiment shifts regarding the sustainability and concentration risk of the artificial intelligence trade, prompting cautious portfolio positioning.",
+      "reasoning": "The article provides notable market commentary from a prominent investor regarding the AI trade and broader equity market risks, making it relevant for market monitoring without indicating immediate systemic distress.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Steve Eisman gets more conservative with portfolio as AI trade nears 'tipping point'",
+      "publishedAtSgt": "2026-10-29T22:15:43+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/steve-eisman-gets-more-conservative-with-portfolio-as-ai-trade-nears-tipping-point.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:08+08:00"
+    },
+    {
+      "articleId": "b59d9aaaa0d7f6c96b34aba68c375f54643d6ec04a3f48f70c323d698188aa10",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Third-quarter U.S. GDP increased at a better-than-expected 3.4% rate, while September inflation accelerated. Despite rising inflation and energy costs, overall economic growth remains robust.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Broad Economy"
+      ],
+      "investorImpact": "Stronger-than-expected GDP growth supports corporate earnings, but accelerating inflation complicates the central bank's rate trajectory, potentially impacting bond yields and equity valuations.",
+      "reasoning": "Classified as ECONOMIC because it reports core macroeconomic indicators (GDP growth and inflation) which are high importance for market-wide asset allocation and central bank policy expectations.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Third-quarter U.S. GDP increases a better-than-expected 3.4% as September inflation accelerates",
+      "publishedAtSgt": "2026-10-29T22:11:31+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/pce-inflation-report-september-2026-.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 102,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-29T22:30:08+08:00"
+    },
+    {
+      "articleId": "d992499700cf0497e1bed3c9e3c22ed9abc077f836a8cfbddab3f787d0177822",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "LOW",
+      "summary": "Health Savings Accounts (HSAs) are highlighted by financial planners as highly effective, underrated investment tools for eligible individuals, often prioritized ahead of Roth IRAs due to their unique tax advantages.",
+      "assetClasses": [
+        "Equities",
+        "Cash"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Healthcare",
+        "Financials"
+      ],
+      "investorImpact": "Provides retail investors and employees with tax-advantaged savings and investment strategies, though it has minimal direct impact on broader institutional markets or portfolio management.",
+      "reasoning": "Classified as MARKET due to its focus on personal investment vehicles and financial planning strategies, but given a LOW importance and false for fund monitoring relevance since it pertains to individual consumer finance rather than macro market or fund movements.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Open enrollment is a chance to get this ‘sneaky-good’ investment account that can be ‘better than a Roth’",
+      "publishedAtSgt": "2026-10-29T22:00:01+08:00",
+      "url": "https://www.cnbc.com/make-it/2026/10/29/hsa-retirement-investing.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:10+08:00"
+    },
+    {
+      "articleId": "39cd9cfa385863a82d7b2fc6b23eb310a07db4c36460938f184a1630364a9df6",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Oil prices fell as renewed U.S.-Iran peace efforts eased supply fears, though investors continue to weigh geopolitical tensions such as Houthi attacks alongside Federal Reserve policy considerations regarding inflationary pressures.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "USA",
+        "Middle East",
+        "Iran"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "De-escalation in Middle East tensions reduces supply risk premiums, leading to lower oil prices which can benefit consumers and inflation-sensitive sectors while weighing on energy producer margins.",
+      "reasoning": "Classified as MARKET because it details oil price movements driven by geopolitical developments and supply expectations, which directly impacts energy assets and inflation tracking.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Oil prices fall as renewed U.S.-Iran peace efforts ease supply fears",
+      "publishedAtSgt": "2026-10-29T21:52:10+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/oil-price-today-wti-brent.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:10+08:00"
+    },
+    {
+      "articleId": "499429c2c836ae7b3e9f8cbe5105d841f9022b7d3f446645fdb3245fc4353881",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "European Central Bank President Christine Lagarde is set to step down in February, concluding a tenure marked by navigation through the Covid-19 pandemic, the Russia-Ukraine war, and severe inflationary shocks.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Currencies"
+      ],
+      "geographies": [
+        "Europe",
+        "European Union"
+      ],
+      "sectors": [
+        "Financials",
+        "Banking"
+      ],
+      "investorImpact": "The departure of a central bank president introduces leadership transition and potential policy direction shifts, which can create volatility in European bonds, equities, and the euro depending on who is tipped to replace her.",
+      "reasoning": "Classified under ECONOMIC due to the central bank leadership change, which is a significant macroeconomic event with high importance for European monetary policy continuity.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "President of the European Central Bank Christine Lagarde to step down. Here's who is tipped to replace her",
+      "publishedAtSgt": "2026-10-29T21:50:58+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/lagarde-ecb-stand-down.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:09+08:00"
+    },
+    {
+      "articleId": "8506bba00be341b95bb07397aa51c3200b548cf28f14488649a40628f97fd923",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Alphabet shares fell sharply by 13% following its third-quarter earnings report, putting the stock on course for its biggest post-earnings drop, while Microsoft traded largely flat as investors scrutinized tech giants' AI spending and free cash flow numbers.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Communication Services"
+      ],
+      "investorImpact": "Investors in mega-cap technology stocks face heightened volatility and scrutiny regarding the returns on heavy artificial intelligence investments, impacting tech sector valuations and broader equity market sentiment.",
+      "reasoning": "The article is classified under MARKET with NEGATIVE sentiment and HIGH importance because Alphabet's massive 13% post-earnings drop directly impacts major equity indices and highlights growing investor concern over tech sector capital expenditures.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Alphabet falls 13%, putting it on course for its biggest ever post-earnings drop",
+      "publishedAtSgt": "2026-10-29T21:46:52+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/alphabet-google-microsoft-msft-shares-today-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:10+08:00"
+    },
+    {
+      "articleId": "4c4a43e2122c9420b4c89c93f91d05e68aff6b8039523948afaf55d82572bb6e",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "According to research by Randstad, non-tech employers such as banks and healthcare firms are outbidding tech companies for software engineers. Healthcare and life sciences firms are paying up to 17% more for software engineers than tech companies, while banking is offering 13% more due to rising demand for AI skills and changing talent markets.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "United Kingdom"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials",
+        "Healthcare"
+      ],
+      "investorImpact": "Investors should note the shift in human capital costs across sectors, with non-tech industries increasing compensation outlays to secure top software and AI talent, potentially impacting tech sector margins and lifting labor costs in banking and healthcare.",
+      "reasoning": "The article highlights an ongoing structural shift in labor markets where non-tech sectors outbid traditional tech firms for software talent, making it relevant for sector-specific labor cost and competitive analysis.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Banks and healthcare firms are outbidding tech for software talent, major recruiter says",
+      "publishedAtSgt": "2026-10-29T21:29:18+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/ai-jobs-software-engineers-tech-layoffs.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:10+08:00"
+    },
+    {
+      "articleId": "e19c9cbeb5f08d94057be5bac8cf43d9fb06b36c8776b24134ca3f955abf6478",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer outlines top market events for Thursday, noting falling bond yields following inflation data meeting expectations, Marvell shares falling 11.5% amid talks to acquire Lumentum, and Eli Lilly shares rising 4% to an all-time high driven by strong earnings from Mounjaro and Zepbound.",
+      "assetClasses": [
+        "Equities",
+        "Bonds"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Healthcare"
+      ],
+      "investorImpact": "Investors can use these insights to monitor specific stock movements such as Eli Lilly and Marvell, while tracking broader macroeconomic trends like bond yields and inflation data.",
+      "reasoning": "The article is classified as MARKET since it covers stock market movers, corporate acquisitions, earnings performance, and reactions to inflation data, making it useful for general market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer's top 10 things to watch in the stock market Thursday",
+      "publishedAtSgt": "2026-10-29T21:13:08+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/29/jim-cramers-top-10-things-to-watch-in-the-stock-market-thursday.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:09+08:00"
+    },
+    {
+      "articleId": "fb1144f10659352581d9f01b9c104266143a447aee7decbfd8932eb3a8ab9b36",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "The AI infrastructure build-out hit a potential snag as major tech firms like Google and Microsoft held off on raising their capital expenditure forecasts, causing a sell-off in neoclouds and infrastructure stocks like CoreWeave, Nebius, IREN, and Oracle. However, Microsoft's overall earnings beat expectations, supported by strong Azure cloud sales growth.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Cloud Computing",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors should note that while AI infrastructure spending growth may face short-term pauses or slower trajectories, cloud revenue growth remains robust for major players, indicating nuanced performance across the technology and AI supply chains.",
+      "reasoning": "The article is classified as MARKET and HIGH importance because it directly impacts technology equity valuations, neocloud providers, and semiconductor or infrastructure suppliers in the AI space. Sentiment is MIXED due to capex hesitation combined with strong cloud earnings.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AI build-out hits snag as Google and Microsoft put off raising capex forecasts",
+      "publishedAtSgt": "2026-10-29T20:10:29+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/microsoft-google-ai-capex-estimates.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:09+08:00"
+    },
+    {
+      "articleId": "6a27cd47a5ec5ba9136d0d14bde0f2f7cc71edbece2e04e76c578e555d0fb3e0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Alphabet reported an earnings miss driven by shortfalls in Search, YouTube, and Subscriptions, raising investor concerns that artificial intelligence is beginning to negatively impact Google's traditional search monetization despite record search query growth.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Communication Services"
+      ],
+      "investorImpact": "Investors in mega-cap technology and Alphabet specifically face renewed concerns over the monetization risks and heavy capital expenditures associated with artificial intelligence integration into traditional search models.",
+      "reasoning": "Classified as MARKET due to Alphabet's earnings miss and the resulting investor apprehension regarding AI's disruptive effect on search revenue. High importance given Alphabet's market capitalization and status as a bellwether for tech and AI investments.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Alphabet earnings miss reflects first real sign that AI is taking a bite out of search",
+      "publishedAtSgt": "2026-10-29T20:09:47+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/alphabet-google-search-ai-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:08+08:00"
+    },
+    {
+      "articleId": "84776faa2babe4df74478ed1c39a087e0b23750ad150d11f10a8cb36f3b5a219",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Prediction market platform Kalshi saw its valuation jump to $40 billion in its latest funding round, up from $22 billion in May. The company plans to use the new funds to develop leveraged event contracts, perpetual futures tied to individual stocks, and markets to trade on the price of compute.",
+      "assetClasses": [
+        "Private Equity",
+        "Derivatives"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financial Technology",
+        "FinTech"
+      ],
+      "investorImpact": "The substantial valuation increase highlights strong investor appetite and rapid growth in prediction markets and alternative derivatives trading, signaling expansion opportunities within the fintech sector.",
+      "reasoning": "Classified as MARKET because it details a significant funding round and valuation milestone for a major private financial platform. The event is important due to the sheer scale of the valuation jump and plans for novel financial products, making it relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Kalshi valuation jumps to $40 billion in latest funding round",
+      "publishedAtSgt": "2026-10-29T20:05:18+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/kalshi-40-billion-valuation-funding-round.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 95,
+      "collectorRelevanceReason": "business_market_event",
+      "collectedAtSgt": "2026-10-29T22:30:09+08:00"
+    },
+    {
+      "articleId": "51e7d846cc9c5da7bad2329031fca35c3c6f65fbe68071d38552e019fe01e35d",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Senator Elizabeth Warren is urging the Department of Justice to launch a criminal investigation into Bank of America and its executives following the bank's admission of willful violations of federal anti-money-laundering laws and $1.2 billion in penalties.",
+      "assetClasses": [
+        "Equities",
+        "Credit"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Banking"
+      ],
+      "investorImpact": "Potential criminal investigations and heightened regulatory scrutiny can negatively impact Bank of America's stock price, increase compliance costs, and create broader regulatory overhang for the banking sector.",
+      "reasoning": "Classified as MARKET due to direct implications for a major financial institution and regulatory risks impacting the banking sector. Sentiment is NEGATIVE due to calls for a criminal probe and massive penalties. Importance is HIGH given the involvement of a major US senator and a systemic bank.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Warren urges DOJ criminal probe of Bank of America over anti-money-laundering violations",
+      "publishedAtSgt": "2026-10-29T20:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/warren-bank-of-america-criminal-probe.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:09+08:00"
+    },
+    {
+      "articleId": "31859c37563e6555d874c7b7dbd2616252c9a901bf50b00e562333b9ce8c13ee",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Alphabet shares are dragging down Nasdaq futures following a record post-earnings loss as AI chat and agents negatively impact Google Search. Additionally, lighter capital expenditure numbers from Microsoft have pressured neocloud stocks, highlighting that the Magnificent Seven no longer trade as a monolith and requiring more selective investor strategies.",
+      "assetClasses": [
+        "Equities",
+        "Futures"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Communication Services"
+      ],
+      "investorImpact": "Investors face increased volatility in mega-cap tech stocks as the market shifts away from treating the Magnificent Seven as a single trade, forcing more discerning stock picking amid AI disruption to traditional search business models.",
+      "reasoning": "The article is classified as MARKET and HIGH importance because it details significant post-earnings losses for Alphabet, impacting index futures and signaling structural shifts in the mega-cap tech trade driven by AI competition.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Alphabet drags on Nasdaq futures as the stock faces a record post-earnings loss",
+      "publishedAtSgt": "2026-10-29T19:41:06+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/alphabet-nasdaq-futures-record-post-earnings-loss.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:10+08:00"
+    },
+    {
+      "articleId": "7776220b878127a8257502d3488736378bbf20ccf09c5e92c5a6b5b3047284c6",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Merck reported better-than-expected third-quarter earnings and raised its adjusted profit outlook, driven by strong sales of its immunotherapy drug Keytruda and its new injectable version, Keytruda Qlex.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Healthcare",
+        "Pharmaceuticals"
+      ],
+      "investorImpact": "The positive earnings beat and guidance hike signal strong fundamentals and growth potential for Merck, which can boost investor confidence in pharmaceutical equities.",
+      "reasoning": "The article details quarterly financial results, earnings beats, and upgraded profit outlooks for a major pharmaceutical company, making it directly relevant to market and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Merck tops quarterly estimates, hikes profit outlook as new Keytruda form shows strength",
+      "publishedAtSgt": "2026-10-29T19:24:38+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/merck-mrk-earnings-q3-2026.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:09+08:00"
+    },
+    {
+      "articleId": "ce6c52c8c7d904875275878b13b314534293c8e2a96f04364cf36755a0e18d04",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "An examination of the Bank of North Dakota, a state-owned financial institution operating for over a century that provides low-interest student loans and engages in regional investment activities outside of private bank competition.",
+      "assetClasses": [
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "The operations of a single state-owned bank in North Dakota have negligible direct impact on broader national financial markets or institutional portfolios, serving primarily as a localized banking and policy case study.",
+      "reasoning": "The article discusses the operations and historical role of the Bank of North Dakota, classifying it under economic structures rather than active market movements. While it concerns banking, its lack of broad systemic or macroeconomic impact makes its significance low for fund monitoring.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "It's a 'socialist' bank — and North Dakota Republicans love it",
+      "publishedAtSgt": "2026-10-29T18:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/bank-north-dakota-socialism-election.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:09+08:00"
+    },
+    {
+      "articleId": "0fd0bd6277c30af458528f1f9da6a35ffeb1ad1e20932d4aab0519742916f0c0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Shell nearly doubled its quarterly profit year-on-year driven by record-high refining margins, while also reducing net debt despite its $16.4 billion acquisition of Canadian energy firm ARC. Shell's London-listed shares rose about 3% to hit an all-time high.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "Global",
+        "United Kingdom",
+        "Canada"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "Strong quarterly profits, record refining margins, and successful debt reduction despite major acquisitions signal robust financial health in the energy sector, driving positive equity performance for Shell and bolstering sector sentiment.",
+      "reasoning": "The article reports major financial results for a prominent global energy firm, directly impacting market sentiment, the energy sector, and equity valuations.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Shell nearly doubles quarterly profit year-on-year as refining margins soar to record high",
+      "publishedAtSgt": "2026-10-29T17:36:41+08:00",
+      "url": "https://www.cnbc.com/2026/10/29/shell-earnings-oil-q3.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-29T22:30:10+08:00"
+    },
     {
       "articleId": "ce4536b28d7c9572df5e504f1a73d412701b3718a5620f1d409af272775ec089",
       "relevant": true,
