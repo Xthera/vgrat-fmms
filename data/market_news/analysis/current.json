@@ -1,10 +1,126 @@
 {
-  "generatedAtSgt": "2026-10-31T02:57:56.453214+08:00",
+  "generatedAtSgt": "2026-10-31T07:18:50.766045+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 251,
+  "articleCount": 255,
   "analyses": [
+    {
+      "articleId": "7d095a8dc895fea57e325a489beff8c3b3af0e7b2df8174677819f82a7dc4764",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "CNBC's Jim Cramer advises investors to look beyond the struggling artificial intelligence trade and consider consumer staples stocks, highlighting companies like Kimberly-Clark and Procter & Gamble for their recent gains, attractive valuations, and dividend yields.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Consumer Staples"
+      ],
+      "investorImpact": "Investors seeking sector diversification away from tech and artificial intelligence may find opportunities in consumer staples, which offer lower valuations and strong dividend yields.",
+      "reasoning": "The article discusses equity market rotation and sector preferences, making it relevant for portfolio allocation and market monitoring within the consumer staples sector.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer says it's time to look beyond tech. Here are 4 consumer stocks he likes",
+      "publishedAtSgt": "2026-10-31T06:52:04+08:00",
+      "url": "https://www.cnbc.com/2026/10/30/jim-cramer-consumer-staples-stocks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-31T07:03:12+08:00"
+    },
+    {
+      "articleId": "2cfd56acc914ddde217c8cd736987be67b66884353ec5e61165f591ec74e2fb4",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "S&P Global Ratings has revised Meta's outlook downward due to concerns over cash flow and high capital expenditure on artificial intelligence. Despite reporting a revenue beat, Meta's shares dropped 7% following the announcement.",
+      "assetClasses": [
+        "Equities",
+        "Credit"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Communication Services"
+      ],
+      "investorImpact": "Investors holding Meta shares face immediate downward pressure of 7% and increased credit risks as heavy AI investments strain cash flows, signaling broader caution regarding mega-cap tech spending.",
+      "reasoning": "Classified as MARKET due to direct stock price and credit rating implications for a major public company. It is important because heavy AI capital expenditures by mega-cap tech firms are facing increased scrutiny from rating agencies and markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Meta outlook revised downward by S&P on cash flow and capex concerns",
+      "publishedAtSgt": "2026-10-31T06:42:26+08:00",
+      "url": "https://www.cnbc.com/2026/10/30/meta-outlook-to-revised-to-negative-by-sp-after-cash-flow-negative.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-31T07:03:12+08:00"
+    },
+    {
+      "articleId": "7b45471800956f0b1535b67e9d8eb2a67394822061627dafd06f64b221655d17",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer warns investors to expect continued market volatility driven by tech earnings, concerns over artificial intelligence infrastructure spending and political opposition, alongside upcoming midterms and macroeconomic jobs data.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Pharmaceuticals"
+      ],
+      "investorImpact": "Investors should brace for heightened short-term volatility in technology shares and AI-related infrastructure plays, while potentially seeking opportunities in pharmaceuticals.",
+      "reasoning": "Classified as MARKET because it discusses overarching stock market conditions, sector trends, and upcoming catalysts like earnings and economic reports. Sentiment is NEGATIVE due to focus on turbulence, AI concerns, and political opposition.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Cramer’s week ahead: Expect more volatility as tech earnings, midterms loom",
+      "publishedAtSgt": "2026-10-31T06:17:13+08:00",
+      "url": "https://www.cnbc.com/2026/10/30/jim-cramer-week-ahead-apple-amd-jobs-report.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-31T07:03:12+08:00"
+    },
+    {
+      "articleId": "99de5f14798396ba6d81405b9ed5c780a4e671693fa92377fac856d09d856b7b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Stocks closed sharply lower on the final trading day of October, led by severe pressure on tech stocks as the market pushed back on AI-related equities. Despite strong fundamentals shown by major cloud providers like Amazon and Microsoft, investor sentiment turned defensive, driving rotation into defensive stocks.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Defensive"
+      ],
+      "investorImpact": "Investors face heightened volatility and sector rotation risks as market participants reassess valuations and AI spending returns, highlighting the importance of diversification into defensive assets.",
+      "reasoning": "The article is classified under MARKET as it discusses broad stock market movements, sector rotation, and monthly performance trends. Sentiment is NEGATIVE due to sharp losses in tech stocks, and importance is HIGH because of significant market-wide sell-offs affecting major asset classes and sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Tech gets crushed, defensive stocks shine. How we're making sense of it all",
+      "publishedAtSgt": "2026-10-31T02:55:44+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/30/tech-gets-crushed-defensive-stocks-shine-how-were-making-sense-of-it-all.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-31T07:03:12+08:00"
+    },
     {
       "articleId": "953e398e33f495f99f9dfafd27d416000416578e86ed22ad6053c244de540ee0",
       "relevant": true,
