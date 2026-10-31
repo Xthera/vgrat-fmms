@@ -1,10 +1,70 @@
 {
-  "generatedAtSgt": "2026-10-31T15:21:24.087776+08:00",
+  "generatedAtSgt": "2026-10-31T21:59:57.954163+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 256,
+  "articleCount": 258,
   "analyses": [
+    {
+      "articleId": "684738bb69fde9ddc1162f83ff5d6fe5e60587d47df59cfbd91e96d5a2e44e45",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "President Donald Trump's campaign promise to slash energy prices and gasoline below $2 a gallon within his first year in office has not materialized, with gasoline, diesel, and jet fuel prices instead surging higher.",
+      "assetClasses": [
+        "Commodities",
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Transportation"
+      ],
+      "investorImpact": "Higher energy and fuel prices contribute to inflationary pressures and increase operating costs for transportation and manufacturing sectors, potentially impacting consumer discretionary spending and corporate margins.",
+      "reasoning": "The article discusses the macroeconomic impact of energy prices failing to meet political promises, directly affecting inflation expectations and sector costs, making it relevant for economic and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump promised to slash energy costs — but gasoline, diesel and jet fuel all soared instead",
+      "publishedAtSgt": "2026-10-31T20:49:58+08:00",
+      "url": "https://www.cnbc.com/2026/10/31/trump-gas-diesel-price-midterm-election.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-31T21:44:23+08:00"
+    },
+    {
+      "articleId": "f6fcedb0f9fc4bffff983ea9ce4fedd6435c5e600eeda44db9cfd5b54ca3353c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "A massive $6.3 billion hack on Binance has sparked renewed concerns regarding crypto wallet and exchange safety, with experts warning against leaving significant funds on exchanges due to a lack of built-in regulatory protections like FDIC insurance.",
+      "assetClasses": [
+        "Cryptocurrency",
+        "Digital Assets"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Financial Technology",
+        "Cryptocurrency"
+      ],
+      "investorImpact": "Investors face heightened counterparty and security risks when holding digital assets on centralized exchanges, emphasizing the need for self-custody or enhanced risk management.",
+      "reasoning": "Classified as MARKET due to its direct impact on cryptocurrency sentiment and exchange security. Rated HIGH importance because of the unprecedented scale of the hack ($6.3 billion) and its implications for digital asset custody.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Binance’s $6.3 billion hack raises questions about crypto wallet safety",
+      "publishedAtSgt": "2026-10-31T20:47:08+08:00",
+      "url": "https://www.cnbc.com/2026/10/31/binance-hack-crypto-wallet-safety.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 95,
+      "collectorRelevanceReason": "business_market_event",
+      "collectedAtSgt": "2026-10-31T21:44:23+08:00"
+    },
     {
       "articleId": "bca48cc959ed5d87cad7f013169471ee012157259fc39c2c7b4635080958ca6f",
       "relevant": true,
