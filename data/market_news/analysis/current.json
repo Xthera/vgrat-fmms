@@ -1,10 +1,43 @@
 {
-  "generatedAtSgt": "2026-10-31T07:18:50.766045+08:00",
+  "generatedAtSgt": "2026-10-31T15:21:24.087776+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 255,
+  "articleCount": 256,
   "analyses": [
+    {
+      "articleId": "bca48cc959ed5d87cad7f013169471ee012157259fc39c2c7b4635080958ca6f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "President Trump criticized Big Oil over excess profits amid shortages, while recent corporate reports highlight continued windfalls for oil majors driven by tight fuel supplies and high refining margins resulting from the conflict involving the U.S., Israel, and Iran.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "USA",
+        "Middle East",
+        "Iran",
+        "Israel"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "High refining margins and surging earnings benefit energy sector equities and commodity markets, but increased political scrutiny and calls out from leadership introduce regulatory and headline risks for major oil companies.",
+      "reasoning": "The article is classified under MARKET due to its direct discussion of corporate profits, earnings results, and refining margins for major energy companies amidst geopolitical tensions. It is important for monitoring energy sector performance and regulatory risk.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump called out Big Oil profits. Here’s how much their refining earnings have surged since",
+      "publishedAtSgt": "2026-10-31T14:00:02+08:00",
+      "url": "https://www.cnbc.com/2026/10/31/trump-big-oil-refining-profits.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-31T15:05:53+08:00"
+    },
     {
       "articleId": "7d095a8dc895fea57e325a489beff8c3b3af0e7b2df8174677819f82a7dc4764",
       "relevant": true,
