@@ -1,10 +1,38 @@
 {
-  "generatedAtSgt": "2026-11-01T04:22:19.412626+08:00",
+  "generatedAtSgt": "2026-11-01T15:55:51.141112+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 255,
+  "articleCount": 256,
   "analyses": [
+    {
+      "articleId": "1a18520f8bb4841d499bd89e8532ac61fb298b7bfc99de54e64abd096210c5fc",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Companies are starting to show measurable financial returns from artificial intelligence investments, with corporate AI spending reaching $581.7 billion in 2025 according to the Stanford HAI 2026 AI Index report.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors can begin to evaluate tangible financial payoffs from corporate AI spending rather than relying purely on growth hype, potentially supporting valuations in the technology sector and efficiency-driven firms.",
+      "reasoning": "Classified as MARKET due to its direct relevance to corporate earnings and financial returns from technology investments. Sentiment is POSITIVE as it highlights actual financial payoffs from AI. Importance is HIGH because massive corporate AI spending is translating into measurable business results.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Companies promised AI gains— here's how the payoff showed up in earnings",
+      "publishedAtSgt": "2026-11-01T14:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/01/ai-investments-company-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-01T15:40:20+08:00"
+    },
     {
       "articleId": "de3c341ab1495273bea2517135f9adcba2d266e6ac2087324877a25f5c44b476",
       "relevant": true,
