@@ -1,10 +1,68 @@
 {
-  "generatedAtSgt": "2026-11-02T07:11:12.856130+08:00",
+  "generatedAtSgt": "2026-11-02T16:02:15.971357+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 247,
+  "articleCount": 249,
   "analyses": [
+    {
+      "articleId": "309b81fa1db0c83bbf627ec7776092bd3e780619dbc5bd4131b8d28605640905",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "South Korean President Lee Jae Myung announced a record 2027 budget of 820.9 trillion won, which includes a nearly doubled allocation of 21.3 trillion won directed toward semiconductors, physical AI, and AI data centers to build a top-tier sovereign AI model.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "South Korea"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "The substantial increase in government funding for AI and semiconductors in South Korea provides a strong tailwind for domestic technology and semiconductor manufacturers, signaling robust public sector demand.",
+      "reasoning": "The article details significant government spending targeted at the technology and semiconductor sectors, warranting a technology and fund monitoring classification due to its positive impact on specific industries.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "South Korea targets 'world's highest performance' sovereign AI model in record new budget",
+      "publishedAtSgt": "2026-11-02T14:02:03+08:00",
+      "url": "https://www.cnbc.com/2026/11/02/south-korea-ai-spending-budget.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 52,
+      "collectorRelevanceReason": "supporting_technology_description",
+      "collectedAtSgt": "2026-11-02T15:46:43+08:00"
+    },
+    {
+      "articleId": "cfc2e7a3c17d30096b9c369fb87b50db507d76c70468d9d140a30c848bc1be38",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "A $5.5 billion bank takeover involving IDBI Bank faces opposition from workers and politicians who are demanding the cancellation of the privatization process and protection of employee interests, despite government plans for growth driven by strategic investors.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Canada",
+        "India"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "The opposition to the privatization and takeover process introduces regulatory and execution risks for cross-border investments and strategic stake sales in the Indian banking sector.",
+      "reasoning": "Classified as MARKET due to the involvement of a major bank takeover and privatization process. Sentiment is negative because of strong opposition from workers and politicians which could delay or disrupt the transaction. It is relevant for fund monitoring as it impacts cross-border M&A and financial sector investments.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Canada-India $5.5 billion bank takeover attracts opposition from workers, politicians",
+      "publishedAtSgt": "2026-11-02T12:09:34+08:00",
+      "url": "https://www.cnbc.com/2026/11/02/canada-india-bank-takeover-protest-workers.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-02T15:46:43+08:00"
+    },
     {
       "articleId": "94aa1c0f2a12d853603972464d8b0280814c7d271770172d1b7fac00018b86ac",
       "relevant": true,
