@@ -1,0 +1,374 @@
+{
+  "date": "2026-10-24",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "articleCount": 12,
+  "analyses": [
+    {
+      "articleId": "6a271ff09c351091754409d20a11419bf8dfb72315769b912166c5f0fb759668",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "Former hedge fund manager and Elm Wealth founder Victor Haghani warned that retail investors trying to beat the market via individual stocks and complex ETFs may underperform and would likely be better off using broad market index funds.",
+      "assetClasses": [
+        "Equities",
+        "ETFs"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Financials",
+        "Asset Management"
+      ],
+      "investorImpact": "Serves as a general reminder on retail investor behavior and the ongoing debate between active stock picking and passive index investing, though it introduces no new macroeconomic data.",
+      "reasoning": "The article discusses general retail investing behavior and market strategy rather than concrete financial market catalysts or company-specific news. It is categorized as MARKET due to its focus on stock picking and index funds.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Retail investors are not more sophisticated than 30 years ago, says former hedge fund manager",
+      "publishedAtSgt": "2026-10-24T23:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/10/24/stock-picking-could-hurt-investors-warns-former-hedge-fund-manager.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-25T00:42:28+08:00"
+    },
+    {
+      "articleId": "e60cbf16084c0088e1c3e31d6dc3519661e6536fb3ca3e46bbfc19b273f0d6b8",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Berkshire Hathaway shares reached new all-time highs as investors rotate out of high-flying tech and AI stocks due to concerns over infrastructure spending. CEO Greg Abel noted that supplying energy to AI data centers presents a significant opportunity for the company, provided rates remain stable for existing customers.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Conglomerates",
+        "Energy",
+        "Technology"
+      ],
+      "investorImpact": "Investors may view Berkshire Hathaway as a strong defensive alternative amidst ongoing tech and AI sector rotation, especially given its strategic positioning in energy supply for data centers.",
+      "reasoning": "The article highlights Berkshire Hathaway reaching all-time highs amid a broader market sector rotation away from tech and AI stocks, which is relevant for market and portfolio monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Berkshire shares shake the Buffett blues with new all-time highs",
+      "publishedAtSgt": "2026-10-24T20:48:32+08:00",
+      "url": "https://www.cnbc.com/2026/10/24/berkshire-record-high-without-buffett.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-25T00:42:28+08:00"
+    },
+    {
+      "articleId": "e50ec86be72c30bf5d713b84846f368a46dd24e37340d886f6f7fb51900bf153",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "With U.S. midterm elections approaching, voter sentiment regarding the economy and inflation remains heavily pessimistic, comparable to post-pandemic levels.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Financials"
+      ],
+      "investorImpact": "Persistent negative sentiment surrounding the economy and inflation ahead of elections can impact consumer spending behavior and heighten market volatility, influencing sector-specific allocations.",
+      "reasoning": "The article is classified under ECONOMIC due to its focus on voter and consumer sentiment regarding the economy and inflation. Sentiment is NEGATIVE given the gloomy outlook reported. It is important for monitoring broader macroeconomic conditions and political risk.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "America by the numbers: How voters feel about the economy, inflation, AI and Trump",
+      "publishedAtSgt": "2026-10-24T18:58:30+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/america-by-the-numbers-how-voters-feel-about-the-economy-inflation-ai-and-trump.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-10-25T00:42:28+08:00"
+    },
+    {
+      "articleId": "676f9758cf949191b92a9d838368093ffa56eb6d887679ee03e3d1ad91b61b0b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Riots and unrest in France have rattled financial markets, pushing the yield on benchmark 10-year French government bonds (OATs) up by 11 basis points to its highest level since 2002 amid pressure on French sovereign debt and weak projected GDP growth of 0.3% in 2026 and 0.6% in 2027.",
+      "assetClasses": [
+        "Fixed Income",
+        "Sovereign Debt"
+      ],
+      "geographies": [
+        "France",
+        "Europe"
+      ],
+      "sectors": [
+        "Government",
+        "Financials"
+      ],
+      "investorImpact": "Investors holding French sovereign debt or European assets face increased volatility and rising yields, prompting tactical portfolio reallocations as domestic unrest and weak economic growth weigh on market confidence.",
+      "reasoning": "The article directly addresses significant market movements, specifically a multi-decade high in French 10-year bond yields driven by social unrest and sovereign debt pressures, making it highly relevant for market and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "What next for France as riots rattle markets? Three questions facing investors ahead of more protests",
+      "publishedAtSgt": "2026-10-24T14:23:02+08:00",
+      "url": "https://www.cnbc.com/2026/10/24/france-riots-paris-unrest-debt-budget.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-24T20:04:16+08:00"
+    },
+    {
+      "articleId": "3f434b88bf545f94e98b790c48219a91d030bede8e7a2423b76967d6dc63f1cf",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Moody's has maintained France's credit rating amid political turmoil and civil unrest, while the country's 10-year bond yields surpassed 5% for the first time since 2002.",
+      "assetClasses": [
+        "Fixed Income",
+        "Sovereign Debt"
+      ],
+      "geographies": [
+        "France",
+        "Euro Zone"
+      ],
+      "sectors": [
+        "Government",
+        "Financial Services"
+      ],
+      "investorImpact": "The decision provides temporary relief against mounting sovereign risk and rising borrowing costs, but surging bond yields and political turmoil highlight ongoing risks for European fixed income investors.",
+      "reasoning": "Classified as MARKET due to its focus on sovereign credit ratings and bond yield movements in a major euro zone economy. Importance is HIGH because France's 10-year bond yield crossing 5% is a significant macroeconomic event with implications for European debt markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Moody's holds steady on France's credit rating as country grapples with turmoil and higher yields",
+      "publishedAtSgt": "2026-10-24T06:18:10+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/moodys-holds-steady-on-frances-credit-rating-as-country-grapples-with-turmoil-and-higher-yields.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-24T06:20:44+08:00"
+    },
+    {
+      "articleId": "ea6625d87d15c023c63b5efd50894eb44c0686d31055c87f9771f0296e08d935",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The AI infrastructure trade faces turmoil as neoclouds encounter financial pressure, credit risks increase, and Solidigm pulls its IPO amid rising skepticism over the return on capital expenditures for AI investments.",
+      "assetClasses": [
+        "Equities",
+        "Credit",
+        "IPOs"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Cloud Computing",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors are increasingly exposed to credit risks and valuation pressures in the AI infrastructure sector, prompting hedging strategies and signaling potential cooling in capital-intensive AI deployment.",
+      "reasoning": "Classified as MARKET due to direct impacts on public equities, IPO pipelines, and credit risks within the technology and AI infrastructure sectors, carrying high importance for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Turmoil hits AI buildout as neoclouds face pressure, credit risks mount and Solidigm pulls IPO",
+      "publishedAtSgt": "2026-10-24T05:49:08+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/ai-turmoil-neoclouds-struggle-credit-risks-jump-solidigm-pulls-ipo.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-24T06:20:44+08:00"
+    },
+    {
+      "articleId": "0ab95f08ae80238bd577eeade9de3e671226a781627b226e0759bfa2e806ca01",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Senator Susan Collins announced that the Trump administration has issued tariff exemptions for several categories of Canadian imports crucial to Maine industries, while simultaneously indicating plans to replace them with other product tariffs as part of ongoing bilateral trade negotiations.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States",
+        "Canada",
+        "Maine"
+      ],
+      "sectors": [
+        "Trade",
+        "Manufacturing"
+      ],
+      "investorImpact": "Investors with exposure to cross-border US-Canada trade and Maine-specific industries should monitor shifting tariff exemptions and replacements, as these policy adjustments create localized sector benefits alongside broader trade uncertainty.",
+      "reasoning": "The article is categorized as GEOPOLITICAL because it deals with international trade policy and tariffs between the US and Canada. Sentiment is MIXED due to relief from specific exemptions offset by the implementation of replacement tariffs. Importance is MEDIUM as it impacts regional and bilateral trade sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump dropping some Canada tariffs but 'replacing' them with other products",
+      "publishedAtSgt": "2026-10-24T05:26:59+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/trump-tariffs-canada-susan-collins.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-24T06:20:44+08:00"
+    },
+    {
+      "articleId": "311f80f730c8cbc630fe1c0fcd6eadef264347a8812c378d1c2c80df8f505c5f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "President Donald Trump signed an executive order targeting mortgage insurance and refinance costs to improve homeownership affordability amid rising interest rates and inflation. The private mortgage insurance industry acknowledged the focus on reducing costs for homeowners.",
+      "assetClasses": [
+        "Real Estate",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Real Estate"
+      ],
+      "investorImpact": "The executive order could impact mortgage insurers and refinancing activity by altering cost structures, which may affect revenues for financial institutions operating in the mortgage and housing sectors.",
+      "reasoning": "Classified as MARKET because the executive order directly impacts the mortgage insurance and housing finance sectors. It is relevant for fund monitoring due to potential regulatory impacts on financial sector equities and mortgage-backed securities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump's executive order targets mortgage insurance, refinance costs. What it means for borrowers",
+      "publishedAtSgt": "2026-10-24T03:53:13+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/trump-mortgage-executive-order-costs.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-24T06:20:44+08:00"
+    },
+    {
+      "articleId": "ed02e0632454d3bd59246b105ea4e23a5944f918ae664568589fbd51dbe2574e",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Meta shares fell 9% over four sessions, wiping $135 billion from its market cap due to concerns over AI buildout expenses, while analyst Mike Khouw views the drop as a buying opportunity and highlights Meta's new active digital assistant AI agent.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Communication Services"
+      ],
+      "investorImpact": "Investors face short-term volatility and valuation pressures from heavy AI infrastructure spending by major tech firms, balanced by potential long-term opportunities if AI products like Meta's digital assistant succeed.",
+      "reasoning": "Classified as MARKET because it discusses stock price movements, market capitalization changes, and analyst buying strategies regarding Meta amidst broader technology sector AI spending concerns.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Meta shares are down 9% this week. Here's why Mike Khouw is buying now",
+      "publishedAtSgt": "2026-10-24T03:25:18+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/meta-shares-rough-week-mike-khouw-is-buying.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-24T06:20:44+08:00"
+    },
+    {
+      "articleId": "c30ee4c3577e9318a8f295fb8f0cc1bbcc39c84de271a58c6f6e89962c0d212a",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Investment strategists note that despite negative returns and soaring yields, investors are beginning to find entry opportunities in the battered bond market, drawing parallels to historical contrarian buying opportunities.",
+      "assetClasses": [
+        "Fixed Income",
+        "Government Debt",
+        "Bonds"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors can view the current high-yield environment and battered bond prices as a potential secular contrarian entry point for fixed income allocations.",
+      "reasoning": "Classified as MARKET because it discusses emerging investment opportunities and capital flows into the bond market amid high yields. It is relevant for fund monitoring as it highlights shifting sentiment and capital deployment in fixed income assets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Investors are starting to find opportunities in the battered bond market",
+      "publishedAtSgt": "2026-10-24T01:40:31+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/investors-are-starting-to-find-opportunities-in-the-battered-bond-market.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-24T01:54:08+08:00"
+    },
+    {
+      "articleId": "31533249e4ed9f0e73bc49b26ab0f5f97867cb6168c643570976a06c6892a383",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Qatar Energy has agreed to buy 4 million metric tons of liquefied natural gas annually through 2054 from U.S. exporter Cheniere Energy, illustrating how conflict involving Iran has altered global energy trade flows.",
+      "assetClasses": [
+        "Commodities",
+        "Equities"
+      ],
+      "geographies": [
+        "Qatar",
+        "United States",
+        "Iran"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil, Gas & Consumable Fuels"
+      ],
+      "investorImpact": "The deal highlights structural shifts in global energy markets and supply arrangements resulting from geopolitical tensions, offering long-term supply visibility for U.S. LNG exporters like Cheniere Energy.",
+      "reasoning": "Classified as GEOPOLITICAL due to its focus on how Middle Eastern conflict has reshaped global energy markets and trade routes, with direct implications for the energy sector and commodity trading.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Qatar deal to buy U.S. natural gas shows how Iran war has redrawn global energy markets",
+      "publishedAtSgt": "2026-10-24T01:25:29+08:00",
+      "url": "https://www.cnbc.com/2026/10/23/cheniere-qatar-energy-lng-natural-gas-iran-war-strait-hormuz.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-10-24T01:54:08+08:00"
+    },
+    {
+      "articleId": "511e83921b9254aac3d07a3ed6caab10550f5fbc07df17f06591fc98360ea5f2",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Stocks fell on Friday, with the Dow leading declines as the broader market sell-off extended beyond just the artificial intelligence trade. Wall Street is growing increasingly concerned over how Meta will finance its aggressive AI ambitions—such as expanding its AI agent Muse—after free cash flow turned negative for the first time since the company's 2012 IPO.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Communication Services"
+      ],
+      "investorImpact": "Investors face growing risks and sentiment pressures regarding mega-cap tech valuations and funding sustainability for AI infrastructure, as negative free cash flows among market leaders could trigger broader equity corrections.",
+      "reasoning": "The article is classified as MARKET and HIGH importance due to its focus on broader market sell-offs driven by AI funding concerns and negative free cash flow for a major tech company. This is relevant to fund monitoring as it touches on macroeconomic sentiment shifts affecting key equity sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "What we want to see when this data center stock reports earnings next week",
+      "publishedAtSgt": "2026-10-24T00:15:59+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/10/23/what-we-want-to-see-when-this-data-center-stock-reports-earnings-next-week.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-10-24T01:54:09+08:00"
+    }
+  ]
+}
