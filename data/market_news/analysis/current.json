@@ -1,10 +1,39 @@
 {
-  "generatedAtSgt": "2026-11-07T04:15:13.826141+08:00",
+  "generatedAtSgt": "2026-11-07T10:17:45.081601+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 208,
+  "articleCount": 209,
   "analyses": [
+    {
+      "articleId": "88be2a7741ae2c0dcc8719ab1c70f23a43b5af6e551c01e7bfee0101126686f0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer highlights upcoming earnings from leading neoclouds and data center stocks as a key test for investor confidence following a turbulent election week that impacted AI infrastructure shares due to political shifts in Congress.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors monitoring AI infrastructure and data center stocks should prepare for potential volatility surrounding upcoming earnings reports and recent political shifts.",
+      "reasoning": "The article discusses upcoming market catalysts and earnings for data center and AI infrastructure stocks following a turbulent political week, making it relevant for market and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Cramer’s week ahead: AI data center stocks face another hurdle and so does the Fed",
+      "publishedAtSgt": "2026-11-07T07:13:10+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/cramer-coreweave-nebius-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-07T10:02:09+08:00"
+    },
     {
       "articleId": "67b31ec58dc11e48db271d18decd7fe0d7e08bc98a0799a13660c426b39a4ff0",
       "relevant": true,
