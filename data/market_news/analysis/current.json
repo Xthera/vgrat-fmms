@@ -1,10 +1,42 @@
 {
-  "generatedAtSgt": "2026-11-09T07:13:45.681700+08:00",
+  "generatedAtSgt": "2026-11-09T16:23:39.918012+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 255,
+  "articleCount": 256,
   "analyses": [
+    {
+      "articleId": "a84453b193e470f3fc44c29dbb4bfa2a39322694d1ce8f2e0928151ce117ccea",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "China's wholesale inflation hit its highest in over four years driven by strong external demand, while consumer inflation slowed to 0.7% in October and core inflation dropped to 0.8%, pointing to uneven economic expansion.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "China",
+        "Asia"
+      ],
+      "sectors": [
+        "Manufacturing",
+        "Consumer Goods"
+      ],
+      "investorImpact": "Investors should monitor the divergence between surging wholesale inflation and slowing consumer inflation in China, as it reflects strong external demand balanced by domestic consumption weakness, affecting manufacturing margins and broader Asian market sentiment.",
+      "reasoning": "The article provides crucial macroeconomic data regarding China's wholesale and consumer inflation trends, making it highly relevant for economic monitoring and global market strategy.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China wholesale inflation hits highest in more than four years as consumer measure slows",
+      "publishedAtSgt": "2026-11-09T10:50:22+08:00",
+      "url": "https://www.cnbc.com/2026/11/09/china-wholesale-inflation-rises-consumer.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-09T16:08:04+08:00"
+    },
     {
       "articleId": "deb4564b29b81711ddf72b1f2c1db714f3b6c1f2eb161954edba192190cc9294",
       "relevant": true,
