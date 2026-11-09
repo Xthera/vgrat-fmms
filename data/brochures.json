@@ -1,10 +1,10 @@
 {
- "generatedAtUtc": "2026-10-26T06:16:41+00:00",
+ "generatedAtUtc": "2026-11-09T08:01:39+00:00",
  "source": "https://www.prudential.com.sg/en/products/",
  "productCount": 41,
- "brochureCount": 81,
- "downloadedCount": 79,
- "downloadedBytes": 212984028,
+ "brochureCount": 80,
+ "downloadedCount": 78,
+ "downloadedBytes": 213376597,
  "products": [
   {
    "id": "care-secure",
@@ -1057,7 +1057,7 @@
    ]
   },
   {
-   "id": "pruassure-income-promo",
+   "id": "pruassure-income",
    "name": "PRUAssure Income (USD)",
    "group": "Wealth",
    "groups": [
@@ -1081,23 +1081,23 @@
     }
    ],
    "description": "Enjoy guaranteed income of 5.0% p.a. for 9 years, with your capital returned at maturity.",
-   "pageUrl": "https://www.prudential.com.sg/en/products/wealth/savings/pruassure-income-promo/",
+   "pageUrl": "https://www.prudential.com.sg/en/products/wealth/savings/pruassure-income/",
    "documents": [
     {
      "kind": "brochure",
      "label": "Brochure",
      "lang": "EN",
-     "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/project/prudential/pdf/ebrochures/pruassure-income-promo/pruassure-income-usd-brochure-en.pdf",
-     "file": "Brochure/pruassure-income-promo-EN.pdf",
-     "bytes": 2008720
+     "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/project/prudential/pdf/ebrochures/pruassure-income/pruassure-income-unbundled-usd-brochure-en.pdf",
+     "file": "Brochure/pruassure-income-EN.pdf",
+     "bytes": 3802657
     },
     {
      "kind": "brochure",
      "label": "Brochure",
      "lang": "CN",
-     "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/project/prudential/pdf/ebrochures/pruassure-income-promo/pruassure-income-usd-brochure-ch.pdf",
-     "file": "Brochure/pruassure-income-promo-CN.pdf",
-     "bytes": 2291452
+     "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/project/prudential/pdf/ebrochures/pruassure-income/pruassure-income-unbundled-usd-brochure-ch.pdf",
+     "file": "Brochure/pruassure-income-CN.pdf",
+     "bytes": 1830481
     }
    ]
   },
@@ -1476,14 +1476,6 @@
    "description": "Say Yes to an insurance savings plan with yearly cash benefit, that gives you the flexibility and structure to meet today’s needs, with tomorrow’s dreams in mind.",
    "pageUrl": "https://www.prudential.com.sg/en/products/wealth/savings/pruactive-cash/",
    "documents": [
-    {
-     "kind": "brochure",
-     "label": "Brochure",
-     "lang": "EN",
-     "url": "https://www.prudential.com.sg/content/dam/prudential-aem-lbu/pacs/en/project/prudential/pdf/ebrochures/pruactive-cash/PRUActive-Cash-Brochure_AD.pdf",
-     "file": "Brochure/pruactive-cash-EN.pdf",
-     "bytes": 940397
-    },
     {
      "kind": "brochure",
      "label": "Brochure",
