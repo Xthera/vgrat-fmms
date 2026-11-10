@@ -1,10 +1,194 @@
 {
-  "generatedAtSgt": "2026-11-10T10:17:41.033370+08:00",
+  "generatedAtSgt": "2026-11-10T18:38:24.934884+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 242,
+  "articleCount": 248,
   "analyses": [
+    {
+      "articleId": "a9fd34dced3100e9b74ede94d7574f1d666eb683b5860dcc2761b72dd038fe28",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Asian technology stocks surged following a Wall Street rebound, driven by declining oil prices and renewed buying in semiconductor shares after a recent sell-off. SoftBank Group shares rose 13.4% and Advantest gained 2.36%.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Asia",
+        "Japan",
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "The rebound in Asian tech stocks and major players like SoftBank signals recovery sentiment after a bruising sell-off, offering positive momentum for tech-heavy equity portfolios.",
+      "reasoning": "The article is classified under MARKET because it details stock market movements and regional responses to Wall Street trends. It is relevant for fund monitoring as it tracks broad sentiment shifts in the technology and equity sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "SoftBank Group shares surge 13% as Asian tech stocks track Wall Street rebound",
+      "publishedAtSgt": "2026-11-10T11:58:46+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/ai-softbank-sk-hynix-samsung-wall-street-tech-stocks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-10T12:12:09+08:00"
+    },
+    {
+      "articleId": "f4f3331be0bbee1c42d7f0fa91919c6231d86e9a8c255966b5f7cf422ec08d3c",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "China's exports and imports surged past expectations in October, with goods exports jumping 35.2% year-on-year, while the trade surplus narrowed sharply despite crossing $1 trillion for the year so far.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Foreign Exchange"
+      ],
+      "geographies": [
+        "China"
+      ],
+      "sectors": [
+        "International Trade",
+        "Manufacturing"
+      ],
+      "investorImpact": "Stronger-than-expected trade data from China signals robust external and internal demand, which can positively impact global equities, trade-exposed sectors, and commodity prices.",
+      "reasoning": "The article details macroeconomic trade data that beats market expectations, providing significant insights into global economic health and Chinese manufacturing activity, thus making it highly relevant for economic monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China exports, imports soar past expectations in October — surplus narrows sharply",
+      "publishedAtSgt": "2026-11-10T11:56:15+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/china-trade-october-exports-imports-surplus-.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 102,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-10T12:12:09+08:00"
+    },
+    {
+      "articleId": "3f3aad0bac95b9422d010701accbf6ad7adc49a102cf3c6503448a6e974a9063",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "The U.S. Senate has advanced a bipartisan bill backed by Donald Trump that aims to speed up critical infrastructure projects. The legislation would require artificial intelligence companies and data center developers to cover their own power and grid enhancement costs, while Democrats push to expedite clean energy projects.",
+      "assetClasses": [
+        "Equities",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Utilities",
+        "Energy"
+      ],
+      "investorImpact": "Investors in AI and data center development may face higher operational and capital costs if forced to fund their own power and grid enhancements. Conversely, utilities and clean energy providers could benefit from increased infrastructure buildout.",
+      "reasoning": "The article is classified under TECHNOLOGY due to its focus on data centers and artificial intelligence power demands, with broader economic and legislative impacts on energy and infrastructure sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Senate advances Trump-backed bipartisan bill to speed critical infrastructure projects",
+      "publishedAtSgt": "2026-11-10T07:54:06+08:00",
+      "url": "https://www.cnbc.com/2026/11/09/senate-infrastructure-bill-data-centers.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 52,
+      "collectorRelevanceReason": "supporting_technology_description",
+      "collectedAtSgt": "2026-11-10T12:12:10+08:00"
+    },
+    {
+      "articleId": "6f139af0648a585951f4d130b0a024411a63ce0b8184014c818d0574504a7846",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Jim Cramer stated that Anthropic's upcoming initial public offering will act as a major catalyst for the artificial intelligence sector, potentially determining whether AI-related stocks can recover following a recent sell-off.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors monitoring the AI trade should watch the Anthropic IPO closely as it serves as a litmus test for market valuation and sentiment toward artificial intelligence companies following recent sector pullbacks.",
+      "reasoning": "The article is classified as MARKET because it discusses how a major upcoming IPO will influence investor confidence and stock performance across the broader artificial intelligence sector.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer says Anthropic's IPO could make or break the AI trade. Here's why",
+      "publishedAtSgt": "2026-11-10T07:30:15+08:00",
+      "url": "https://www.cnbc.com/2026/11/09/anthropic-ipo-ai-trade-jim-cramer.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-10T12:12:10+08:00"
+    },
+    {
+      "articleId": "3c6914c32a90b9634df17f5fd90cd027fd5aa1b74c2edf61828e6046f62c7864",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Lucid reported missing Wall Street earnings expectations and announced a $1.75 billion increase in a delayed draw term loan from Saudi Arabia's Public Investment Fund, causing its stock to fall about 5% in aftermarket trading.",
+      "assetClasses": [
+        "Equities",
+        "Debt"
+      ],
+      "geographies": [
+        "United States",
+        "Saudi Arabia"
+      ],
+      "sectors": [
+        "Automotive",
+        "Electric Vehicles"
+      ],
+      "investorImpact": "Investors face negative sentiment and dilution or ongoing cash burn risks given Lucid's earnings miss and heavy reliance on further debt financing from its majority shareholder.",
+      "reasoning": "The article is classified as MARKET due to corporate earnings and stock price movement, with a NEGATIVE sentiment driven by the earnings miss and reliance on a major loan expansion.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Lucid misses Wall Street’s earnings expectations, expands loan from Saudi Arabia fund",
+      "publishedAtSgt": "2026-11-10T07:05:53+08:00",
+      "url": "https://www.cnbc.com/2026/11/09/lucid-group-lcid-earnings-q3-2026.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-10T12:12:10+08:00"
+    },
+    {
+      "articleId": "7d21b5f214dbc0d8f788bef326fbb8edc6e3dcb4ad0d58b25b050b29df0aac91",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Ahead of the October CPI inflation report, markets price in an 80% probability of a Fed rate hike in December following a previous hold, while Bank of America notes fading tariff impacts offset by potential goods price increases driven by AI demand.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Investors must monitor the upcoming inflation data and shifting Fed rate expectations, as higher interest rates and AI-driven goods price pressures could impact equity valuations and fixed income yields.",
+      "reasoning": "Classified as ECONOMIC because it focuses on inflation data and Federal Reserve rate expectations. High importance due to its direct impact on broader monetary policy and market pricing, making it critical for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "A key report for where inflation stood in October comes out Tuesday. Here's what to expect",
+      "publishedAtSgt": "2026-11-10T05:03:55+08:00",
+      "url": "https://www.cnbc.com/2026/11/09/october-cpi-report-2026-inflation.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-10T12:12:09+08:00"
+    },
     {
       "articleId": "ccf10804cf50343d507ab85faabe6cfa1be5e3eee908318d93127b897f289bba",
       "relevant": true,
