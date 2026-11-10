@@ -1,10 +1,493 @@
 {
-  "generatedAtSgt": "2026-11-10T18:38:24.934884+08:00",
+  "generatedAtSgt": "2026-11-11T04:51:04.303317+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 248,
+  "articleCount": 242,
   "analyses": [
+    {
+      "articleId": "d771376ea7c7feed6dad54ad1a9dea2e47fbddd2579079a3778696eb7b345047",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "An analysis discussing market perspectives on GE Vernova sellers and rising Federal Reserve rate hike odds, alongside mentions of the broader AI trade sentiment.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Industrials",
+        "Technology"
+      ],
+      "investorImpact": "Investors should monitor shifting expectations regarding Federal Reserve rate hikes and sentiment fluctuations within industrial and tech-related sectors such as the AI trade.",
+      "reasoning": "The article is classified under MARKET due to its focus on stock valuation discussions for GE Vernova and broader macroeconomic rate hike expectations, making it relevant for portfolio monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "GE Vernova sellers have it all wrong — plus, why Fed rate hike odds are soaring",
+      "publishedAtSgt": "2026-11-11T04:02:53+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/10/ge-vernova-sellers-have-it-all-wrong-plus-why-fed-rate-hike-odds-are-soaring.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-11T04:30:09+08:00"
+    },
+    {
+      "articleId": "cf376d94cf5c3e922ba628798c7c23a74b77969dc662c551809361a2bb66a56b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Traders are utilizing pre-IPO perpetual contracts on decentralized crypto exchanges to speculate on Anthropic's upcoming initial public offering, with prices experiencing volatility alongside recent broader tech stock selloffs.",
+      "assetClasses": [
+        "Cryptocurrency",
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Financial Services"
+      ],
+      "investorImpact": "Investors can gauge market sentiment and speculative demand for upcoming high-profile tech IPOs through decentralized pre-IPO perpetual markets, though these instruments carry high volatility.",
+      "reasoning": "Classified as MARKET due to its focus on trading activity, derivatives, and trader sentiment surrounding a historic IPO. Sentiment is MIXED as initial high valuations faced pressure from recent tech sector selloffs. Significance is MEDIUM as it highlights emerging pre-IPO derivative products on decentralized exchanges.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Traders bet on a pop for Anthropic's historic IPO",
+      "publishedAtSgt": "2026-11-11T03:51:18+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/traders-bet-on-a-pop-for-anthropics-historic-ipo.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-11T04:30:09+08:00"
+    },
+    {
+      "articleId": "c1c04e32b938d7986ba32ba76604a2f44bdbd1ee64bf1e7c620380bd6ca05fdc",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Ten days after Alphabet shares suffered their worst one-day drop in history, losing nearly $500 billion in market value, the stock has barely retraced with a 1.5% rally. Alphabet's earnings initiated cracks in the AI trade and preceded subsequent market volatility.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Communication Services"
+      ],
+      "investorImpact": "Investors monitoring mega-cap technology stocks and AI sector exposure face significant volatility and potential downside risks following Alphabet's historic sell-off and weak recovery.",
+      "reasoning": "The article discusses major market movements and valuation losses for a key mega-cap technology stock, directly impacting market sentiment and sector performance, making it highly relevant for market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Alphabet shares appear to have bottomed. How to play it for a quick rebound",
+      "publishedAtSgt": "2026-11-11T02:15:24+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/alphabet-shares-appear-to-have-bottomed-how-to-play-it-for-a-quick-rebound.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-11T04:30:09+08:00"
+    },
+    {
+      "articleId": "5cd8e79407335afc52a215d7d119fe1171c0c388c290418f7ab25f2de5971b1e",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Consumer prices rose 0.4% in October, exceeding expectations and complicating the Federal Reserve's efforts to lower inflation, following a decision to keep benchmark rates between 3.75% and 4%.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Higher than expected inflation complicates the Federal Reserve's monetary policy outlook, potentially leading to higher-for-longer interest rates which can pressure equity valuations and bond yields.",
+      "reasoning": "The article reports critical macroeconomic inflation data that directly influences central bank policy, making it essential for economic monitoring and investment strategy.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Consumer prices rose 0.4% in October, more than expected, complicating Fed's inflation fight",
+      "publishedAtSgt": "2026-11-11T00:47:05+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/cpi-inflation-report-october-2026.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-11T04:30:11+08:00"
+    },
+    {
+      "articleId": "0a24ddbefb3b96a944a36bb9766bb53ca27c7631eec69243b10dbc3aececc153",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The October 2026 inflation breakdown reveals a hot inflation report driven partly by the war in Iran, with prices failing to return to the Fed's 2% target and prompting previous rate hikes.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States",
+        "Iran"
+      ],
+      "sectors": [
+        "Broad Economy"
+      ],
+      "investorImpact": "Persistent high inflation and ongoing geopolitical conflict create uncertainty for interest rate paths, negatively impacting valuations across equities and fixed income.",
+      "reasoning": "The article directly discusses macroeconomic inflation data and central bank policy actions driven by geopolitical events, making it highly relevant for economic monitoring and investment strategy.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Here's the inflation breakdown for October 2026 — in one chart",
+      "publishedAtSgt": "2026-11-11T00:36:40+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/october-2026-cpi-inflation-breakdown.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-11T04:30:09+08:00"
+    },
+    {
+      "articleId": "da7f7e1212d76823288ce36a5612515eea97ee302aca7bdd04bcf3b1cf4b48f8",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Anthropic's upcoming trillion-dollar IPO highlights how retail investors often miss early private equity opportunities in major AI companies, though alternative private wealth structures are emerging to offer fractional or managed access.",
+      "assetClasses": [
+        "Equities",
+        "Private Equity"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence",
+        "Financial Services"
+      ],
+      "investorImpact": "Highlights structural barriers and evolving alternative fund vehicles for retail and smaller institutional investors attempting to access high-growth private AI companies before public listing.",
+      "reasoning": "Classified as MARKET because it discusses an impending trillion-dollar IPO and access structures for investors. Significance is medium as it pertains to market access and valuation trends in the AI sector.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Anthropic's trillion-dollar IPO is coming, but retail investors could have owned AI stock much earlier",
+      "publishedAtSgt": "2026-11-11T00:30:23+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/anthropic-ipo-shares-invest.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-11T04:30:10+08:00"
+    },
+    {
+      "articleId": "8c9a4eb0c6cd9ee71e421b2dea0c9c8a122c16f80d63af91252581667f509ee0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Bridgepoint Group sees investment opportunities in re-rated real estate sectors despite higher interest rates, highlighting its acquisition of Kayne Anderson Real Estate as part of a strategy focusing on high-growth, rate-resilient property niches.",
+      "assetClasses": [
+        "Real Estate",
+        "Private Equity"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Real Estate"
+      ],
+      "investorImpact": "Investors can note that private equity firms are finding value in specific high-margin real estate subsectors despite broader interest rate headwinds, indicating potential opportunities in targeted property acquisitions.",
+      "reasoning": "Classified as MARKET because it discusses private equity strategies and investment opportunities in the real estate sector amidst changing interest rate environments. It is relevant for fund monitoring as it highlights institutional perspectives on property valuations.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bridgepoint sees opportunity in 're-rated' real estate",
+      "publishedAtSgt": "2026-11-11T00:13:27+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/bridgepoint-sees-opportunity-in-re-rated-real-estate.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 58,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-11-11T04:30:11+08:00"
+    },
+    {
+      "articleId": "d60343bf22589bad400132c927afe0e1ba04a969f89f06acc0cd1a8c95189234",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Rivian CEO designates 2027 as an inflection year driven by the new R2 SUV and autonomy developments, with analysts anticipating positive catalysts from upcoming investor events regarding software revenue and vehicle demand.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Automotive",
+        "Technology"
+      ],
+      "investorImpact": "Provides investors with forward-looking visibility into Rivian's potential catalysts, software revenue streams, and autonomous vehicle demand expected in 2027.",
+      "reasoning": "Classified as MARKET because it details corporate strategy, analyst perspectives, and future growth catalysts for a publicly traded EV manufacturer.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Rivian CEO says new R2 SUV, autonomy make 2027 an ‘inflection year’ as EV maker marks five years since IPO",
+      "publishedAtSgt": "2026-11-10T23:11:48+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/rivian-r2-autonomy-2027-rj-scaringe.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-11T04:30:17+08:00"
+    },
+    {
+      "articleId": "f8856430ef548fd28c1a26e12db65d44b2646e2f98cbcfe39212210289a35213",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "CoreWeave earnings and outlook are drawing intense scrutiny regarding its debt-fueled artificial intelligence infrastructure build-out, with both company stock and bonds facing pressure from investor concerns over high capital expenditures and heavy borrowing.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Cloud Computing",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors in AI infrastructure and high-yield debt should monitor financing strategies and capital expenditure sustainability closely, as debt-heavy expansion models face growing market skepticism.",
+      "reasoning": "The article highlights critical market risks surrounding debt-fueled AI capital expenditure, making it highly relevant for assessing credit risk and market sentiment in the tech infrastructure sector.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "CoreWeave earnings put debt-fueled AI build-out under scrutiny",
+      "publishedAtSgt": "2026-11-10T23:01:21+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/coreweave-earnings-preview-debt-capex.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-11T04:30:17+08:00"
+    },
+    {
+      "articleId": "a94abcff5380feb557a4887aeea4deebaa4239618002b777df8e815194660af4",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Chip stocks rallied on Monday following a period of steep declines despite a pileup of adverse headlines, including voter opposition to data centers, a lower target IPO valuation for Anthropic, and a scandal involving Nvidia CEO Jensen Huang.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "The rally in chip stocks despite severe negative news suggests that the market may have bottomed out on bad news for the AI sector, signaling potential recovery for tech-heavy portfolios.",
+      "reasoning": "Classified as MARKET due to the discussion of chip stocks rallying amid broader sector headlines. Sentiment is POSITIVE because stocks reversed higher after weeks of punishment. Importance is HIGH given Nvidia and the AI sector's major influence on overall market direction.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "'Markets bottom on bad news' maxim rings true as chip stocks rally amid Nvidia scandal",
+      "publishedAtSgt": "2026-11-10T21:19:13+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/chip-stocks-rally-nvidia-scandal.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-11T04:30:17+08:00"
+    },
+    {
+      "articleId": "413d027ab406b579555544076d8fc752e1d145dfde66d59290138d9baba82419",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Polymarket has announced that its annualized revenue has topped $1.8 billion, driven by growth in the U.S. and a $1 billion funding round valuing the company at $21 billion.",
+      "assetClasses": [
+        "Cryptocurrency",
+        "Private Equity"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financial Technology",
+        "Crypto"
+      ],
+      "investorImpact": "The substantial valuation and revenue figures indicate robust growth and investor appetite within the prediction market and crypto sector.",
+      "reasoning": "Classified as MARKET due to direct reporting of revenue milestones, funding rounds, and company valuation, indicating significant activity in the fintech sector.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Polymarket says annualized revenue has topped $1.8 billion",
+      "publishedAtSgt": "2026-11-10T21:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/polymarket-annualized-revenue-us-growth.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-11T04:30:18+08:00"
+    },
+    {
+      "articleId": "f8fc943198b40a3a258239dc2785292e3c7cf6c31957df7a38588fbd4a70741e",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Treasury yields edged higher as traders awaited upcoming CPI inflation data and weighed comments from Fed Governor Christopher Waller emphasizing the need for an expected rate hike next month.",
+      "assetClasses": [
+        "Bonds",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Government"
+      ],
+      "investorImpact": "Rising yields increase borrowing costs and pressure fixed income portfolios, making it crucial for investors to monitor incoming inflation data and Federal Reserve policy expectations.",
+      "reasoning": "Classified as ECONOMIC because it discusses Treasury yields, inflation data, and Federal Reserve policy commentary, which directly impact broader financial markets and monetary policy tracking.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Treasury yields edge higher as traders await CPI inflation data, weigh Fed's Waller comments",
+      "publishedAtSgt": "2026-11-10T20:46:47+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/us-bonds-treasurys-yields.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 102,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-10T20:47:32+08:00"
+    },
+    {
+      "articleId": "caa42a6337f8b234841e97ac124798cf2be375818fdf20664a0ccf9f9caa4725",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Anthropic announced an upcoming IPO offering 825 million shares at a price range of $70 to $78 per share on Nasdaq. The AI lab also secured agreements with major tech and semiconductor companies including AMD, Broadcom, Google, Micron, Microsoft, Nvidia, and TSMC to purchase $26 billion of Class N common stock.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence",
+        "Semiconductors"
+      ],
+      "investorImpact": "The IPO represents a major liquidity and valuation benchmark for the artificial intelligence sector, while the massive strategic backing from key hardware providers highlights deep inter-industry ties that impact sentiment across tech equities.",
+      "reasoning": "The article details a major public offering and multi-billion-dollar strategic investments involving top-tier technology and semiconductor companies, making it highly significant for market and tech sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Anthropic sets price range of $70 to $78 in upcoming IPO as AI lab marches toward Nasdaq",
+      "publishedAtSgt": "2026-11-10T20:31:39+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/anthropic-sets-price-range-of-70-to-78-in-upcoming-ipo.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-10T20:47:32+08:00"
+    },
+    {
+      "articleId": "16e07b9586557d3d7866a6b922298f04dedfe1f59c7a8536457e9943436b12f1",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Nvidia shares edged higher in premarket trading after falling over 4% following CEO Jensen Huang's disclosure of an affair with an alleged Chinese spy.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors are weighing potential corporate governance and key-person risk fallout following the CEO's personal scandal, which caused a recent drop in share price before stabilizing.",
+      "reasoning": "The article details significant market movement and key-person risk for a major market-cap technology company, making it crucial for equity and market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Nvidia stock edges higher as investors weigh potential fallout of CEO's affair with alleged spy",
+      "publishedAtSgt": "2026-11-10T19:28:37+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/nvidia-nvda-jensen-huang-affair-chinese-spy.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-10T20:47:32+08:00"
+    },
+    {
+      "articleId": "e7d79b74896dfc0a494bba3d911a2a6324b90a0ec08c0aefb3587e1502504846",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "France has blamed Iran for October cyberattacks targeting supermarket refrigerators and is weighing potential sanctions, prompting the French government to summon Iran's ambassador.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "France",
+        "Iran",
+        "Europe"
+      ],
+      "sectors": [
+        "Consumer Staples",
+        "Technology",
+        "Retail"
+      ],
+      "investorImpact": "Escalating geopolitical tensions and potential sanctions between European nations and Iran could introduce localized operational risks for the retail sector and broader supply chain concerns, though systemic market impact remains limited at this stage.",
+      "reasoning": "The article is classified as GEOPOLITICAL due to state-sponsored cyber warfare attribution and potential diplomatic/sanctions retaliation. It is relevant for fund monitoring as it touches on European security and critical infrastructure risks affecting the retail and food supply sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "France blames Iran for supermarket refrigerator cyberattacks, weighs sanctions",
+      "publishedAtSgt": "2026-11-10T17:34:24+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/iran-fridge-cyberattacks-france.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-10T20:47:32+08:00"
+    },
+    {
+      "articleId": "5c4a294c1876f27f4910d707c930585e08d970d2db529d91d36dcba8777c1745",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "SoftBank swings to a $7 billion loss driven by U.S. data center hits and a decline in Intel shares, highlighting risks in tech and AI infrastructure investments amid soaring power grid demands and multi-billion dollar projects like the PORTS-Pike Technology Campus in Ohio.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "Japan"
+      ],
+      "sectors": [
+        "Technology",
+        "Telecommunications",
+        "Energy"
+      ],
+      "investorImpact": "Investors in technology, AI infrastructure, and energy-constrained data centers face heightened volatility and valuation risks as major conglomerates like SoftBank absorb significant losses from tech holdings and infrastructure challenges.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on AI data center buildouts, tech selloffs, and SoftBank's earnings hit from tech sector declines. It is highly relevant for fund monitoring given the scale of losses and infrastructure constraints.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "SoftBank swings to $7 billion loss after U.S. data center hit and Intel share decline",
+      "publishedAtSgt": "2026-11-10T17:01:37+08:00",
+      "url": "https://www.cnbc.com/2026/11/10/softbank-2q-earnings-tech-selloff.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-10T20:47:32+08:00"
+    },
     {
       "articleId": "a9fd34dced3100e9b74ede94d7574f1d666eb683b5860dcc2761b72dd038fe28",
       "relevant": true,
@@ -188,6 +671,36 @@
       "collectorRelevanceScore": 101,
       "collectorRelevanceReason": "strong_economic_title",
       "collectedAtSgt": "2026-11-10T12:12:09+08:00"
+    },
+    {
+      "articleId": "5f1af2f883662e956da85b8bcc6df79043a6e95425104b8a9468b05a38d122aa",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Stocks are extending their recovery following a recent sell-off, with strong performances in portfolio holdings such as Qnity Electronics, Micron, and Starbucks, alongside positive momentum in healthcare drug stocks driven by new trial data.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Consumer Discretionary",
+        "Healthcare"
+      ],
+      "investorImpact": "The broad market recovery and positive moves in key technology, consumer, and healthcare holdings indicate improving investor sentiment and portfolio performance after a recent sell-off.",
+      "reasoning": "Classified as MARKET because it details broader stock market recovery trends and specific portfolio stock movements based on trial data and manufacturing demand, making it relevant for portfolio monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Stocks extend recovery from Thursday's sell-off. Plus, new trial data from Lilly, JJ",
+      "publishedAtSgt": "2026-11-10T04:04:30+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/09/stocks-extend-recovery-from-thursdays-sell-off-plus-new-trial-data-from-lilly-jj-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-10T20:47:32+08:00"
     },
     {
       "articleId": "ccf10804cf50343d507ab85faabe6cfa1be5e3eee908318d93127b897f289bba",
@@ -6749,696 +7262,6 @@
       "collectorRelevanceScore": 91,
       "collectorRelevanceReason": "strong_market_title",
       "collectedAtSgt": "2026-10-29T02:57:53+08:00"
-    },
-    {
-      "articleId": "6c3439bf72125d08ce64d9088f72bcd55b50d04c5102340a56b97d5142637a52",
-      "relevant": true,
-      "category": "ECONOMIC",
-      "sentiment": "MIXED",
-      "importance": "HIGH",
-      "summary": "The U.K. finance minister delivered a high-stakes fiscal budget featuring energy bill reductions, bank taxation, defense spending increases, and substantial funding for artificial intelligence security and sovereignty.",
-      "assetClasses": [
-        "Equities",
-        "Government Bonds",
-        "Currencies"
-      ],
-      "geographies": [
-        "United Kingdom"
-      ],
-      "sectors": [
-        "Banking",
-        "Defense",
-        "Technology",
-        "Energy"
-      ],
-      "investorImpact": "The budget introduces divergent sector impacts: increased taxes on banks could pressure financial sector equities, while heightened defense spending and artificial intelligence funding provide positive catalysts for technology and defense contractors. Broader fiscal measures affecting energy bills and cost of living will influence U.K. consumer discretionary stocks and gilt markets.",
-      "reasoning": "Classified as ECONOMIC due to its focus on national fiscal policy, taxation, and government spending allocations. It is highly important and fund monitoring relevant because sweeping fiscal changes in the U.K. directly affect multiple asset classes, banking sector profitability, and government bond issuance.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "The UK cuts energy bills, taxes banks and boosts defense in high-stakes budget",
-      "publishedAtSgt": "2026-10-28T23:39:14+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/uk-autumn-budget-cost-living-defense-ai.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-29T02:58:00+08:00"
-    },
-    {
-      "articleId": "d1a1b9d596cf74ccb77b158d1657018b1d998752128c0af2a395482128a37484",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "HIGH",
-      "summary": "Nelson Peltz's Trian Fund Management, alongside other investment firms and franchisees, has offered $1.4 billion to acquire Wendy's, causing Wendy's shares to surge about 15% in morning trading.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Consumer Discretionary",
-        "Restaurants"
-      ],
-      "investorImpact": "Investors holding Wendy's shares saw immediate positive gains with a 15% price spike. M&A activity in the consumer sector highlights potential value unlocking for target companies.",
-      "reasoning": "The article details a major corporate buyout offer and a significant immediate stock price reaction, making it highly relevant for market and equity monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Wendy's shares jump 15% as Nelson Peltz's Trian offers $1.4 billion to buy burger chain",
-      "publishedAtSgt": "2026-10-28T22:35:51+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/nelson-peltz-trian-wendys-1point4-billion.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-29T02:58:00+08:00"
-    },
-    {
-      "articleId": "b14846b3f8fbbc6f87436becbf418283e60497e1446165c84699d5accd1f7c46",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "MEDIUM",
-      "summary": "The New Zealand dollar experienced a sharp decline after the Reserve Bank of New Zealand defied market expectations by not hiking interest rates at its final meeting of the year, leading to a sudden drop in rate hike bets as the central bank aims to keep inflation stable over the medium term.",
-      "assetClasses": [
-        "Currencies",
-        "Fixed Income"
-      ],
-      "geographies": [
-        "New Zealand"
-      ],
-      "sectors": [
-        "Financials",
-        "Banking"
-      ],
-      "investorImpact": "Investors holding the New Zealand dollar face immediate depreciation pressure, while fixed income and interest rate derivative positioning tied to RBNZ rate hikes needs immediate repricing.",
-      "reasoning": "The article details a major monetary policy surprise by a G10 central bank that caused an immediate, sharp reaction in the currency markets, making it highly relevant for market monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "New Zealand dollar tanks after central bank defies markets' near-certainty it would hike rates",
-      "publishedAtSgt": "2026-10-28T20:52:41+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/new-zealand-dollar-rbnz-rates.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-29T02:58:01+08:00"
-    },
-    {
-      "articleId": "eddd47c0af7c92d104809ab5b352696c04ca04276d05bdcd5a801ed75699c0db",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "MEDIUM",
-      "summary": "Traders are placing bearish bets against a major restaurant giant ahead of its upcoming earnings report, as indicated by option activities and declining confidence shown by strike roll-downs.",
-      "assetClasses": [
-        "Equities",
-        "Options"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Consumer Discretionary",
-        "Restaurants"
-      ],
-      "investorImpact": "Investors monitoring consumer discretionary and restaurant stocks should note the bearish sentiment and options activity heading into earnings, which could signal heightened near-term volatility.",
-      "reasoning": "The article details market positioning and options trading strategies ahead of a major corporate earnings report, categorized under MARKET sentiment due to the bearish positioning.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Traders are betting big against this restaurant giant into earnings",
-      "publishedAtSgt": "2026-10-28T20:04:47+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/traders-are-betting-big-against-chipotle-into-earnings.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-29T02:58:00+08:00"
-    },
-    {
-      "articleId": "b22003c51a69e3d674d14d0f0d5c681f5f6dad1e1c6937e3b46a4eea4cf7f4e4",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "HIGH",
-      "summary": "Investors are preparing for a hawkish monetary policy hold as AI-driven demand and energy costs pressure inflation. Meanwhile, chip stocks rallied following a major $63 billion financing announcement for Broadcom chips to be leased to Anthropic, benefiting companies like Micron and driving Wall Street gains.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors"
-      ],
-      "investorImpact": "The massive $63 billion financing deal for chip purchases highlights continued robust demand in the AI and semiconductor sectors, offering potential tailwinds for chipmakers despite broader macroeconomic headwinds like inflation and potential hawkish interest rate policies.",
-      "reasoning": "The article is classified under MARKET as it covers major stock market movements driven by sector dynamics in technology and semiconductors, alongside macroeconomic expectations of a hawkish hold.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Investors brace for a hawkish hold and tech on tap",
-      "publishedAtSgt": "2026-10-28T18:54:29+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/investors-brace-for-a-hawkish-hold-and-tech-on-tap.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-29T02:58:01+08:00"
-    },
-    {
-      "articleId": "77c70fbb30118064130682915faf9d0126fcf8f01866971caea963494ec92d3f",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Oil prices climbed following Houthi attacks on Saudi Arabia's largest refinery, raising supply worries amid a widening Middle East conflict.",
-      "assetClasses": [
-        "Commodities",
-        "Energy"
-      ],
-      "geographies": [
-        "Saudi Arabia",
-        "Middle East",
-        "Tehran"
-      ],
-      "sectors": [
-        "Energy",
-        "Oil and Gas"
-      ],
-      "investorImpact": "Rising oil prices due to supply disruption concerns can increase input costs for various industries and trigger inflationary pressures, while directly benefiting energy and oil sector equities.",
-      "reasoning": "The article details a significant geopolitical and supply shock affecting global energy markets, making it highly relevant for market monitoring and asset allocation strategies.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Oil prices rise as Houthi attacks on Saudi Arabian refinery raise supply worries",
-      "publishedAtSgt": "2026-10-28T17:54:59+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/oil-price-today-wti-brent-hormuz.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T18:40:59+08:00"
-    },
-    {
-      "articleId": "fc77bdd394f6dd92b488911c20f4e0e82ba233ee53f87ca93d05ecb375f581f0",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "HIGH",
-      "summary": "UBS reported a 27% jump in third-quarter pretax profits to $3.59 billion, driven by surging wealth inflows. The bank's CET1 capital ratio rose to 14.7%, and the integration of Credit Suisse is on track to finish by year-end with $13.7 billion in cumulative cost savings.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income"
-      ],
-      "geographies": [
-        "Switzerland",
-        "Global"
-      ],
-      "sectors": [
-        "Financials",
-        "Banking"
-      ],
-      "investorImpact": "The strong earnings and successful Credit Suisse integration highlight robust operational health for UBS, providing positive sentiment for European banking equities and wealth management sectors.",
-      "reasoning": "The article details major financial results and integration milestones for a globally systemically important bank, making it highly relevant for market and fund monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "UBS pretax profits jump 27% in third quarter to $3.59 billion as wealth inflows surge",
-      "publishedAtSgt": "2026-10-28T17:42:03+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/ubs-earnings-third-quarter.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T18:40:58+08:00"
-    },
-    {
-      "articleId": "585422d575ac4c191d2b36bd4098597f546ac93068d7344e4745e66e6e884000",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEUTRAL",
-      "importance": "HIGH",
-      "summary": "Bond yields ticked higher early Wednesday, with the 10-year Treasury note yield surpassing 5.01%, as investors awaited the Federal Reserve's upcoming monetary policy decision.",
-      "assetClasses": [
-        "Fixed Income",
-        "Bonds"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials"
-      ],
-      "investorImpact": "Rising Treasury yields impact borrowing costs across mortgages, auto loans, and credit card debt, and signal market caution ahead of the Federal Reserve's rate decision.",
-      "reasoning": "Classified as MARKET because it directly covers Treasury yield movements ahead of a major Federal Reserve rate decision. It is of high importance for fixed income and overall market conditions.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Treasury yields tick higher ahead of Federal Reserve interest rate decision",
-      "publishedAtSgt": "2026-10-28T17:22:26+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/us-treasurys-bonds-yields-federal-reserve.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 93,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T18:40:58+08:00"
-    },
-    {
-      "articleId": "a0f650c8d8683311a06d3127bcc88b5ce8508f2496ca348a828f40b6ee6b5f64",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Israeli bonds and the shekel fell, the Tel Aviv 35 stock index dropped 2.7%, and government bond yields rose across maturities following an election that left Benjamin Netanyahu and rivals short of majorities.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income",
-        "Currencies"
-      ],
-      "geographies": [
-        "Israel"
-      ],
-      "sectors": [
-        "Financials",
-        "Government"
-      ],
-      "investorImpact": "Investors face heightened political uncertainty in Israel, leading to immediate downward pressure on domestic equities and local currency, alongside rising sovereign bond yields.",
-      "reasoning": "The article reports direct market reactions including stock index drops, currency depreciation, and yield increases stemming from an inconclusive election result, making it highly relevant for market and fund monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Israeli bonds, shekel fall as election leaves Netanyahu and others far short of majorities",
-      "publishedAtSgt": "2026-10-28T17:12:02+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/israel-election-netanyahu-trump-gaza-.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T18:40:57+08:00"
-    },
-    {
-      "articleId": "21d648bb7812b5a5669b3229b1ce8920c6c8d1f3bd7395aaee149d898f9c7755",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "HIGH",
-      "summary": "Jio Platforms' shares surged 21.5% on their trading debut following a record IPO backed by Meta and Google, with strong interest from retail and institutional investors. Potential exits are anticipated around six months as the stock eyes inclusion in major indices like the MSCI and Nifty 50.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "India"
-      ],
-      "sectors": [
-        "Technology",
-        "Telecommunications"
-      ],
-      "investorImpact": "The successful debut of a major tech platform like Jio highlights strong investor appetite for Indian equities and large-scale tech IPOs, signaling positive sentiment for regional market listings and future index inclusions.",
-      "reasoning": "Classified as MARKET due to the major stock debut and IPO performance, representing high importance for regional equity investors tracking large tech offerings.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Meta- and Google-backed Jio Platforms’ shares soar over 21% on trading debut after record IPO",
-      "publishedAtSgt": "2026-10-28T15:48:35+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/jio-ipo-india-listing-.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T18:40:57+08:00"
-    },
-    {
-      "articleId": "52bb7b9195e571b4f5ccda5085dcbfe49f0ad82dacbd8f7f5b9cfcf590f0a55b",
-      "relevant": true,
-      "category": "ECONOMIC",
-      "sentiment": "NEGATIVE",
-      "importance": "MEDIUM",
-      "summary": "President Donald Trump made remarks regarding promised $5,000 U.S. payments, while economists warn such cash disbursements could exacerbate inflation and fail to ease affordability pressures affecting voters ahead of midterms.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Consumer Discretionary",
-        "Consumer Staples"
-      ],
-      "investorImpact": "Potential fiscal stimulus or cash distribution policies could impact inflation expectations, influencing Treasury yields and Federal Reserve monetary policy paths.",
-      "reasoning": "Classified as ECONOMIC because it discusses proposed fiscal payouts and their inflationary risks, which are relevant to macroeconomic monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Trump jokes $5,000 would buy 'a hamburger and maybe a small dessert' at Mar-a-Lago as cost of living looms over midterms",
-      "publishedAtSgt": "2026-10-28T12:29:20+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/trump-jokes-5000-cash-would-buy-hamburger-and-dessert-at-mar-a-lago.html",
-      "collectorCategory": "ECONOMIC",
-      "collectorRelevanceScore": 101,
-      "collectorRelevanceReason": "strong_economic_title",
-      "collectedAtSgt": "2026-10-28T18:40:58+08:00"
-    },
-    {
-      "articleId": "b830841b70873cf2e866ebaf20f6b7607fb6a6bcb11546c421572a12ffb79a40",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "MEDIUM",
-      "summary": "Shares of Chinese toymaker Pop Mart, known for its Labubu dolls, fell further following a steep decline in third-quarter revenue, raising questions about the sustainability of demand for collectible toys.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "China",
-        "Asia"
-      ],
-      "sectors": [
-        "Consumer Discretionary",
-        "Retail"
-      ],
-      "investorImpact": "Investors holding shares in Pop Mart or similar consumer novelty brands face increased volatility and downside risk as growth momentum slows in overseas and domestic markets.",
-      "reasoning": "Classified as MARKET due to direct impact on Pop Mart's share price and revenue performance, with negative sentiment reflecting declining sales and investor skepticism regarding fad-driven retail.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Labubu-maker Pop Mart's shares extend declines as third-quarter sales plunge",
-      "publishedAtSgt": "2026-10-28T10:57:36+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/labubu-pop-mart-third-quarter-earnings.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T18:40:59+08:00"
-    },
-    {
-      "articleId": "e5eb6460b816e9c63a9f51206b3f9f9d4c7049c972ad0deee527fe3c305cbcf2",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "HIGH",
-      "summary": "SK Hynix announced over $25 billion in dividends and buyback plans following a third-quarter profit that beat estimates. Concurrently, the company halted its review of potential pre-IPO fundraising and IPO options for its U.S. unit due to financial market volatility and a correction in semiconductor stocks.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "South Korea",
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors"
-      ],
-      "investorImpact": "The massive shareholder return of over $25 billion in dividends and buybacks underscores strong financial performance and shareholder-friendly policies, boosting confidence in the semiconductor sector despite broader market volatility.",
-      "reasoning": "Classified as MARKET due to strong earnings and significant shareholder capital return announcements, accompanied by strategic updates regarding U.S. unit IPO plans amidst semiconductor stock corrections.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "SK Hynix announces over $25 billion in dividends and buyback as third-quarter profit beats estimates",
-      "publishedAtSgt": "2026-10-28T09:25:18+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/sk-hynix-third-quarter-profit.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T09:28:22+08:00"
-    },
-    {
-      "articleId": "255d54c1288873fa9bd3b7166326f41eafa27c92ccdc5e74d50a09767481557d",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Indian investment platforms such as Groww are rolling out direct access to U.S. stocks, driving retail interest into companies like Nvidia, SpaceX, and Apple, even as foreign investors record substantial outflows from local Indian equities.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "India",
-        "United States"
-      ],
-      "sectors": [
-        "Financials",
-        "Technology"
-      ],
-      "investorImpact": "Highlights shifting retail investment flows in India towards U.S. markets amidst foreign institutional outflows, presenting cross-border investment trends and opportunities for brokerage and wealth management platforms.",
-      "reasoning": "The article is classified as MARKET and is relevant to fund monitoring as it details structural shifts in retail investor access and capital flows between Indian and U.S. equity markets.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Indian investors rush to Nvidia, SpaceX, Apple as local trading apps roll out access to U.S. stocks",
-      "publishedAtSgt": "2026-10-28T08:14:24+08:00",
-      "url": "https://www.cnbc.com/2026/10/28/india-us-stocks-retail-access.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T09:28:23+08:00"
-    },
-    {
-      "articleId": "e01139188be74fc55d1417518ecc758efcfca5ed485680cf49e3f26eb0b81cff",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "MEDIUM",
-      "summary": "Jim Cramer warns investors against prematurely declaring the AI stock rally back on track following a recent $63 billion financing deal for Anthropic to purchase Broadcom's hardware.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors",
-        "Financials"
-      ],
-      "investorImpact": "Investors should exercise caution regarding recent AI stock rallies, as heavy debt-backed hardware financing may introduce systemic valuation risks rather than guaranteed fundamental growth.",
-      "reasoning": "The article discusses market sentiment and valuation risks surrounding major AI-related equities following a significant financing deal, making it relevant for market and sector monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Jim Cramer warns investors not to get fooled by the latest AI stock rally",
-      "publishedAtSgt": "2026-10-28T06:24:19+08:00",
-      "url": "https://www.cnbc.com/2026/10/27/jim-cramer-ai-trade-financing-risks.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T09:28:23+08:00"
-    },
-    {
-      "articleId": "58f64a175759cca87f94312fe8817ad9a78a81aa209290a7347672527a124722",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "NEUTRAL",
-      "importance": "MEDIUM",
-      "summary": "Energy Secretary Chris Wright stated in a CNBC interview that the Trump administration may allow more Russian diesel fuel onto the global market depending on Moscow's behavior regarding the war in Ukraine.",
-      "assetClasses": [
-        "Commodities",
-        "Energy"
-      ],
-      "geographies": [
-        "Russia",
-        "Ukraine",
-        "United States"
-      ],
-      "sectors": [
-        "Energy"
-      ],
-      "investorImpact": "Potential easing of Russian diesel restrictions could increase global supply and put downward pressure on diesel and broader energy prices, impacting energy sector equities and commodity trading strategies.",
-      "reasoning": "Classified as GEOPOLITICAL due to its focus on sanctions and international relations involving Russia, Ukraine, and the US, with direct implications for global energy markets.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Trump administration may let more Russian diesel onto market, energy secretary tells CNBC",
-      "publishedAtSgt": "2026-10-28T06:18:59+08:00",
-      "url": "https://www.cnbc.com/2026/10/27/trump-putin-zelenskyy-russia-ukraine-diesel.html",
-      "collectorCategory": "GEOPOLITICAL",
-      "collectorRelevanceScore": 71,
-      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
-      "collectedAtSgt": "2026-10-28T09:28:23+08:00"
-    },
-    {
-      "articleId": "ec519b89d968b2b6839b6b8d586621230e908ec2946b401ba798a575a28c88b6",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "MEDIUM",
-      "summary": "Early third-quarter earnings reports indicate a resilient U.S. consumer seeking value across income scales, leading to upgraded full-year forecasts and positive stock reactions.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Consumer Discretionary"
-      ],
-      "investorImpact": "Demonstrates underlying strength in consumer spending despite selective behaviors, supporting positive earnings outlooks for consumer-facing companies.",
-      "reasoning": "Classified as MARKET due to its focus on Q3 earnings results and consumer spending trends affecting corporate forecasts and stock performance.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Early third-quarter earnings show a 'resilient' U.S. consumer, with signs of strain",
-      "publishedAtSgt": "2026-10-28T04:42:17+08:00",
-      "url": "https://www.cnbc.com/2026/10/27/q3-earnings-resilient-consumer.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T04:48:05+08:00"
-    },
-    {
-      "articleId": "d24d8549cf749a83afd425b7b4c8d504696415f082ca2b73ffaf1234dd1f1b22",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Robinhood shares fell 5% in after-hours trading as a crypto slump weighed on profits and transaction-based revenue missed Wall Street expectations, despite strong growth in options and equities trading.",
-      "assetClasses": [
-        "Equities",
-        "Cryptocurrency"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials",
-        "Fintech"
-      ],
-      "investorImpact": "Investors in fintech and retail brokerages should note the vulnerability of transaction-based revenues to crypto market downturns, even amidst growth in other product lines like options and equities.",
-      "reasoning": "The article details quarterly earnings and stock price reaction for a major retail brokerage platform, reflecting broader market trends in crypto sentiment and retail trading behavior, making it relevant for market and fintech sector monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Robinhood shares fall 5% as crypto slump weighs on profits, offsetting gains in new businesses",
-      "publishedAtSgt": "2026-10-28T04:39:49+08:00",
-      "url": "https://www.cnbc.com/2026/10/27/robinhood-hood-q3-2026-earnings.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T04:48:06+08:00"
-    },
-    {
-      "articleId": "3b5c05f83b0f9d3be0ff198e2fdb4fd652690e874c0d3faa0909405362a4c17f",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "POSITIVE",
-      "importance": "LOW",
-      "summary": "Walmart reports that AI training and experience are boosting employee confidence and familiarity with the technology among its workforce, based on survey responses.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Consumer Discretionary",
-        "Technology"
-      ],
-      "investorImpact": "Highlights enterprise adoption trends and workforce training strategies regarding AI, providing qualitative insights into corporate productivity initiatives without direct near-term financial valuation impacts.",
-      "reasoning": "Classified under TECHNOLOGY as it addresses enterprise AI adoption and workforce training trends. Marked low importance as it is a general corporate trend rather than a market-moving event.",
-      "fundMonitoringRelevant": false,
-      "source": "CNBC",
-      "title": "Walmart says AI training is boosting confidence with the technology among its 2.1 million associates",
-      "publishedAtSgt": "2026-10-28T04:30:01+08:00",
-      "url": "https://www.cnbc.com/2026/10/27/walmart-ai-training-workers.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 52,
-      "collectorRelevanceReason": "supporting_technology_description",
-      "collectedAtSgt": "2026-10-28T04:48:07+08:00"
-    },
-    {
-      "articleId": "617d82e01cee71e2abf9fa16b9f658d07aa6673ad234fd142a59165cf4def388",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "POSITIVE",
-      "importance": "MEDIUM",
-      "summary": "Oracle expanded its collaboration with OpenAI to integrate ChatGPT and Codex into its software applications and announced the addition of Google tensor processing units and OpenAI's Jalapeño chips to its cloud infrastructure.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Cloud Computing",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "The integration of advanced AI models and diverse hardware into Oracle's cloud infrastructure highlights competitive positioning in the enterprise cloud and AI sectors, offering potential growth drivers for tech sector investors.",
-      "reasoning": "The article details significant technological updates and strategic partnerships for Oracle, OpenAI, and Google within the cloud and AI space, making it relevant for technology sector monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Oracle integrates ChatGPT, Codex into apps and expands cloud chip lineup",
-      "publishedAtSgt": "2026-10-28T03:51:41+08:00",
-      "url": "https://www.cnbc.com/2026/10/27/oracle-openai-chatgpt-codex-google-tpus.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 52,
-      "collectorRelevanceReason": "supporting_technology_description",
-      "collectedAtSgt": "2026-10-28T04:48:08+08:00"
-    },
-    {
-      "articleId": "12b88b2fd8eaf343a2ac042cac636c8ec589135fb96fb8768d8c86a0701e93be",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "MEDIUM",
-      "summary": "Boeing shares experienced a significant decline, dropping 10% following a disappointing cash flow update and a reset of investor expectations regarding its future cash-flow ramp.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Industrials",
-        "Aerospace & Defense"
-      ],
-      "investorImpact": "Investors holding Boeing face near-term volatility and a sharp drop in share value, though analysts suggest the reset in expectations may present a buying opportunity for long-term investors.",
-      "reasoning": "The article is classified as MARKET because it discusses a major stock price movement and company update for Boeing. Sentiment is NEGATIVE due to the 10% share drop and disappointing cash flow news, but it holds MEDIUM importance as a company-specific event.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Boeing shares slide on a disappointing cash flow update. Why this dip is buyable",
-      "publishedAtSgt": "2026-10-28T03:21:20+08:00",
-      "url": "https://www.cnbc.com/investingclub/2026/10/27/boeing-shares-slide-on-a-disappointing-cash-flow-update-why-this-dip-is-buyable-.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T04:48:07+08:00"
-    },
-    {
-      "articleId": "d431568fac33a53ad0685c03f26d54b546680f169cba452732d0d4062ff33f3b",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "The pace of margin debt growth has cooled sharply, falling from 53.7% in May to 31.4% in September according to FINRA data highlighted by Bank of America, which raises concerns that the stock market may be approaching a top.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials"
-      ],
-      "investorImpact": "The deceleration in margin debt growth serves as a potential warning sign for equity investors, signaling a reduction in speculative leverage that often precedes market corrections or tops.",
-      "reasoning": "The article provides timely and crucial market sentiment and positioning data via margin debt trends, directly impacting risk management and equity portfolio monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Margin debt growth slows sharply as stock market warning signs build",
-      "publishedAtSgt": "2026-10-28T02:53:18+08:00",
-      "url": "https://www.cnbc.com/2026/10/27/margin-debt-growth-cools-after-2026-surge-may-signal-market-top.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T04:48:06+08:00"
-    },
-    {
-      "articleId": "18261b307051b6d86fa838da9f517d317d2e7c05767af72460fe33858e1a3cbc",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "HIGH",
-      "summary": "Anthropic's potential IPO presents a significant market event, dividing investors between viewing it as a generational investment opportunity in pure-play artificial intelligence and a speculative risk amid rising interest rates and concerns over AI buildout costs.",
-      "assetClasses": [
-        "Equities",
-        "Private Equity",
-        "Venture Capital"
-      ],
-      "geographies": [
-        "Global",
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "The IPO serves as a key market test for valuing pure-play artificial intelligence companies at a time of rising interest rates and intense sector buildout, impacting sentiment across tech equities and growth portfolios.",
-      "reasoning": "Classified as MARKET due to the focus on an upcoming IPO and investor sentiment. Sentiment is MIXED as opinions are sharply divided between high growth potential and fundamental business valuation risks. Importance is HIGH given Anthropic's prominent status in the AI sector.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Anthropic's IPO could be 'speculative fiction' or a 'generational moment' — investors are split",
-      "publishedAtSgt": "2026-10-28T01:26:34+08:00",
-      "url": "https://www.cnbc.com/2026/10/27/-anthropic-ipo-investors-growth-losses-s-1.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-10-28T04:48:06+08:00"
     }
   ]
 }
