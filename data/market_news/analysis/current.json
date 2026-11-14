@@ -1,10 +1,41 @@
 {
-  "generatedAtSgt": "2026-11-14T04:47:28.068066+08:00",
+  "generatedAtSgt": "2026-11-14T19:52:55.753178+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 216,
+  "articleCount": 217,
   "analyses": [
+    {
+      "articleId": "badd428a6717a337d01500b9b2598482569a20b108fbb5809bc39e575d53af65",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "U.S. officials stated that President Donald Trump does not plan to raise allegations regarding a Chinese intelligence operation involving former Nvidia CEO Jensen Huang during his upcoming meeting with Chinese President Xi Jinping. Additionally, Elon Musk will accompany Trump on the trip to Shenzhen, China, for the APEC summit.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Automotive",
+        "Aerospace"
+      ],
+      "investorImpact": "The avoidance of escalating tensions regarding Nvidia and Chinese intelligence operations during high-level diplomatic talks removes a potential near-term geopolitical headwind for the technology sector, while Musk's presence highlights ongoing corporate and geopolitical intersections.",
+      "reasoning": "Classified as GEOPOLITICAL due to the focus on presidential diplomacy between the U.S. and China, involving high-profile tech executives. It carries HIGH importance given the market capitalization and significance of Nvidia and Tesla, though sentiment is NEUTRAL as the diplomatic decision averts new friction rather than creating a new positive catalyst.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump doesn’t plan to raise Nvidia, spy issue during China trip: U.S. officials",
+      "publishedAtSgt": "2026-11-14T09:34:11+08:00",
+      "url": "https://www.cnbc.com/2026/11/13/trump-nvidia-huang-china.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-14T10:30:40+08:00"
+    },
     {
       "articleId": "f470b3855a597b6bda0d29b4f746735e2f79a3ac1fd87f6cdf5748f3a117ee15",
       "relevant": true,
