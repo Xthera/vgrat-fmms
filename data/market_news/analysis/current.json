@@ -1,10 +1,160 @@
 {
-  "generatedAtSgt": "2026-11-14T19:52:55.753178+08:00",
+  "generatedAtSgt": "2026-11-15T03:02:23.555558+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 217,
+  "articleCount": 216,
   "analyses": [
+    {
+      "articleId": "16c0527b91f5403e47e5f65e0acf9100ff061ff9a4c4653abf4b5a9ce9fa3e21",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Major investors are urging Nvidia's board to consider the potential return of Jensen Huang, amid ongoing investigations involving the redirection of restricted AI chips to China.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "China",
+        "Singapore"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "The governance and regulatory focus on key semiconductor players like Nvidia can introduce short-term volatility and affect investor sentiment regarding leadership and compliance.",
+      "reasoning": "The article discusses significant corporate governance and leadership queries alongside regulatory scrutiny involving a major technology company, impacting market sentiment and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Nvidia board urged to consider 'potential return of Jensen Huang' by two major investors",
+      "publishedAtSgt": "2026-11-15T01:46:06+08:00",
+      "url": "https://www.cnbc.com/2026/11/14/nvidia-investors-jensen-huang-return-board-letter.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-15T02:46:37+08:00"
+    },
+    {
+      "articleId": "7d6f0bed1aaf448c826dd3fff70ed62853145c45ca24c9734fa1ba1ef8fd60fb",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "According to ETF experts on CNBC's ETF Edge, the AI trade and major tech stocks could see reshaped dynamics following Nvidia turmoil, including CEO Jensen Huang's resignation, alongside political shifts involving a Democratic-controlled Congress pushing back on data centers.",
+      "assetClasses": [
+        "Equities",
+        "ETFs"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors in mega-cap technology and artificial intelligence may need to reallocate exposure as Nvidia faces leadership and trust issues, while alternative chip makers and tech infrastructure providers could capture shifting market demand under a changing political landscape.",
+      "reasoning": "The article discusses major structural shifts in the artificial intelligence trade driven by specific corporate governance turbulence at Nvidia and regulatory or political pressures from Congress regarding data centers. This directly impacts technology sector valuations and ETF strategies, making it highly relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "How Nvidia turmoil and a Democratic Congress could reshape the AI trade, according to ETF experts",
+      "publishedAtSgt": "2026-11-14T23:50:43+08:00",
+      "url": "https://www.cnbc.com/2026/11/14/nvidia-ai-trade-data-centers-congress.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-15T02:46:43+08:00"
+    },
+    {
+      "articleId": "8b1ce5591d9666ec9abf6fbe2dc331e1c3ab3332e525b52b4889a2cadc5d49f3",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Wall Street and institutional investors are increasingly investing in industrial outdoor storage (IOS) lots across the U.S., driven by rising rents and surging demand for heavy equipment linked to AI infrastructure and broader energy and infrastructure activity.",
+      "assetClasses": [
+        "Real Estate",
+        "Private Equity"
+      ],
+      "geographies": [
+        "U.S."
+      ],
+      "sectors": [
+        "Real Estate",
+        "Industrial"
+      ],
+      "investorImpact": "Investors can find attractive yields and creditworthy tenants in the industrial outdoor storage sector, benefiting from infrastructure-driven rent growth.",
+      "reasoning": "Classified as MARKET because it details emerging real estate investment trends and institutional capital flows into industrial outdoor storage lots. It is relevant for fund monitoring due to new yield opportunities in alternative real estate sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Rising rents draw Wall Street money to industrial outdoor storage lot investments across the U.S.",
+      "publishedAtSgt": "2026-11-14T23:14:57+08:00",
+      "url": "https://www.cnbc.com/2026/11/14/real-estate-rental-income-industrial-storage-market.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-15T02:46:43+08:00"
+    },
+    {
+      "articleId": "4e9ad46dc82912eda0b06322e1cf94f409269f0e1048c648c2e3ccc858e85573",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Heating oil prices have surged 59% from last winter, creating severe financial strain for households, particularly in regions like Maine. The spike has prompted calls from congressional lawmakers for increased federal LIHEAP funding to assist qualifying families facing energy crises.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Utilities"
+      ],
+      "investorImpact": "The significant rise in heating oil prices impacts consumer disposable income and discretionary spending, particularly for lower-income households during the winter season, while highlighting volatility in energy commodity markets.",
+      "reasoning": "Classified as MARKET due to direct reporting on heating oil price spikes and consumer impacts, with relevance to energy commodities and consumer discretionary sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Heating oil prices are up 59% from last winter. The spike is 'crushing folks,' Maine nonprofit says",
+      "publishedAtSgt": "2026-11-14T22:30:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/14/heating-oil-price-spike-household-budgets.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-15T02:46:43+08:00"
+    },
+    {
+      "articleId": "ee07ac69c57570b1582a395f956ba02aefc303f1574c27f64e88d01986aa73df",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "LOW",
+      "summary": "During open enrollment season, financial advisors highlight the benefits of health savings accounts (HSAs) as a tax-advantaged investment vehicle for growth and healthcare cost savings.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Healthcare"
+      ],
+      "investorImpact": "Highlights retail investment trends into tax-advantaged accounts like HSAs, offering minor indirect signals for asset management and wealth advisory sectors.",
+      "reasoning": "Classified as MARKET because it discusses personal investment strategies and tax-advantaged accounts during benefits open enrollment. Importance is LOW as it is general financial advice rather than market-moving macro news.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Juice your growth and save on taxes in this workplace investment account",
+      "publishedAtSgt": "2026-11-14T22:08:17+08:00",
+      "url": "https://www.cnbc.com/2026/11/14/hsa-investing-tax-benefits.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-15T02:46:43+08:00"
+    },
     {
       "articleId": "badd428a6717a337d01500b9b2598482569a20b108fbb5809bc39e575d53af65",
       "relevant": true,
@@ -6357,185 +6507,6 @@
       "collectorRelevanceScore": 52,
       "collectorRelevanceReason": "supporting_technology_description",
       "collectedAtSgt": "2026-11-02T00:51:57+08:00"
-    },
-    {
-      "articleId": "662fd8411d58685695d94e49217592848501d1d317d457cb339afab537821e37",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "HIGH",
-      "summary": "The historical correlation between oil prices and Treasury yields broke down in October, drawing the attention of Federal Reserve Chair Kevin Warsh as rising oil futures complicate the central bank's inflation fight. Meanwhile, artificial intelligence and bond trades have also experienced significant regime shifts over the past month.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income",
-        "Commodities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Energy",
-        "Technology"
-      ],
-      "investorImpact": "Shifts in key macro correlations such as oil and Treasury yields impact asset allocation, inflation hedging strategies, and rate-sensitive equity and fixed income portfolios.",
-      "reasoning": "Classified as MARKET because it discusses major regime shifts in asset correlations affecting oil, AI, and bond trades, which are highly relevant for multi-asset fund monitoring and macroeconomic positioning.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Everything changed for the oil, AI and bond trades over the past month",
-      "publishedAtSgt": "2026-11-01T23:58:24+08:00",
-      "url": "https://www.cnbc.com/2026/11/01/oil-bond-yields-ai-market.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-02T00:52:02+08:00"
-    },
-    {
-      "articleId": "18c2e38c1b84a0a6e9c038e709f3d177a5619d08f6e807f76584316cfa7c21df",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "MEDIUM",
-      "summary": "Top Wall Street analysts remain bullish on specific long-term stock picks like Datadog and Atlassian amidst broader market concerns and worries regarding elevated artificial intelligence spending.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Software"
-      ],
-      "investorImpact": "Investors can use analyst insights to identify long-term growth opportunities in software and artificial intelligence despite short-term market volatility.",
-      "reasoning": "The article provides actionable equity market insights from Wall Street analysts focusing on specific stocks benefiting from AI trends, making it relevant for market monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Top Wall Street analysts are bullish on these 3 stocks for the long haul",
-      "publishedAtSgt": "2026-11-01T20:33:53+08:00",
-      "url": "https://www.cnbc.com/2026/11/01/top-analysts-are-bullish-on-these-3-stocks-for-the-long-haul.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-02T00:52:02+08:00"
-    },
-    {
-      "articleId": "820fe11600770cbe059082162f4f9777dcae8dbba51d4548b3d3f61ca8dae488",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "MEDIUM",
-      "summary": "Midterm election initiatives across the nation could alter tax laws and increase municipal bond supply. Because municipal bond income is tax-free, investors often seek shelter in this market during times of potential tax and policy changes, which can drive bond prices higher.",
-      "assetClasses": [
-        "Fixed Income",
-        "Municipal Bonds"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Municipal",
-        "Government"
-      ],
-      "investorImpact": "Investors in municipal bonds should monitor election outcomes as potential changes to tax laws and increased bond supply could impact pricing and demand.",
-      "reasoning": "Classified as MARKET because it discusses how upcoming midterm election outcomes and ballot initiatives can influence the municipal bond market, tax considerations, and investor demand.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "The midterm election could reshape the muni bond market. Here’s what investors need to know",
-      "publishedAtSgt": "2026-11-01T20:30:48+08:00",
-      "url": "https://www.cnbc.com/2026/11/01/election-municipal-bonds.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-02T00:52:02+08:00"
-    },
-    {
-      "articleId": "1a18520f8bb4841d499bd89e8532ac61fb298b7bfc99de54e64abd096210c5fc",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "HIGH",
-      "summary": "Companies are starting to show measurable financial returns from artificial intelligence investments, with corporate AI spending reaching $581.7 billion in 2025 according to the Stanford HAI 2026 AI Index report.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Global"
-      ],
-      "sectors": [
-        "Technology"
-      ],
-      "investorImpact": "Investors can begin to evaluate tangible financial payoffs from corporate AI spending rather than relying purely on growth hype, potentially supporting valuations in the technology sector and efficiency-driven firms.",
-      "reasoning": "Classified as MARKET due to its direct relevance to corporate earnings and financial returns from technology investments. Sentiment is POSITIVE as it highlights actual financial payoffs from AI. Importance is HIGH because massive corporate AI spending is translating into measurable business results.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Companies promised AI gains— here's how the payoff showed up in earnings",
-      "publishedAtSgt": "2026-11-01T14:00:01+08:00",
-      "url": "https://www.cnbc.com/2026/11/01/ai-investments-company-earnings.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-01T15:40:20+08:00"
-    },
-    {
-      "articleId": "de3c341ab1495273bea2517135f9adcba2d266e6ac2087324877a25f5c44b476",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "HIGH",
-      "summary": "OpenAI is seeking to raise up to $20 billion in a new funding round, lowering its previous target of up to $30 billion amid rising investor scrutiny regarding the returns on heavy artificial intelligence infrastructure spending by big tech firms.",
-      "assetClasses": [
-        "Equities",
-        "Private Equity",
-        "Venture Capital"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "The adjustment in OpenAI's fundraising target highlights potential investor caution regarding AI infrastructure spending, which could impact valuations and capital allocation across the technology sector.",
-      "reasoning": "Classified as MARKET due to its focus on major private fundraising and broader implications for tech sector sentiment and valuation trends. It is significant for fund monitoring as it touches on AI capital expenditure returns.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "OpenAI pares fundraising goal, now seeking up to $20 billion in latest round",
-      "publishedAtSgt": "2026-11-01T03:56:23+08:00",
-      "url": "https://www.cnbc.com/2026/10/31/openai-fundraising-20-billion-valuation.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 95,
-      "collectorRelevanceReason": "business_market_event",
-      "collectedAtSgt": "2026-11-01T04:06:39+08:00"
-    },
-    {
-      "articleId": "a9a3a834e4675db8c1ef89c50122f496dc12b3b924311a28bc4701bac3191e7e",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "NEGATIVE",
-      "importance": "MEDIUM",
-      "summary": "SpaceX's AI division lost its bid to dismiss an NAACP lawsuit claiming violations of the Clean Air Act from using gas-fired combustion turbines to power AI data centers in Greater Memphis.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Utilities",
-        "Aerospace & Defense"
-      ],
-      "investorImpact": "Highlights potential regulatory and environmental compliance risks for large tech companies scaling AI data center infrastructure using unconventional or fossil-fuel power sources, which could lead to increased operational costs or legal delays.",
-      "reasoning": "Classified under TECHNOLOGY due to AI data center operations, and negative sentiment because of a failed bid to dismiss an environmental lawsuit. It is important for monitoring tech infrastructure and ESG risks.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "SpaceX loses bid to toss NAACP lawsuit over Memphis data center air pollution",
-      "publishedAtSgt": "2026-11-01T02:56:37+08:00",
-      "url": "https://www.cnbc.com/2026/10/31/xai-naacp-clean-air-act-lawsuit-dismissal.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 81,
-      "collectorRelevanceReason": "technology_business_or_infrastructure",
-      "collectedAtSgt": "2026-11-01T04:06:38+08:00"
     }
   ]
 }

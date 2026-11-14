@@ -1,0 +1,187 @@
+{
+  "date": "2026-11-01",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "articleCount": 6,
+  "analyses": [
+    {
+      "articleId": "662fd8411d58685695d94e49217592848501d1d317d457cb339afab537821e37",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "The historical correlation between oil prices and Treasury yields broke down in October, drawing the attention of Federal Reserve Chair Kevin Warsh as rising oil futures complicate the central bank's inflation fight. Meanwhile, artificial intelligence and bond trades have also experienced significant regime shifts over the past month.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Technology"
+      ],
+      "investorImpact": "Shifts in key macro correlations such as oil and Treasury yields impact asset allocation, inflation hedging strategies, and rate-sensitive equity and fixed income portfolios.",
+      "reasoning": "Classified as MARKET because it discusses major regime shifts in asset correlations affecting oil, AI, and bond trades, which are highly relevant for multi-asset fund monitoring and macroeconomic positioning.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Everything changed for the oil, AI and bond trades over the past month",
+      "publishedAtSgt": "2026-11-01T23:58:24+08:00",
+      "url": "https://www.cnbc.com/2026/11/01/oil-bond-yields-ai-market.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-02T00:52:02+08:00"
+    },
+    {
+      "articleId": "18c2e38c1b84a0a6e9c038e709f3d177a5619d08f6e807f76584316cfa7c21df",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Top Wall Street analysts remain bullish on specific long-term stock picks like Datadog and Atlassian amidst broader market concerns and worries regarding elevated artificial intelligence spending.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Software"
+      ],
+      "investorImpact": "Investors can use analyst insights to identify long-term growth opportunities in software and artificial intelligence despite short-term market volatility.",
+      "reasoning": "The article provides actionable equity market insights from Wall Street analysts focusing on specific stocks benefiting from AI trends, making it relevant for market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Top Wall Street analysts are bullish on these 3 stocks for the long haul",
+      "publishedAtSgt": "2026-11-01T20:33:53+08:00",
+      "url": "https://www.cnbc.com/2026/11/01/top-analysts-are-bullish-on-these-3-stocks-for-the-long-haul.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-02T00:52:02+08:00"
+    },
+    {
+      "articleId": "820fe11600770cbe059082162f4f9777dcae8dbba51d4548b3d3f61ca8dae488",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Midterm election initiatives across the nation could alter tax laws and increase municipal bond supply. Because municipal bond income is tax-free, investors often seek shelter in this market during times of potential tax and policy changes, which can drive bond prices higher.",
+      "assetClasses": [
+        "Fixed Income",
+        "Municipal Bonds"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Municipal",
+        "Government"
+      ],
+      "investorImpact": "Investors in municipal bonds should monitor election outcomes as potential changes to tax laws and increased bond supply could impact pricing and demand.",
+      "reasoning": "Classified as MARKET because it discusses how upcoming midterm election outcomes and ballot initiatives can influence the municipal bond market, tax considerations, and investor demand.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "The midterm election could reshape the muni bond market. Here’s what investors need to know",
+      "publishedAtSgt": "2026-11-01T20:30:48+08:00",
+      "url": "https://www.cnbc.com/2026/11/01/election-municipal-bonds.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-02T00:52:02+08:00"
+    },
+    {
+      "articleId": "1a18520f8bb4841d499bd89e8532ac61fb298b7bfc99de54e64abd096210c5fc",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Companies are starting to show measurable financial returns from artificial intelligence investments, with corporate AI spending reaching $581.7 billion in 2025 according to the Stanford HAI 2026 AI Index report.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors can begin to evaluate tangible financial payoffs from corporate AI spending rather than relying purely on growth hype, potentially supporting valuations in the technology sector and efficiency-driven firms.",
+      "reasoning": "Classified as MARKET due to its direct relevance to corporate earnings and financial returns from technology investments. Sentiment is POSITIVE as it highlights actual financial payoffs from AI. Importance is HIGH because massive corporate AI spending is translating into measurable business results.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Companies promised AI gains— here's how the payoff showed up in earnings",
+      "publishedAtSgt": "2026-11-01T14:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/01/ai-investments-company-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-01T15:40:20+08:00"
+    },
+    {
+      "articleId": "de3c341ab1495273bea2517135f9adcba2d266e6ac2087324877a25f5c44b476",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "OpenAI is seeking to raise up to $20 billion in a new funding round, lowering its previous target of up to $30 billion amid rising investor scrutiny regarding the returns on heavy artificial intelligence infrastructure spending by big tech firms.",
+      "assetClasses": [
+        "Equities",
+        "Private Equity",
+        "Venture Capital"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "The adjustment in OpenAI's fundraising target highlights potential investor caution regarding AI infrastructure spending, which could impact valuations and capital allocation across the technology sector.",
+      "reasoning": "Classified as MARKET due to its focus on major private fundraising and broader implications for tech sector sentiment and valuation trends. It is significant for fund monitoring as it touches on AI capital expenditure returns.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "OpenAI pares fundraising goal, now seeking up to $20 billion in latest round",
+      "publishedAtSgt": "2026-11-01T03:56:23+08:00",
+      "url": "https://www.cnbc.com/2026/10/31/openai-fundraising-20-billion-valuation.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 95,
+      "collectorRelevanceReason": "business_market_event",
+      "collectedAtSgt": "2026-11-01T04:06:39+08:00"
+    },
+    {
+      "articleId": "a9a3a834e4675db8c1ef89c50122f496dc12b3b924311a28bc4701bac3191e7e",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "SpaceX's AI division lost its bid to dismiss an NAACP lawsuit claiming violations of the Clean Air Act from using gas-fired combustion turbines to power AI data centers in Greater Memphis.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Utilities",
+        "Aerospace & Defense"
+      ],
+      "investorImpact": "Highlights potential regulatory and environmental compliance risks for large tech companies scaling AI data center infrastructure using unconventional or fossil-fuel power sources, which could lead to increased operational costs or legal delays.",
+      "reasoning": "Classified under TECHNOLOGY due to AI data center operations, and negative sentiment because of a failed bid to dismiss an environmental lawsuit. It is important for monitoring tech infrastructure and ESG risks.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "SpaceX loses bid to toss NAACP lawsuit over Memphis data center air pollution",
+      "publishedAtSgt": "2026-11-01T02:56:37+08:00",
+      "url": "https://www.cnbc.com/2026/10/31/xai-naacp-clean-air-act-lawsuit-dismissal.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-01T04:06:38+08:00"
+    }
+  ]
+}
