@@ -1,0 +1,611 @@
+{
+  "date": "2026-11-04",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "articleCount": 20,
+  "analyses": [
+    {
+      "articleId": "a8329b901857f92352b43727ea819ef4d1ba6121faf072d8e6d3798a81456da3",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "LOW",
+      "summary": "French blood banks were impacted by recent cyberattacks on European refrigeration systems, with external cold storage units compromised across three sites and temperatures altered.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "France",
+        "Europe"
+      ],
+      "sectors": [
+        "Healthcare",
+        "Technology",
+        "Cybersecurity"
+      ],
+      "investorImpact": "Investors in European healthcare and third-party facility management providers should monitor for potential operational vulnerabilities and increased cybersecurity compliance costs, though broad market impact is limited.",
+      "reasoning": "Classified under TECHNOLOGY due to the nature of cyberattacks on refrigeration systems. Sentiment is negative given the compromise of critical medical cold storage, but importance is low as direct systemic financial impact is minimal.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Blood banks targeted in latest European fridge cyberattacks",
+      "publishedAtSgt": "2026-11-04T22:15:32+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/blood-bank-fridges-cyberattacks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T04:28:05+08:00"
+    },
+    {
+      "articleId": "c1baeddf24865f04231555c888cc66a84c4678845f8d2e5aab2cd56c6e59dbc7",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "McDonald's reported an earnings beat, driving shares up over 2% in premarket trading, despite reporting falling traffic to its U.S. restaurants. The company previously noted slightly negative same-store sales in July and August, while its international developmental licensed markets business achieved 4.2% same-store sales growth.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States",
+        "China",
+        "Japan"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Restaurants"
+      ],
+      "investorImpact": "Investors can gauge consumer spending trends and fast-food industry health, balancing positive earnings performance against weak U.S. traffic headwinds.",
+      "reasoning": "Classified as MARKET because it details earnings, share price reaction, and sales metrics for a major global corporation. Sentiment is MIXED due to strong earnings and international growth offset by declining U.S. restaurant traffic.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "McDonald's earnings beat, but traffic to chain's U.S. restaurants falls",
+      "publishedAtSgt": "2026-11-04T20:13:31+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/mcdonalds-is-about-to-report-earnings-heres-what-to-expect.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T20:18:32+08:00"
+    },
+    {
+      "articleId": "58f24ee155574bd5bf7625870c0ad02dd6cb3038abd380fde5d02b5a952f81bd",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "SpaceX, Tesla, and artificial intelligence stocks declined following midterm election victories by Democrats in key data center hubs, raising concerns over potential data center moratoriums, particularly in Texas.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "Texas"
+      ],
+      "sectors": [
+        "Technology",
+        "Automotive",
+        "Aerospace"
+      ],
+      "investorImpact": "Investors in AI, data centers, and related tech stocks face heightened regulatory and political risk following Democratic midterm wins, potentially impacting infrastructure expansion and valuations.",
+      "reasoning": "The article is classified as MARKET due to direct stock price impacts driven by political election outcomes affecting key technology infrastructure sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "SpaceX, Tesla fall over 4% on Democrats' big win; AI stocks mixed",
+      "publishedAtSgt": "2026-11-04T19:35:52+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/ai-stocks-texas-governor-data-centers.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T20:18:32+08:00"
+    },
+    {
+      "articleId": "1d152ff72d643778cb9449cd5d6d09a81458d7cd2f3f99db4a6047dbd6606bb2",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Euro zone inflation has hit 4% for the first time in three years, with all member countries remaining above the European Central Bank's 2% target. Ongoing turmoil in the French bond market is further constraining ECB policy and its ability to combat inflation, while interest rate hikes loom.",
+      "assetClasses": [
+        "Fixed Income",
+        "Currencies",
+        "Equities"
+      ],
+      "geographies": [
+        "Euro Zone",
+        "France"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Rising inflation and potential interest rate hikes, compounded by bond market turmoil in France, create downward pressure on European equities and fixed income assets, while increasing volatility for the euro.",
+      "reasoning": "The article is classified under ECONOMIC due to the core metrics of euro zone inflation reaching 4% and anticipated ECB rate hikes. It is of high importance and negative sentiment because persistently high inflation and regional bond market constraints threaten macroeconomic stability and monetary policy effectiveness.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Euro zone inflation hits 4% for first time in three years as interest rate hike looms",
+      "publishedAtSgt": "2026-11-04T18:47:30+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/euro-zone-cpi-inflation-october-ecb-rate-hike.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-04T20:18:32+08:00"
+    },
+    {
+      "articleId": "960f7e23889787948adee6dd15be7f1caa3538bbad7efb336b996ffe1400b9a0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Novo reported quarterly earnings beating expectations driven by strong Wegovy pill sales and GLP-1 volume growth, sending shares up significantly and leading the company to raise its outlook.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Healthcare",
+        "Pharmaceuticals"
+      ],
+      "investorImpact": "The positive earnings beat and outlook revision signal strong demand in the GLP-1 market, offering confidence to investors following previous growth concerns.",
+      "reasoning": "The article details strong corporate earnings, robust pharmaceutical sales, and a raised outlook for a major market player, making it highly relevant for market and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Novo shares jump as Wegovy pill sales impress, drugmaker hikes outlook",
+      "publishedAtSgt": "2026-11-04T18:40:51+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/novo-q3-earnings-wegovy-sales.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T20:18:32+08:00"
+    },
+    {
+      "articleId": "4891ac8b8e5a32e2a75d855e913dc568851d28ebe8fbcf2167b913b0e090a117",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Treasury yields declined as investors crowded into safe-haven bonds amid an equity market sell-off driven by U.S. midterm election results, specifically targeting AI-related shares due to concerns over potential data center buildout regulations.",
+      "assetClasses": [
+        "Bonds",
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Investors should monitor shifting asset allocations from equities to fixed income and regulatory risks facing technology and AI infrastructure sectors following the election results.",
+      "reasoning": "The article is classified as MARKET because it directly covers equity sell-offs and Treasury yield movements driven by political events and sector-specific policy concerns, making it highly relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Treasury yields fall as investors crowd into bonds for safety amid election stock sell-off",
+      "publishedAtSgt": "2026-11-04T18:02:00+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/treasury-yields-fall-as-democrats-win-big-in-us-midterm-elections.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 94,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T20:18:32+08:00"
+    },
+    {
+      "articleId": "f40950bd9da82421ddead917772c3965848dccd6ff309f014017a0edcfedba22",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer noted signs of recovery in technology stocks led by a new group of winners, such as Broadcom and Micron, signaling a potential shift in investor preference away from traditional market leaders.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors may need to monitor shifting leadership within the technology sector, as performance drivers appear to be expanding beyond the usual mega-cap winners.",
+      "reasoning": "Classified as MARKET because it discusses stock market trends and sector leadership shifts highlighted by market commentators. Sentiment is POSITIVE due to observed gains and signs of life in tech stocks. Important for fund monitoring to capture sector rotation dynamics.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer sees signs of life in tech stocks — but not from the usual winners",
+      "publishedAtSgt": "2026-11-04T07:58:09+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/jim-cramer-sees-signs-of-life-in-tech-stocks-but-not-from-the-usual-winners.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T10:27:47+08:00"
+    },
+    {
+      "articleId": "ff6898d20cc28b0ba27fadae9a5e35e297e890e8374626ef3947431b888dbbea",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "AMD stock jumped 8% following its earnings report as data center revenue nearly doubled. CEO Lisa Su projected that server revenue will double year-over-year in 2027, driven by accelerated data center AI growth and strong demand for CPUs alongside GPUs.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "The strong earnings and robust forward-looking guidance for data center revenue highlight continued high demand in the semiconductor and AI hardware sectors, positively impacting AMD shares and broader tech sentiment.",
+      "reasoning": "The article reports on significant market movement and strong financial performance of a major tech stock driven by AI growth catalysts, which is vital for market and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AMD stock jumps 8% on earnings as data center revenue nearly doubles",
+      "publishedAtSgt": "2026-11-04T07:04:37+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/amd-amd-q3-earnings-report-2026-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T10:27:46+08:00"
+    },
+    {
+      "articleId": "6469a50960ae82e8164a17eaf14002b7bbf71274f9ecfa8078fc340f63485951",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Eaton reported a strong quarterly financial performance that provides a boost to its shares and signals a potential bottom for the AI infrastructure play after a volatile period.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Industrials",
+        "Electrical Equipment",
+        "Technology"
+      ],
+      "investorImpact": "Investors in Eaton and the broader AI infrastructure buildout sector can view the strong quarterly results as a positive sign of fundamental demand resiliency, potentially marking a stock price floor following recent turbulence.",
+      "reasoning": "Classified as MARKET due to its direct focus on Eaton's quarterly earnings performance and stock price reaction. Sentiment is POSITIVE based on strong financial results and a favorable outlook for the AI trade winner.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Eaton's strong quarter should mark a bottom for shares of the AI buildout winner",
+      "publishedAtSgt": "2026-11-04T04:46:59+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/03/eatons-strong-quarter-should-mark-a-bottom-for-shares-of-the-ai-buildout-winner.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T10:27:47+08:00"
+    },
+    {
+      "articleId": "ca53b59c8420835b138247ee51346bd23c0ba852a0389db922d3e7f649d414f0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "AMD stock has experienced a significant downturn leading up to its earnings report, pressured by broader tech sector earnings disappointments and ongoing AI debates. Due to unpredictable reactions and high investor expectations, options strategies are suggested to trade the stock without taking a directional side.",
+      "assetClasses": [
+        "Equities",
+        "Options"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors holding AMD or similar semiconductor stocks face heightened volatility ahead of earnings, prompting alternative trading approaches like options to manage directional risk.",
+      "reasoning": "The article discusses recent market performance and trading strategies for AMD ahead of its earnings report, classifying it as MARKET due to its focus on stock price movement and options strategies.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "AMD has been crushed into earnings. Here’s one way to trade it",
+      "publishedAtSgt": "2026-11-04T04:40:51+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/amd-has-been-crushed-into-earnings-heres-one-way-to-trade-it.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T10:27:47+08:00"
+    },
+    {
+      "articleId": "8e443346c2494b194bc307f77c148e2cbe0842cee2f2db70643813a6df93935c",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Following a security breach at Binance, the crypto infrastructure trade highlights the growing importance of custody solutions. Analysts note that repeated security breaches could prompt investors to shift assets to independent custodians while maintaining trading activity on centralized exchanges.",
+      "assetClasses": [
+        "Cryptocurrency",
+        "Digital Assets"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Financial Technology",
+        "Cryptocurrency Infrastructure"
+      ],
+      "investorImpact": "Investors may reassess risk management practices and favor independent custody solutions over centralized exchange custody, potentially driving investment toward specialized crypto infrastructure and custody providers.",
+      "reasoning": "The article discusses a significant security breach at a major crypto exchange and its structural implications for digital asset custody and infrastructure, making it relevant for technology and market monitoring in the crypto space.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Binance breach puts custody at center of crypto infrastructure trade",
+      "publishedAtSgt": "2026-11-04T04:13:37+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/binance-breach-puts-custody-at-center-of-crypto-infrastructure-trade.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-04T10:27:46+08:00"
+    },
+    {
+      "articleId": "5379cf8784dc440a26c4b04b6269ce42d02338924e6f9542b9ee5e02986a441b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "LOW",
+      "summary": "JetBlue Airways has increased checked bag fees for the third time in less than a year, raising the first bag fee for economy travelers to $50 due to ongoing high fuel costs impacting profitability.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Airlines",
+        "Transportation"
+      ],
+      "investorImpact": "The fee increases reflect persistent pressure from high fuel costs on airline profit margins, signaling potential earnings headwinds for the airline sector despite attempts to pass costs on to consumers.",
+      "reasoning": "Classified as MARKET because it details corporate pricing strategy and operational pressures within the airline industry. Sentiment is NEGATIVE due to rising cost pressures affecting profitability. Importance is LOW as it pertains to a single company's specific ancillary fee adjustment rather than systemic economic shifts.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "JetBlue raises bag fees for third time in a year as fuel costs bite",
+      "publishedAtSgt": "2026-11-04T04:07:50+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/jetblue-checked-bag-fee.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T04:12:16+08:00"
+    },
+    {
+      "articleId": "359ea0e6470a503bd38ce344ac592bfcac3d515350d46310faf585fb3bef744d",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Apple shares fell following a disappointing gross margin outlook driven by rising memory chip costs. Meanwhile, chip stocks and AI names rebounded, prompting a reversal in bond markets where prices fell and yields rose.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors",
+        "Consumer Electronics"
+      ],
+      "investorImpact": "Investors should monitor the shifting correlation between AI and chip stock movements and bond yields, as well as margin pressures on consumer technology companies due to rising component costs.",
+      "reasoning": "The article is classified as MARKET because it highlights sector rotations between chip stocks, Apple, and bond yields, carrying medium importance for monitoring equity and fixed income sentiment.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Election Day: Here is the No. 1 issue we're watching as a signal for stocks",
+      "publishedAtSgt": "2026-11-04T03:29:41+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/03/election-day-here-is-the-no-1-issue-were-watching-as-a-signal-for-stocks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T04:12:15+08:00"
+    },
+    {
+      "articleId": "8621bf70cd22e87fa1218e33701f8503680480a0298dd05f39b1a6b5f819f82f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Ahead of midterm election results with prediction markets indicating a potential Democratic victory, options traders are heavily betting on clean-energy and solar stocks despite a prior five-month sell-off.",
+      "assetClasses": [
+        "Equities",
+        "Options"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Clean Energy",
+        "Solar"
+      ],
+      "investorImpact": "Investors with exposure to clean energy and solar sectors should note the heightened options activity driven by political expectations, signaling potential short-term volatility and speculative repositioning.",
+      "reasoning": "The article is classified under MARKET as it details specific options trading behavior and sector-specific bets tied to political expectations. Sentiment is mixed due to surging options activity contrasted with an ongoing sector sell-off. It is relevant for fund monitoring as it highlights short-term sentiment shifts in thematic equities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Options traders are betting heavily on these stocks ahead of election results",
+      "publishedAtSgt": "2026-11-04T03:22:30+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/options-traders-are-betting-heavily-on-these-stocks-ahead-of-election-results.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T04:12:14+08:00"
+    },
+    {
+      "articleId": "1413442fedb31c278a9c883903340f3599a50b02d65e0b9b993933436e275f7c",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "U.S. job openings posted a significant gain in September, accompanied by an increase in hires and a drop in layoffs and discharges to the lowest level since March 2025, offering a positive signal for the labor market ahead of the payrolls report.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Manufacturing",
+        "Government",
+        "Professional and Business Services"
+      ],
+      "investorImpact": "Strong labor market indicators can influence Federal Reserve monetary policy expectations, impacting both equity valuations and fixed income yields.",
+      "reasoning": "The article reports major economic indicators regarding employment trends, specifically job openings and layoffs, which are critical for macroeconomic monitoring and market sentiment.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Job openings posted big September gain in positive sign for labor market ahead of payrolls report",
+      "publishedAtSgt": "2026-11-04T03:15:21+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/job-openings-posted-big-september-gain-in-positive-sign-for-labor-market-ahead-of-payrolls-report.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-04T04:12:14+08:00"
+    },
+    {
+      "articleId": "1dc0ff47c4715687c6fe075d75e297df3210cc1dc93a6bb9cf98c88444cbaca0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "An analysis by Sullivan regarding the 2026 midterms indicates that immediate large-scale moves in energy stocks are unlikely. However, higher prices support continued upward momentum for big-cap oil and gas stocks, while utility stocks also align with the election outlook.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Utilities"
+      ],
+      "investorImpact": "Investors should note that while immediate disruptive market swings from the midterms are not expected for energy stocks, sustained higher prices will continue to support large-cap oil, gas, and power-hungry utility stocks.",
+      "reasoning": "Classified as MARKET because it evaluates the impact of political elections on energy sector equities and commodities. Significance is medium as it guides expectations for sector-specific stock performance without indicating immediate systemic shocks.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Sullivan: What the 2026 midterms could mean for energy investors",
+      "publishedAtSgt": "2026-11-04T03:03:06+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/2026-midterms-energy-investors.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T04:12:13+08:00"
+    },
+    {
+      "articleId": "4bd38fff42b315e9ff9fdbbfd95f23f47c7570bf94096dc8c76002db8c8d4f23",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Ferrari reported a Q3 earnings beat and raised its 2026 guidance, driven by strong customer personalizations, lower currency headwinds, and Formula 1 performance, though shares faced slight pressure as some investors expected a larger upward revision.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Automotive",
+        "Luxury Goods"
+      ],
+      "investorImpact": "Investors in luxury automotive equities should note that while fundamentals and guidance remain robust, short-term share price volatility may occur if guidance upgrades do not meet elevated market expectations.",
+      "reasoning": "The article details corporate earnings, guidance revisions, and market reactions for a major luxury automaker, categorizing it under MARKET with a MIXED sentiment due to the earnings beat tempered by mild share pressure.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Ferrari raises 2026 guidance after Q3 earnings beat",
+      "publishedAtSgt": "2026-11-04T02:52:06+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/ferrari-race-earnings-q3-2026.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T04:12:15+08:00"
+    },
+    {
+      "articleId": "fbfd6362eaf69d8ded0f2c40900596de3447233d0a7e2d3f32201a54716baebb",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Meta is seeking to raise between $20 billion and $25 billion in a bond sale to fund its expanding artificial intelligence infrastructure, models, and services, following plans to raise $95 billion for AI initiatives.",
+      "assetClasses": [
+        "Fixed Income",
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Communications"
+      ],
+      "investorImpact": "The massive debt issuance highlights the heavy capital expenditure required for AI development, impacting Meta's balance sheet and offering large-scale corporate bond opportunities for fixed-income investors.",
+      "reasoning": "Classified as MARKET because it details a major corporate debt issuance and capital-raising event by a prominent technology company to fund strategic AI expansion.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Meta seeks to raise up to $25 billion in debt sale as AI spending jumps",
+      "publishedAtSgt": "2026-11-04T02:33:49+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/meta-bond-sale-ai-funding.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 95,
+      "collectorRelevanceReason": "business_market_event",
+      "collectedAtSgt": "2026-11-04T04:12:13+08:00"
+    },
+    {
+      "articleId": "516ce8effc445d394a50b1f0987e7fc68c458bd1e76ddd2e255ea17557003133",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Shopify shares dropped 7% after reporting Q3 revenue and gross merchandise volume that missed analyst estimates, despite projecting Q4 revenue growth in the low thirties.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "E-commerce"
+      ],
+      "investorImpact": "Investors holding Shopify shares face immediate downward price pressure due to the earnings and volume miss, signaling potential growth moderation in the e-commerce sector.",
+      "reasoning": "Classified as MARKET due to direct stock price reaction and earnings performance against consensus estimates. Significant for monitoring tech equity holdings and e-commerce sector sentiment.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Shopify falls 7% after Q3 revenue and merchandise volume miss estimates",
+      "publishedAtSgt": "2026-11-04T00:53:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/shopify-q3-2026-earnings-gmv.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T04:12:15+08:00"
+    },
+    {
+      "articleId": "85932471386709edf112ef74288b8a198b25253c6cda6ab40ff4fa69d1947943",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Bill Ackman warned on CNBC about speculative trading turning the stock market into a casino with prices that make no sense, though he noted these dislocations present bargain opportunities for his hedge fund.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Hedge Funds"
+      ],
+      "investorImpact": "Investors should note prominent warnings about market speculation and dislocation, which could signal heightened volatility while simultaneously opening potential bargain-hunting opportunities.",
+      "reasoning": "Classified as MARKET due to discussion on stock market behavior, sentiment, and pricing dislocations by a notable hedge fund manager. Sentiment is MIXED as it highlights concerns over speculative market health alongside opportunities for bargains. Important for monitoring market psychology and risk.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bill Ackman warns of 'casino' stock market as speculative trading grows",
+      "publishedAtSgt": "2026-11-04T00:23:26+08:00",
+      "url": "https://www.cnbc.com/2026/11/03/bill-ackman-casino-stock-market.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-04T04:12:14+08:00"
+    }
+  ]
+}
