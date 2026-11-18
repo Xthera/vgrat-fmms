@@ -1,10 +1,375 @@
 {
-  "generatedAtSgt": "2026-11-18T09:57:46.475301+08:00",
+  "generatedAtSgt": "2026-11-18T21:29:14.874780+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 211,
+  "articleCount": 223,
   "analyses": [
+    {
+      "articleId": "a883b9181c29a0a58259870d01c10a551453e20d8b0cc6415376cd2ba65b288c",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "New U.S. rules put the data center boom in Southeast Asia at risk by targeting Chinese demand and AI export cycles, potentially impacting GDP growth in countries like Malaysia.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Southeast Asia",
+        "Malaysia",
+        "United States",
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Infrastructure",
+        "Data Centers"
+      ],
+      "investorImpact": "Investors in Southeast Asian data centers and technology infrastructure face headwinds from potential slowdowns in investment driven by new U.S. export rules restricting Chinese demand.",
+      "reasoning": "The article discusses critical cross-border technology export rules and their macroeconomic impact on Southeast Asian infrastructure and GDP growth, making it highly relevant for tech and geopolitical risk monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Southeast Asia’s data center boom leaned on Chinese demand. New U.S. rules put that pipeline at risk",
+      "publishedAtSgt": "2026-11-18T21:10:10+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/nvidia-us-ai-chip-export-controls-data-centers-.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-18T21:13:14+08:00"
+    },
+    {
+      "articleId": "0b1fb18abb6348021c96aefe95d09946041e3e416fb9cfd3f6d6b5608bf8e06d",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Target reported its best sales growth in over five years, beating Wall Street revenue expectations with a 5% increase in comparable traffic, and raised its full-year net sales growth guidance to around 6%.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Retail"
+      ],
+      "investorImpact": "Strong sales growth and raised guidance signal successful turnaround efforts, likely boosting investor confidence and positively impacting Target's stock performance as well as sentiment in the broader retail sector.",
+      "reasoning": "The article details strong corporate earnings, beating expectations and raising guidance, which directly impacts market performance and retail sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Target posts best sales growth in five years, raises guidance",
+      "publishedAtSgt": "2026-11-18T21:08:43+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/target-tgt-q3-2026-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-18T21:13:13+08:00"
+    },
+    {
+      "articleId": "d2ae9c66625ab06e9dc6e50c889606c506a078aa8f16c40dc9295573bd8e28a3",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Federal Reserve Governor Christopher Waller stated that the central bank may need to implement a half-point interest rate hike to combat more persistent inflation than previously expected.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Potential half-point rate hikes create downward pressure on equity valuations and drive up bond yields, increasing borrowing costs and volatility across financial markets.",
+      "reasoning": "The statement from a key Fed official regarding aggressive monetary policy tightening directly impacts macroeconomic expectations and market pricing of interest rates.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Fed’s Waller says central bank may need to ‘shock people’ with half-point rate hike",
+      "publishedAtSgt": "2026-11-18T20:58:59+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/federal-reserve-governor-christopher-waller.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 93,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-18T21:13:13+08:00"
+    },
+    {
+      "articleId": "3d674870596a7d8eeba20c9c5302d54a5fe8b18b85f85014d5196b779e1568a5",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Mortgage demand decreased as average contract interest rates for 30-year fixed-rate mortgages rose to 7.35%, the highest level in three weeks, driven by climbing Treasury yields due to accelerated October inflation data and potential future Federal Reserve rate hikes.",
+      "assetClasses": [
+        "Fixed Income",
+        "Real Estate"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Real Estate",
+        "Financials"
+      ],
+      "investorImpact": "Higher mortgage rates negatively impact housing demand, mortgage origination volumes, and real estate sector activity, while reflecting broader macroeconomic pressures on fixed-income yields.",
+      "reasoning": "Classified as MARKET because it details mortgage demand and interest rate shifts. Sentiment is NEGATIVE due to rising rates and falling demand. Importance is MEDIUM as it impacts real estate and fixed-income markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Mortgage demand turns lower, as interest rates shoot back up to the highest level in three weeks.",
+      "publishedAtSgt": "2026-11-18T20:34:10+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/mortgage-demand-turns-lower-as-interest-rates-shoot-back-up-to-the-highest-level-in-three-weeks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-18T21:13:13+08:00"
+    },
+    {
+      "articleId": "1cf9d9c2fe90a7072c4bd84e29a3494b0fce5c41ba82fba7b66829190a0adac8",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The IEA chief has stated there is no credible pathway back to pre-war normality in the Strait of Hormuz, noting that confidence in the shipping corridor has been crushed following disruptions to oil and gas flows.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "Global",
+        "Middle East"
+      ],
+      "sectors": [
+        "Energy",
+        "Transportation",
+        "Oil and Gas"
+      ],
+      "investorImpact": "Highlights structural supply chain risks and persistent geopolitical tensions affecting energy markets, potentially leading to sustained volatility in oil and gas prices.",
+      "reasoning": "The article is classified as geopolitical due to its focus on the Strait of Hormuz choke point. It carries high importance and negative sentiment for energy markets given the permanent loss of confidence in the corridor as a safe shipping route.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "IEA chief sees no 'credible pathway' back to pre-war normality in the Strait of Hormuz",
+      "publishedAtSgt": "2026-11-18T20:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/iea-strait-hormuz-energy-risk.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 72,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-18T21:13:13+08:00"
+    },
+    {
+      "articleId": "d17adc7cf416659463d10be8ecece0e274999773b46a43ce627937577da6ab0d",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Lowe's reported strong online sales and raised its outlook despite a sluggish housing market, achieving its sixth straight quarter of comparable sales growth alongside a pre-tax benefit from tariff refunds.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Retail"
+      ],
+      "investorImpact": "The positive earnings outlook and continued comparable sales growth despite macroeconomic headwinds highlight resilience in the home improvement retail sector, potentially boosting investor sentiment for Lowe's and related equities.",
+      "reasoning": "The article discusses quarterly earnings, sales growth, and a raised outlook for a major public retailer, making it directly relevant for market and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Lowe's posts strong online sales, raises outlook despite slow housing market",
+      "publishedAtSgt": "2026-11-18T19:47:59+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/lowes-low-q3-2026-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-18T21:13:13+08:00"
+    },
+    {
+      "articleId": "f26d036c58b54aa81b740b0d6ad783cd6c475d27b33c54cc0568357070c0ca91",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Nvidia shares rallied nearly 4% in premarket trading following another earnings beat, despite ongoing fallout from CEO Jensen Huang's resignation. The company also confirmed it is assuming no Data Center compute revenue from China in its outlook.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "China",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "The positive earnings beat drives short-term relief and a rally in Nvidia shares and neoclouds, but management's exclusion of China data center revenue and leadership transitions highlight persistent governance and geopolitical risks for tech investors.",
+      "reasoning": "Classified as MARKET due to the stock price movement and earnings release. Sentiment is MIXED as strong financial results and a share price rally offset executive leadership uncertainty and China revenue headwinds. Importance is HIGH given Nvidia's dominant market capitalization and influence on the broader technology sector.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Nvidia earnings spark rally in shares and neoclouds despite Huang scandal",
+      "publishedAtSgt": "2026-11-18T18:58:22+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/nvidia-stock-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-18T21:13:14+08:00"
+    },
+    {
+      "articleId": "114a7e1ec7e82f9b79cef29379c9fbb3742114949c01c75862f4c668f704aca2",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "A congressional commission report reveals that China's People's Liberation Army is actively seeking advanced Nvidia semiconductor chips for AI-enabled military capabilities, highlighting ongoing friction over technology chokepoints.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "China",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors",
+        "Defense"
+      ],
+      "investorImpact": "The report highlights continued geopolitical scrutiny and export control risks surrounding advanced semiconductor sales to China, potentially impacting major chipmakers like Nvidia and tightening regulatory compliance.",
+      "reasoning": "The article details military and geopolitical friction involving advanced technology components and US-China relations, making it critical for geopolitical and technology sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China’s military seeks Nvidia’s advanced chips for AI capabilities, commission says",
+      "publishedAtSgt": "2026-11-18T18:45:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/nvidia-chips-china-military-ai.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 82,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-18T21:13:13+08:00"
+    },
+    {
+      "articleId": "6ea2dcc2c492c17ec86501019b4a31ce87e09d4b64c883d18dc103c2277f5b73",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Treasury yields held mostly steady, with the 10-year yield dropping slightly to 5.092% and the 30-year yield dipping to 5.443%, while stronger-than-expected retail sales point to potential further interest rate hikes.",
+      "assetClasses": [
+        "Fixed Income",
+        "Bonds"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Retail"
+      ],
+      "investorImpact": "Investors are closely watching Treasury yields and upcoming Fed minutes alongside robust retail sales data, which could influence future monetary policy and interest rate decisions.",
+      "reasoning": "The article is classified as MARKET due to its direct focus on Treasury yields and bond market movements in response to economic data, making it relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Treasury yields hold steady as investors look ahead to Fed minutes",
+      "publishedAtSgt": "2026-11-18T17:32:43+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/treasury-yields-bonds-fed.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 93,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-18T21:13:14+08:00"
+    },
+    {
+      "articleId": "bb9d911c3aa35d4f3d32cd95f5944e60e4c986388396e8e11614abd5a9b910e2",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Record diesel prices drive UK inflation to a one-year high of 3.6%, fueled by external energy shocks and disruptions from the U.S.-Iran war. Markets are currently pricing in an 80% chance of a rate hike by the Bank of England.",
+      "assetClasses": [
+        "Fixed Income",
+        "Currencies",
+        "Commodities"
+      ],
+      "geographies": [
+        "United Kingdom"
+      ],
+      "sectors": [
+        "Energy",
+        "Transportation"
+      ],
+      "investorImpact": "Rising inflation and strong expectations for a Bank of England rate hike increase borrowing costs and impact UK fixed income and currency markets.",
+      "reasoning": "The article reports a significant macroeconomic development (inflation reaching a one-year high due to energy shocks) that directly affects monetary policy expectations and financial markets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Record diesel prices drive UK inflation to 1-year high of 3.6%",
+      "publishedAtSgt": "2026-11-18T15:57:37+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/uk-inflation-cpi-fuel-prices.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-18T21:13:14+08:00"
+    },
+    {
+      "articleId": "e11853ede7d332f1e4309d5f43e935110f5ca1730daeb253a1a5ea7d103003da",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Morgan Stanley equity strategists note that despite an expected earnings beat from Nvidia, investor uncertainty persists regarding future AI investment pace, though near-term demand and guidance remain constructive with no signs of spending slowdown from hyperscalers.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors face ongoing uncertainty regarding the future trajectory and pace of AI infrastructure spending, despite strong near-term earnings results from key market drivers like Nvidia.",
+      "reasoning": "The article discusses high-level market sentiment and analyst expectations surrounding Nvidia's earnings and broader artificial intelligence spending trends, making it highly relevant for equity market and technology sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "'Who and what comes next': Analysts expect Nvidia investor uncertainty despite earnings beat",
+      "publishedAtSgt": "2026-11-18T14:21:45+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/nvidia-earnings-market-analysis.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-18T21:13:14+08:00"
+    },
+    {
+      "articleId": "4f5c94f8054488247cc27e729937c437f5a20d028364daa1a87e9645374f8243",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Nvidia executives, including Colette Kress, highlighted continued strong business support and supply chain stability, with key supplier TSMC visiting offices and customers backing the outlook, demonstrating Nvidia's enduring central role in the AI ecosystem even in the absence of CEO Jensen Huang.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "Taiwan",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Reassures equity investors regarding Nvidia's operational stability, leadership depth, and robust customer/supplier relationships within the AI hardware supply chain.",
+      "reasoning": "Classified as MARKET due to its focus on Nvidia's business outlook, supplier relations, and market positioning. Sentiment is POSITIVE because it underscores ongoing demand and supply chain backing. Important for monitoring semiconductor and AI tech holdings.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "With Jensen Huang gone, Colette Kress shows Nvidia is still at the center of AI",
+      "publishedAtSgt": "2026-11-18T11:15:00+08:00",
+      "url": "https://www.cnbc.com/2026/11/17/jensen-huang-may-be-gone-nvidia-shows-its-still-at-the-center-of-ai-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-11-18T21:13:13+08:00"
+    },
     {
       "articleId": "21121a776a178e23a17ae78d0faa36917765d9bf8afa9557ffa3a3dc20f6eb3c",
       "relevant": true,
