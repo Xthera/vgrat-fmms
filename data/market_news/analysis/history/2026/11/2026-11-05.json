@@ -1,0 +1,785 @@
+{
+  "date": "2026-11-05",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "articleCount": 26,
+  "analyses": [
+    {
+      "articleId": "4874222d0f95952dfa274d7fa76abb00d2b8106deea1ee440406e680ee6c829a",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "According to a Federal Reserve survey, banks are tightening lending standards due to economic health concerns, leading to tighter credit and higher borrowing costs for small businesses, housing, and debt-laden firms.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Credit"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Real Estate"
+      ],
+      "investorImpact": "Tighter lending standards and higher borrowing costs can restrict growth for small businesses and debt-laden firms, negatively impacting equity valuations in vulnerable sectors and increasing credit risk.",
+      "reasoning": "The article is classified under ECONOMIC because it discusses Federal Reserve survey findings regarding bank lending standards and macroeconomic credit conditions, which are significant for market-wide risk assessment and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Banks are turning cautious on lending, according to the Fed. What it means for the economy",
+      "publishedAtSgt": "2026-11-05T21:52:38+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/fed-bank-lending-standards-small-business.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T04:44:23+08:00"
+    },
+    {
+      "articleId": "9b66cf8b3aa5220c37dbc8225209c22d8be32a0c0cd48081eb58fceb2a845f72",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Financial markets cooled following a strong midterm rally as investors assessed the implications of a newly Democratic-controlled Congress. The market received a boost from plunging oil prices, but stocks faced pressure, including Elon Musk-related equities and premarket drops in smartphone chip shares following fourth-quarter sales misses.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Energy"
+      ],
+      "investorImpact": "Investors should monitor shifting political dynamics following the midterm elections alongside sector-specific pressures in technology and energy, which may drive near-term market volatility.",
+      "reasoning": "The article is classified as MARKET because it discusses overall market cooling post-midterm rally, political shifts affecting the landscape, and sector-specific pressures such as plunging oil prices and semiconductor sales misses. It is relevant for fund monitoring due to broad equity and commodity market impacts.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Markets cool after the monster midterm rally with Musk's stocks under pressure",
+      "publishedAtSgt": "2026-11-05T21:41:10+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/markets-cool-midterm-musk-stocks-under-pressure.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T04:44:23+08:00"
+    },
+    {
+      "articleId": "ab87edda16b43c0572ca47288d431f3e3782a5a082c0974876b64d55fec76514",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Wendy's announced it has rejected a $1.4 billion takeover offer of $7.35 per share in cash from an investor group led by Nelson Peltz's Trian Fund Management, alongside BlueFive Capital, Sixth Street Partners, and Flynn Group.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Restaurants"
+      ],
+      "investorImpact": "Investors holding Wendy's stock should monitor for potential price volatility or revised bids following the rejection of the takeover proposal.",
+      "reasoning": "The article reports a significant M&A development involving a major corporate takeover bid rejection, impacting Wendy's and related investor groups within the consumer discretionary sector.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Wendy's rejects takeover proposal from Nelson Peltz’s Trian",
+      "publishedAtSgt": "2026-11-05T20:27:50+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/wendys-rejects-takeover-proposal.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T20:32:38+08:00"
+    },
+    {
+      "articleId": "f70fad09a0f3b719cd74bcbfd54ad4048663fcca0667863bc10f39ebf8224d28",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The Bank of England raised its key interest rate by 25 basis points to 4% in its first rate hike in over three years, while warning that inflation is expected to near 5%.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Currencies"
+      ],
+      "geographies": [
+        "United Kingdom"
+      ],
+      "sectors": [
+        "Banking",
+        "Financials"
+      ],
+      "investorImpact": "Higher interest rates and rising inflation in the UK impact borrowing costs, asset valuations, and currency strength, creating headwinds for equities and fixed income markets.",
+      "reasoning": "The article details a major central bank monetary policy shift with direct implications for macroeconomic stability and asset pricing in the UK.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bank of England hikes interest rate for the first time since Iran war, warns inflation will near 5%",
+      "publishedAtSgt": "2026-11-05T20:27:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/interest-rates-inflation-uk.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-05T20:32:38+08:00"
+    },
+    {
+      "articleId": "cd43f5ea9215ebea1469044fbe7307b534fbdc6c2e60ae04ea677bb79277b0b9",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Shares of Deoleo, the world's largest olive oil company, plummeted 18% after rivals Dcoop and Acesur agreed to a takeover deal to each acquire a 50% stake, consolidating Spain's dominance in the olive oil sector.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Spain",
+        "Global"
+      ],
+      "sectors": [
+        "Consumer Staples",
+        "Food & Beverage"
+      ],
+      "investorImpact": "Investors in Deoleo experienced a sharp single-day drop of 18% following the acquisition announcement, highlighting sector-specific consolidation risks and volatility.",
+      "reasoning": "Classified as MARKET due to the corporate takeover and significant stock price movement of a major industry player. Fund monitoring relevance is true as it impacts sector consolidation and equity holdings in consumer staples.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "World's largest olive oil company plummets 18% after rivals agree to takeover deal",
+      "publishedAtSgt": "2026-11-05T19:42:28+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/deoleo-olive-oil-takeover-dcoop-acesur.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T20:32:38+08:00"
+    },
+    {
+      "articleId": "995d4cf71e3ba8f24ccb4462e360ee9e7a9ed7891a164415f0c166fe39608d69",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "BMI and Nomura analysts highlight that midterm election results could lead to a sharp slowdown in AI investment and data center construction due to potential permitting delays and regulatory uncertainty, specifically impacting projects planned for 2028.",
+      "assetClasses": [
+        "Equities",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Real Estate",
+        "Utilities"
+      ],
+      "investorImpact": "Investors in AI and data center infrastructure face potential headwinds and increased regulatory and permitting risks following the midterm elections, which could delay projects and slow overall sector investment.",
+      "reasoning": "The article is classified under GEOPOLITICAL as it links midterm election outcomes to regulatory and permitting hurdles for technology infrastructure, carrying negative sentiment for AI capital expenditure and moderate importance for tech and infrastructure portfolios.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "How the midterms could fuel the K-shaped AI trade",
+      "publishedAtSgt": "2026-11-05T19:01:39+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/ai-data-centers-midterms-capacity.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-05T20:32:38+08:00"
+    },
+    {
+      "articleId": "280a66d21e1fd55de6e807e8db5fa49dd9392b8a014df03243340da8560f67cd",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "OpenAI pledged to cover the full cost of powering its data centers and committed to greater transparency following voter pushback against rapid AI expansion. The company stated it will seek community input, publish construction plans, and avoid non-disclosure agreements with public officials for data centers it owns and operates.",
+      "assetClasses": [
+        "Equities",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Utilities",
+        "Energy"
+      ],
+      "investorImpact": "Investors in AI infrastructure and utilities should note potential cost burdens shift toward developers like OpenAI, while regulatory and community resistance could introduce delays or higher operational compliance overheads.",
+      "reasoning": "The article discusses AI infrastructure costs and community pushback, which directly affects technology sector investments, utility demand, and data center developers.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "OpenAI pledges to pay for data center power after election highlights AI concerns",
+      "publishedAtSgt": "2026-11-05T18:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/openai-to-pay-for-data-center-power-after-election-shows-ai-concern.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 82,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-05T20:32:38+08:00"
+    },
+    {
+      "articleId": "83f10ed76e912c6f67b0989535548787f113d02267ef0ce7df4a022d610ee660",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Rheinmetall shares plunged 17% following an outlook cut caused by stalled military contracts and delays to the Boxer contract, which pushes advance payments into 2027 and impacts cash conversion targets.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Germany",
+        "Europe"
+      ],
+      "sectors": [
+        "Defense",
+        "Aerospace"
+      ],
+      "investorImpact": "The sharp drop in Rheinmetall shares and its outlook cut raise broader concerns regarding traditional defense technology investments, contract execution delays, and cash flow conversions in the defense sector.",
+      "reasoning": "The article details a major equity sell-off and earnings/outlook revision for a prominent defense contractor, providing significant market intelligence relevant to defense sector holdings.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Rheinmetall shares plunge 17% after outlook cut as military contracts stall",
+      "publishedAtSgt": "2026-11-05T17:06:40+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/rheinmetall-stock-outlook-sales-germany.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T20:32:39+08:00"
+    },
+    {
+      "articleId": "8c2f38e1119f912dcf477d382a44487f10924bbb170802a828c75ea9dd4f956b",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Chinese semiconductor companies are recruiting experienced overseas engineers with competitive compensation packages to bridge the technology gap, heightening concerns over trade secrets and the protection of complex manufacturing knowledge.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "China",
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors in semiconductor firms should monitor talent retention risks, competitive pressures from Chinese rivals, and potential regulatory or corporate actions regarding intellectual property protection.",
+      "reasoning": "Classified as GEOPOLITICAL due to cross-border technology competition and talent acquisition strategies between China and international markets. It is relevant for fund monitoring as it impacts the semiconductor sector's cost structure and competitive landscape.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Inside the chip talent war: Trade secrets and rising Chinese rivals",
+      "publishedAtSgt": "2026-11-05T11:53:18+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/semiconductor-china-korea-talents-rivalry.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-05T20:32:39+08:00"
+    },
+    {
+      "articleId": "2f8dc86e75addd1da596e40465198c0041ffd69b7fc52fc22e8237dbc82e807f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "LIV Golf faces potential liquidation following BC Partners Credit's decision to drop a rescue financing plan after the breakaway league failed to secure sufficient player commitments for a relaunch.",
+      "assetClasses": [
+        "Private Equity"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Sports",
+        "Entertainment",
+        "Financial Services"
+      ],
+      "investorImpact": "Highlights execution and uptake risks in sports financing and alternative league restructuring, directly impacting potential private credit investments and sponsors associated with the venture.",
+      "reasoning": "Classified as MARKET due to corporate rescue financing failure and potential liquidation of a prominent sports entity. Important for monitoring private credit and sports-related private equity exposure.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "LIV Golf faces liquidation after BC Partners scraps rescue plan",
+      "publishedAtSgt": "2026-11-05T11:11:58+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/liv-golf-liquidation-bc-partners.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 100,
+      "collectorRelevanceReason": "financial_market_legal_story",
+      "collectedAtSgt": "2026-11-05T20:32:38+08:00"
+    },
+    {
+      "articleId": "cfd0558291c06f1191b3e2def2bba8785ec0abfcab6d129713745d02b235641a",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Shares of Australian data center operator NextDC surged over 42% after Goodman Group and Digital Realty acquired stakes of up to 9.9% at A$9.50 per share through an aftermarket bookbuild.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Australia",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Real Estate",
+        "Data Centers"
+      ],
+      "investorImpact": "The significant surge in NextDC shares highlights strong strategic interest and valuation upside in the data center sector driven by major industry players like Goodman Group and Digital Realty.",
+      "reasoning": "Classified under MARKET because it details a major equity price surge driven by strategic stake purchases in a publicly traded company. It is fund monitoring relevant due to its direct implications for data center real estate and technology equity investments.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "NextDC shares surge 43% after Goodman, Digital Realty stake purchases",
+      "publishedAtSgt": "2026-11-05T08:24:57+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/nextdc-goodman-group-digital-realty-data-centers-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T10:35:37+08:00"
+    },
+    {
+      "articleId": "33611218d4ede2613567b8ba31c07cf2198a455891e87b88ddf87e291b09351b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Snap shares fell over 10% following a third-quarter revenue and daily active users miss, alongside plans to shift its primary audience metric to global monthly active users starting in early 2027.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Communication Services"
+      ],
+      "investorImpact": "Investors should note the growth challenges and metric changes for Snap, which may impact sentiment across the digital advertising and social media sectors.",
+      "reasoning": "The article is classified under MARKET due to the immediate 10% drop in share price following earnings results, with NEGATIVE sentiment reflecting the revenue and user misses. It is relevant for fund monitoring as it provides insights into social media sector performance.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Snap shares fall over 10% on third-quarter revenue miss",
+      "publishedAtSgt": "2026-11-05T08:14:47+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/snap-q3-earnings-report-2026.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T10:35:38+08:00"
+    },
+    {
+      "articleId": "b8a3f2a704d10b8b30ef4752893bcf7debfaeba56c2fe0bfb03bcf1215bc42ad",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "India is weighing potential tax cuts to attract foreign investors amidst recent capital outflows towards cheaper Chinese stocks, while multiple risks such as strained US ties, high energy prices, currency depreciation, and AI uncertainty weigh down Indian markets.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "India",
+        "China",
+        "United States"
+      ],
+      "sectors": [
+        "Broad Market"
+      ],
+      "investorImpact": "Potential tax cuts could improve sentiment and capital inflows into Indian equities, but persistent macroeconomic and geopolitical risks may continue to weigh on investor allocation decisions between India and competing emerging markets.",
+      "reasoning": "Classified as MARKET due to focus on foreign investor capital flows, equity market performance, and policy considerations like tax cuts impacting asset allocation. Importance is MEDIUM as it addresses broader emerging market allocation trends and regional risks.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Inside India newsletter: India weighs a tax cut to win over foreign investors. Will it work?",
+      "publishedAtSgt": "2026-11-05T08:04:36+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/india-tax-foreign-investors-nifty.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T10:35:37+08:00"
+    },
+    {
+      "articleId": "02c50df6753d61f1ec97b796ad470132f63c925e2d46f2d2a155569fa3ac0ebd",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Qualcomm shares dropped 7% following a weak earnings forecast driven by a memory shortage that weighed on smartphone sales. Handset chip sales fell 26% to $5.14 billion, trailing estimates, though the company noted sequential growth and that Android shipments in China have bottomed.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "The weak forecast and declining handset chip sales weigh directly on Qualcomm's stock and broader semiconductor sentiment, signaling near-term headwinds in the mobile chip market.",
+      "reasoning": "Classified as MARKET due to the significant 7% drop in Qualcomm's stock price following earnings and guidance updates. It is important for monitoring tech sector performance and supply chain constraints like memory shortages.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Qualcomm stock drops 7% on weak earnings forecast as memory shortage weighs on smartphone sales",
+      "publishedAtSgt": "2026-11-05T07:38:11+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/qualcomm-qcom-earnings-report-q4-2026.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T10:35:38+08:00"
+    },
+    {
+      "articleId": "5889db13bfecf21becb334cc67c30edf312dfa3ad49e66f2e6a17ae8b5f10e5b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "BP and Baker Hughes CEOs discuss the investment outlook, highlighting a 'demand decade' driven by artificial intelligence, population growth, and developing nations, despite geopolitical risks and volatile oil prices.",
+      "assetClasses": [
+        "Commodities",
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Energy"
+      ],
+      "investorImpact": "Investors in the energy sector should note the long-term positive outlook driven by structural demand growth from AI and emerging markets, even amid near-term geopolitical and commodity price uncertainties.",
+      "reasoning": "The article is classified under MARKET as it covers industry investment outlooks and demand drivers from major energy CEOs, which is highly relevant for sector monitoring and investment strategies.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "A 'demand decade' ahead for energy? BP, Baker Hughes CEOs weigh the investment outlook",
+      "publishedAtSgt": "2026-11-05T07:23:03+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/energy-leaders-investment-outlook.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T10:35:37+08:00"
+    },
+    {
+      "articleId": "172ba24a9d0a1e3817dd04256335521c2432f4d7b037fb164d79b3351af1ed99",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer warns investors against overinterpreting the post-election Wall Street rally as a solid foundation for long-term investment decisions, noting that short-term trading is driving current market action. Meanwhile, Apple shares reached an all-time high amid expectations that slowing data center construction could lower memory chip prices and relieve pressure on margins.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors should exercise caution regarding the sustainability of post-election market rallies, distinguishing between short-term trading momentum and fundamental long-term value, while monitoring specific sector developments such as memory chip pricing impacts on hardware margins.",
+      "reasoning": "The article is classified under MARKET as it discusses stock market reactions, post-election rally sentiment, and specific equity movements. Sentiment is MIXED due to Cramer's warning about reading too much into short-term rallies contrasted with positive developments for Apple.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer warns investors may be reading too much into Wall Street's post-election rally",
+      "publishedAtSgt": "2026-11-05T07:18:56+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/cramer-midterms-ai-stocks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T10:35:38+08:00"
+    },
+    {
+      "articleId": "f78e41b3c4daff716d2e8b5494f3109a3bbc04af31bd2f04f1368dc31f691f5d",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Figma shares dropped 7% in extended trading despite beating third-quarter earnings expectations and guidance, as the company prioritized long-term growth through AI changes.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Software"
+      ],
+      "investorImpact": "Investors experienced a sell-off despite strong headline beats due to strategic shifts towards AI and long-term growth investments, highlighting ongoing valuation sensitivity to AI integration strategies in software companies.",
+      "reasoning": "The article is classified under MARKET due to the immediate stock price reaction following earnings. Sentiment is MIXED because strong financial performance was overshadowed by a negative share price reaction and strategic AI pivots. It is relevant for fund monitoring as it reflects broader software sector dynamics regarding AI integration and earnings reactions.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Figma sinks after earnings beat as company prioritizes long-term growth with AI changes",
+      "publishedAtSgt": "2026-11-05T07:02:39+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/figma-fig-q3-earnings-report-2026.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T10:35:38+08:00"
+    },
+    {
+      "articleId": "a049da21e2d61a30bb1e49f6d242c59fd578f14edb654ac01f3c7e545d65f724",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "E.l.f. Beauty reported a 51 percent sales increase, its 31st consecutive quarter of net sales growth, and raised its full-year guidance, driven by broad portfolio performance and international growth.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Beauty"
+      ],
+      "investorImpact": "Strong sales growth and raised guidance signal robust consumer demand and execution in the beauty sector, providing positive sentiment for equity investors holding the stock or sector peers.",
+      "reasoning": "The article details strong quarterly financial results and an upward revision of guidance for a prominent consumer brand, making it relevant for market and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "E.l.f. Beauty posts 51% sales increase, raises full-year guidance",
+      "publishedAtSgt": "2026-11-05T05:47:22+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/elf-beauty-elf-q2-2027-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T10:35:38+08:00"
+    },
+    {
+      "articleId": "8aec230ae2cf5e0acb38f7ab63bde21ba70f9ffb0c9c7011c2541921efe743fb",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Crude oil prices fell below $90 a barrel following Republican midterm election setbacks linked by Vice President JD Vance to the war against Iran, fueling market expectations of a potential political shift toward a deal or restricted war funding.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "United States",
+        "Iran"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil & Gas"
+      ],
+      "investorImpact": "The decline in crude oil prices below $90 a barrel impacts energy sector equities and commodity portfolios, driven by shifting political expectations surrounding US foreign policy and war funding.",
+      "reasoning": "Classified as MARKET due to direct crude oil price movements driven by political developments and market speculation regarding the Iran war and US midterm election results, carrying high importance for energy sector positioning.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Crude oil prices fall below $90 a barrel as Vance blames GOP election defeat on Iran war",
+      "publishedAtSgt": "2026-11-05T04:14:52+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/oil-price-iran-war-us-election-strait-hormuz.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T10:35:38+08:00"
+    },
+    {
+      "articleId": "cdd217684c8786287a2bdb15aded5d2a5f3bd6b988e0466a7d3b0ae6273e7d24",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Flutter's new CEO is relying on FanDuel promotions to drive customer acquisition despite a negative impact on profits, while the company's stock is down over 60% year-to-date and management prioritizes organic growth and debt reduction.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Gaming"
+      ],
+      "investorImpact": "Investors should monitor how marketing spend and promotional strategies impact profitability versus customer growth for major betting operators like FanDuel.",
+      "reasoning": "The article discusses company-specific performance, strategic shifts by leadership, and stock valuation impacts, making it relevant for market and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "New Flutter CEO bets on FanDuel promotions to win customers as profits suffer",
+      "publishedAtSgt": "2026-11-05T03:53:32+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/flutter-fanduel-promotions-q3-2026.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T04:28:00+08:00"
+    },
+    {
+      "articleId": "f91e4bc1ec0da1f21536b45d6762ea998b44c2adfcce4004438ac263a53a526f",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "During the 2026 midterms, voters rebuffed data center ballot measures in every instance except one. Meanwhile, OpenAI secured significant computing capacity at an Ohio campus with backing from SoftBank, highlighting the tension between massive AI infrastructure growth and local voter resistance.",
+      "assetClasses": [
+        "Equities",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Real Estate",
+        "Utilities"
+      ],
+      "investorImpact": "Voter resistance to data centers poses regulatory and expansion risks for tech infrastructure, real estate, and utility sectors supporting the AI boom, potentially driving up costs or delaying project deployment.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on data center infrastructure and AI expansion. Sentiment is negative because voters overwhelmingly rejected ballot measures, creating hurdles for sector scaling.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Voters rebuff data centers in every ballot measure except one during the 2026 midterms",
+      "publishedAtSgt": "2026-11-05T03:51:18+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/data-center-ballot-measures-2026-midterm.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-05T04:28:00+08:00"
+    },
+    {
+      "articleId": "ead0f5a344d1b7d1dccb7ef2bdb6b2561429c744a1b592f3abefa5f0bc2053a4",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Following the 2026 midterm election results, which produced a divided government, major stock market indices and large-cap tech stocks including Apple and hyperscalers surged as investors found relief from market uncertainty. However, certain stocks tied to Elon Musk and AI data center buildouts experienced declines.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Communication Services"
+      ],
+      "investorImpact": "The removal of political uncertainty driven by midterm results provides a boost to broader equity markets and large-cap tech stocks, though divergent performance among sub-sectors like AI infrastructure requires selective stock picking.",
+      "reasoning": "The article is classified under MARKET with a MIXED sentiment because while overall market indices and major tech stocks surged due to reduced policy uncertainty from a divided government, specific segments related to AI data centers and Elon Musk saw declines. It is highly relevant for fund monitoring given the immediate impact on equity valuations and sector rotation.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Hyperscalers and Apple surge after election results remove investor uncertainty",
+      "publishedAtSgt": "2026-11-05T03:37:43+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/apple-and-other-big-tech-stocks-surge-after-2026-midterm-elections.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T04:27:59+08:00"
+    },
+    {
+      "articleId": "baa582bf8260f23623a3fb4bf2bb2f1904c4a6acd980aab304988fd9bdaaac1a",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Crude oil prices fell with WTI trading below $90, causing energy stocks to drop significantly, while inflation and interest-rate related trades saw bullish attention alongside a rally in solar energy companies.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Renewable Energy",
+        "Financials"
+      ],
+      "investorImpact": "Investors in energy and renewable sectors should note the volatility in crude prices and the shifting sentiment toward inflation- and interest-rate-sensitive assets.",
+      "reasoning": "The article discusses significant market movements including falling crude prices, energy sector declines, and shifts in options activity related to interest rates and solar energy, making it relevant for market and economic monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "A massive trade just happened in a leading mortgage lender: Watch Options Action Live",
+      "publishedAtSgt": "2026-11-05T03:08:15+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/a-massive-trade-just-happened-in-a-leading-mortgage-lender-watch-options-action-live.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-05T04:28:00+08:00"
+    },
+    {
+      "articleId": "9d965a0f4afdb9cbad87187ad027021347e41c814e5ca92c68ef83e0b13d8e7f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "CVS Health is splitting off its drugstore business in a major breakup of the healthcare giant, causing shares to fall over 10%. Existing shareholders will own stock in both resulting companies.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Healthcare",
+        "Retail"
+      ],
+      "investorImpact": "Investors face significant structural changes with the corporate breakup, resulting in an immediate negative share price reaction of over 10% but offering shares in both standalone entities going forward.",
+      "reasoning": "The article details a major corporate restructuring and breakup of a prominent healthcare giant, which directly impacts market valuations, sector sentiment, and equity holders, making it highly relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "CVS to split off drugstore business in major breakup of healthcare giant; shares fall 10%",
+      "publishedAtSgt": "2026-11-05T02:35:35+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/cvs-to-split-off-drugstore-business.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T04:28:00+08:00"
+    },
+    {
+      "articleId": "05ddf3897daad7800286c1ab936a8c1661db2bcfa720a05271fa4c924fb7d9cd",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Uber shares rose over 7% following a revenue beat driven by its freight division and an announcement that the company is investing significantly to add drivers, despite reporting a sharp drop in net income due to a previous tax valuation release benefit.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Transport",
+        "Ride-hailing"
+      ],
+      "investorImpact": "The positive revenue beat and strong stock reaction indicate robust demand and growth potential, though net income contraction warrants monitoring.",
+      "reasoning": "The article details quarterly earnings and market performance for a major publicly traded company, making it relevant for equity market and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Uber beats on revenue, CEO tells CNBC the company is 'investing significantly' to add drivers",
+      "publishedAtSgt": "2026-11-05T01:04:32+08:00",
+      "url": "https://www.cnbc.com/2026/11/04/uber-stock-q3-2026-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T04:28:01+08:00"
+    },
+    {
+      "articleId": "77908b5068db0cef171cd0dadad253bc0e635c07784058179a66bc54d1c03e77",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer highlights a bank stock as a buy following a post-election pullback, while discussing investor expectations around political control impacting AI data center buildouts and capital spending for hyperscalers.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Technology"
+      ],
+      "investorImpact": "Investors may find buying opportunities in specific bank stocks following post-election pullbacks, while tech sector investors must weigh the implications of potential shifts in AI capital spending.",
+      "reasoning": "The article provides stock recommendation commentary and discusses broader market impacts from political outcomes on the banking and technology sectors, making it relevant for market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer says this bank stock is a buy after its post-election pullback",
+      "publishedAtSgt": "2026-11-05T00:54:39+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/04/cramer-says-this-bank-stock-is-a-buy-after-its-post-election-pullback.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-05T04:28:01+08:00"
+    }
+  ]
+}
