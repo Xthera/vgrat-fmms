@@ -1,10 +1,333 @@
 {
-  "generatedAtSgt": "2026-11-19T05:49:40.314192+08:00",
+  "generatedAtSgt": "2026-11-19T21:48:51.301223+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 207,
+  "articleCount": 218,
   "analyses": [
+    {
+      "articleId": "2d52cd1386723763581a7f19afcfa3cefb9f94f39ea391b881800dc0d871e1f4",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Anthropic's IPO prospectus indicates that shares will be available to retail investors through major brokerages like Charles Schwab, Fidelity, Robinhood, SoFi, and E*Trade, which enforce anti-flipping policies to discourage quick selling of IPO shares.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Retail investors participating in the Anthropic IPO must be aware of brokerage anti-flipping penalties, which could restrict quick liquidity and trading strategies immediately following the public debut.",
+      "reasoning": "Classified as MARKET due to its focus on IPO mechanics and brokerage trading rules for a prominent technology company. Important for monitoring retail investor behavior and market access dynamics surrounding major primary issuances.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Anthropic IPO: Investors who flip the stock may face brokerage penalty",
+      "publishedAtSgt": "2026-11-19T21:05:40+08:00",
+      "url": "https://www.cnbc.com/2026/11/19/anthropic-ipo-flipping-rules.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 100,
+      "collectorRelevanceReason": "financial_market_legal_story",
+      "collectedAtSgt": "2026-11-19T21:31:05+08:00"
+    },
+    {
+      "articleId": "5e84084c113b2c81aa47ced58ebad572ceacddcef1235b33cae5b30b580b26d7",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "According to the CNBC Family Office Portfolio Tracker, family offices increased their stock holdings in the third quarter while hedging AI-related risks by increasing bets on the financial sector, showing resilience despite tech weakness and bubble concerns.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Financials",
+        "Technology"
+      ],
+      "investorImpact": "Investors can gauge institutional sentiment and risk management strategies from ultra-high-net-worth family offices, noting a rotation or hedging strategy away from pure-play AI tech into financials.",
+      "reasoning": "The article reports on broad institutional portfolio shifts among family offices, highlighting asset allocation trends which are critical for market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Family offices move more money into stocks, hedge AI risk, according to CNBC Family Office Portfolio Tracker",
+      "publishedAtSgt": "2026-11-19T20:46:28+08:00",
+      "url": "https://www.cnbc.com/2026/11/19/family-offices-moved-more-money-into-stocks-but-hedged-ai-risk.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-19T21:31:05+08:00"
+    },
+    {
+      "articleId": "0bdb467186da0a189988140e494845ba3a2953c8c07bf443831ab484db92cc6d",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Anthropic has lifted Nasdaq futures and tech stocks ahead of its record-breaking IPO, raising $81.3 billion by selling around 980 million shares and surpassing SpaceX's record IPO from June. Retail investors can access the offering through certain mutual funds or ETFs, while the massive IPO provides a major alternative vehicle for AI sector exposure.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "The record-breaking IPO by Anthropic provides a significant positive catalyst for tech stocks and Nasdaq futures while offering investors a major new vehicle to gain exposure to the artificial intelligence trade, though it may also shift capital dynamics within the sector.",
+      "reasoning": "Classified as MARKET due to its direct impact on Nasdaq futures and tech equities driven by a historic IPO event. It is important for fund monitoring as it affects broader technology sector sentiment and portfolio allocation alternatives.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Anthropic lifts Nasdaq futures and tech stocks ahead of its record-breaking IPO",
+      "publishedAtSgt": "2026-11-19T20:30:29+08:00",
+      "url": "https://www.cnbc.com/2026/11/19/anthropic-lifts-nasdaq-futures-and-tech-stocks-ahead-of-its-record-breaking-ipo.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-19T21:31:06+08:00"
+    },
+    {
+      "articleId": "61a6b96a7100e892b9bf4305fdb5bff20ecd2cc9a03986dce5c75c650cef4824",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Anthropic's IPO is slated to be the largest in history by dollar amounts and one of the most rapid wealth creation events, with the average employee projected to be worth over $40 million and hundreds worth over $100 million based on SEC filings and investors.",
+      "assetClasses": [
+        "Equities",
+        "Private Equity"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "The massive IPO highlights extreme wealth generation in the artificial intelligence sector, signaling robust public market demand for leading AI companies and potential liquidity shifts for high-net-worth consumers.",
+      "reasoning": "The article covers a major market event—a historic IPO with massive capital and wealth creation implications in the technology sector, making it highly relevant for market and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Anthropic IPO could create thousands of multimillionaire employees",
+      "publishedAtSgt": "2026-11-19T20:30:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/19/anthropic-ipo-could-create-thousands-of-multimillionaire-employees.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-19T21:31:05+08:00"
+    },
+    {
+      "articleId": "49cb0a42b7c4e4eb3a7ad58dd35e2f03ce2e833af8a416c45d0390223454ed10",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "The IEA reports that global data center electricity use could double by 2030, driven by surging power demands and significant infrastructure investments. Additionally, renewable power generation is projected to grow substantially faster over the next decade, while recent energy crises may accelerate global electrification efforts.",
+      "assetClasses": [
+        "Equities",
+        "Infrastructure",
+        "Commodities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Utilities",
+        "Energy"
+      ],
+      "investorImpact": "Investors in technology infrastructure, data centers, and renewable energy will find significant growth opportunities and capital expenditure requirements as power demand doubles by 2030, impacting utility grids and energy suppliers.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on data center electricity demand and energy infrastructure projections reported by the IEA. It is highly important and fund-monitoring relevant because it highlights major structural shifts in energy demand and infrastructure spending affecting technology and utility sectors globally.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Data center electricity use could double by 2030, IEA says",
+      "publishedAtSgt": "2026-11-19T19:34:24+08:00",
+      "url": "https://www.cnbc.com/2026/11/19/data-center-electricity-demand-iea.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-19T21:31:06+08:00"
+    },
+    {
+      "articleId": "7b1425c0684501b2b46aa30eba9be87425885fdab1934ff241dd4074bd9cffbf",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Novartis raised its blockbuster drug forecasts to $18 billion while addressing investor concerns about long-term growth beyond 2031 and patent expiries on older drugs, with shares falling 2.4% in Swiss trading.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Switzerland",
+        "Global"
+      ],
+      "sectors": [
+        "Healthcare",
+        "Pharmaceuticals"
+      ],
+      "investorImpact": "Investors are weighing the upgraded forecasts for growth drugs against the looming patent expiries of older drugs and questions about long-term sustainability past 2031, which drove a temporary drop in share price.",
+      "reasoning": "The article details corporate guidance updates and market reaction for a major pharmaceutical company, providing relevant insights for healthcare sector and equity monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Novartis raises blockbuster drug forecasts to $18 billion as it seeks to prove growth can last",
+      "publishedAtSgt": "2026-11-19T17:57:53+08:00",
+      "url": "https://www.cnbc.com/2026/11/19/novartis-stock-cmd-2026-ceo.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 95,
+      "collectorRelevanceReason": "business_market_event",
+      "collectedAtSgt": "2026-11-19T21:31:06+08:00"
+    },
+    {
+      "articleId": "ff298b405a602a058d74678d68ae0e577d9c9f25e0194168e7223ede548da7fb",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "South Korean entertainment, gaming, and travel stocks rallied following the conclusion of a trade deal between Seoul and Beijing that grants Korean companies greater access to China's consumer market, with gaming firms like Krafton and Shift Up seeing notable gains.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "South Korea",
+        "China"
+      ],
+      "sectors": [
+        "Entertainment",
+        "Gaming",
+        "Travel"
+      ],
+      "investorImpact": "The trade agreement provides a positive catalyst for South Korean media, gaming, and travel sectors by opening up access to the Chinese consumer market, potentially boosting revenues and stock performance for companies operating in these industries.",
+      "reasoning": "The article highlights direct market movements and sector rallies resulting from a significant bilateral trade development between South Korea and China, making it highly relevant for equity market monitoring and regional sector strategies.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "'Parasite' backer and other South Korean media, gaming and travel stocks rally on China trade deal",
+      "publishedAtSgt": "2026-11-19T10:54:37+08:00",
+      "url": "https://www.cnbc.com/2026/11/19/china-south-korea-trade-deal-films-gaming.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-19T11:40:51+08:00"
+    },
+    {
+      "articleId": "4597895641cffe4d9dcdfefd97d8b6a0273275f7cc650237df506e40ed02fbc7",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Palo Alto Networks stock surged significantly in after-hours and regular trading sessions following a strong earnings report and growing recognition of cybersecurity's critical role in the artificial intelligence era.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Cybersecurity"
+      ],
+      "investorImpact": "Highlights strong market demand and positive sentiment for cybersecurity equities driven by the AI expansion, offering growth opportunities for tech-focused portfolios.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on cybersecurity and AI integration. The sentiment is POSITIVE because of the stock surge and strong market performance. Fund monitoring is relevant as it reflects sector trends in tech and security.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Palo Alto stock surges as all signs point to how important cybersecurity is in the AI age",
+      "publishedAtSgt": "2026-11-19T09:29:06+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/18/palo-alto-surges-as-all-signs-point-to-cybersecurity-need-in-the-ai-age.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-19T11:40:51+08:00"
+    },
+    {
+      "articleId": "ed068a456aa323875d8dc016a1275dc2dfca111925cf6083578bd8b8e5793787",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Palo Alto Networks shares surged over 7% following a strong fiscal first-quarter earnings beat and the announcement of a $4.5 billion acquisition of AI startup Applied Compute, reflecting high demand for cybersecurity amid rising AI threats.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Cybersecurity"
+      ],
+      "investorImpact": "The positive earnings report and large strategic acquisition signal robust demand in the cybersecurity sector, potentially boosting investor confidence in tech equities with AI integration strategies.",
+      "reasoning": "Classified as MARKET due to direct stock price movement and earnings results, with HIGH importance given the scale of the $4.5 billion acquisition and strong earnings beat.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Palo Alto inks $4.5 billion deal for AI startup Applied Compute, shares pop 7% on earnings",
+      "publishedAtSgt": "2026-11-19T08:07:06+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/palo-alto-networks-panw-q1-2027-earnings-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-19T11:40:51+08:00"
+    },
+    {
+      "articleId": "fed881d169742ef5e5207381d1ee7dbe695022f28a3cc432e8c8fe71ae5e3cca",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Foreign capital inflows have helped Indian equities recover as global managers diversify out of artificial intelligence trades, driven by strong economic growth and corporate earnings. However, accelerating inflation has recently breached the central bank's comfort level, posing a new risk to the market rally.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "India"
+      ],
+      "sectors": [],
+      "investorImpact": "Investors allocating to Indian equities must weigh the benefits of strong economic growth and corporate earnings against the emerging headwind of accelerating inflation, which could impact monetary policy and market valuations.",
+      "reasoning": "Classified as ECONOMIC because it deals with macroeconomic factors such as foreign portfolio flows and inflation trends in India. The sentiment is MIXED as positive foreign inflows and economic growth are countered by the rising inflation threat. It is relevant for fund monitoring given its implications for emerging market equity allocations.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Inside India newsletter: Foreign flows helped the market recover. Now it faces the inflation test",
+      "publishedAtSgt": "2026-11-19T08:01:23+08:00",
+      "url": "https://www.cnbc.com/2026/11/19/india-inflation-foreign-investor-nifty50.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-19T11:40:51+08:00"
+    },
+    {
+      "articleId": "a2fe064319058b9d01d7068f997a59524ff26dd8b98cbf6d33aa8500f90b2381",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Jim Cramer highlights a new challenge for Nvidia as Anthropic's blockbuster IPO draws investor enthusiasm and capital away from the chipmaker, offering an alternative way to invest in the artificial intelligence boom.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors may face rotation out of Nvidia shares into newly available AI pure-play IPOs like Anthropic, potentially impacting Nvidia's short-term valuation momentum.",
+      "reasoning": "The article discusses capital rotation within the technology sector driven by a major IPO competitor, which is relevant for portfolio managers monitoring AI exposure and market sentiment.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer says Nvidia has a new problem — and it has nothing to do with earnings",
+      "publishedAtSgt": "2026-11-19T07:46:32+08:00",
+      "url": "https://www.cnbc.com/2026/11/18/nvidia-cramer-anthropic-ipo-ceo.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-19T11:40:51+08:00"
+    },
     {
       "articleId": "bcd1dff2a7aa4752e1a344a177f7f9f381bd64b5e8a9b8bd332e180d341afdd6",
       "relevant": true,
