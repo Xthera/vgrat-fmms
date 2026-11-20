@@ -905,7 +905,7 @@ function applyNavCollapsed(collapsed) {
         const label =
             collapsed
                 ? "Expand menu"
-                : "Minimise menu";
+                : "Shrink menu";
 
         button.setAttribute(
             "aria-expanded",
