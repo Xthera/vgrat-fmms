@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-21",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "source": "CNBC",
+  "articles": [
+    {
+      "id": "1729535624ab7a3a3b2c577dd825b00103b08d2418343e1e9547ecdee4bb0e19",
+      "source": "CNBC",
+      "title": "Anthropic defied the odds in its record IPO. Now it has to reckon with AI market turbulence",
+      "publishedAtSgt": "2026-11-21T02:38:37+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/anthropic-defies-odds-holding-ipo-despite-massively-disruptive-market.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Between Jensen Huang's shocking exit from chip giant Nvidia, voters' rebuke of artificial intelligence in this month's midterm elections, and rising interest rates that threatened to stymie plans for a multitrillion-dollar infrastructure buildout, there seemed to be no way Anthropic could carry out an initial public offering.",
+      "feeds": [
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-21T02:39:56+08:00"
+    },
+    {
+      "id": "757302a61645a564d2a8046405195f4fde6cffd1924259ff24e77fbae89dc385",
+      "source": "CNBC",
+      "title": "Trump vows to stop U.S. companies from building data centers abroad, threatens 'tremendous tax'",
+      "publishedAtSgt": "2026-11-21T02:35:16+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/trump-data-centers-ai-companies-tax.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "CNBC's All-America Economic Survey found that 64% of registered voters opposed an AI data center within 10 miles of their home, while just 13% of respondents said they would support one. International expansion represents a growth opportunity for the top cloud infrastructure providers, which want to serve clients from data centers that are close in proximity, sometimes to meet regulatory requirements.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-21T02:39:54+08:00"
+    },
+    {
+      "id": "ef705abb724485465bfdc22128e52004a2212ee6623ddea83a74b8d216cd388a",
+      "source": "CNBC",
+      "title": "Home Depot vs. Lowe's: Which stock has the edge after earnings and our support?",
+      "publishedAtSgt": "2026-11-21T02:26:09+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/home-depot-vs-lowes-which-stock-has-the-edge-after-earnings-and-our-support.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "See here for a full list of the stocks.) As a subscriber to the CNBC Investing Club with Jim Cramer, you will receive a trade alert before Jim makes a trade. Jim waits 45 minutes after sending a trade alert before buying or selling a stock in his charitable trust's portfolio. If Jim has talked about a stock on CNBC TV, he waits 72 hours after issuing the trade alert before executing the trade.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-11-21T02:39:56+08:00"
+    },
+    {
+      "id": "ba8ed8c6cf76627c10ea0f6414f569db89d560fc53ce15f8738f6453202ef409",
+      "source": "CNBC",
+      "title": "Prediction markets outlook for stocks in 2026 dims amid AI sell-off",
+      "publishedAtSgt": "2026-11-21T02:05:29+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/sp-500-8000-kalshi-odds-ai-selloff.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "As stocks continue their tech-driven sell-off, prediction markets traders are seeing a bleaker outlook for the remainder of the year. On Friday, the Nasdaq Composite turned negative for the year as investors continued to dump tech stocks, primarily those with exposure to the artificial intelligence buildout.",
+      "feeds": [
+        "latest",
+        "finance"
+      ],
+      "collectedAtSgt": "2026-11-21T02:39:55+08:00"
+    },
+    {
+      "id": "3debe15309a30f48dd00017e66b7b4e233b76f39f99b6ff3e6bb7c07f2bdb8b7",
+      "source": "CNBC",
+      "title": "Bitcoin sell-off: Crypto is failing the 'digital gold' test again as it sinks with stocks",
+      "publishedAtSgt": "2026-11-21T01:25:19+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/bitcoin-price-gold-market-hedge.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Coming into 2026, experts said that showing bitcoin could serve as a market hedge rather than a risk-on asset that moves up and down with growth stocks was an important test for the cryptocurrency. Investors are currently in sell everything mode, including tech stocks and gold — the Dow Jones Industrial Average and S&P 500 tumbled into correction territory on Friday, according to CNBC data.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-21T02:39:56+08:00"
+    },
+    {
+      "id": "8e3a0a349a2e81afec0398c7be20e4d14ad67f8523c66d896d63cea7f1ba3b6f",
+      "source": "CNBC",
+      "title": "Data center construction costs soar 13% in 2026",
+      "publishedAtSgt": "2026-11-21T00:52:08+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/data-center-construction-costs-soar-13-percent-in-2026.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "Property Play covers new and evolving opportunities for the real estate investor, from individuals to venture capitalists, private equity funds, family offices, institutional investors and large public companies. While there was some stabilization in cost inflation this year, it was not enough to offset the huge growth in not just demand but speed of construction and delivery.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-21T02:39:55+08:00"
+    }
+  ],
+  "articleCount": 6,
+  "updatedAtSgt": "2026-11-21T02:39:56+08:00"
+}
