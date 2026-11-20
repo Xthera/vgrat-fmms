@@ -1,0 +1,639 @@
+{
+  "date": "2026-11-06",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "articleCount": 21,
+  "analyses": [
+    {
+      "articleId": "2a1377e6b2588cb471628f296103a18929472bc718b53903d17e58aef825cddc",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Prediction market odds for an Anthropic IPO announcement dropped on Kalshi following an AI sector sell-off and recent Democratic midterms victories, which raised investor concerns over potential regulatory headwinds or slowed data center construction.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors tracking the AI sector and upcoming IPO pipelines should note the shifting sentiment and regulatory concerns following political shifts, which may impact valuation expectations and exit timelines for private AI companies.",
+      "reasoning": "The article is classified as MARKET because it details prediction market pricing shifts for an IPO alongside broader AI sector sentiment changes. It is relevant for fund monitoring as it touches on tech sector sentiment and venture-backed IPO liquidity expectations.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Anthropic IPO announcement odds drop on Kalshi following midterms and AI sell-off",
+      "publishedAtSgt": "2026-11-06T23:55:32+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/anthropic-ipo-kalshi-post-midterms-ai-sell-off.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-07T03:59:44+08:00"
+    },
+    {
+      "articleId": "b4a55e226ad8539bf7f81c984e5cafeb6142579a04bdcdce71bd6ce1ef8adb3d",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Family offices increased their startup investments in October, notably backing sectors such as women's health, caregivers, and artificial intelligence healthcare applications like BioStack.",
+      "assetClasses": [
+        "Private Equity",
+        "Venture Capital"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Healthcare",
+        "Technology"
+      ],
+      "investorImpact": "Indicates active deployment of capital by high-net-worth family offices into early-stage ventures, signaling ongoing support for venture capital and health technology sectors.",
+      "reasoning": "Classified under MARKET because it reports on high-net-worth investor capital allocation trends into startups, providing useful intelligence for private market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Family offices boost startup investments in October, backing women's health and caregivers",
+      "publishedAtSgt": "2026-11-06T22:16:28+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/family-offices-boost-startup-investments-in-october.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-07T03:59:44+08:00"
+    },
+    {
+      "articleId": "750eadbf370a25ff34dbfaf31ce9a7143e3eb27cc643f335bc4cb3436163c0ce",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Financial advisors recommend staying the course following a sharp market sell-off driven by tumbling technology stocks and a retreat in the Dow, contrasting with heavy selling by retail investors of individual stocks.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "The sell-off and contrasting behavior between retail investors and advisors highlight potential short-term volatility, prompting a disciplined approach rather than panic selling.",
+      "reasoning": "Classified as MARKET due to the focus on a sharp market sell-off and stock market reactions. Sentiment is NEGATIVE reflecting the tumbling stocks and sell-off, with MEDIUM importance for portfolio oversight.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Market sell-off hits hard: Advisors say 'stay the course with an eye on buying'",
+      "publishedAtSgt": "2026-11-06T21:56:39+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/market-sell-off-hits-hard-advisors-say-stay-the-course-with-an-eye-on-buying-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-11-07T03:59:43+08:00"
+    },
+    {
+      "articleId": "4d42bd5651f18f67504248b2014a6e8414e33ca7d051eb2778f80095a57b9bb7",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Moderna reported stronger-than-expected third-quarter revenue and earnings, raising its full-year 2026 revenue growth outlook to between 15% and 25%. However, its stock fell following a social media leak of trial data ahead of an upcoming medical conference.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Healthcare",
+        "Biotechnology"
+      ],
+      "investorImpact": "Investors face mixed signals as strong fundamental business performance and raised guidance are offset by market volatility and stock sell-offs driven by premature trial data leaks.",
+      "reasoning": "The article is classified under MARKET due to earnings results and stock price reactions. Sentiment is MIXED because strong financial beats and raised guidance are counterbalanced by a stock sell-off stemming from data leaks.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Moderna raises 2026 outlook as CEO says newer vaccines are gaining traction",
+      "publishedAtSgt": "2026-11-06T20:14:24+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/moderna-mrna-earnings-q3-2026.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T20:15:52+08:00"
+    },
+    {
+      "articleId": "cecf2cb38177397f84a642eb0a79da316bc694371fae17f1cbef91a3ef7cb82c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Tech and AI stocks experienced significant market volatility and a sell-off following the US midterm elections, driven by investor concerns over potential tech regulation under a Democrat-controlled Congress and challenges related to the data center buildout.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors holding tech and AI-related equities face increased regulatory risks and market volatility following the US midterm election outcomes.",
+      "reasoning": "Classified as MARKET due to the immediate impact on stock prices and sector volatility following a major political event. Significant for fund monitoring given the scale of the tech sell-off.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AI stocks hammered by midterm shock as data center buildout becomes a 'war of attrition'",
+      "publishedAtSgt": "2026-11-06T20:04:17+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/ai-data-center-midterms-selloff.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T20:15:52+08:00"
+    },
+    {
+      "articleId": "1aeccbe49f750191e5d8294be429d2c4706ef26682eda5c535332334b9cb5dd0",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "ING is reportedly seeking buyers for $500 million of data center loans as concerns grow over soaring AI build-out debt and potentially disappointing returns. This perceived risk contributed to a sharp drop in AI-related stocks and sent the Nasdaq Composite down 5.5% into correction territory.",
+      "assetClasses": [
+        "Equities",
+        "Debt"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "The article highlights rising credit and valuation risks in AI infrastructure financing, which can trigger broader tech sector sell-offs and impact portfolios heavily weighted in tech equities and debt instruments.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on data center loans and AI infrastructure financing. The sentiment is NEGATIVE given the soaring debt concerns and sharp market sell-off, and importance is HIGH due to the significant market-wide impact on the Nasdaq.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AI debt concerns grow as ING reportedly seeks buyers for $500 million of data center loans",
+      "publishedAtSgt": "2026-11-06T19:24:52+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/ing-ai-data-center-loans-debt.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-06T20:15:52+08:00"
+    },
+    {
+      "articleId": "59668c59ac7095e2afe166e9c34e282ae4e3c3fa211b5f9cb4419a13f36fc398",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "The midterm election results and the prospect of political shifts are leading market watchers to rethink the future path of global interest rates, alongside ongoing concerns regarding oil prices and geopolitical conflict in the Middle East.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States",
+        "Middle East"
+      ],
+      "sectors": [
+        "Energy",
+        "Financials"
+      ],
+      "investorImpact": "Investors must reassess potential trajectories for global interest rates and energy markets in light of recent political outcomes and ongoing geopolitical developments.",
+      "reasoning": "The article discusses significant macro-level market drivers including interest rate expectations, oil prices, and election outcomes, making it highly relevant for market monitoring and investment strategy.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Democrat sweep gives markets a reason to rethink path of interest rates",
+      "publishedAtSgt": "2026-11-06T18:22:22+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/oil-prices-interest-rates-midterms.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T20:15:52+08:00"
+    },
+    {
+      "articleId": "42a612961716741d3db5ba6710396efc22611fd364e603b4943bc30252dfd4a0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Oil prices fell on Friday, reversing earlier gains, as investors weighed ongoing risks including potential military conflict involving Iran, with experts forecasting possible spikes above $100 a barrel.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "Global",
+        "USA",
+        "Iran"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "Investors in energy assets and broader equity markets face heightened volatility due to conflicting short-term price drops and long-term geopolitical risks that could push oil prices above $100 a barrel.",
+      "reasoning": "The article discusses significant movements in oil benchmarks driven by market reactions to political events and geopolitical conflict risks, making it highly relevant for market and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Oil prices set for sharp weekly fall after midterm elections as investors weigh Iran conflict risk",
+      "publishedAtSgt": "2026-11-06T18:00:54+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/oil-price-today-brent-wti.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T20:15:52+08:00"
+    },
+    {
+      "articleId": "e5f56d3f49a53451dc4838d2d6c5698c6208b3c1a88c2e8845a7f15a62f15220",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Equinix is shifting toward smaller facilities as regulatory scrutiny and construction restrictions on U.S. data center development grow. While enterprise demand for hybrid and multi-cloud infrastructure remains strong, potential restrictions could increase costs across the AI infrastructure supply chain.",
+      "assetClasses": [
+        "Equities",
+        "Real Estate"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Data Centers",
+        "Real Estate"
+      ],
+      "investorImpact": "Increased regulatory scrutiny and restrictions on U.S. data center construction could raise development costs across the AI infrastructure supply chain, impacting tech and real estate sectors while shifting strategies toward smaller facilities.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on data center infrastructure and AI supply chain pressures. Sentiment is MIXED as enterprise demand remains high despite regulatory headwinds and cost pressures.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Equinix points to smaller facilities as scrutiny of U.S. data center construction grows",
+      "publishedAtSgt": "2026-11-06T15:23:02+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/equinix-us-data-center-growth-asia.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-06T20:15:53+08:00"
+    },
+    {
+      "articleId": "02ef28359d0edd06bb810a1888250a130adec613dc032d5efa0da86b8482d9c4",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "The Indian stock market is positioned as an attractive hedge for global investors seeking safety from a sell-off in the artificial intelligence sector, potentially drawing in renewed foreign capital despite prior concerns over high valuations.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "India"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Investors may find strategic allocation opportunities in Indian equities as a defensive diversification play against concentrated AI trade risks in other global markets.",
+      "reasoning": "The article is classified under MARKET because it discusses capital flows and hedging strategies involving the Indian stock market amid global tech sell-offs. It holds medium importance for fund monitoring by highlighting changing sentiment and potential capital reallocation into Indian equities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "India as an AI hedge? The country's stocks could see robust inflows as markets globally tank",
+      "publishedAtSgt": "2026-11-06T14:02:36+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/india-ai-tech-hedge-nifty50.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T20:15:53+08:00"
+    },
+    {
+      "articleId": "54a0f7f90cd9cda94295604254552c01008e09a296980acd7fd9d9c58153a93c",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Rapidan Energy Group CEO Bob McNally warns that renewed U.S. military action against Iran could push oil prices past $100 per barrel as geopolitical uncertainty and risks surrounding the conflict weigh on markets.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "USA",
+        "Iran"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "Potential spikes in oil prices past $100 per barrel present significant inflationary pressures and input cost increases for energy-dependent sectors, while creating trading opportunities and volatility in energy commodities.",
+      "reasoning": "The article details a high-impact geopolitical risk involving U.S.-Iran tensions that directly threaten global energy supplies and oil price stability, making it critical for macroeconomic and commodity fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Renewed U.S.-Iran tension could push oil past $100: Rapidan Energy",
+      "publishedAtSgt": "2026-11-06T13:27:24+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/us-iran-war-trump-hormuz-oil-midterms.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-06T20:15:53+08:00"
+    },
+    {
+      "articleId": "1652ed0620d78bf00322c586c899314ac0ee9244d3e44a67fd91ab2aa5da1c6b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Asian technology stocks tumbled following an overnight Wall Street sell-off that pushed the Nasdaq Composite into correction territory due to renewed concerns over artificial intelligence spending. Major chipmakers and tech companies such as SK Hynix, Samsung, Softbank, TSMC, Advantest, and Tokyo Electron saw significant drops.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Asia",
+        "Japan",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors holding positions in Asian technology and semiconductor equities face immediate downside risk and elevated volatility due to contagion from the US tech sell-off and rising anxiety over AI spending levels.",
+      "reasoning": "The article details a major market sell-off affecting key technology and semiconductor stocks across Asia in response to Wall Street trends, directly impacting equity portfolios and sector sentiment.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Nasdaq sell-off batters Asian chip stocks as SK Hynix, Samsung, Softbank, TSMC tumble",
+      "publishedAtSgt": "2026-11-06T09:41:32+08:00",
+      "url": "https://www.cnbc.com/2026/11/06/tech-stocks-sk-hynix-samsung-softbank.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T10:35:11+08:00"
+    },
+    {
+      "articleId": "ebafab5a6c0178925fb45e422acae4a2dc468c43fde7ad075391bfd042ea72ed",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Neocloud company IREN reported that over $4 billion in projected annualized recurring revenue for 2026 is being delayed to at least January at a customer's request. This follows a significant decline in its stock price and comes amid broader concerns over the unwinding of the AI trade following midterm elections.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors monitoring AI infrastructure and high-growth neocloud providers face heightened volatility and delayed monetization timelines, which could weigh on sector sentiment and valuations.",
+      "reasoning": "The article is classified under MARKET due to its direct discussion of stock price movements, revenue delays, and investor sentiment regarding the AI trade, impacting market risk assessments.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Neocloud IREN says $4 billion in annualized revenue being delayed due to customer request",
+      "publishedAtSgt": "2026-11-06T07:25:02+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/iren-earnings-report-q1-2027-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T10:35:12+08:00"
+    },
+    {
+      "articleId": "d4135d3601d966ccc5645175595c7813a9545b31151f063ca3306b33427c249f",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Top Democrats are calling for a national moratorium on AI data center construction following a midterms sweep, highlighting growing political pressure and voter concern over AI infrastructure growth.",
+      "assetClasses": [
+        "Equities",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Utilities",
+        "Real Estate"
+      ],
+      "investorImpact": "Potential regulatory hurdles and data center development restrictions could negatively impact the growth, capital expenditure plans, and valuations of technology, utility, and infrastructure companies tied to the AI buildout.",
+      "reasoning": "Classified as TECHNOLOGY and HIGH importance due to potential policy shifts and political calls for national data center moratoria that directly affect the AI infrastructure sector and related investments.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Top Democrats call to rein in AI buildout after midterms sweep: 'National data center moratorium now'",
+      "publishedAtSgt": "2026-11-06T04:17:16+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/democrats-data-center-restrictions-midterms.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-06T04:44:16+08:00"
+    },
+    {
+      "articleId": "0d465c9f204081452658621ea41088375017c5b3f0181fa5b386be4ca1578c8f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Chip stocks and neoclouds plummeted following midterm election results that sparked Wall Street concerns over a potential slowdown in the artificial intelligence buildout, dragging the Nasdaq down to its worst day since April 2025.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors with exposure to technology equities and semiconductor stocks face heightened volatility and potential downside risk as market sentiment shifts regarding the pace of AI infrastructure spending.",
+      "reasoning": "The article details a major market sell-off driven by political outcomes affecting AI infrastructure expectations, directly impacting equity markets and the technology sector.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AI meltdown: Chip stocks and neoclouds plunge, pushing Nasdaq to worst day since April 2025",
+      "publishedAtSgt": "2026-11-06T04:08:49+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/qualcomm-earnings-chip-stocks-election.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T04:44:17+08:00"
+    },
+    {
+      "articleId": "255b901a35f1f79b414c1494cd30b99b8357c04d0acf6987adf47bd7456dbc09",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Tech stocks experienced a major rout, with the Dow Jones Industrial Average dropping over 1,600 points. Investors expressed concern that fundamental shifts are occurring in the AI trade following Democratic successes in midterm elections and potential threats to slow data center buildouts.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Industrials"
+      ],
+      "investorImpact": "Investors face significant volatility as the AI trade and broader market sentiment come under pressure due to political shifts and potential regulatory headwinds affecting data center infrastructure.",
+      "reasoning": "Classified as MARKET due to the severe sell-off in major indices and tech stocks, and categorized as NEGATIVE and HIGH importance because of the broad market implications of potential changes to the AI infrastructure buildout.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "CNBC's experts on whether the AI trade is ending and what investors should do next",
+      "publishedAtSgt": "2026-11-06T03:19:31+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/cnbcs-experts-on-whether-the-ai-trade-is-ending-and-what-investors-should-do-next.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T20:15:53+08:00"
+    },
+    {
+      "articleId": "b5c83995c5f208b574bb2c93709a430aaee2a29b8600b0cf21dbfb1d6f07dd1e",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Democrats are preparing a wave of investigations into the Trump administration's energy deals, specifically targeting the legality of interventions in Venezuela's oil sector following a military raid and the cancellation of renewable energy projects.",
+      "assetClasses": [
+        "Commodities",
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "Venezuela"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil & Gas",
+        "Renewable Energy"
+      ],
+      "investorImpact": "Potential regulatory and legal scrutiny over Venezuela-related oil ventures and renewable energy rollbacks could introduce headline risk and policy uncertainty for energy sector investments.",
+      "reasoning": "Classified as GEOPOLITICAL due to congressional oversight and investigations into executive energy interventions. It is relevant for fund monitoring because regulatory and legal challenges can impact energy policy stability and specific corporate participants.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump's energy deals are about to face a wave of investigations by Democrats",
+      "publishedAtSgt": "2026-11-06T03:13:06+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/trump-election-energy-venezuela-critical-mineral-renewable-iran.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-06T04:44:17+08:00"
+    },
+    {
+      "articleId": "94b1a3b87dfc31ab0b245e689b7ca46c8156c6b1b07adba4108aac2762fa0904",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Voters across communities rejected AI data centers by passing 40 of 41 proposed ballot measures to restrict new facilities, driven by concerns over massive resource consumption, such as consuming up to 10 million gallons of water a day.",
+      "assetClasses": [
+        "Equities",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Utilities",
+        "Real Estate"
+      ],
+      "investorImpact": "Increased local regulatory pushback and restrictions on AI data centers could delay infrastructure deployment, increase capital expenditure costs, and impact growth trajectories for major tech companies investing heavily in AI infrastructure.",
+      "reasoning": "The article highlights growing regulatory and community headwinds facing AI infrastructure expansion due to resource constraints like water usage. This is relevant for fund monitoring as it touches on operational hurdles for mega-cap tech companies and utilities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Voters rejected AI data centers over resource concerns. Here's why measuring water usage is hard",
+      "publishedAtSgt": "2026-11-06T02:52:21+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/meta-spacex-ai-data-centers-use-millions-of-gallons-of-water-a-day.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-06T04:44:17+08:00"
+    },
+    {
+      "articleId": "1260aae0d3b03887a3f5f5d2eaa72949cd8bd2f17774b2e71f392e25478283ac",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Stocks plunged as the Nasdaq entered a correction territory, prompting investors to rotate out of technology stocks and into defensive sectors, while market commentators like Jim Cramer noted that the AI trade remains intact despite the pullback.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors face heightened volatility as the technology sector undergoes a correction, encouraging defensive rotation and re-evaluation of growth valuations.",
+      "reasoning": "Classified as MARKET due to the discussion of stock market movements, sector rotation, and index correction. Sentiment is negative due to plunging stocks and the Nasdaq entering correction, though tempered by long-term commentary on the AI trade.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jim Cramer says the AI trade is not going away as Nasdaq enters correction",
+      "publishedAtSgt": "2026-11-06T02:46:23+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/05/cramer-says-the-ai-trade-is-not-going-away-as-nasdaq-enters-correction.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-06T04:44:18+08:00"
+    },
+    {
+      "articleId": "9367ee70ff85a71585103737eafe8f589f6af3745fb71ac86a83800af524c211",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Richmond Federal Reserve President Thomas Barkin stated that the central bank may need to implement further interest rate hikes, though at a gradual pace, driven by ongoing concerns regarding inflation.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Expectations of further interest rate hikes, even at a gradual pace, can influence borrowing costs, equity valuations, and fixed income yields, requiring investors to adjust portfolio positioning accordingly.",
+      "reasoning": "The article discusses central bank monetary policy and interest rate expectations, which are critical economic drivers impacting multiple asset classes and overall market sentiment.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Barkin sees interest rate hikes ahead, but at a gradual pace",
+      "publishedAtSgt": "2026-11-06T00:34:33+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/barkin-sees-interest-rate-hikes-ahead-but-at-a-gradual-pace.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T04:44:17+08:00"
+    },
+    {
+      "articleId": "7d19b9db0f8a0843516453983ea7ca218242993603eb0774a7bdf1e0071f640b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Marc Lore's food-tech startup Wonder has confidentially filed for an IPO, backed by over $3 billion in venture funding and a $9 billion pre-money valuation from its earlier Series D round. However, the listing comes amid shaky IPO market conditions driven by market volatility and weak consumer sentiment impacting restaurant stocks.",
+      "assetClasses": [
+        "Equities",
+        "Private Equity",
+        "Venture Capital"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Technology",
+        "Restaurants"
+      ],
+      "investorImpact": "The confidential IPO filing provides a key benchmark for late-stage venture-backed food technology and consumer companies, though broader IPO market volatility and weak consumer sentiment present execution risks.",
+      "reasoning": "Classified as MARKET due to the IPO filing event. Sentiment is MIXED because a high valuation and heavy venture backing are counterbalanced by challenging market conditions and consumer sentiment headwinds.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Marc Lore's Wonder confidentially files for IPO",
+      "publishedAtSgt": "2026-11-06T00:27:10+08:00",
+      "url": "https://www.cnbc.com/2026/11/05/wonder-confidential-ipo-filing.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-06T04:44:17+08:00"
+    }
+  ]
+}
