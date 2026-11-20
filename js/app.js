@@ -354,6 +354,7 @@ const THEMES = {
     midnight: { base: "dark",  variant: "midnight", label: "Midnight", icon: "●" },
     light:    { base: "light", variant: null,       label: "Light",    icon: "☀" },
     sepia:    { base: "light", variant: "sepia",    label: "Sepia",    icon: "❧" },
+    mint:     { base: "light", variant: "mint",     label: "Mint",     icon: "❦" },
     auto:     { base: null,    variant: null,       label: "Auto",     icon: "◑" }
 };
 
