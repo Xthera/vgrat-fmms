@@ -1,10 +1,41 @@
 {
-  "generatedAtSgt": "2026-11-21T09:08:08.495562+08:00",
+  "generatedAtSgt": "2026-11-21T16:38:11.256919+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 205,
+  "articleCount": 212,
   "analyses": [
+    {
+      "articleId": "a69f2c37b29c331c39dd67b195a7177c3fadc346435f89d6d56ba78503b02cea",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "An early breakdown of the stratospheric polar vortex and a record-breaking El Niño event threaten depleted natural gas stocks in Europe, potentially intensifying global competition for LNG cargoes and driving up prices.",
+      "assetClasses": [
+        "Commodities"
+      ],
+      "geographies": [
+        "Europe",
+        "Asia",
+        "South America"
+      ],
+      "sectors": [
+        "Energy",
+        "Utilities"
+      ],
+      "investorImpact": "The convergence of weather phenomena and low gas storage levels creates upside price risks for natural gas and liquefied natural gas (LNG), impacting energy sector equities and utility costs.",
+      "reasoning": "The article is classified under MARKET due to its direct implications for energy commodity pricing and supply competition driven by weather forecasts.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "An early breakdown in the polar vortex is threatening already depleted gas stocks",
+      "publishedAtSgt": "2026-11-21T14:00:02+08:00",
+      "url": "https://www.cnbc.com/2026/11/21/polar-vortex-europe-gas-prices.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-21T16:22:18+08:00"
+    },
     {
       "articleId": "52f1c6badf26d639ca25d6616619c82d87c59b4fbcdd42309829d1fa5c7c44f6",
       "relevant": true,
@@ -426,6 +457,71 @@
       "collectedAtSgt": "2026-11-21T02:40:01+08:00"
     },
     {
+      "articleId": "3b3179911c1d50421f42164d0cdb456ef98da935b0ea38fa09e86d0bc7f60946",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "U.S.-China trade, Taiwan, and technology tensions remain unresolved following President Trump's return from Asia and the APEC summit, with major-power diplomacy overshadowing Southeast Asia's manufacturing importance.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "U.S.",
+        "China",
+        "Asia",
+        "Taiwan"
+      ],
+      "sectors": [
+        "Technology",
+        "Manufacturing"
+      ],
+      "investorImpact": "Unresolved U.S.-China trade, technology, and Taiwan tensions maintain baseline regulatory and geopolitical risk for multinational corporations and technology sector investors exposed to Asian manufacturing supply chains.",
+      "reasoning": "Classified as GEOPOLITICAL because it covers high-level U.S.-Asia diplomacy, trade, and technology tensions. It is relevant to fund monitoring as ongoing geopolitical frictions can create volatility in technology and cross-border equities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "U.S.-China trade, Taiwan and tech tensions remain unresolved as Trump returns from Asia",
+      "publishedAtSgt": "2026-11-20T21:29:50+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/apec-summit-trump-xi-china-trade-taiwan.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-21T02:40:01+08:00"
+    },
+    {
+      "articleId": "5c0a1eaeaf994ddd344b8a4c9a408c1ea8eb015c79b4cefcb384a8ced0c000de",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "European Central Bank President Christine Lagarde proposed that EU public funds should absorb first losses on major technology infrastructure projects like chip plants and data centers to attract private capital and achieve European scale.",
+      "assetClasses": [
+        "Equities",
+        "Private Equity",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "Europe",
+        "European Union"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors",
+        "Data Centers"
+      ],
+      "investorImpact": "This policy proposal could de-risk investments in European technology infrastructure, potentially unlocking private capital for chip plants and data centers and benefiting companies operating in these sectors.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on chip plants and data centers. It is significant for investors as public-private partnerships with loss-absorption mechanisms can substantially change the risk-return profile of tech infrastructure investments in Europe.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Lagarde says EU funds should take first losses on chip plants, data centers",
+      "publishedAtSgt": "2026-11-20T20:52:15+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/lagarde-eu-data-center-funding.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-21T02:40:01+08:00"
+    },
+    {
       "articleId": "fe1acb282f63208e16a4008f36f99159c2bcb1ae0619a2a72830af7bc49e33fc",
       "relevant": true,
       "category": "MARKET",
@@ -843,6 +939,126 @@
       "collectorRelevanceScore": 91,
       "collectorRelevanceReason": "strong_market_title",
       "collectedAtSgt": "2026-11-20T07:06:59+08:00"
+    },
+    {
+      "articleId": "846134e24452e18f77040b0a913006ffc0d0c7ba80d5f25053307e74f3fe6e6f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "President Donald Trump's investment accounts purchased shares in Nvidia, Palantir, and SpaceX in September around the same time these companies secured major federal contracts and their executives met with the president.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Defense"
+      ],
+      "investorImpact": "The disclosure highlights political scrutiny around high-profile technology and defense stock purchases by the president, potentially bringing regulatory or reputational focus to the named companies.",
+      "reasoning": "Classified as MARKET because it details stock purchases by a high-profile political figure in major technology companies. Importance is MEDIUM due to potential regulatory scrutiny and public interest, and fundMonitoringRelevant is true given the relevance to major tech and defense equities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump bought Nvidia, Palantir, SpaceX in September as federal deals, White House ties grew",
+      "publishedAtSgt": "2026-11-20T03:43:08+08:00",
+      "url": "https://www.cnbc.com/2026/11/19/trump-nvidia-spacex-palantir-stock-trades-september.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-11-20T07:06:58+08:00"
+    },
+    {
+      "articleId": "c487be86047834c0555457b938482af2569df51673fc485c839162baa903966c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "Recent banking and technology outages affecting U.S. banks and peer-to-peer payment networks like Zelle have prompted top financial advisors to weigh in on whether consumers should keep emergency cash on hand.",
+      "assetClasses": [
+        "Cash",
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Banking"
+      ],
+      "investorImpact": "The article discusses consumer behavior and financial resilience regarding tech outages, but offers minimal direct impact on institutional asset values or fund performance.",
+      "reasoning": "The article is classified under MARKET as it addresses consumer banking operations and advisor recommendations, but its importance is low and fund monitoring relevance is false because it deals with retail consumer cash habits rather than systemic financial market risks.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Amid recent banking outages, should you start carrying cash again? Top advisors weigh in",
+      "publishedAtSgt": "2026-11-20T03:06:56+08:00",
+      "url": "https://www.cnbc.com/2026/11/19/banking-outages-emergency-cash.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-20T07:06:58+08:00"
+    },
+    {
+      "articleId": "4c58eef840be958354a719668d1648058d64801e019d22fb443576330d7603ff",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Gold prices are continuing to fall, driven down primarily by currency arguments and prevailing market factors affecting precious metals.",
+      "assetClasses": [
+        "Commodities",
+        "Precious Metals"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Mining",
+        "Materials"
+      ],
+      "investorImpact": "Investors holding gold or precious metals face downward pressure on prices due to currency dynamics, impacting commodity portfolio valuations.",
+      "reasoning": "Classified as MARKET due to direct coverage of falling gold prices and market sentiment regarding precious metals. Sentiment is NEGATIVE because gold is experiencing a bad year and prices continue to fall.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Gold's bad year is getting worse. Why its price keeps falling",
+      "publishedAtSgt": "2026-11-20T00:29:52+08:00",
+      "url": "https://www.cnbc.com/2026/11/19/gold-prices-fall-fed-rates-dollar.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-11-20T07:06:59+08:00"
+    },
+    {
+      "articleId": "18c8ccea8736f5ef4bf145f5103cede579e66f9894604269301ed62f6afc6cfe",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "The upcoming Anthropic IPO is expected to create hundreds of centimillionaires and drive the formation of new, leaner family offices, personal investment companies, venture funds, and investor partnerships to manage the resulting wealth windfalls.",
+      "assetClasses": [
+        "Private Equity",
+        "Venture Capital",
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Financial Services"
+      ],
+      "investorImpact": "The proliferation of leaner family offices and new venture funds spawned by AI wealth creation highlights growing private market liquidity and shifts in how high-net-worth individuals manage concentrated tech sector windfalls.",
+      "reasoning": "Classified as MARKET due to its focus on IPO wealth creation and the structural evolution of private investment vehicles. Sentiment is positive given the wealth generation and new investment opportunities discussed.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Anthropic IPO, AI wealth spawn a new, leaner kind of family office",
+      "publishedAtSgt": "2026-11-19T22:57:38+08:00",
+      "url": "https://www.cnbc.com/2026/11/19/anthropic-ipo-ai-wealth-spawn-a-new-leaner-kind-of-family-office.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-20T07:07:03+08:00"
     },
     {
       "articleId": "2d52cd1386723763581a7f19afcfa3cefb9f94f39ea391b881800dc0d871e1f4",
