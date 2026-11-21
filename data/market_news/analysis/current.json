@@ -1,10 +1,430 @@
 {
-  "generatedAtSgt": "2026-11-20T15:34:48.448271+08:00",
+  "generatedAtSgt": "2026-11-21T09:08:08.495562+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 211,
+  "articleCount": 205,
   "analyses": [
+    {
+      "articleId": "52f1c6badf26d639ca25d6616619c82d87c59b4fbcdd42309829d1fa5c7c44f6",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Treasury Secretary Scott Bessent confirmed to CNBC that U.S. policy allowing Nvidia's H200 AI chips to be sold to China remains unchanged following discussions between President Trump and Chinese President Xi Jinping in Shenzhen.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "The clarification provides near-term regulatory certainty for semiconductor companies exporting to China, particularly Nvidia, maintaining existing revenue streams without new unexpected trade restrictions.",
+      "reasoning": "The article is classified under TECHNOLOGY and GEOPOLITICAL intersections, given high-level diplomatic discussions on trade and AI between U.S. and Chinese leadership. It is significant for investors monitoring technology export controls.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump says he discussed Jensen Huang with Xi; Bessent tells CNBC Nvidia chip export policy is unchanged",
+      "publishedAtSgt": "2026-11-21T06:08:41+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/treasury-secretary-scott-bessent.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-21T08:52:08+08:00"
+    },
+    {
+      "articleId": "c3132180e56e178313d3c446af061d482b7db474dd92283ddf824c7bb09029e4",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Anthropic shares fell 8.5% on Friday to close their first full day of trading following the largest IPO in history, closing at $97.17 as a broader tech stock sell-off weighed on artificial intelligence-related equities.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "The weak debut and subsequent drop in Anthropic's shares following a massive IPO signal cooling sentiment and increasing volatility for the artificial intelligence sector and high-growth technology equities, which may impact near-term valuation multiples and broader market risk appetite.",
+      "reasoning": "The article details significant market movement for a landmark high-profile IPO in the technology sector, directly impacting broader tech sentiment and equity valuations. It is highly relevant for market monitoring and investment decisions.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Anthropic falls nearly 9% in first full day of trading as tech stocks get shellacked",
+      "publishedAtSgt": "2026-11-21T05:27:51+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/anthropic-stock-ai-amd-nvidia.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-21T08:52:08+08:00"
+    },
+    {
+      "articleId": "5c3b229b0c22c006d565144f5ba738b078a5ddcecccc32dfc3b758e32f865890",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Nvidia former CEO Jensen Huang is scheduled to testify publicly before the Senate banking panel, as confirmed by a spokesperson for Committee Chair Tim Scott.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Congressional testimony involving major tech leadership can introduce regulatory scrutiny or policy shifts that impact investor sentiment and technology sector valuations.",
+      "reasoning": "Classified as Geopolitical and regulatory oversight monitoring. The public testimony of a prominent semiconductor executive before a Senate panel has potential policy implications for the tech sector.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jensen Huang to testify publicly before Senate banking panel, Chairman Scott says",
+      "publishedAtSgt": "2026-11-21T03:42:53+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/jensen-huang-nvidia-senate-testimony.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-21T08:52:08+08:00"
+    },
+    {
+      "articleId": "f659026394f75cb7197d3c27282cc57963415ea55b4f61f90ba5a169595fcd0e",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "As the S&P 500 enters correction territory and the Nasdaq-100 approaches a bear market, a massive near-$100 million bearish options trade was placed on the VanEck Semiconductor ETF (SMH), signaling expectations of further downside for chip stocks.",
+      "assetClasses": [
+        "Equities",
+        "Options"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Semiconductors",
+        "Technology"
+      ],
+      "investorImpact": "Investors holding semiconductor exposure should note substantial bearish institutional positioning, which may increase near-term volatility and downward pressure on chip stocks as broader markets face correction and bear market pressures.",
+      "reasoning": "Classified as MARKET due to significant options trading activity and equity market indices entering correction or bear market territory. High importance given the large scale of the options trade and sector-specific vulnerability.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "A massive bearish trade just happened in the chip stocks",
+      "publishedAtSgt": "2026-11-21T03:33:31+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/a-massive-bearish-trade-just-happened-in-the-chip-stocks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-21T08:52:08+08:00"
+    },
+    {
+      "articleId": "1729535624ab7a3a3b2c577dd825b00103b08d2418343e1e9547ecdee4bb0e19",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Anthropic successfully completed a record initial public offering despite significant market headwinds, including Jensen Huang's exit from Nvidia, anti-AI sentiment in midterm elections, and rising interest rates threatening infrastructure buildouts.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "The successful IPO of a major AI firm amidst severe market turbulence and sector headwinds signals strong investor appetite for leading AI assets, but highlights growing volatility and regulatory or political risks facing the sector.",
+      "reasoning": "Classified as MARKET because it covers a major public offering and market dynamics within the AI sector. It is important due to the prominence of the company and broader market turbulence.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Anthropic defied the odds in its record IPO. Now it has to reckon with AI market turbulence",
+      "publishedAtSgt": "2026-11-21T02:38:37+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/anthropic-defies-odds-holding-ipo-despite-massively-disruptive-market.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-21T02:39:56+08:00"
+    },
+    {
+      "articleId": "757302a61645a564d2a8046405195f4fde6cffd1924259ff24e77fbae89dc385",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "President Trump vowed to stop U.S. companies from building data centers abroad and threatened a tremendous tax, while public polling shows high voter resistance to AI data centers near homes, complicating expansion plans for cloud infrastructure providers.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Cloud Computing",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Cloud infrastructure providers and tech companies looking to build data centers internationally may face significant regulatory headwinds, potential tariffs or tax penalties, and domestic resistance, creating policy risk for technology sector investments.",
+      "reasoning": "The article is classified under TECHNOLOGY and tagged as HIGH importance due to potential regulatory intervention and tax threats impacting international expansion strategies of U.S. technology and cloud infrastructure companies.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump vows to stop U.S. companies from building data centers abroad, threatens 'tremendous tax'",
+      "publishedAtSgt": "2026-11-21T02:35:16+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/trump-data-centers-ai-companies-tax.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-21T02:39:54+08:00"
+    },
+    {
+      "articleId": "ef705abb724485465bfdc22128e52004a2212ee6623ddea83a74b8d216cd388a",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "An analysis piece comparing Home Depot and Lowe's stocks following earnings reports, mentioning subscriber details for the CNBC Investing Club.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Retail"
+      ],
+      "investorImpact": "Provides commentary on major home improvement retailers, but focuses primarily on subscription club disclosures rather than actionable macroeconomic data.",
+      "reasoning": "The article discusses Home Depot and Lowe's stocks post-earnings, which falls under market analysis, but the content is largely promotional and analytical commentary rather than material market-moving news.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Home Depot vs. Lowe's: Which stock has the edge after earnings and our support?",
+      "publishedAtSgt": "2026-11-21T02:26:09+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/home-depot-vs-lowes-which-stock-has-the-edge-after-earnings-and-our-support.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-21T02:39:56+08:00"
+    },
+    {
+      "articleId": "ba8ed8c6cf76627c10ea0f6414f569db89d560fc53ce15f8738f6453202ef409",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "As stocks continue their tech-driven sell-off, prediction markets traders are seeing a bleaker outlook for the remainder of the year. On Friday, the Nasdaq Composite turned negative for the year as investors continued to dump tech stocks, primarily those with exposure to the artificial intelligence buildout.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors with exposure to technology and artificial intelligence sectors face heightened downside risks and volatility as sentiment and market outlooks deteriorate.",
+      "reasoning": "The article is classified under MARKET with a NEGATIVE sentiment due to the tech-driven sell-off and falling prediction market odds. It is highly important and fund monitoring relevant because it directly impacts equity portfolios exposed to technology and AI.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Prediction markets outlook for stocks in 2026 dims amid AI sell-off",
+      "publishedAtSgt": "2026-11-21T02:05:29+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/sp-500-8000-kalshi-odds-ai-selloff.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-21T02:39:55+08:00"
+    },
+    {
+      "articleId": "3debe15309a30f48dd00017e66b7b4e233b76f39f99b6ff3e6bb7c07f2bdb8b7",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Bitcoin is selling off alongside stocks and failing to act as a 'digital gold' market hedge during a broader market downturn that saw the Dow Jones and S&P 500 enter correction territory.",
+      "assetClasses": [
+        "Cryptocurrency",
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Investors are reminded that bitcoin currently behaves as a risk-on asset correlated with growth stocks rather than a safe-haven hedge during broad market sell-offs.",
+      "reasoning": "The article discusses the correlation between bitcoin, stocks, and gold during a major market sell-off, making it highly relevant for market and asset allocation monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bitcoin sell-off: Crypto is failing the 'digital gold' test again as it sinks with stocks",
+      "publishedAtSgt": "2026-11-21T01:25:19+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/bitcoin-price-gold-market-hedge.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-21T02:39:56+08:00"
+    },
+    {
+      "articleId": "8e3a0a349a2e81afec0398c7be20e4d14ad67f8523c66d896d63cea7f1ba3b6f",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Data center construction costs are projected to soar 13% in 2026 due to surging demand and accelerated speed of delivery requirements outpacing any cost inflation stabilization.",
+      "assetClasses": [
+        "Real Estate",
+        "Infrastructure"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Real Estate",
+        "Construction"
+      ],
+      "investorImpact": "Rising data center construction costs may pressure profit margins for developers, real estate investors, and technology companies scaling up infrastructure, while presenting higher capital requirements for private equity and institutional investors.",
+      "reasoning": "The article discusses significant cost inflation in critical digital infrastructure (data centers), which impacts real estate and technology investments, justifying a TECHNOLOGY category and MEDIUM importance.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Data center construction costs soar 13% in 2026",
+      "publishedAtSgt": "2026-11-21T00:52:08+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/data-center-construction-costs-soar-13-percent-in-2026.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-21T02:39:55+08:00"
+    },
+    {
+      "articleId": "7a4b937a32992128187eab0d7db60c1693902f7aaab050747b512f2fce80bdba",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Anthropic shares are tumbling toward their IPO price of $83, leading investors to scramble for hedges. Options on the AI giant are not expected to list until Monday, leaving investors temporarily exposed.",
+      "assetClasses": [
+        "Equities",
+        "Options"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors holding Anthropic shares face downside risk as the stock tumbles near its IPO price without immediate hedging instruments available, increasing near-term portfolio risk.",
+      "reasoning": "The article discusses significant market movement in a prominent AI stock and the resulting hedging challenges for investors, making it relevant for market and risk monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "As Anthropic shares tank, investors scramble to hedge. It could be very expensive",
+      "publishedAtSgt": "2026-11-20T23:12:40+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/as-anthropic-shares-tank-investors-scramble-to-hedge-it-could-be-very-expensive.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-21T02:40:01+08:00"
+    },
+    {
+      "articleId": "7bba747b8e17e57c96b34275bd3b2ab2fecd07bc5e203c20ac1bb3981b5ee4d1",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Artificial intelligence company Anthropic raised a total of $93.5 billion, including $12.2 billion through a greenshoe overallotment, after selling 1,127,000,000 shares of Class A common stock at $83 per share, surpassing SpaceX's record IPO.",
+      "assetClasses": [
+        "Equities",
+        "IPOs"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "This monumental IPO signals robust investor appetite for mega-cap artificial intelligence offerings, potentially setting a new benchmark for tech sector valuations and liquidity.",
+      "reasoning": "The article details a record-breaking market event involving a major IPO, directly impacting market sentiment and capital flows within the technology sector.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Anthropic raises $93.5 billion total as underwriters scoop up ‘greenshoe’ overallotment",
+      "publishedAtSgt": "2026-11-20T22:59:38+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/anthropic-ipo-greenshoe.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 95,
+      "collectorRelevanceReason": "business_market_event",
+      "collectedAtSgt": "2026-11-21T02:40:00+08:00"
+    },
+    {
+      "articleId": "e73a333d7d053ca8545959fd176d9e9168fa0c0eeea2a882b4861d867bf59e06",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Bitcoin experienced a sell-off pattern similar to trends seen ahead of major public offerings like Anthropic and SpaceX, as traders liquidate various assets including crypto and tech stocks to free up liquidity for secondary market shares.",
+      "assetClasses": [
+        "Cryptocurrency",
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Investors should note that short-term liquidity demands for major upcoming IPOs can create cross-asset selling pressure, impacting stores of value like Bitcoin and other risk assets.",
+      "reasoning": "The article is relevant as it examines short-term market dynamics and liquidity-driven sell-offs across multiple asset classes ahead of major IPOs, providing insight into macro market behavior.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Bitcoin suffered identical sell-off pattern ahead of Anthropic, SpaceX IPOs — what happens next?",
+      "publishedAtSgt": "2026-11-20T22:34:14+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/bitcoin-pre-ipo-selloff-pattern-anthropic-spacex.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-21T02:40:00+08:00"
+    },
+    {
+      "articleId": "2ca50a3c25fa1f68b2a95267145623ea35059dfc1a38d9bb6afa1708d82646c7",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Industry trade groups are pushing for regulatory changes to FHA mortgage insurance rules, as borrowers currently pay mortgage insurance for a decade or more while facing rising property taxes, homeowners insurance, and overall inflation.",
+      "assetClasses": [
+        "Real Estate",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Real Estate",
+        "Financials"
+      ],
+      "investorImpact": "Potential rule changes could impact mortgage-backed securities, residential real estate demand, and the financial services sector by altering borrower costs and loan prepayment behavior.",
+      "reasoning": "Classified as MARKET due to industry advocacy affecting mortgage insurance rules and broader real estate financing conditions. Importance is MEDIUM because while it highlights an important policy push, actual regulatory changes have not yet been enacted.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Some FHA borrowers pay mortgage insurance for a decade or more. There's an industry push to change the rules",
+      "publishedAtSgt": "2026-11-20T21:35:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/fha-mortgage-insurance-cuts-cancellation.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-21T02:40:01+08:00"
+    },
     {
       "articleId": "fe1acb282f63208e16a4008f36f99159c2bcb1ae0619a2a72830af7bc49e33fc",
       "relevant": true,
@@ -5745,608 +6165,6 @@
       "collectorRelevanceScore": 91,
       "collectorRelevanceReason": "strong_market_title",
       "collectedAtSgt": "2026-11-08T02:06:20+08:00"
-    },
-    {
-      "articleId": "427bec213e9d76816ab2fa0db8ab921a23c4590564c0cb2c4bcae93fbbd5f1d3",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "HIGH",
-      "summary": "Berkshire Hathaway doubled its share buybacks to $9.6 billion in the third quarter despite declining overall earnings, while its railroad, energy, and manufacturing segments experienced year-over-year earnings growth.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials",
-        "Conglomerates",
-        "Energy",
-        "Industrials"
-      ],
-      "investorImpact": "Investors should note Berkshire's significant increase in buybacks as a sign of capital allocation strategy and confidence amidst sector rotations away from technology.",
-      "reasoning": "Classified as MARKET due to major corporate earnings and capital return actions by Berkshire Hathaway, holding high significance for equity markets and conglomerate sentiment.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Berkshire Hathaway more than doubles buybacks in third quarter as earnings decline",
-      "publishedAtSgt": "2026-11-07T23:23:46+08:00",
-      "url": "https://www.cnbc.com/2026/11/07/berkshire-hathaway-q3-2026-earnings-buybacks.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-08T02:06:25+08:00"
-    },
-    {
-      "articleId": "4862df6de4b157cc710eb21e696a08193ed5d89b589a3b997447a370c257d618",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Following a midterm election blue wave rebuke of Trump, renewable energy investing remains active among public and private infrastructure and clean tech funders, despite crude oil prices surging and leading energy commodities in 2026.",
-      "assetClasses": [
-        "Equities",
-        "Infrastructure",
-        "Commodities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Energy",
-        "Renewable Energy",
-        "Clean Technology"
-      ],
-      "investorImpact": "Investors should monitor the interplay between traditional energy commodity strength, such as surging crude oil prices, and ongoing public and private investments in renewable energy infrastructure and clean tech innovation following the midterm elections.",
-      "reasoning": "The article discusses the geopolitical backdrop of the midterm elections and its implications for the energy sector, balancing the dominance of energy commodities with the resilience of renewable energy investing.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "What midterm election blue wave rebuke of Trump means for renewable energy",
-      "publishedAtSgt": "2026-11-07T22:33:32+08:00",
-      "url": "https://www.cnbc.com/2026/11/07/midterm-election-blue-wave-trump-renewable-energy.html",
-      "collectorCategory": "GEOPOLITICAL",
-      "collectorRelevanceScore": 71,
-      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
-      "collectedAtSgt": "2026-11-08T02:06:26+08:00"
-    },
-    {
-      "articleId": "702e8084643c8e077601ae90721bf8234b185e5008af93beede6568c5d2f6e85",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "MEDIUM",
-      "summary": "Berkshire Hathaway shares outperformed the S&P 500 as investors rotated out of slumping tech stocks into the safety of a traditional conglomerate with low artificial intelligence exposure amid growing fears of AI overspending.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials",
-        "Technology",
-        "Conglomerates"
-      ],
-      "investorImpact": "Highlights a broader market sector rotation away from high-spending technology and AI-exposed equities into defensive, traditional conglomerates.",
-      "reasoning": "The article is relevant as it reflects significant market sentiment shifts and sector rotation trends away from AI-heavy tech stocks into traditional conglomerates like Berkshire Hathaway.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Berkshire shares surge as Wall Street swoons amid AI fears",
-      "publishedAtSgt": "2026-11-07T22:06:20+08:00",
-      "url": "https://www.cnbc.com/2026/11/07/berkshire-shares-surge-as-wall-street-swoons-amid-ai-fears.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-08T06:49:28+08:00"
-    },
-    {
-      "articleId": "ca36a7c4e2163f815dae3935bb2c65298a7a79453cd3c38b66062d93d409c832",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "NEUTRAL",
-      "importance": "LOW",
-      "summary": "Democratic lawmaker Josh Gottheimer, involved in shaping artificial intelligence policy, purchased AI-linked stocks including Advanced Micro Devices and Applied Materials despite previously supporting a congressional trading ban.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors"
-      ],
-      "investorImpact": "The article highlights regulatory and ethical scrutiny regarding lawmakers trading in semiconductor and AI stocks, though it has no direct financial impact on the companies mentioned.",
-      "reasoning": "Classified as TECHNOLOGY due to the focus on AI policy and semiconductor companies, with low importance for fund monitoring as it concerns political ethics rather than direct market-moving data.",
-      "fundMonitoringRelevant": false,
-      "source": "CNBC",
-      "title": "Democrat shaping AI policy bought chip stocks despite backing congressional trading ban",
-      "publishedAtSgt": "2026-11-07T21:30:01+08:00",
-      "url": "https://www.cnbc.com/2026/11/07/josh-gottheimer-ai-stocks-congress-trading-ban.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-08T02:06:26+08:00"
-    },
-    {
-      "articleId": "d657c0488cabdca26f369af79c843f4f9a749cb0fe2080b63cac29915b8013c1",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "HIGH",
-      "summary": "Anthropic is preparing for a mid-November Nasdaq debut with a targeted valuation of $1 trillion to $1.5 trillion, lower than previous $2 trillion targets, amid a political backlash against data centers following midterms.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "The IPO valuation adjustment reflects broader regulatory, environmental, and political sentiment headwinds facing AI infrastructure and data centers, impacting market sentiment for large-scale tech offerings.",
-      "reasoning": "Classified as MARKET due to the major upcoming IPO and valuation metrics, with mixed sentiment resulting from a lower valuation target and political headwinds. Highly relevant for fund monitoring given the scale of the IPO.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Anthropic IPO meets AI backlash after midterms show stinging rebuke of data centers",
-      "publishedAtSgt": "2026-11-07T21:00:01+08:00",
-      "url": "https://www.cnbc.com/2026/11/07/anthropic-ipo-ai-data-center-backlash.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-08T02:06:26+08:00"
-    },
-    {
-      "articleId": "f5e1cdf5c5ecb4d3687ef400ccbaa4e7a386726d31a00b02e16467737ad2e834",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "NEGATIVE",
-      "importance": "MEDIUM",
-      "summary": "Snap settled a lawsuit alleging its technology caused severe psychological distress to teenagers, while Google faces a new lawsuit from parents claiming their child suffered a psychological crisis after interacting with the Gemini AI chatbot in Google Classroom. These legal challenges arise as tech companies rapidly integrate AI products into educational environments.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Education"
-      ],
-      "investorImpact": "Mounting legal scrutiny regarding child safety and AI deployment in educational settings creates regulatory and reputational risks for major technology firms, potentially impacting valuation multiples and prompting stricter compliance costs.",
-      "reasoning": "Classified as TECHNOLOGY and NEGATIVE sentiment due to legal liabilities and child safety lawsuits facing major tech platforms over AI and social media integration. It is important for monitoring regulatory and legal risks in the tech sector, making fundMonitoringRelevant true.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Tech companies face mounting child safety lawsuits while pushing AI into schools",
-      "publishedAtSgt": "2026-11-07T20:00:01+08:00",
-      "url": "https://www.cnbc.com/2026/11/07/snap-social-media-teen-safety-lawsuits.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 81,
-      "collectorRelevanceReason": "technology_business_or_infrastructure",
-      "collectedAtSgt": "2026-11-08T02:06:26+08:00"
-    },
-    {
-      "articleId": "0fda9c5f2279e24d80d20f5a40e85d313356f05ae0fc460db8d9fffd4b76aac6",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "President Donald Trump announced that the U.S. conducted minor strikes on Iran following reports of missiles hitting Qeshm Island near the Strait of Hormuz, a critical trade and energy route.",
-      "assetClasses": [
-        "Commodities",
-        "Equities",
-        "Energy"
-      ],
-      "geographies": [
-        "United States",
-        "Iran",
-        "Middle East"
-      ],
-      "sectors": [
-        "Energy",
-        "Oil and Gas",
-        "Defense"
-      ],
-      "investorImpact": "Escalating military activity in the region surrounding the Strait of Hormuz can cause volatility in global oil and gas prices, impacting energy equities and risk sentiment.",
-      "reasoning": "The article is classified as GEOPOLITICAL because it covers U.S. military strikes against Iran near a vital energy transit chokepoint. It is important for monitoring due to potential macroeconomic shocks affecting energy markets.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Trump says U.S. carried out ‘minor strikes’ on Iran as missiles hit Qeshm Island",
-      "publishedAtSgt": "2026-11-07T15:37:36+08:00",
-      "url": "https://www.cnbc.com/2026/11/07/trump-us-minor-strikes-iran-qeshm-island.html",
-      "collectorCategory": "GEOPOLITICAL",
-      "collectorRelevanceScore": 52,
-      "collectorRelevanceReason": "supporting_geopolitical_economic_description",
-      "collectedAtSgt": "2026-11-07T19:11:50+08:00"
-    },
-    {
-      "articleId": "88be2a7741ae2c0dcc8719ab1c70f23a43b5af6e551c01e7bfee0101126686f0",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Jim Cramer highlights upcoming earnings from leading neoclouds and data center stocks as a key test for investor confidence following a turbulent election week that impacted AI infrastructure shares due to political shifts in Congress.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "Investors monitoring AI infrastructure and data center stocks should prepare for potential volatility surrounding upcoming earnings reports and recent political shifts.",
-      "reasoning": "The article discusses upcoming market catalysts and earnings for data center and AI infrastructure stocks following a turbulent political week, making it relevant for market and sector monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Cramer’s week ahead: AI data center stocks face another hurdle and so does the Fed",
-      "publishedAtSgt": "2026-11-07T07:13:10+08:00",
-      "url": "https://www.cnbc.com/2026/11/06/cramer-coreweave-nebius-earnings.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-07T10:02:09+08:00"
-    },
-    {
-      "articleId": "b7c01bc9d1d40a1e0b691ee3b33693a8f3ca41bf1fc8035e01b57f23d883f40d",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Investors are bracing for a lower valuation for Anthropic, with stakeholders stating that a $1.5 trillion valuation is a stretch and a more realistic target likely between $1 trillion and $1.25 trillion amid market turmoil and rising bearishness on the AI trade.",
-      "assetClasses": [
-        "Equities",
-        "Private Equity",
-        "Venture Capital"
-      ],
-      "geographies": [
-        "Global",
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "The potential downward revision in Anthropic's valuation signals cooling investor sentiment and rising bearishness regarding the broader artificial intelligence sector and upcoming IPO valuations.",
-      "reasoning": "Classified as MARKET due to its direct impact on IPO valuations and investor sentiment within the AI sector. The significance is HIGH given the massive capital involved in AI leaders like Anthropic and the potential contagion effect on tech sector valuations.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Investors brace for lower Anthropic valuation, calling $1.5 trillion a 'stretch'",
-      "publishedAtSgt": "2026-11-07T05:07:07+08:00",
-      "url": "https://www.cnbc.com/2026/11/06/investors-brace-for-anthropic-valuation-1point5-trillion-a-stretch.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-07T10:02:08+08:00"
-    },
-    {
-      "articleId": "4b105f5ea24db16f335d125b3b0f38af09af574297375e3746b9fa93d61243d6",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "An update on a portfolio of 31 stocks highlighting potential buying opportunities, evaluations of AI industrial exposure amidst shifting data center sentiment, and commentary on Goldman Sachs and upcoming IPO catalysts.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Industrials",
-        "Financials"
-      ],
-      "investorImpact": "Investors should note the changing sentiment around AI industrials and data center exposure, alongside potential catalysts like upcoming high-profile IPOs.",
-      "reasoning": "The article discusses portfolio adjustments, sector-specific sentiment shifts around AI and data centers, and stock-specific catalysts, making it relevant for market and investment monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Here's a rapid-fire update on all 31 of our stocks, including 2 to buy now",
-      "publishedAtSgt": "2026-11-07T04:36:03+08:00",
-      "url": "https://www.cnbc.com/investingclub/2026/11/06/heres-a-rapid-fire-update-on-our-31-stocks-including-2-to-buy-now.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-07T10:02:09+08:00"
-    },
-    {
-      "articleId": "67b31ec58dc11e48db271d18decd7fe0d7e08bc98a0799a13660c426b39a4ff0",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "NEGATIVE",
-      "importance": "LOW",
-      "summary": "Abdulrahman Alfozan, a Saudi national charged with planting a listening device at OpenAI headquarters where he worked, has pleaded not guilty in a San Francisco federal court and remains in jail.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States",
-        "Saudi Arabia"
-      ],
-      "sectors": [
-        "Technology"
-      ],
-      "investorImpact": "The incident involves a high-profile artificial intelligence company, but the legal proceeding is an isolated criminal matter regarding an employee rather than a systemic risk to the technology sector or OpenAI's broader commercial operations.",
-      "reasoning": "The article reports on a legal proceeding involving an individual at a prominent AI firm. While it touches on the technology sector, it is primarily a criminal case with negligible direct impact on macroeconomic trends, market indices, or overall fund holdings.",
-      "fundMonitoringRelevant": false,
-      "source": "CNBC",
-      "title": "OpenAI bugging suspect Alfozan pleads not guilty",
-      "publishedAtSgt": "2026-11-07T03:58:29+08:00",
-      "url": "https://www.cnbc.com/2026/11/06/openai-bugging-alfozan-saudi.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 52,
-      "collectorRelevanceReason": "supporting_technology_description",
-      "collectedAtSgt": "2026-11-07T03:59:37+08:00"
-    },
-    {
-      "articleId": "c03fe9808b99a055ed5581d9cb8e6ca28cfca407801c0ad27257a137e5288478",
-      "relevant": true,
-      "category": "ECONOMIC",
-      "sentiment": "NEGATIVE",
-      "importance": "MEDIUM",
-      "summary": "Despite strong headline job numbers, unemployed Americans are facing longer durations to find new work, creating a risk of extended unemployment cycles. Corporate shifts, such as American Express cutting headcount by 5% to focus on AI, highlight underlying labor market friction.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials",
-        "Technology"
-      ],
-      "investorImpact": "Increasing long-term unemployment and corporate layoffs driven by AI adoption signal underlying shifts in labor market health that could impact consumer spending and monetary policy decisions.",
-      "reasoning": "The article highlights employment trends and structural labor market shifts tied to AI adoption, which are important indicators for macroeconomic conditions and monetary policy.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "A disturbing employment trend is hiding beneath the latest strong job numbers",
-      "publishedAtSgt": "2026-11-07T03:49:09+08:00",
-      "url": "https://www.cnbc.com/2026/11/06/long-term-unemployment-october-jobs-report.html",
-      "collectorCategory": "ECONOMIC",
-      "collectorRelevanceScore": 101,
-      "collectorRelevanceReason": "strong_economic_title",
-      "collectedAtSgt": "2026-11-07T03:59:36+08:00"
-    },
-    {
-      "articleId": "4dd7e13cca843ccaf1367c64a99a2b45f9649119e7b10269df92e13558e2ece9",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Jim Cramer discusses the market's wild swings following major midterm elections where Democrats flipped both houses of Congress, comments on the AI infrastructure buildout, the potential Anthropic IPO, and maintains a bullish stance on Apple.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology"
-      ],
-      "investorImpact": "Investors face heightened market volatility due to shifting political control in Congress alongside ongoing developments in the artificial intelligence sector.",
-      "reasoning": "The article addresses broad market sentiment and sector-specific trends following significant political shifts and AI developments, making it relevant for portfolio strategy.",
-      "fundMonitoringRelevant": false,
-      "source": "CNBC",
-      "title": "Watch the Annual Meeting: Cramer on the fate of the AI buildout and stocks to buy now",
-      "publishedAtSgt": "2026-11-07T03:36:12+08:00",
-      "url": "https://www.cnbc.com/investingclub/2026/11/06/watch-jim-cramer-live.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-07T03:59:37+08:00"
-    },
-    {
-      "articleId": "155c1ece4cc5d708c39ad72868673bf0fbaac27078b80577c3576144937b83d3",
-      "relevant": true,
-      "category": "ECONOMIC",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "San Francisco Federal Reserve President Mary Daly stated that Americans remain on a treadmill of high inflation and that further interest rate hikes are likely, though the pace and timing remain uncertain. She emphasized the persistent burden of inflation over nearly six years.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials"
-      ],
-      "investorImpact": "Expectations of further interest rate hikes and persistent inflation create downward pressure on equity valuations and bond prices, increasing borrowing costs for businesses and consumers.",
-      "reasoning": "The article comes from a senior Federal Reserve official discussing potential rate hikes and persistent inflation, which directly impacts macroeconomic conditions, monetary policy expectations, and overall market sentiment.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Americans are on a 'treadmill of high inflation' and more rate hikes are likely, Fed's Daly says",
-      "publishedAtSgt": "2026-11-07T03:05:00+08:00",
-      "url": "https://www.cnbc.com/2026/11/06/fed-daly-interest-rates-inflation.html",
-      "collectorCategory": "ECONOMIC",
-      "collectorRelevanceScore": 101,
-      "collectorRelevanceReason": "strong_economic_title",
-      "collectedAtSgt": "2026-11-07T03:59:37+08:00"
-    },
-    {
-      "articleId": "b80a2694d0d0a3b48bb3c8044d42c7a28385b60fcfa2f0f327a0167a7e0454f1",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "POSITIVE",
-      "importance": "MEDIUM",
-      "summary": "National Economic Council Director Kevin Hassett stated that he expects data center growth and the AI infrastructure buildout to continue as projected, despite midterm ballot measures and a blue-wave election favoring limits on such infrastructure.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Infrastructure"
-      ],
-      "investorImpact": "Provides reassurance to investors in artificial intelligence and data center infrastructure that federal support remains strong despite local pushback and regulatory headwinds.",
-      "reasoning": "Classified as TECHNOLOGY due to its focus on the AI infrastructure buildout and data centers. Sentiment is POSITIVE for the sector because administration officials expect growth to persist despite local limitations.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Data center double-down: Hassett says blue wave won't stop AI build-out",
-      "publishedAtSgt": "2026-11-07T02:54:22+08:00",
-      "url": "https://www.cnbc.com/2026/11/06/data-centers-ai-elections-hassett.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 81,
-      "collectorRelevanceReason": "technology_business_or_infrastructure",
-      "collectedAtSgt": "2026-11-07T03:59:36+08:00"
-    },
-    {
-      "articleId": "d9ee3f677868f0245de81891528d8dad46b5c5c73fa0afb228b7052f41ec1e2d",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Executives from OpenAI, Arm, and Qualcomm share their perspectives following an AI-related stock sell-off triggered by a Democratic sweep in the midterm elections and a subsequent market rally.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "The reactions from major tech executives provide insight into sentiment and resilience within the artificial intelligence and semiconductor sectors following political shifts and market volatility.",
-      "reasoning": "Classified under technology as it captures commentary from key tech leaders on sector-specific market movements following the midterms, holding moderate importance for tech and growth investors.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "OpenAI, Arm and Qualcomm executives react to post-midterm AI sell-off",
-      "publishedAtSgt": "2026-11-07T02:35:08+08:00",
-      "url": "https://www.cnbc.com/2026/11/06/tech-executives-ai-data-center-selloff-midterms.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 81,
-      "collectorRelevanceReason": "technology_business_or_infrastructure",
-      "collectedAtSgt": "2026-11-07T03:59:38+08:00"
-    },
-    {
-      "articleId": "3d0049b589002ce2673a7a8fcb69ddb6180694088890bc9141c66dff6c9aca37",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Information technology, semiconductors, and traditional energy sectors experienced immediate headwinds following the election. Traditional oil and gas majors sank, while solar and green energy stocks surged, driven by expectations that a Democratic Congress will resume pushing subsidies for them.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Information Technology",
-        "Semiconductors",
-        "Energy",
-        "Utilities"
-      ],
-      "investorImpact": "Investors should monitor sector rotation risks, particularly the divergence between traditional oil and gas majors and green energy stocks following political shifts and legislative expectations.",
-      "reasoning": "Classified as MARKET because the article discusses sector-specific market reactions and equity movements driven by election results and policy expectations. It is relevant for fund monitoring due to the sector rotation implications.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "AI crush is powering one stock to sky-high valuations",
-      "publishedAtSgt": "2026-11-07T02:15:44+08:00",
-      "url": "https://www.cnbc.com/2026/11/06/ai-crush-is-powering-one-stock-to-sky-high-valuations.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-07T03:59:37+08:00"
-    },
-    {
-      "articleId": "ecc6362fa32ed0555f6b67d96e371c1ff26f02c689d2aa8867648a1dae3de096",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "OpenAI plans to continue its AI data center investments despite recent election results, even as investors grow skeptical over soaring debt, higher borrowing costs, and public backlash. This skepticism has driven significant declines in the Nasdaq and shares of chipmakers and neocloud companies.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Global"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors",
-        "Cloud Computing"
-      ],
-      "investorImpact": "Investors in AI infrastructure, semiconductors, and neocloud companies face heightened volatility and risk due to rising borrowing costs, debt concerns, and market skepticism, despite continued aggressive corporate spending by industry leaders like OpenAI.",
-      "reasoning": "The article highlights critical market movements and investor sentiment shifts regarding the ongoing AI infrastructure buildout, making it highly relevant for technology sector and broader equity market monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "OpenAI will keep investing in AI data centers despite election results, CFO tells CNBC",
-      "publishedAtSgt": "2026-11-07T01:24:48+08:00",
-      "url": "https://www.cnbc.com/2026/11/06/open-ai-data-centers-election.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 82,
-      "collectorRelevanceReason": "technology_business_or_infrastructure",
-      "collectedAtSgt": "2026-11-07T03:59:38+08:00"
-    },
-    {
-      "articleId": "d80241b176cb119abe8a7fa67a95033917f1daa9535ce786c08679d72ea78061",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Debt markets are signaling growing credit stress for AI data center builders like CoreWeave, with bond yields topping 16% on their 2032 bonds and investors demanding higher compensation to insure against default.",
-      "assetClasses": [
-        "Fixed Income",
-        "Equities"
-      ],
-      "geographies": [
-        "Global"
-      ],
-      "sectors": [
-        "Technology",
-        "Financials"
-      ],
-      "investorImpact": "Rising yields and increasing credit stress for AI infrastructure builders indicate higher borrowing costs and potential capital constraints, which can weigh on equity valuations and debt performance across the tech sector.",
-      "reasoning": "The article details rising bond yields and credit stress for AI infrastructure providers, directly impacting fixed income and equity markets tied to the artificial intelligence sector, making it highly relevant for market monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "The AI ‘credit card’ is getting costlier as CoreWeave bond yield tops 16%",
-      "publishedAtSgt": "2026-11-07T01:09:53+08:00",
-      "url": "https://www.cnbc.com/2026/11/06/coreweave-bond-yield-tops-16percent-as-ai-credit-stress-rises.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-07T03:59:37+08:00"
-    },
-    {
-      "articleId": "e9050178724393c2030349becd68452cf0e2f4f21f3cb0f7383082eee6db92a7",
-      "relevant": true,
-      "category": "ECONOMIC",
-      "sentiment": "POSITIVE",
-      "importance": "HIGH",
-      "summary": "The U.S. economy added 165,000 jobs in October, surpassing expectations, while the unemployment rate slipped to 4.1%. Job creation showed broad-based strength with notable gains in transportation, warehousing, and manufacturing.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Transportation",
-        "Warehousing",
-        "Manufacturing",
-        "Healthcare"
-      ],
-      "investorImpact": "Stronger-than-expected labor market data signals continued economic resilience, which may influence Federal Reserve interest rate expectations and affect bond yields and equity market valuations.",
-      "reasoning": "The article reports critical top-tier macroeconomic employment data that directly impacts monetary policy expectations and market sentiment, making it highly relevant for economic and fund monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "U.S. economy added 165,000 jobs in October, way more than expected; unemployment rate slips to 4.1%",
-      "publishedAtSgt": "2026-11-07T00:06:59+08:00",
-      "url": "https://www.cnbc.com/2026/11/06/jobs-report-october-2026.html",
-      "collectorCategory": "ECONOMIC",
-      "collectorRelevanceScore": 102,
-      "collectorRelevanceReason": "strong_economic_title",
-      "collectedAtSgt": "2026-11-07T03:59:37+08:00"
     }
   ]
 }
