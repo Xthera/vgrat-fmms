@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-11-21T16:22:18+08:00",
+  "generatedAtSgt": "2026-11-22T01:39:24+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,38 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "ed23bc2a1ab6a37da3d5475e1d4f41c8ca3cd04b57beeee1cd7e85a4634b804b",
+      "source": "CNBC",
+      "title": "Anthropic’s record IPO collides with tech’s worst week on Wall Street since 2020",
+      "publishedAtSgt": "2026-11-22T00:40:05+08:00",
+      "url": "https://www.cnbc.com/2026/11/21/anthropic-ipo-tech-selloff.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Startup investor Ben Narasin is so jazzed about Anthropic's blockbuster IPO that he's planning a party later this month at his Silicon Valley home. Investors and analysts spent the week debating whether Anthropic will trade alongside AI hardware, as it's reliant on advanced chips, memory and data centers, or whether it will stand alone as the first public pure-play AI developer and a company that's achieved unrivaled growth in less than six years of existence.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-22T01:39:21+08:00"
+    },
+    {
+      "id": "c6080175c0c2d9170d3808cf2d4787fc913cd16b8e07ccb2e000b29e564939b0",
+      "source": "CNBC",
+      "title": "Why Anthropic's blockbuster IPO couldn't escape the stock market correction",
+      "publishedAtSgt": "2026-11-21T22:07:53+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/anthropic-ipo-ai-stock-market-selloff.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "But what came within a day is something that investors better get used to: anxiety in the stock market about valuations being assigned to artificial intelligence revenue and business models that should keep Anthropic shares volatile in the period ahead. \"The volatility in the AI trade we've been seeing for the past few months stems from valuations and whether we are in a bubble, and that's been heightened and highlighted by the Anthropic IPO,\" Marquez said on \"ETF Edge\" on Friday.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-11-22T01:39:24+08:00"
+    },
     {
       "id": "a69f2c37b29c331c39dd67b195a7177c3fadc346435f89d6d56ba78503b02cea",
       "source": "CNBC",
@@ -1562,37 +1594,6 @@
         "latest",
         "technology",
         "world"
-      ],
-      "collectedAtSgt": "2026-11-17T04:34:38+08:00"
-    },
-    {
-      "id": "e06a180097d1c403f5c6b247689fc6e871e7431883c4d496c1ae579243e1a0c6",
-      "source": "CNBC",
-      "title": "Prediction market odds for Tesla-SpaceX merger by April 2027 top 60%",
-      "publishedAtSgt": "2026-11-17T03:06:41+08:00",
-      "url": "https://www.cnbc.com/2026/11/16/prediction-market-odds-for-tesla-spacex-merger-by-april-2027-top-60percent.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "He cited Terafab, the semiconductor project involving Tesla, SpaceX and xAI, as a catalyst. national strategies of independence and leadership in space, energy, manufacturing or semiconductors, in our view, remain highly relevant regardless of which party controls Congress,\" wrote Jefferies analyst Philippe Houchois. Disclosure: CNBC and Kalshi have a commercial relationship that includes customer acquisition and a minority investment.",
-      "feeds": [
-        "latest",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-17T04:34:40+08:00"
-    },
-    {
-      "id": "2226ca370a6aaab7906ef9b9800c55e4193ce033000f1119c2cb8c14f9114fdb",
-      "source": "CNBC",
-      "title": "Market's Nvidia obsession obscuring an opportunity in this name",
-      "publishedAtSgt": "2026-11-17T02:56:49+08:00",
-      "url": "https://www.cnbc.com/2026/11/16/disney-options-trade-before-earnings.html",
-      "category": "MARKET",
-      "relevanceScore": 57,
-      "relevanceReason": "supporting_market_description",
-      "summary": "Trading back to a market multiple, justified if it establishes above-market EPS growth, suggests ~26% upside, which is also consistent with a sum-of-the-parts analysis that points to an intrinsic valuation of $140 to $160 per share versus the Friday, November 13th closing price of $118.97.",
-      "feeds": [
-        "latest"
       ],
       "collectedAtSgt": "2026-11-17T04:34:38+08:00"
     }

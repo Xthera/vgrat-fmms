@@ -5,6 +5,21 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "c6080175c0c2d9170d3808cf2d4787fc913cd16b8e07ccb2e000b29e564939b0",
+      "source": "CNBC",
+      "title": "Why Anthropic's blockbuster IPO couldn't escape the stock market correction",
+      "publishedAtSgt": "2026-11-21T22:07:53+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/anthropic-ipo-ai-stock-market-selloff.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "But what came within a day is something that investors better get used to: anxiety in the stock market about valuations being assigned to artificial intelligence revenue and business models that should keep Anthropic shares volatile in the period ahead. \"The volatility in the AI trade we've been seeing for the past few months stems from valuations and whether we are in a bubble, and that's been heightened and highlighted by the Anthropic IPO,\" Marquez said on \"ETF Edge\" on Friday.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-11-22T01:39:24+08:00"
+    },
+    {
       "id": "a69f2c37b29c331c39dd67b195a7177c3fadc346435f89d6d56ba78503b02cea",
       "source": "CNBC",
       "title": "An early breakdown in the polar vortex is threatening already depleted gas stocks",
@@ -179,6 +194,6 @@
       "collectedAtSgt": "2026-11-21T02:39:55+08:00"
     }
   ],
-  "articleCount": 11,
-  "updatedAtSgt": "2026-11-21T16:22:18+08:00"
+  "articleCount": 12,
+  "updatedAtSgt": "2026-11-22T01:39:24+08:00"
 }
