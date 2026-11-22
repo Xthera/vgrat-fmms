@@ -5,6 +5,23 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "eca73525028771fe86f39a33ae04703419f14c072ba11fbee3b40cd607d61f0a",
+      "source": "CNBC",
+      "title": "Quantum computing’s first real-world payoff may come in energy, not drug discovery",
+      "publishedAtSgt": "2026-11-22T14:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/22/quantum-computing-energy-applications.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "But quantum software, which uses algorithms designed to solve complex problems faster than conventional computers, is already being tested on a more immediate challenge: the energy transition, from keeping power grids stable to finding better materials for solar cells and hydrogen production. Phasecraft, a quantum software company founded in Bristol, England, in 2019, is one of the firms putting the technology to work in energy.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-22T16:11:20+08:00"
+    },
+    {
       "id": "ed23bc2a1ab6a37da3d5475e1d4f41c8ca3cd04b57beeee1cd7e85a4634b804b",
       "source": "CNBC",
       "title": "Anthropic’s record IPO collides with tech’s worst week on Wall Street since 2020",
@@ -22,6 +39,6 @@
       "collectedAtSgt": "2026-11-22T01:39:21+08:00"
     }
   ],
-  "articleCount": 1,
-  "updatedAtSgt": "2026-11-22T01:39:21+08:00"
+  "articleCount": 2,
+  "updatedAtSgt": "2026-11-22T16:11:20+08:00"
 }
