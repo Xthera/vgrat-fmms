@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-11-22T16:11:20+08:00",
+  "generatedAtSgt": "2026-11-23T01:54:55+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,21 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "ec5f3e18984d5d84956adbb2ffcc72ca1dc62d95bbaf4690b5697dee847f51a7",
+      "source": "CNBC",
+      "title": "Top Wall Street analysts favor these 3 dividend stocks for strong returns",
+      "publishedAtSgt": "2026-11-22T20:13:56+08:00",
+      "url": "https://www.cnbc.com/2026/11/22/top-wall-street-analysts-favor-these-stocks-for-strong-returns.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "Investors often favor dividend stocks for their regular income and the promise of potential share price appreciation. Devon Energy Devon Energy (DVN), an independent oil and natural gas exploration and production company, reported better-than-expected third-quarter results. Margolin expects COP to sustain an 8% dividend compound annual growth rate through 2029 while repurchasing $6.4 billion of stock annually, and reducing net debt-to-capital to less than 9% by the end of 2028 based on the...",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-11-23T01:54:55+08:00"
+    },
     {
       "id": "eca73525028771fe86f39a33ae04703419f14c072ba11fbee3b40cd607d61f0a",
       "source": "CNBC",
@@ -1579,23 +1594,6 @@
         "world"
       ],
       "collectedAtSgt": "2026-11-17T12:37:43+08:00"
-    },
-    {
-      "id": "a4b1a8b4e487a241f6717a2cc5a2baf08d4f5ab42b0912c5e4ff4f52f9dc9569",
-      "source": "CNBC",
-      "title": "U.S. crude oil declines to $85 a barrel on recovering Middle East exports",
-      "publishedAtSgt": "2026-11-17T03:13:25+08:00",
-      "url": "https://www.cnbc.com/2026/11/16/us-crude-oil-declines-to-87-a-barrel-on-recovering-middle-east-exports.html",
-      "category": "ECONOMIC",
-      "relevanceScore": 101,
-      "relevanceReason": "strong_economic_title",
-      "summary": "Oil prices are falling Monday as shipments through the Strait of Hormuz recover and tensions between Iran and the U.S remain at a stalemate. The International Energy Agency said on Friday it expects global supply to exceed 1.7 million barrels a day in the fourth quarter of 2026, reversing its earlier forecast for a deficit as Middle East exports recover faster than global demand and even as shipping attacks continue.",
-      "feeds": [
-        "latest",
-        "finance",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-17T04:34:40+08:00"
     }
   ]
 }
