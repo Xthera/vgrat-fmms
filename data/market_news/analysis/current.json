@@ -1,10 +1,68 @@
 {
-  "generatedAtSgt": "2026-11-21T16:38:11.256919+08:00",
+  "generatedAtSgt": "2026-11-22T08:07:29.826967+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 212,
+  "articleCount": 210,
   "analyses": [
+    {
+      "articleId": "ed23bc2a1ab6a37da3d5475e1d4f41c8ca3cd04b57beeee1cd7e85a4634b804b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Anthropic's major IPO coincides with the worst week for technology stocks on Wall Street since 2020, sparking debates among investors regarding whether the company will trade alongside AI hardware or stand alone as a pure-play AI developer.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "The simultaneous occurrence of a major pure-play AI IPO and a severe tech sector selloff creates valuation uncertainty and highlights high volatility for tech and AI-focused investments.",
+      "reasoning": "Classified under MARKET because it directly concerns an initial public offering intersecting with broader market selloffs in the technology sector. It is significant for fund monitoring due to its high-profile nature and impact on AI valuation dynamics.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Anthropic’s record IPO collides with tech’s worst week on Wall Street since 2020",
+      "publishedAtSgt": "2026-11-22T00:40:05+08:00",
+      "url": "https://www.cnbc.com/2026/11/21/anthropic-ipo-tech-selloff.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-22T01:39:21+08:00"
+    },
+    {
+      "articleId": "c6080175c0c2d9170d3808cf2d4787fc913cd16b8e07ccb2e000b29e564939b0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Anthropic's blockbuster IPO could not escape a broader stock market correction and sell-off, highlighting growing investor anxiety over AI valuations and potential bubble concerns that will likely keep shares volatile.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors face heightened volatility in the AI trade as market corrections and valuation anxieties impact major technology IPOs, signaling the need for careful risk management in AI-related allocations.",
+      "reasoning": "The article discusses the intersection of a major AI IPO and a broader market correction driven by valuation concerns, making it highly relevant for market and investment monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Why Anthropic's blockbuster IPO couldn't escape the stock market correction",
+      "publishedAtSgt": "2026-11-21T22:07:53+08:00",
+      "url": "https://www.cnbc.com/2026/11/20/anthropic-ipo-ai-stock-market-selloff.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-22T01:39:24+08:00"
+    },
     {
       "articleId": "a69f2c37b29c331c39dd67b195a7177c3fadc346435f89d6d56ba78503b02cea",
       "relevant": true,
@@ -6263,124 +6321,6 @@
       "collectorRelevanceScore": 91,
       "collectorRelevanceReason": "strong_market_title",
       "collectedAtSgt": "2026-11-09T06:57:54+08:00"
-    },
-    {
-      "articleId": "2feb6918da3357279207902c4e751b920207aa3ad16fd3dfd69668e772df148f",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "NEUTRAL",
-      "importance": "MEDIUM",
-      "summary": "Democrats are planning to challenge and attempt to end President Trump's tariff regime, starting with his trade war against Canada, and are looking to ensure Congress has final say over future tariffs.",
-      "assetClasses": [
-        "Equities",
-        "Commodities"
-      ],
-      "geographies": [
-        "United States",
-        "Canada"
-      ],
-      "sectors": [
-        "Trade",
-        "Manufacturing"
-      ],
-      "investorImpact": "Potential removal of tariffs, particularly against Canada, could reduce input costs for manufacturers and ease cross-border trade friction, impacting equities and commodities exposed to US-Canada trade.",
-      "reasoning": "Classified as GEOPOLITICAL because it covers legislative and political efforts by Democrats to overturn executive tariffs. It is relevant to fund monitoring as shifts in trade policy affect macroeconomic conditions and sector-specific costs.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "How Democrats will try to end Trump's tariffs",
-      "publishedAtSgt": "2026-11-08T23:36:39+08:00",
-      "url": "https://www.cnbc.com/2026/11/08/trump-tariffs-democrats-congress-canada.html",
-      "collectorCategory": "GEOPOLITICAL",
-      "collectorRelevanceScore": 71,
-      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
-      "collectedAtSgt": "2026-11-09T00:44:18+08:00"
-    },
-    {
-      "articleId": "9f06056e01a7c3ac8f6891017f0c7734699ee5b0ec30548d017ef7cca93746ab",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Democrats' midterm election win has created uncertainty for the artificial intelligence trade due to voter opposition to data center buildouts. Amid potential market volatility from macro uncertainties and geopolitical tensions, top Wall Street analysts suggest investing in dividend-paying stocks for consistent income.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials",
-        "Technology"
-      ],
-      "investorImpact": "Investors facing potential market volatility from AI trade headwinds and geopolitical tensions can consider rotating into dividend-paying stocks to secure steady income.",
-      "reasoning": "Classified as MARKET because it discusses equity market strategy, portfolio positioning, and dividend stocks amidst political and macroeconomic shifts. Sentiment is MIXED as it highlights trade concerns and volatility alongside positive defensive income strategies.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Top Wall Street analysts like these 3 dividend stocks for consistent income",
-      "publishedAtSgt": "2026-11-08T19:47:24+08:00",
-      "url": "https://www.cnbc.com/2026/11/08/top-analysts-like-these-3-dividend-stocks-for-consistent-income.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-09T00:44:18+08:00"
-    },
-    {
-      "articleId": "33e825706b6a17ec89a148f6f9b0f4a061eaaecaf2648b68813e445ca86c8253",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "NEUTRAL",
-      "importance": "LOW",
-      "summary": "Dave Wehner, Meta's chief strategy officer, is leaving the company to join AI infrastructure startup Fireworks as its chief financial officer.",
-      "assetClasses": [
-        "Private Equity",
-        "Venture Capital"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "Highlights executive talent movement toward high-valuation AI infrastructure startups, signaling continued growth and maturation in the AI sector.",
-      "reasoning": "The article discusses a notable executive departure from Meta to a high-valuation AI startup, which is relevant to technology sector trends and venture capital but has limited direct market-wide portfolio impact.",
-      "fundMonitoringRelevant": false,
-      "source": "CNBC",
-      "title": "Meta chief strategy officer Dave Wehner leaves to join AI infrastructure startup Fireworks as CFO",
-      "publishedAtSgt": "2026-11-08T01:51:16+08:00",
-      "url": "https://www.cnbc.com/2026/11/07/dave-wehner-meta-fireworks-cfo.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 82,
-      "collectorRelevanceReason": "technology_business_or_infrastructure",
-      "collectedAtSgt": "2026-11-08T02:06:20+08:00"
-    },
-    {
-      "articleId": "234ca19577c6588f25b17004042e4ea0eafa86fd61e5dfe84d823e6175e6a53d",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEUTRAL",
-      "importance": "MEDIUM",
-      "summary": "Healthcare stocks face an uncertain outlook and potential lack of momentum as Democrats prepare to take over Congress, with analysts suggesting subsectors like medical device stocks near multi-year lows should be treated selectively.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Healthcare"
-      ],
-      "investorImpact": "Investors holding healthcare stocks should adopt a selective approach across subsectors, potentially finding value in medical device stocks near multi-year lows despite broader political uncertainty.",
-      "reasoning": "The article discusses the impact of congressional political shifts on healthcare market performance and investor strategy, making it relevant for market and sector monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Why the prognosis for healthcare stocks is uncertain ahead of Congress’ new makeup",
-      "publishedAtSgt": "2026-11-08T00:02:33+08:00",
-      "url": "https://www.cnbc.com/2026/11/07/healthcare-stocks-may-face-trouble-due-to-midterm-results.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-08T02:06:20+08:00"
     }
   ]
 }
