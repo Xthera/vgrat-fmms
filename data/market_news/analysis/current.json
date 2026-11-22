@@ -1,10 +1,41 @@
 {
-  "generatedAtSgt": "2026-11-22T08:07:29.826967+08:00",
+  "generatedAtSgt": "2026-11-22T16:27:07.028666+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 210,
+  "articleCount": 211,
   "analyses": [
+    {
+      "articleId": "eca73525028771fe86f39a33ae04703419f14c072ba11fbee3b40cd607d61f0a",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Quantum computing software is being tested on energy transition challenges, such as stabilizing power grids and discovering materials for solar cells and hydrogen production, ahead of drug discovery applications.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United Kingdom",
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Energy",
+        "Clean Energy"
+      ],
+      "investorImpact": "Investors in the quantum computing and clean energy sectors should monitor software firms like Phasecraft, as near-term commercial viability may materialize faster in energy applications than previously expected.",
+      "reasoning": "Classified under TECHNOLOGY as it discusses quantum computing software advancements and commercial applications. It is relevant for fund monitoring given its focus on the intersection of deep tech and the energy transition, offering early-stage investment insights.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Quantum computing’s first real-world payoff may come in energy, not drug discovery",
+      "publishedAtSgt": "2026-11-22T14:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/22/quantum-computing-energy-applications.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-22T16:11:20+08:00"
+    },
     {
       "articleId": "ed23bc2a1ab6a37da3d5475e1d4f41c8ca3cd04b57beeee1cd7e85a4634b804b",
       "relevant": true,
