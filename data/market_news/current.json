@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-11-23T08:22:21+08:00",
+  "generatedAtSgt": "2026-11-23T17:14:24+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,55 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "39d3af6d3d8ec303d736650440f3c0926025d5e7e37405475d5c5f8cc301d722",
+      "source": "CNBC",
+      "title": "Investors gives a thumbs down to Tata Steel-APL Apollo $1.67 billion deal, plunging shares",
+      "publishedAtSgt": "2026-11-23T15:25:24+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/tata-steel-acquisition-deal-apl-india.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "The acquisition will boost Tata Steel's downstream integration to around 53% from 35%, the company said in a stock exchange filing. Investors reacted negatively to the deal, with shares of Tata Steel sliding over 9% on Monday, while APL Apollo's stock crashed more than 19%. While the deal is likely to be positive in the long term, the complex structure and lack of clarity have rattled investors, Deven Choksey, founder and managing director of wealth management firm DRChoksey FinServ, told CNBC.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-23T17:14:21+08:00"
+    },
+    {
+      "id": "24c56025eb65efb7b98c8f1b175997fe7422a99090204744204880e7633b093c",
+      "source": "CNBC",
+      "title": "How Asian countries are looking to prop up markets as AI downturn sinks stocks",
+      "publishedAtSgt": "2026-11-23T14:50:48+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/asia-markets-kospi-taiwan-china-csi300.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "South Korean stocks have seen wild swings over 2026 as investors piled into, then fled from its two tech heavyweights, Samsung Electronics and SK Hynix, both critical companies in the AI supply chain. The ministry said that it \"assessed that volatility in domestic and international stock markets has significantly increased recently due to internal and external uncertainties surrounding the global AI and semiconductor industries, as well as U.S.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-23T17:14:21+08:00"
+    },
+    {
+      "id": "919bf1d6e10c41dd4852f70df2d115e5927f9877f53b674d39e423b03b4f2ade",
+      "source": "CNBC",
+      "title": "U.S. probes Megaspeed, Alice Huang as new figure emerges in Nvidia chip case",
+      "publishedAtSgt": "2026-11-23T13:08:03+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/nvidia-megaspeed-chipmaker-us.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "Director of National Intelligence Jay Clayton said the U.S. Treasury Secretary Scott Bessent told CBS on Sunday that the administration was seeking answers from Nvidia about its chip sales to China, including who oversaw compliance and which levels of the company knew about the activity.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-23T17:14:21+08:00"
+    },
     {
       "id": "ec5f3e18984d5d84956adbb2ffcc72ca1dc62d95bbaf4690b5697dee847f51a7",
       "source": "CNBC",
@@ -1542,58 +1591,6 @@
         "world"
       ],
       "collectedAtSgt": "2026-11-17T12:37:44+08:00"
-    },
-    {
-      "id": "e81a77c181d1743bfbb4e8d1078aa7cdd0fbcbecca3d28547a198576cebdc633",
-      "source": "CNBC",
-      "title": "Aschenbrenner’s Situational Awareness made AI bets again before October rout",
-      "publishedAtSgt": "2026-11-17T07:05:12+08:00",
-      "url": "https://www.cnbc.com/2026/11/16/situational-awareness-aschenbrenner-new-ai-bets.html",
-      "category": "MARKET",
-      "relevanceScore": 57,
-      "relevanceReason": "supporting_market_description",
-      "summary": "Leopold Aschenbrenner's artificial intelligence-themed hedge fund Situational Awareness, which nearly collapsed in July, loaded back up on AI stocks as it returned to the financial markets at the end of the third quarter. Stocked tethered to the AI trade took a hit in the most recent quarter as investors grew concerned about a slowdown in development of the technology.",
-      "feeds": [
-        "latest",
-        "technology",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-17T12:37:43+08:00"
-    },
-    {
-      "id": "6ee802f770598e29651b745cc640a0412dd1466f88ae50d329804146742f3925",
-      "source": "CNBC",
-      "title": "Berkshire Hathaway raised its stake in Delta in the third quarter. It also trimmed a key bank holding",
-      "publishedAtSgt": "2026-11-17T07:01:19+08:00",
-      "url": "https://www.cnbc.com/2026/11/16/berkshire-hathaway-raised-its-stake-in-delta-air-in-the-third-quarter.html",
-      "category": "MARKET",
-      "relevanceScore": 92,
-      "relevanceReason": "strong_market_title",
-      "summary": "Berkshire Hathaway made several moves in the stock market during the third quarter, adding to key positions and trimming others. Selling some Bank of America Berkshire also trimmed its holding in Bank of America by nearly 6%, selling more than $1.6 billion worth of stock. At one point in September the 30-year Treasury bond yield surged above 5.6% to its highest level since 2002.",
-      "feeds": [
-        "latest",
-        "finance"
-      ],
-      "collectedAtSgt": "2026-11-17T12:37:44+08:00"
-    },
-    {
-      "id": "8deee6ab811f69cdf136268ce80428377515b6f9d98221c40bdb578d3242c7a2",
-      "source": "CNBC",
-      "title": "JPMorgan Chase says temporary software bug is affecting consumer banking",
-      "publishedAtSgt": "2026-11-17T06:14:47+08:00",
-      "url": "https://www.cnbc.com/2026/11/16/jpmorgan-chase-technical-issue.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "The bank said a \"temporary issue related to a software bug in on-premise hardware systems\" was causing some customer transactions to take longer than usual, though it said customers can still access their accounts and funds. Bank said that company was \"not directly impacted. However, clients attempting to send or receive Zelle payments with another financial institution may experience transaction delays.\" Zelle is the peer-to-peer payments system backed by many of the largest U.S.",
-      "feeds": [
-        "latest",
-        "business",
-        "finance",
-        "technology",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-17T12:37:43+08:00"
     }
   ]
 }

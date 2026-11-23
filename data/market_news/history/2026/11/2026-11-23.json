@@ -1,0 +1,59 @@
+{
+  "date": "2026-11-23",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "source": "CNBC",
+  "articles": [
+    {
+      "id": "39d3af6d3d8ec303d736650440f3c0926025d5e7e37405475d5c5f8cc301d722",
+      "source": "CNBC",
+      "title": "Investors gives a thumbs down to Tata Steel-APL Apollo $1.67 billion deal, plunging shares",
+      "publishedAtSgt": "2026-11-23T15:25:24+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/tata-steel-acquisition-deal-apl-india.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "The acquisition will boost Tata Steel's downstream integration to around 53% from 35%, the company said in a stock exchange filing. Investors reacted negatively to the deal, with shares of Tata Steel sliding over 9% on Monday, while APL Apollo's stock crashed more than 19%. While the deal is likely to be positive in the long term, the complex structure and lack of clarity have rattled investors, Deven Choksey, founder and managing director of wealth management firm DRChoksey FinServ, told CNBC.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-23T17:14:21+08:00"
+    },
+    {
+      "id": "24c56025eb65efb7b98c8f1b175997fe7422a99090204744204880e7633b093c",
+      "source": "CNBC",
+      "title": "How Asian countries are looking to prop up markets as AI downturn sinks stocks",
+      "publishedAtSgt": "2026-11-23T14:50:48+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/asia-markets-kospi-taiwan-china-csi300.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "South Korean stocks have seen wild swings over 2026 as investors piled into, then fled from its two tech heavyweights, Samsung Electronics and SK Hynix, both critical companies in the AI supply chain. The ministry said that it \"assessed that volatility in domestic and international stock markets has significantly increased recently due to internal and external uncertainties surrounding the global AI and semiconductor industries, as well as U.S.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-23T17:14:21+08:00"
+    },
+    {
+      "id": "919bf1d6e10c41dd4852f70df2d115e5927f9877f53b674d39e423b03b4f2ade",
+      "source": "CNBC",
+      "title": "U.S. probes Megaspeed, Alice Huang as new figure emerges in Nvidia chip case",
+      "publishedAtSgt": "2026-11-23T13:08:03+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/nvidia-megaspeed-chipmaker-us.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "Director of National Intelligence Jay Clayton said the U.S. Treasury Secretary Scott Bessent told CBS on Sunday that the administration was seeking answers from Nvidia about its chip sales to China, including who oversaw compliance and which levels of the company knew about the activity.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-23T17:14:21+08:00"
+    }
+  ],
+  "articleCount": 3,
+  "updatedAtSgt": "2026-11-23T17:14:21+08:00"
+}
