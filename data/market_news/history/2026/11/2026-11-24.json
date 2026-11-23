@@ -1,0 +1,90 @@
+{
+  "date": "2026-11-24",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "source": "CNBC",
+  "articles": [
+    {
+      "id": "3453f425bf2d40ee3a0be5353414fcfb2d170e123a9087c31b00d8424ba18cc0",
+      "source": "CNBC",
+      "title": "Tech stocks see monster rally after Jensen Huang returns as Nvidia CEO",
+      "publishedAtSgt": "2026-11-24T05:22:13+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/anthropic-nvidia-shares.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Major tech stocks rebounded across the board Monday, sharply reversing Friday's steep sell-off when artificial intelligence stocks fell in the Nasdaq's worst week since 2020. The Nasdaq slid 10% last week, with tech stocks having a rocky week as investors remained nervous about the valuation of some AI companies and business models. Shares of Big Tech companies and other stocks related to the AI trade saw a lift Monday on the Nvidia news.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-24T06:06:18+08:00"
+    },
+    {
+      "id": "67d843fb02397704aef278fcb692685855ec95c96a7e4327a87a69a8836e75e4",
+      "source": "CNBC",
+      "title": "2-year Treasury yield jumps as stocks rebound, investors await New York Fed President Williams speech",
+      "publishedAtSgt": "2026-11-24T05:05:02+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/treasury-yields-bonds-fed.html",
+      "category": "MARKET",
+      "relevanceScore": 93,
+      "relevanceReason": "strong_market_title",
+      "summary": "Treasury yields on the short end of the curve rose on Monday, partially unwinding price action seen at the end of last week, as stocks experienced a strong rebound on Wall Street and investors looked ahead to comments from John Williams of the New York Fed. The 2-year Treasury note yield, the most sensitive to short-term Federal Reserve interest rate decisions, was up more than 7 basis points at 4.69%.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-24T06:06:20+08:00"
+    },
+    {
+      "id": "ba17c25c386367823e4fee08ba949f5ca56c5e0c50f48628110b7d0af370e902",
+      "source": "CNBC",
+      "title": "Fed's John Williams indicates higher interest rates likely 'over time' to address inflation",
+      "publishedAtSgt": "2026-11-24T05:02:17+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/john-williams-fed-inflation-rate-hikes.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "New York Federal Reserve President John Williams said Monday that policymakers have more work to do to bring inflation under control, though he indicated that further action can unfold over time as the economy continues to grow. He also said that while artificial intelligence is pressuring prices, there's \"little evidence\" it will be the source of more persistent inflation.",
+      "feeds": [
+        "latest",
+        "finance"
+      ],
+      "collectedAtSgt": "2026-11-24T06:06:18+08:00"
+    },
+    {
+      "id": "b542958b664d96ebd1d39429a905b11c0318c9d58e3e1ddbd3bad7e8b77397b5",
+      "source": "CNBC",
+      "title": "Investors are missing the bigger picture in CrowdStrike's deal to buy Zscaler",
+      "publishedAtSgt": "2026-11-24T04:26:39+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/23/crowdstrikes-zscaler-deal-investors-are-missing-the-bigger-picture.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Investors are balking at CrowdStrike 's $43.9 billion all-stock acquisition of Zscaler , sending shares down 10%. \"AI safety is multi-dimensional,\" CrowdStrike CEO George Kurtz said during a conference call with analysts and investors. \"We have had several conversations with technology leaders and engineers over the last two weeks against a backdrop of elevated stock volatility,\" they wrote.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-11-24T06:06:18+08:00"
+    },
+    {
+      "id": "52bb90aca41ab5a898008288caa0119dab61391fc18a3d5f4267f6d33dbeb49d",
+      "source": "CNBC",
+      "title": "SpaceX sued by Oregon and Virginia over AI deepfake porn, Grok safety claims",
+      "publishedAtSgt": "2026-11-24T00:45:31+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/oregon-virginia-spacex-grok-deepfake-lawsuits.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 80,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "Lawsuits against Elon Musk's SpaceX are stacking up, with Virginia and Oregon becoming the first states to sue the company over issues with its Grok AI image generator. The complaints also allege that SpaceX has falsely represented its AI apps and social network (Grok and X) as generally safe, which the states see as a violation of Virginia's Consumer Protection Act or Oregon's Unlawful Trade Practices Act.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-24T06:06:18+08:00"
+    }
+  ],
+  "articleCount": 5,
+  "updatedAtSgt": "2026-11-24T06:06:20+08:00"
+}

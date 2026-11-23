@@ -5,6 +5,83 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "1919a1d4a6540dd5a1c761ec4c0cabf629787c9e012942fb549e072e6c07f493",
+      "source": "CNBC",
+      "title": "Tokenized stocks face pushback as NYSE, Nasdaq pivot for a new market",
+      "publishedAtSgt": "2026-11-23T23:30:27+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/tokenized-stocks-face-pushback-as-nyse-nasdaq-pivot-for-a-new-market-.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Of the 62 companies whose shares OKXICE first sought to trade, 56 objected to having their shares tokenized and traded on the platform, according to a review of public notices posted between Oct. \"What you're seeing now is the more the companies learn about 24/7 global access, the more receptive they are.\" At launch, tokenized shares of Coinbase, Robinhood, Strategy, Circle, Securitize and BitGo will be available to trade on the platform, OKXICE disclosed in a public notice.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-24T06:06:26+08:00"
+    },
+    {
+      "id": "be723b9243d0d8cce8fa9d7b4c9758e9e81a5b9453b9fd03a72162a1de4cf150",
+      "source": "CNBC",
+      "title": "More Americans pay this Obama-era investment tax every year — how to avoid it",
+      "publishedAtSgt": "2026-11-23T21:15:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/net-investment-income-tax-niit.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Every year, more Americans pay an extra tax levy on their investment gains — but there's still time to reduce or avoid that bill for 2026, experts say. Net investment income tax, or NIIT, is a 3.8% levy on investment income once earnings exceed $200,000 for single filers or $250,000 for married couples filing jointly.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-11-24T06:06:25+08:00"
+    },
+    {
+      "id": "f4014968f4133785d9308e7d575e527d1cdc084087777c1edf3049de9f9c4927",
+      "source": "CNBC",
+      "title": "The biggest money-making energy trade looks over. What to buy instead",
+      "publishedAtSgt": "2026-11-23T20:00:20+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/refinery-stocks-crack-spreads.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 72,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "The upshot for investors may be that, as the shares come down, analysts see more upside. Energy policies coming from Washington, D.C., can drive — or destroy — investment dollars. Brian Perhaps the big investor story — which is, like most things lately, related to Jensen-gate and Nvidia—is the sizable selloff in many AI, neocloud, and data center power-related stocks.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-11-24T06:06:26+08:00"
+    },
+    {
+      "id": "93b8447ca713e5dacf9551c596f85c56c9e8891ca0020b2105cd8ba065845dd4",
+      "source": "CNBC",
+      "title": "Futures rally after Wall Street's nightmare week",
+      "publishedAtSgt": "2026-11-23T19:10:34+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/futures-rally-after-wall-streets-nightmare-week-.html",
+      "category": "MARKET",
+      "relevanceScore": 57,
+      "relevanceReason": "supporting_market_description",
+      "summary": "stocks looks set to help major markets crawl away from correction territory. Technology stocks sank in overnight trading, with SK Hynix among the biggest losers, weighing on South Korea's Kospi. Meanwhile, chip stocks are also in the green, rebounding from last week's sell-off.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtSgt": "2026-11-24T06:06:26+08:00"
+    },
+    {
+      "id": "1cffa7327234c1559efc24d3551a4af3171cf6e06739a2ad425bfe7bd3e081c6",
+      "source": "CNBC",
+      "title": "French biotech rejects short seller’s cancer-risk claims after shares plunge 17%",
+      "publishedAtSgt": "2026-11-23T17:45:42+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/abivax-scorpion-capital-obefazimod.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "French biotech Abivax's stock has partially recovered after the company responded to short seller Scorpion Capital accusing it of serious scientific and safety shortcomings in its experimental inflammatory bowel disease drug, obefazimod. After the closing bell, Abivax said Scorpion's report contained \"numerous factually inaccurate and misleading statements, assumptions, and conclusions.\" Shares rose 10% in Monday morning trading.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-24T06:06:27+08:00"
+    },
+    {
       "id": "39d3af6d3d8ec303d736650440f3c0926025d5e7e37405475d5c5f8cc301d722",
       "source": "CNBC",
       "title": "Investors gives a thumbs down to Tata Steel-APL Apollo $1.67 billion deal, plunging shares",
@@ -54,6 +131,6 @@
       "collectedAtSgt": "2026-11-23T17:14:21+08:00"
     }
   ],
-  "articleCount": 3,
-  "updatedAtSgt": "2026-11-23T17:14:21+08:00"
+  "articleCount": 8,
+  "updatedAtSgt": "2026-11-24T06:06:27+08:00"
 }
