@@ -1,0 +1,191 @@
+{
+  "date": "2026-11-09",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "articleCount": 6,
+  "analyses": [
+    {
+      "articleId": "4e932f86e76e4fa69d4fb1b7827652a33aad748ef71069374c53d346c5d68fad",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Megaspeed, an Nvidia chip buyer, has come into the spotlight following scrutiny involving executive Alice Huang and statements from the House Select Committee on China and government departments, which found no evidence of chip transfer violations.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "Malaysia",
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors should monitor regulatory scrutiny and geopolitical risks surrounding semiconductor supply chains and major chip buyers, as export controls and political investigations can impact sentiment on major tech companies like Nvidia.",
+      "reasoning": "The article details geopolitical and regulatory scrutiny regarding a major Nvidia chip buyer, which touches on semiconductor supply chains and compliance. It is relevant to technology and geopolitical monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "What is Megaspeed? The Nvidia chip buyer in the spotlight after Jensen Huang’s affair",
+      "publishedAtSgt": "2026-11-09T23:57:38+08:00",
+      "url": "https://www.cnbc.com/2026/11/09/megaspeed-nvidia-jensen-huang-alice-huang.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-10T04:51:42+08:00"
+    },
+    {
+      "articleId": "e7e8d52c2f2a3108eb10b1018c7ff47511ee13e5a98c37a41d89c336d3808857",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "LOW",
+      "summary": "Jim Cramer's Charitable Trust is booking profits on a stock holding to reduce its overall exposure to data centers, locking in a 47% gain while decreasing the position weighting to 1.6% from 2%.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Industrials"
+      ],
+      "investorImpact": "Provides insight into portfolio rebalancing strategies regarding high-flying data center exposures, though individual trade alerts have limited macro market impact.",
+      "reasoning": "Classified as MARKET due to portfolio management and profit-taking actions on a specific equity holding. Importance is LOW as it represents a specific fund's micro-adjustment rather than a broad market mover.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "We're booking profits in a stock to reduce our data center exposure",
+      "publishedAtSgt": "2026-11-09T21:42:57+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/09/were-booking-profits-in-a-stock-to-reduce-our-data-center-exposure.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-10T04:51:42+08:00"
+    },
+    {
+      "articleId": "09c1cb9d8a819f50caa96a77b89a2809f63be4761ede7a3e342a7d0b22fc9ef9",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Congress returns with pressing agenda items including government funding expiring in December, debates over Pete Hegseth, and the debt limit.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Government",
+        "Defense"
+      ],
+      "investorImpact": "Potential government shutdown risks and debt limit deadlines can cause short-term market volatility and uncertainty for fixed income and equity investors.",
+      "reasoning": "Classified as GEOPOLITICAL because it covers legislative actions and federal government funding deadlines which are critical drivers of market sentiment and macro risk.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Congress returns with government funding, Pete Hegseth and the debt limit on the agenda",
+      "publishedAtSgt": "2026-11-09T19:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/09/congress-government-funding-debt-limit-elections.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-10T04:51:42+08:00"
+    },
+    {
+      "articleId": "a84453b193e470f3fc44c29dbb4bfa2a39322694d1ce8f2e0928151ce117ccea",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "China's wholesale inflation hit its highest in over four years driven by strong external demand, while consumer inflation slowed to 0.7% in October and core inflation dropped to 0.8%, pointing to uneven economic expansion.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "China",
+        "Asia"
+      ],
+      "sectors": [
+        "Manufacturing",
+        "Consumer Goods"
+      ],
+      "investorImpact": "Investors should monitor the divergence between surging wholesale inflation and slowing consumer inflation in China, as it reflects strong external demand balanced by domestic consumption weakness, affecting manufacturing margins and broader Asian market sentiment.",
+      "reasoning": "The article provides crucial macroeconomic data regarding China's wholesale and consumer inflation trends, making it highly relevant for economic monitoring and global market strategy.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China wholesale inflation hits highest in more than four years as consumer measure slows",
+      "publishedAtSgt": "2026-11-09T10:50:22+08:00",
+      "url": "https://www.cnbc.com/2026/11/09/china-wholesale-inflation-rises-consumer.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-09T16:08:04+08:00"
+    },
+    {
+      "articleId": "deb4564b29b81711ddf72b1f2c1db714f3b6c1f2eb161954edba192190cc9294",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "President Donald Trump stated that renewed military strikes on Iran are highly unlikely if ongoing peace talks progress, though he retained the option to strike if necessary, as diplomatic efforts continue to resolve the eight-month-old conflict.",
+      "assetClasses": [
+        "Commodities",
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "Iran",
+        "Middle East"
+      ],
+      "sectors": [
+        "Energy",
+        "Oil and Gas"
+      ],
+      "investorImpact": "The ongoing talks and reduced likelihood of immediate open war lower the near-term risk premium on oil prices and inflation expectations, though continued threats mean energy markets will remain sensitive to geopolitical developments.",
+      "reasoning": "Classified as GEOPOLITICAL because it covers diplomatic and military tensions involving the U.S. and Iran. It is relevant to fund monitoring due to potential impacts on global oil prices and energy sector equities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump says renewed Iran strikes ‘highly unlikely’ if talks progress but warns he could still strike",
+      "publishedAtSgt": "2026-11-09T05:53:02+08:00",
+      "url": "https://www.cnbc.com/2026/11/08/trump-iran-strikes-unlikely-talks-hormuz.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 52,
+      "collectorRelevanceReason": "supporting_geopolitical_economic_description",
+      "collectedAtSgt": "2026-11-09T06:57:54+08:00"
+    },
+    {
+      "articleId": "2651d142100c821cf65cf49ec24e6422d0da9c2d64ac4c6ba865222bd4ef545c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "The article highlights key market focus areas for the upcoming trading week, specifically centering on the trajectory of artificial intelligence stocks and using CoreWeave's bonds and stock as a barometer for investor sentiment toward the AI sector.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors monitoring the technology and artificial intelligence sectors should pay close attention to sentiment indicators like CoreWeave to gauge broader market appetite for AI-related assets.",
+      "reasoning": "Classified as MARKET because it discusses upcoming market catalysts and investor sentiment regarding AI stocks. It is important for monitoring tech exposure and broader risk appetite.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Here are the 2 big things we're watching in the stock market in the week ahead",
+      "publishedAtSgt": "2026-11-09T01:40:15+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/08/here-are-the-2-big-things-were-watching-in-the-stock-market-in-the-week-ahead.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-09T06:57:54+08:00"
+    }
+  ]
+}
