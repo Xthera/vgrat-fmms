@@ -23,6 +23,12 @@
             "More reliable automatic updates: the market news analysis tries again when the AI service is busy, and data updates that finish at the same time no longer block each other.",
             "The user guide is updated for this version."
           ]
+        },
+        {
+          "title": "Fixed",
+          "items": [
+            "Fund lists: clicking a fund now always opens it. Before, a click could be lost if text on the page was highlighted, or if you clicked another fund while the previous one was still closing."
+          ]
         }
       ]
     },
