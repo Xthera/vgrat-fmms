@@ -1,0 +1,90 @@
+{
+  "date": "2026-11-25",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "source": "CNBC",
+  "articles": [
+    {
+      "id": "b73de41486b9e9895d668982eeba6ba7982e2c816a9558721c74e17869e3837a",
+      "source": "CNBC",
+      "title": "Consumer confidence shoots up after Democrats' midterm victories — though inflation worries persist",
+      "publishedAtSgt": "2026-11-25T02:34:43+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/consumer-confidence-november-election-midterm.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 102,
+      "relevanceReason": "strong_economic_title",
+      "summary": "Consumers grew significantly more optimistic in November in the wake of the midterm elections, with a growing number of Americans now seeing improvement in the labor market and expecting inflation to cool. While respondents \"continued to express frustration with high prices and rising costs,\" they also \"cited hope for the general economy,\" said Fergus McCormick, the board's senior economist for global indicators.",
+      "feeds": [
+        "latest",
+        "economy",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:09+08:00"
+    },
+    {
+      "id": "33b15103b5e2cc889bb0ec441ec470e777a07c705c49bedf658e466f2dadba7f",
+      "source": "CNBC",
+      "title": "Nvidia shares fall 7% as Huang comeback rally cools",
+      "publishedAtSgt": "2026-11-25T02:30:58+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/nvidia-stock-jensen-huang-return.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Nvidia shares fell around 7% on Tuesday, paring a massive Monday rally that was sparked by the return of Jensen Huang as CEO. semiconductor stocks also trended lower after posting strong increases Monday. \"We believe reinstatement of CEO Jensen Huang RETURNS Investor CONFIDENCE in the AI trade,\" Mizuho analysts wrote in a note on Monday.",
+      "feeds": [
+        "latest",
+        "technology"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:11+08:00"
+    },
+    {
+      "id": "c90267599d98b09c445a1bac902d4a36fd186bae11f77bc8f85341e91577b923",
+      "source": "CNBC",
+      "title": "As Anthropic falls below its IPO price, here's how big-money traders are reacting",
+      "publishedAtSgt": "2026-11-25T02:17:12+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/anthropic-options-trading-ipo-price.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Anthropic shares are back trading below the IPO price after a 13% sell-off Tuesday and a 1.5% drop Monday, despite a broad rally in most big-tech AI names. Trading below $76 Tuesday, the stock's now 8.5% below its IPO level and 34% below its intraday high of $115. Options volume on the stock is picking up as the shares drop and implied volatility jumps to 96, according to ThinkOrSwim data.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:09+08:00"
+    },
+    {
+      "id": "f3fd6079390c68fb2625f69c6b913339c09bb1831f76919e0a9e23c8a1737777",
+      "source": "CNBC",
+      "title": "Treasury yields are steady after inflation warning from New York Fed's Williams, investors await 5-year auction",
+      "publishedAtSgt": "2026-11-25T02:01:33+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/treasury-yields-bonds-inflation.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "Treasury yields were steady on Tuesday as investors took stock of a speech by John Williams of the New York Fed and looked ahead to a 5-year bond auction due later in the session. The 2-year Treasury note yield, the most sensitive to short-term Federal Reserve interest rate decisions, was higher by more than 1 basis point at 4.679%.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:13+08:00"
+    },
+    {
+      "id": "30b3f5ec079bfb707e2c3ce734374b315248bb1e294a911cf81fc4d1ca5b499f",
+      "source": "CNBC",
+      "title": "Anthropic sinks 8%, falling below $83 IPO price, but analysts are still largely positive",
+      "publishedAtSgt": "2026-11-25T01:30:26+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/anthropic-stock-ipo-price.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Shares of Anthropic fell 8% on Tuesday, sending the stock below the artificial intelligence company's $83 IPO price. Investors eagerly awaited Anthropic's debut in hopes that the company would revitalize the broader AI trade, which has been volatile in recent weeks over concerns about the feasibility of a multitrillion-dollar infrastructure buildout.",
+      "feeds": [
+        "latest",
+        "technology"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:09+08:00"
+    }
+  ],
+  "articleCount": 5,
+  "updatedAtSgt": "2026-11-25T02:58:13+08:00"
+}

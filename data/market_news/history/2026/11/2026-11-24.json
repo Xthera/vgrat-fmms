@@ -5,6 +5,103 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "c8a26e1929c100520e284021268fd476759a64016d5d91d6da2d55685d7a3229",
+      "source": "CNBC",
+      "title": "Drugmaker Insmed shares rally 14% after Sanofi agrees to buy it in pharma’s biggest deal in three years",
+      "publishedAtSgt": "2026-11-24T23:49:27+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/insmed-sanofi-deal-stock-pharma.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Insmed shares rose 14.3% to roughly $170.40 in morning trading, while Sanofi stock climbed 8% in Paris. Investors are also calling for sustainable revenue growth as major drugs lose exclusivity. \"Sanofi could offer a far more attractive investment opportunity given the significantly improved growth outlook,\" Barclays said in a note early Tuesday.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:16+08:00"
+    },
+    {
+      "id": "c33019bb263dc95d016517e1b2138f8a4ebec25607018c53da2a68db496a8ac8",
+      "source": "CNBC",
+      "title": "Kushner-backed OakNorth secures U.S. bank charter as global digital banks push into America",
+      "publishedAtSgt": "2026-11-24T23:34:10+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/oaknorth-us-bank-charter.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "The U.K.'s OakNorth has secured a federal bank charter, saying it is the first foreign digital bank to do so, as international competitors vie for U.S. The charter clears OakNorth, which is backed by Jared Kushner's private equity firm, to acquire Michigan-based Community Unity Bank, subject to an $80 million capital injection, according to approval documents issued by the Office of the Comptroller of the Currency on Nov.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:16+08:00"
+    },
+    {
+      "id": "2246ecafae5e080c85eb89d160909fea7ac906f27274845ec850ec94315e200c",
+      "source": "CNBC",
+      "title": "Commercial real estate activity falls 14% in October, as interest rates rise",
+      "publishedAtSgt": "2026-11-24T23:05:14+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/commercial-real-estate-activity-falls-14percent-in-october.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Property Play covers new and evolving opportunities for the real estate investor, from individuals to venture capitalists, private equity funds, family offices, institutional investors and large public companies. After settling in the low-to-mid-4% range, the yield on the 10-year Treasury moved above 5% and has been wavering around there with the potential to move even higher due to stubborn inflation. During $100 oil earlier this year, it didn't dip.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
+    {
+      "id": "a01c3b45a2e18d1f392a63a8ab4bb783bd1528bb97e99c4cbcb372a7462d42da",
+      "source": "CNBC",
+      "title": "Best Buy reports comparable sales growth of 6.1%, highest in five years",
+      "publishedAtSgt": "2026-11-24T22:51:58+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/best-buy-bby-q3-2027-earnings.html",
+      "category": "MARKET",
+      "relevanceScore": 57,
+      "relevanceReason": "supporting_market_description",
+      "summary": "The consumer electronics retailer reported comparable sales growth of 6.1%, a significant beat over expectations of 2.3%, according to market intelligence platform StreetAccount. The company said that growth was its highest in five years. It reported a domestic comparable sales increase of 6.2% and international comparable sales growth of 4.9%.",
+      "feeds": [
+        "latest",
+        "business",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
+    {
+      "id": "deed420731c7980faf45b2c13c069aebb4570fec49f27e9a03460218db9b591d",
+      "source": "CNBC",
+      "title": "Signal joins United Airlines, banks in limiting AI agents over customer risks",
+      "publishedAtSgt": "2026-11-24T22:46:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/signal-airlines-banks-ai-limit.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Privacy-focused messaging application Signal is tightening protections against artificial intelligence agents that can access information displayed on users' screens, citing concerns over privacy and security. Signal said AI agents built into mobile operating systems, such as Google's Gemini and Apple's Siri with onscreen awareness, can \"scan\" information on users' screens, potentially capturing and storing Signal data outside its control.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
+    {
+      "id": "c954d3ad0aeefbb322c8948fc645e5d936c856a01421b07465a8fafd7661903f",
+      "source": "CNBC",
+      "title": "Some U.S. food banks see demand top pandemic levels",
+      "publishedAtSgt": "2026-11-24T20:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/us-food-banks-demand-snap.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "economy ground to a halt — and many of the people now seeking food also have jobs. In the Federal Reserve's October Beige Book, the central bank's New York regional branch described a sharp rise in first-time food pantry users. One nonprofit leader told the Federal Reserve Bank of New York that the strain was comparable to the pandemic, \"but without the same philanthropic and government support.\" Data from Plentiful, a technology platform that connects people with food pantries and tracks their...",
+      "feeds": [
+        "latest",
+        "business"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
+    {
       "id": "7522e88ae688242fa3e207f80004d93223d5dd00b79dee24eb6fe1c7d94ab3f2",
       "source": "CNBC",
       "title": "Iran says three tankers hit mines in Hormuz despite U.S. escort, as Treasury widens sanctions",
@@ -184,6 +281,6 @@
       "collectedAtSgt": "2026-11-24T06:06:18+08:00"
     }
   ],
-  "articleCount": 11,
-  "updatedAtSgt": "2026-11-24T14:10:27+08:00"
+  "articleCount": 17,
+  "updatedAtSgt": "2026-11-25T02:58:17+08:00"
 }

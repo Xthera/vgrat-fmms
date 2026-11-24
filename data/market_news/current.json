@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-11-24T14:10:27+08:00",
+  "generatedAtSgt": "2026-11-25T02:58:17+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,183 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "b73de41486b9e9895d668982eeba6ba7982e2c816a9558721c74e17869e3837a",
+      "source": "CNBC",
+      "title": "Consumer confidence shoots up after Democrats' midterm victories — though inflation worries persist",
+      "publishedAtSgt": "2026-11-25T02:34:43+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/consumer-confidence-november-election-midterm.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 102,
+      "relevanceReason": "strong_economic_title",
+      "summary": "Consumers grew significantly more optimistic in November in the wake of the midterm elections, with a growing number of Americans now seeing improvement in the labor market and expecting inflation to cool. While respondents \"continued to express frustration with high prices and rising costs,\" they also \"cited hope for the general economy,\" said Fergus McCormick, the board's senior economist for global indicators.",
+      "feeds": [
+        "latest",
+        "economy",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:09+08:00"
+    },
+    {
+      "id": "33b15103b5e2cc889bb0ec441ec470e777a07c705c49bedf658e466f2dadba7f",
+      "source": "CNBC",
+      "title": "Nvidia shares fall 7% as Huang comeback rally cools",
+      "publishedAtSgt": "2026-11-25T02:30:58+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/nvidia-stock-jensen-huang-return.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Nvidia shares fell around 7% on Tuesday, paring a massive Monday rally that was sparked by the return of Jensen Huang as CEO. semiconductor stocks also trended lower after posting strong increases Monday. \"We believe reinstatement of CEO Jensen Huang RETURNS Investor CONFIDENCE in the AI trade,\" Mizuho analysts wrote in a note on Monday.",
+      "feeds": [
+        "latest",
+        "technology"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:11+08:00"
+    },
+    {
+      "id": "c90267599d98b09c445a1bac902d4a36fd186bae11f77bc8f85341e91577b923",
+      "source": "CNBC",
+      "title": "As Anthropic falls below its IPO price, here's how big-money traders are reacting",
+      "publishedAtSgt": "2026-11-25T02:17:12+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/anthropic-options-trading-ipo-price.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Anthropic shares are back trading below the IPO price after a 13% sell-off Tuesday and a 1.5% drop Monday, despite a broad rally in most big-tech AI names. Trading below $76 Tuesday, the stock's now 8.5% below its IPO level and 34% below its intraday high of $115. Options volume on the stock is picking up as the shares drop and implied volatility jumps to 96, according to ThinkOrSwim data.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:09+08:00"
+    },
+    {
+      "id": "f3fd6079390c68fb2625f69c6b913339c09bb1831f76919e0a9e23c8a1737777",
+      "source": "CNBC",
+      "title": "Treasury yields are steady after inflation warning from New York Fed's Williams, investors await 5-year auction",
+      "publishedAtSgt": "2026-11-25T02:01:33+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/treasury-yields-bonds-inflation.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "Treasury yields were steady on Tuesday as investors took stock of a speech by John Williams of the New York Fed and looked ahead to a 5-year bond auction due later in the session. The 2-year Treasury note yield, the most sensitive to short-term Federal Reserve interest rate decisions, was higher by more than 1 basis point at 4.679%.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:13+08:00"
+    },
+    {
+      "id": "30b3f5ec079bfb707e2c3ce734374b315248bb1e294a911cf81fc4d1ca5b499f",
+      "source": "CNBC",
+      "title": "Anthropic sinks 8%, falling below $83 IPO price, but analysts are still largely positive",
+      "publishedAtSgt": "2026-11-25T01:30:26+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/anthropic-stock-ipo-price.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Shares of Anthropic fell 8% on Tuesday, sending the stock below the artificial intelligence company's $83 IPO price. Investors eagerly awaited Anthropic's debut in hopes that the company would revitalize the broader AI trade, which has been volatile in recent weeks over concerns about the feasibility of a multitrillion-dollar infrastructure buildout.",
+      "feeds": [
+        "latest",
+        "technology"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:09+08:00"
+    },
+    {
+      "id": "c8a26e1929c100520e284021268fd476759a64016d5d91d6da2d55685d7a3229",
+      "source": "CNBC",
+      "title": "Drugmaker Insmed shares rally 14% after Sanofi agrees to buy it in pharma’s biggest deal in three years",
+      "publishedAtSgt": "2026-11-24T23:49:27+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/insmed-sanofi-deal-stock-pharma.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Insmed shares rose 14.3% to roughly $170.40 in morning trading, while Sanofi stock climbed 8% in Paris. Investors are also calling for sustainable revenue growth as major drugs lose exclusivity. \"Sanofi could offer a far more attractive investment opportunity given the significantly improved growth outlook,\" Barclays said in a note early Tuesday.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:16+08:00"
+    },
+    {
+      "id": "c33019bb263dc95d016517e1b2138f8a4ebec25607018c53da2a68db496a8ac8",
+      "source": "CNBC",
+      "title": "Kushner-backed OakNorth secures U.S. bank charter as global digital banks push into America",
+      "publishedAtSgt": "2026-11-24T23:34:10+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/oaknorth-us-bank-charter.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "The U.K.'s OakNorth has secured a federal bank charter, saying it is the first foreign digital bank to do so, as international competitors vie for U.S. The charter clears OakNorth, which is backed by Jared Kushner's private equity firm, to acquire Michigan-based Community Unity Bank, subject to an $80 million capital injection, according to approval documents issued by the Office of the Comptroller of the Currency on Nov.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:16+08:00"
+    },
+    {
+      "id": "2246ecafae5e080c85eb89d160909fea7ac906f27274845ec850ec94315e200c",
+      "source": "CNBC",
+      "title": "Commercial real estate activity falls 14% in October, as interest rates rise",
+      "publishedAtSgt": "2026-11-24T23:05:14+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/commercial-real-estate-activity-falls-14percent-in-october.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Property Play covers new and evolving opportunities for the real estate investor, from individuals to venture capitalists, private equity funds, family offices, institutional investors and large public companies. After settling in the low-to-mid-4% range, the yield on the 10-year Treasury moved above 5% and has been wavering around there with the potential to move even higher due to stubborn inflation. During $100 oil earlier this year, it didn't dip.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
+    {
+      "id": "a01c3b45a2e18d1f392a63a8ab4bb783bd1528bb97e99c4cbcb372a7462d42da",
+      "source": "CNBC",
+      "title": "Best Buy reports comparable sales growth of 6.1%, highest in five years",
+      "publishedAtSgt": "2026-11-24T22:51:58+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/best-buy-bby-q3-2027-earnings.html",
+      "category": "MARKET",
+      "relevanceScore": 57,
+      "relevanceReason": "supporting_market_description",
+      "summary": "The consumer electronics retailer reported comparable sales growth of 6.1%, a significant beat over expectations of 2.3%, according to market intelligence platform StreetAccount. The company said that growth was its highest in five years. It reported a domestic comparable sales increase of 6.2% and international comparable sales growth of 4.9%.",
+      "feeds": [
+        "latest",
+        "business",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
+    {
+      "id": "deed420731c7980faf45b2c13c069aebb4570fec49f27e9a03460218db9b591d",
+      "source": "CNBC",
+      "title": "Signal joins United Airlines, banks in limiting AI agents over customer risks",
+      "publishedAtSgt": "2026-11-24T22:46:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/signal-airlines-banks-ai-limit.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Privacy-focused messaging application Signal is tightening protections against artificial intelligence agents that can access information displayed on users' screens, citing concerns over privacy and security. Signal said AI agents built into mobile operating systems, such as Google's Gemini and Apple's Siri with onscreen awareness, can \"scan\" information on users' screens, potentially capturing and storing Signal data outside its control.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
+    {
+      "id": "c954d3ad0aeefbb322c8948fc645e5d936c856a01421b07465a8fafd7661903f",
+      "source": "CNBC",
+      "title": "Some U.S. food banks see demand top pandemic levels",
+      "publishedAtSgt": "2026-11-24T20:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/us-food-banks-demand-snap.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "economy ground to a halt — and many of the people now seeking food also have jobs. In the Federal Reserve's October Beige Book, the central bank's New York regional branch described a sharp rise in first-time food pantry users. One nonprofit leader told the Federal Reserve Bank of New York that the strain was comparable to the pandemic, \"but without the same philanthropic and government support.\" Data from Plentiful, a technology platform that connects people with food pantries and tracks their...",
+      "feeds": [
+        "latest",
+        "business"
+      ],
+      "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
     {
       "id": "7522e88ae688242fa3e207f80004d93223d5dd00b79dee24eb6fe1c7d94ab3f2",
       "source": "CNBC",
@@ -1418,181 +1595,6 @@
         "world"
       ],
       "collectedAtSgt": "2026-11-18T21:13:14+08:00"
-    },
-    {
-      "id": "e11853ede7d332f1e4309d5f43e935110f5ca1730daeb253a1a5ea7d103003da",
-      "source": "CNBC",
-      "title": "'Who and what comes next': Analysts expect Nvidia investor uncertainty despite earnings beat",
-      "publishedAtSgt": "2026-11-18T14:21:45+08:00",
-      "url": "https://www.cnbc.com/2026/11/18/nvidia-earnings-market-analysis.html",
-      "category": "MARKET",
-      "relevanceScore": 92,
-      "relevanceReason": "strong_market_title",
-      "summary": "equity strategist at Morgan Stanley, told CNBC TV that the results were \"somewhat expected,\" with no major drop-off in Nvidia's business anticipated in the near term and guidance remaining \"pretty constructive.\" Wilson said AI remained a \"desirable investment,\" with no slowdown in spending seen or expected from hyperscalers and some neoclouds — newer cloud providers built around AI computing. However, he added that investment may not continue at the pace investors expected six months ago.",
-      "feeds": [
-        "latest",
-        "technology"
-      ],
-      "collectedAtSgt": "2026-11-18T21:13:14+08:00"
-    },
-    {
-      "id": "4f5c94f8054488247cc27e729937c437f5a20d028364daa1a87e9645374f8243",
-      "source": "CNBC",
-      "title": "With Jensen Huang gone, Colette Kress shows Nvidia is still at the center of AI",
-      "publishedAtSgt": "2026-11-18T11:15:00+08:00",
-      "url": "https://www.cnbc.com/2026/11/17/jensen-huang-may-be-gone-nvidia-shows-its-still-at-the-center-of-ai-.html",
-      "category": "MARKET",
-      "relevanceScore": 57,
-      "relevanceReason": "supporting_market_description",
-      "summary": "She said leadership from Nvidia's most important supplier, Taiwan Semiconductor Manufacturing Company, visited company offices this week. \"Customers have expressed their support to the business outlook and helping us through that.\" While Huang was a singular figure in artificial intelligence with a commanding presence across the globe, Nvidia is still at the center of the AI ecosystem.",
-      "feeds": [
-        "latest",
-        "technology"
-      ],
-      "collectedAtSgt": "2026-11-18T21:13:13+08:00"
-    },
-    {
-      "id": "21121a776a178e23a17ae78d0faa36917765d9bf8afa9557ffa3a3dc20f6eb3c",
-      "source": "CNBC",
-      "title": "Japan exports in October surge 20.5%, beating estimates on robust chip shipments",
-      "publishedAtSgt": "2026-11-18T08:35:31+08:00",
-      "url": "https://www.cnbc.com/2026/11/18/japan-exports-october-imports-chips.html",
-      "category": "ECONOMIC",
-      "relevanceScore": 101,
-      "relevanceReason": "strong_economic_title",
-      "summary": "Exports growth beat expectations of economists polled by Reuters that had pegged it at 20%, and it was sharply higher compared to a revised 16.5% in September. Shipments of semiconductor equipment that have been propping up Tokyo's exports jumped 49.7% by value. Exports have been the main driver of Japan's growth, although a surge in the value of imports of petroleum due to the Iran war has offset some the impact of the exports surge on its economy.",
-      "feeds": [
-        "latest",
-        "economy",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-18T09:42:04+08:00"
-    },
-    {
-      "id": "a4ba2e18ba4052fb820696faeabd95f4e61db97868b28dc29b6cd91a7db5fe41",
-      "source": "CNBC",
-      "title": "Widespread outages hit banks, air travel, the NSA and Apple, disrupting seemingly everything",
-      "publishedAtSgt": "2026-11-18T06:03:57+08:00",
-      "url": "https://www.cnbc.com/2026/11/17/apple-microsoft-faa-jpmorgan-outages.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "\"We've looked very closely.\" It's been a tough few days for the technology world after a series of widespread disruptions brought different parts of life to a halt. \"That's a stark reminder of how deeply embedded these services and technologies are in our day-to-day life.\" The disruptions have rattled consumers and led to a steady stream of memes on social media, as people look for a silver lining — or sinister plot — in the string of technology problems.",
-      "feeds": [
-        "latest",
-        "technology",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-18T09:42:04+08:00"
-    },
-    {
-      "id": "f478c5bb6212971b26815e72418ed6aa33e1e747b3136682a8d28175e30d3556",
-      "source": "CNBC",
-      "title": "A generational flight from tech to defensive stocks is underway. How we’re capitalizing",
-      "publishedAtSgt": "2026-11-18T04:31:27+08:00",
-      "url": "https://www.cnbc.com/investingclub/2026/11/17/a-generational-flight-from-tech-to-defensive-stocks-is-underway-how-were-capitalizing.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "After chasing tech stocks for most of the four-year-old AI boom, investors have recently sought to reduce their tech exposure and seek out stocks in companies that offer more stability and less volatility. Healthcare Johnson & Johnson — If there's one stock that perfectly illustrates the market's appetite for defensive stocks, Jim said it is J & J.",
-      "feeds": [
-        "latest"
-      ],
-      "collectedAtSgt": "2026-11-18T09:42:04+08:00"
-    },
-    {
-      "id": "a9180e742d694495026e0244dd65888d6ef282f9ce420aa412f95b56837f1f9e",
-      "source": "CNBC",
-      "title": "Nvidia stock falls ahead of earnings as company reels from Huang resignation",
-      "publishedAtSgt": "2026-11-18T00:49:12+08:00",
-      "url": "https://www.cnbc.com/2026/11/17/nvidia-stock-earnings-jensen-huang-resignation.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "Nvidia shares slipped on Tuesday as former CEO Jensen Huang released his first public statement since his resignation and the company prepares to report earnings after the bell. Nvidia's stock slid 4% on Monday, bringing shares to their lowest close since July 1, 2025. Nvidia's stock slid 4% on Monday, bringing shares to their lowest close since July 1, 2025.",
-      "feeds": [
-        "latest",
-        "technology",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-18T00:57:47+08:00"
-    },
-    {
-      "id": "14b28fd440263c7eaf15889ae0244cc29baa186014149f9a4e16a45ceb42b7c7",
-      "source": "CNBC",
-      "title": "Jensen Huang breaks his silence ahead of Nvidia earnings — plus, 1 stock to buy on weakness",
-      "publishedAtSgt": "2026-11-18T00:42:21+08:00",
-      "url": "https://www.cnbc.com/investingclub/2026/11/17/jensen-huang-breaks-his-silence-ahead-of-nvidia-earnings-plus-1-stock-to-buy.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "Jim noted that Home Depot trades inversely bond yields, so when they do come down, the stock can go up. Portfolio director Jeff Marks said that inflation driven by higher oil prices due to the Iran war needs to come down, which would take pressure off bond yields. See here for a full list of the stocks.) As a subscriber to the CNBC Investing Club with Jim Cramer, you will receive a trade alert before Jim makes a trade.",
-      "feeds": [
-        "latest"
-      ],
-      "collectedAtSgt": "2026-11-18T00:57:47+08:00"
-    },
-    {
-      "id": "af6ce8d40f270de0fc7fd9bea7dc2bb4f9b194a3688d3bde8d44c4e0a82718fe",
-      "source": "CNBC",
-      "title": "Trump has arrived in Asia. Here’s what he said about Iran and Deutsche Bank",
-      "publishedAtSgt": "2026-11-18T00:39:43+08:00",
-      "url": "https://www.cnbc.com/2026/11/17/trump-iran-asia-trip-china.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "President Donald Trump has arrived for his high-stakes trip to Asia, and took a range of questions on subjects from Iran to Deutsche Bank leaking details about his tax. While Trump was airborne, the Financial Times reported Deutsche Bank had mistakenly leaked details of his taxes in March 2017, during his first presidential term.",
-      "feeds": [
-        "latest",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-18T00:57:49+08:00"
-    },
-    {
-      "id": "de06e58451d41d1bdf4629af357ab689ce3eccf622c201af2397d0230741e729",
-      "source": "CNBC",
-      "title": "Property Play: Chase Home Lending CEO says he plans to 'go on offense' against non-bank lenders",
-      "publishedAtSgt": "2026-11-18T00:38:56+08:00",
-      "url": "https://www.cnbc.com/2026/11/17/chase-home-lending-ceo-says-hes-going-on-offense.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "Property Play covers new and evolving opportunities for the real estate investor, from individuals to venture capitalists, private equity funds, family offices, institutional investors and large public companies. A hotter-than-expected monthly inflation report, coupled with new headlines from the Iran war, had the average rate on the 30-year fixed mortgage up 33 basis points to 7.5%, according to Mortgage News Daily.",
-      "feeds": [
-        "latest"
-      ],
-      "collectedAtSgt": "2026-11-18T00:57:47+08:00"
-    },
-    {
-      "id": "2b55c9306b7bf632121a98bd4de935d4b7f53b7cdfe9187849fb4c03091a2ed2",
-      "source": "CNBC",
-      "title": "Treasury yields moderate as investors parse retail sales data",
-      "publishedAtSgt": "2026-11-17T23:35:58+08:00",
-      "url": "https://www.cnbc.com/2026/11/17/treasury-yields-bonds-inflation.html",
-      "category": "ECONOMIC",
-      "relevanceScore": 101,
-      "relevanceReason": "strong_economic_title",
-      "summary": "Treasury yields gave up their gains Tuesday as investors digested key economic data from the federal government and comments from Federal Reserve officials. The benchmark 10-year Treasury yield rose nearly 1 basis point to 5.129%, while the long-dated 30-year Treasury bond was trading relatively flat at 5.471%.",
-      "feeds": [
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-18T00:58:01+08:00"
-    },
-    {
-      "id": "7467aca34374839beb78ac371fc8f9461a7506b75c7f38cf9e3e4606b96f7f77",
-      "source": "CNBC",
-      "title": "Home Depot names Richard McPhail as new CEO, beats earnings expectations",
-      "publishedAtSgt": "2026-11-17T23:27:51+08:00",
-      "url": "https://www.cnbc.com/2026/11/17/home-depot-hd-q3-earnings-2026.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "He said the company will continue to lean into winning professional shoppers like contractors and using AI tools to encourage sales. Shares of Home Depot sank more than 3% following the announcement and the retailer's fiscal third-quarter results. In the third quarter, the company said online comparable sales grew around 13%, which marked its sixth straight quarter of double-digit positive growth for the metric.",
-      "feeds": [
-        "latest",
-        "business"
-      ],
-      "collectedAtSgt": "2026-11-18T00:57:58+08:00"
     }
   ]
 }
