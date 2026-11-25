@@ -53,6 +53,10 @@ import {
 } from "./charts.js";
 
 import {
+    initializeFinanceCalculator
+} from "./fin-calc.js";
+
+import {
     createFundLinker,
     createIndexLinker
 } from "./news-fund-links.js";
@@ -3887,7 +3891,7 @@ const CALCULATOR_KEY = "vgrat-fms-calculator";
 function showCalculator(name, { save = true } = {}) {
 
     const value =
-        name === "prucredits" ? "prucredits" : "prushield";
+        ["prucredits", "finance"].includes(name) ? name : "prushield";
 
     qsa("[data-calc]").forEach(
         button => {
@@ -3906,6 +3910,12 @@ function showCalculator(name, { save = true } = {}) {
     if (value === "prucredits") {
 
         initializePruCredits();
+
+    }
+
+    if (value === "finance") {
+
+        initializeFinanceCalculator();
 
     }
 
@@ -3937,16 +3947,18 @@ function initializeCalculatorSwitch() {
     );
 
     // Don't load the external page until the Calculator page is opened
-    if (saved === "prucredits") {
+    if (saved === "prucredits" || saved === "finance") {
         qsa("[data-calc]").forEach(button => {
-            const active = button.dataset.calc === "prucredits";
+            const active = button.dataset.calc === saved;
             button.classList.toggle("active", active);
             button.setAttribute("aria-selected", String(active));
         });
         qsa("[data-calc-block]").forEach(block => {
-            block.hidden = block.dataset.calcBlock !== "prucredits";
+            block.hidden = block.dataset.calcBlock !== saved;
         });
     }
+
+    if (saved === "finance") initializeFinanceCalculator();
 
 }
 
