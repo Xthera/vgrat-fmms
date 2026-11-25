@@ -5,6 +5,105 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "e74b898190e8e9773261802dd390f9db5f7a9d6c69a8122645f87c5a27f3151b",
+      "source": "CNBC",
+      "title": "U.S. jury convicts Huawei in a criminal trial over fraud and trade secrets",
+      "publishedAtSgt": "2026-11-25T10:43:33+08:00",
+      "url": "https://www.cnbc.com/2026/11/25/huawei-fraud-trade-trial.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "Chinese technology giant Huawei was convicted Tuesday in New York on multiple federal criminal charges, including fraud, U.S. sanctions violations and conspiracy to steal trade secrets, following a three-month trial, according to the U.S. A federal jury found Huawei and three of its subsidiaries guilty of multiple offenses, including bank and wire fraud and conspiracy to commit money laundering, the Justice Department said in a statement.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T11:05:51+08:00"
+    },
+    {
+      "id": "38910952eb3fe5319f0759cee947e95f7dcd0699a21c0a612876f07f0a842536",
+      "source": "CNBC",
+      "title": "SoftBank drops 14% as Wall Street AI sell-off ripples across Asian tech names",
+      "publishedAtSgt": "2026-11-25T09:57:29+08:00",
+      "url": "https://www.cnbc.com/2026/11/25/tech-stocks-softbank-group-advantest-sk-hynix-samsung.html",
+      "category": "MARKET",
+      "relevanceScore": 57,
+      "relevanceReason": "supporting_market_description",
+      "summary": "Asian technology stocks tumbled Wednesday, led by a rout in Japanese semiconductor stocks, as renewed concerns over the artificial intelligence trade rattles investors following an overnight sell-off on Wall Street. Japanese semiconductor stocks tied to the global AI supply chain were among the hardest hit. Technology conglomerate SoftBank Group shed 13.8%, while semiconductor inspection equipment maker Lasertec lost 10.15%.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T11:05:51+08:00"
+    },
+    {
+      "id": "48d08294c4ec8611b0cad9a6f47236c042dc00ae3e70dd747b3773263776b5ae",
+      "source": "CNBC",
+      "title": "Jensen Huang's Nvidia return shows the U.S.-China AI race is about more than chips",
+      "publishedAtSgt": "2026-11-25T09:13:56+08:00",
+      "url": "https://www.cnbc.com/2026/11/25/jensen-huang-nvidia-ai-talent-race.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "If not, Trump warned, the founder of the AI chip giant could hypothetically have taken a job in China. Nvidia \"was shaken without a single chip or model changing,\" said Winston Ma, an AI investor and adjunct professor of law at New York University. She also said a Meta engineer in Canada took an offer from a Chinese AI startup for a salary of 1.4 million yuan ($210,000), in addition to stock options.",
+      "feeds": [
+        "latest",
+        "finance",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T11:05:51+08:00"
+    },
+    {
+      "id": "8e4fc310cef964a3199a2b3fc1e5ac3f8f24c6c550acba67d0486f158d1826f4",
+      "source": "CNBC",
+      "title": "Dell earnings beat on AI strength, company authorizes $25 billion buyback",
+      "publishedAtSgt": "2026-11-25T06:07:45+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/dell-earnings-report-q3-2027.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "The company's overall sales more than doubled on an annual basis during the third quarter, driven by AI server demand. The company's largest line is its infrastructure solutions group, or ISG, which makes AI servers and systems, often based around AI chips from companies like Nvidia and AMD. \"Every AI order is vetted for access to capital, end customer quality, trade and export compliance and access to land and power,\" Clarke said on an earnings call with analysts.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T11:05:51+08:00"
+    },
+    {
+      "id": "7cb7987a013fb79f8811d1b1ca59646cd82322815e5847a5cc9fae732d63d11c",
+      "source": "CNBC",
+      "title": "Saudi national charged in OpenAI bugging to be released on $1 million bond",
+      "publishedAtSgt": "2026-11-25T06:03:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/openai-bugging-aflozan-release-saudi.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Abdulrahman Alfozan, the Saudi national accused of bugging an OpenAI executive conference room, will be allowed to be released from jail on a $1 million bond, a San Francisco federal court judge ruled Tuesday. Alfozan was stealing trade secrets, or to support the speculation that he was acting as an unregistered foreign agent for Saudi Arabia.\" The San Francisco U.S.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-25T11:05:51+08:00"
+    },
+    {
+      "id": "6fe426036e5dad6e41da7c07565b538e25aa76f014dd061977b6c6e32313de46",
+      "source": "CNBC",
+      "title": "Who qualifies for Costco’s $30-per-share dividend — plus, Meta puts share plan on hold",
+      "publishedAtSgt": "2026-11-25T03:23:59+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/24/who-qualifies-for-costcos-dividend-plus-meta-pauses-share-plan.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Tech stocks and the broader AI trade are facing a wave of selling, with Anthropic's drop below its $83 IPO price contributing to the negative sentiment. As the AI trade fell back, defensive sectors like healthcare and staples outperformed. The shares were intended to give Meta a way to fund its AI infrastructure buildout or make acquisitions without diluting CEO Mark Zuckerberg's voting power.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-11-25T11:05:51+08:00"
+    },
+    {
       "id": "b73de41486b9e9895d668982eeba6ba7982e2c816a9558721c74e17869e3837a",
       "source": "CNBC",
       "title": "Consumer confidence shoots up after Democrats' midterm victories — though inflation worries persist",
@@ -85,6 +184,6 @@
       "collectedAtSgt": "2026-11-25T02:58:09+08:00"
     }
   ],
-  "articleCount": 5,
-  "updatedAtSgt": "2026-11-25T02:58:13+08:00"
+  "articleCount": 11,
+  "updatedAtSgt": "2026-11-25T11:05:51+08:00"
 }
