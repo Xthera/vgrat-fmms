@@ -1,10 +1,490 @@
 {
-  "generatedAtSgt": "2026-11-25T03:13:55.554719+08:00",
+  "generatedAtSgt": "2026-11-25T11:22:21.699726+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 171,
+  "articleCount": 187,
   "analyses": [
+    {
+      "articleId": "e74b898190e8e9773261802dd390f9db5f7a9d6c69a8122645f87c5a27f3151b",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Chinese technology giant Huawei was convicted in a New York federal court on multiple criminal charges including fraud, sanctions violations, and conspiracy to steal trade secrets.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Telecommunications"
+      ],
+      "investorImpact": "The conviction heightens U.S.-China technology tensions and poses regulatory and legal risks for multinational tech companies operating across both jurisdictions.",
+      "reasoning": "Classified as GEOPOLITICAL due to the high-profile legal ruling involving a major Chinese multinational and U.S. federal prosecutors, reinforcing ongoing tech decoupling and regulatory risks.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "U.S. jury convicts Huawei in a criminal trial over fraud and trade secrets",
+      "publishedAtSgt": "2026-11-25T10:43:33+08:00",
+      "url": "https://www.cnbc.com/2026/11/25/huawei-fraud-trade-trial.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-25T11:05:51+08:00"
+    },
+    {
+      "articleId": "38910952eb3fe5319f0759cee947e95f7dcd0699a21c0a612876f07f0a842536",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Asian technology stocks tumbled following an overnight sell-off on Wall Street, with Japanese semiconductor and AI-related stocks experiencing sharp declines, including a 13.8% drop in SoftBank Group and a 10.15% loss in Lasertec.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Asia",
+        "Japan",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors with exposure to Asian technology equities and the global artificial intelligence supply chain face immediate downside risk and heightened volatility following spillover selling from Wall Street.",
+      "reasoning": "Classified as MARKET because it details a significant regional equities sell-off driven by Wall Street sentiment and AI trade concerns. It is highly important and fund-monitoring relevant due to the magnitude of the declines in major tech and semiconductor holdings.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "SoftBank drops 14% as Wall Street AI sell-off ripples across Asian tech names",
+      "publishedAtSgt": "2026-11-25T09:57:29+08:00",
+      "url": "https://www.cnbc.com/2026/11/25/tech-stocks-softbank-group-advantest-sk-hynix-samsung.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-11-25T11:05:51+08:00"
+    },
+    {
+      "articleId": "48d08294c4ec8611b0cad9a6f47236c042dc00ae3e70dd747b3773263776b5ae",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Jensen Huang's return and recent comments highlight that the U.S.-China AI race extends beyond hardware chips to include a fierce competition for elite artificial intelligence talent.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "USA",
+        "China",
+        "Canada"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors should note that talent acquisition and retention are critical bottlenecks and cost centers in the global AI race, impacting companies beyond hardware manufacturers.",
+      "reasoning": "The article discusses the intersection of geopolitics, technology, and talent mobility in the AI industry, making it highly relevant for tech-focused portfolio monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Jensen Huang's Nvidia return shows the U.S.-China AI race is about more than chips",
+      "publishedAtSgt": "2026-11-25T09:13:56+08:00",
+      "url": "https://www.cnbc.com/2026/11/25/jensen-huang-nvidia-ai-talent-race.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-25T11:05:51+08:00"
+    },
+    {
+      "articleId": "8e4fc310cef964a3199a2b3fc1e5ac3f8f24c6c550acba67d0486f158d1826f4",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Dell reported third-quarter earnings that beat expectations, driven by strong demand for AI servers and infrastructure solutions, alongside a $25 billion share buyback authorization.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "The strong earnings beat and significant buyback authorization highlight robust enterprise demand for AI infrastructure, signaling positive momentum for the technology sector and related hardware suppliers.",
+      "reasoning": "Classified as MARKET due to corporate earnings and shareholder return announcements. It is significant for investors tracking AI hardware demand and tech sector performance.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Dell earnings beat on AI strength, company authorizes $25 billion buyback",
+      "publishedAtSgt": "2026-11-25T06:07:45+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/dell-earnings-report-q3-2027.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-25T11:05:51+08:00"
+    },
+    {
+      "articleId": "7cb7987a013fb79f8811d1b1ca59646cd82322815e5847a5cc9fae732d63d11c",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "A San Francisco federal judge ruled that Abdulrahman Alfozan, a Saudi national accused of bugging an OpenAI executive conference room to steal trade secrets and potentially act as an unregistered foreign agent, will be released on a $1 million bond.",
+      "assetClasses": [
+        "Equity",
+        "Private Equity"
+      ],
+      "geographies": [
+        "United States",
+        "Saudi Arabia"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "The event highlights corporate espionage and security risks within major artificial intelligence companies like OpenAI, but has minimal direct financial or operational impact on public markets or fund portfolios.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on OpenAI security and trade secrets. It is categorized as low importance and low fund monitoring relevance because it is an isolated legal proceeding regarding corporate espionage rather than a systemic market or macroeconomic driver.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Saudi national charged in OpenAI bugging to be released on $1 million bond",
+      "publishedAtSgt": "2026-11-25T06:03:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/openai-bugging-aflozan-release-saudi.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-25T11:05:51+08:00"
+    },
+    {
+      "articleId": "6fe426036e5dad6e41da7c07565b538e25aa76f014dd061977b6c6e32313de46",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Tech stocks and the broader AI trade face selling pressure, with Anthropic falling below its IPO price, while defensive sectors like healthcare and consumer staples outperform. Additionally, Costco outlines details for its dividend, and Meta pauses its share plan which was intended to fund AI infrastructure without diluting voting power.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Healthcare",
+        "Consumer Staples"
+      ],
+      "investorImpact": "Investors should note the rotation from tech and AI trades into defensive sectors like healthcare and staples, as well as corporate actions like Meta pausing share plans and Costco's dividend eligibility.",
+      "reasoning": "Classified as MARKET due to broader equity market movements, tech sector sell-offs, and corporate updates regarding dividends and share plans.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Who qualifies for Costco’s $30-per-share dividend — plus, Meta puts share plan on hold",
+      "publishedAtSgt": "2026-11-25T03:23:59+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/24/who-qualifies-for-costcos-dividend-plus-meta-pauses-share-plan.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-25T11:05:51+08:00"
+    },
+    {
+      "articleId": "b73de41486b9e9895d668982eeba6ba7982e2c816a9558721c74e17869e3837a",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Consumer confidence rose significantly in November following the midterm elections, driven by optimism regarding the labor market and expectations of cooling inflation, though persistent concerns about high prices remain.",
+      "assetClasses": [
+        "Equities",
+        "Consumer Discretionary"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Goods",
+        "Retail"
+      ],
+      "investorImpact": "Higher consumer confidence can support retail and consumer discretionary sectors, signaling potential resilience in consumer spending despite ongoing inflation worries.",
+      "reasoning": "Classified as ECONOMIC because it reports on consumer confidence metrics and economic outlooks following political events. Sentiment is MIXED as positive labor and inflation expectations are balanced against continued frustration over high prices.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Consumer confidence shoots up after Democrats' midterm victories — though inflation worries persist",
+      "publishedAtSgt": "2026-11-25T02:34:43+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/consumer-confidence-november-election-midterm.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 102,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-25T02:58:09+08:00"
+    },
+    {
+      "articleId": "33b15103b5e2cc889bb0ec441ec470e777a07c705c49bedf658e466f2dadba7f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Nvidia shares dropped approximately 7% following a prior rally driven by the return of Jensen Huang as CEO, causing broader semiconductor stocks to pull back as well.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "High volatility in Nvidia and semiconductor stocks can significantly impact broader tech-heavy equity portfolios and AI-related investment strategies.",
+      "reasoning": "Classified as MARKET due to direct stock price movement and sector-wide trading trends for Nvidia and semiconductor equities, carrying HIGH importance given Nvidia's dominant market weighting and role in the AI trade.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Nvidia shares fall 7% as Huang comeback rally cools",
+      "publishedAtSgt": "2026-11-25T02:30:58+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/nvidia-stock-jensen-huang-return.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-25T02:58:11+08:00"
+    },
+    {
+      "articleId": "c90267599d98b09c445a1bac902d4a36fd186bae11f77bc8f85341e91577b923",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Anthropic shares have fallen below their IPO price after experiencing a 13% sell-off and a subsequent 1.5% drop, diverging from the broader big-tech AI rally. The stock traded below $76, putting it 8.5% below its IPO level and 34% below its intraday high, while options volume surges and implied volatility climbs to 96.",
+      "assetClasses": [
+        "Equities",
+        "Options"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors monitoring AI stocks should note the significant correction in Anthropic relative to broader sector peers, alongside elevated options volatility, which may signal shifting sentiment or risk re-pricing in high-growth AI equities.",
+      "reasoning": "The article details significant market movement, valuation correction, and derivatives activity for a prominent AI stock, making it highly relevant for market and investment monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "As Anthropic falls below its IPO price, here's how big-money traders are reacting",
+      "publishedAtSgt": "2026-11-25T02:17:12+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/anthropic-options-trading-ipo-price.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-25T02:58:09+08:00"
+    },
+    {
+      "articleId": "f3fd6079390c68fb2625f69c6b913339c09bb1831f76919e0a9e23c8a1737777",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Treasury yields held steady as investors digested an inflation warning from New York Fed President John Williams while awaiting an upcoming 5-year Treasury note auction.",
+      "assetClasses": [
+        "Fixed Income",
+        "Bonds"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Government"
+      ],
+      "investorImpact": "Investors monitoring fixed income and interest rate sensitivity should note the steady Treasury yields and upcoming 5-year auction, as comments from Fed officials continue to shape rate expectations.",
+      "reasoning": "The article discusses macroeconomic indicators, specifically Treasury yields and Federal Reserve commentary on inflation, which directly impacts fixed income markets and macroeconomic monitoring for funds.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Treasury yields are steady after inflation warning from New York Fed's Williams, investors await 5-year auction",
+      "publishedAtSgt": "2026-11-25T02:01:33+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/treasury-yields-bonds-inflation.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-25T02:58:13+08:00"
+    },
+    {
+      "articleId": "30b3f5ec079bfb707e2c3ce734374b315248bb1e294a911cf81fc4d1ca5b499f",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Shares of Anthropic dropped 8%, falling below its $83 IPO price, amidst broader volatility and infrastructure buildout concerns in the AI sector.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "The decline below the IPO price signals ongoing volatility and investor caution regarding AI infrastructure valuations, potentially impacting sentiment across the broader technology sector.",
+      "reasoning": "The article is classified as MARKET due to the stock price movement and IPO performance, with NEGATIVE sentiment driven by the drop below the IPO price and HIGH importance given its role in reflecting broader AI sector health.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Anthropic sinks 8%, falling below $83 IPO price, but analysts are still largely positive",
+      "publishedAtSgt": "2026-11-25T01:30:26+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/anthropic-stock-ipo-price.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-25T02:58:09+08:00"
+    },
+    {
+      "articleId": "c8a26e1929c100520e284021268fd476759a64016d5d91d6da2d55685d7a3229",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Insmed shares rallied 14.3% following an agreement by Sanofi to acquire the drugmaker in the pharmaceutical sector's largest deal in three years. Sanofi shares also climbed 8% in Paris, while analysts noted the deal significantly improves growth outlooks.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "France",
+        "United States"
+      ],
+      "sectors": [
+        "Pharmaceuticals",
+        "Healthcare"
+      ],
+      "investorImpact": "The massive M&A deal provides a strong positive catalyst for pharmaceutical equities, boosting valuations and sentiment across the healthcare sector as investors look for sustainable revenue growth amid patent expirations.",
+      "reasoning": "The article details a major multi-billion dollar M&A transaction within the pharmaceutical industry that significantly impacts stock prices for both companies and influences broader sector sentiment, making it highly relevant for market and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Drugmaker Insmed shares rally 14% after Sanofi agrees to buy it in pharma’s biggest deal in three years",
+      "publishedAtSgt": "2026-11-24T23:49:27+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/insmed-sanofi-deal-stock-pharma.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-25T02:58:16+08:00"
+    },
+    {
+      "articleId": "c33019bb263dc95d016517e1b2138f8a4ebec25607018c53da2a68db496a8ac8",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "The U.K.'s OakNorth has secured a federal bank charter from the Office of the Comptroller of the Currency, becoming the first foreign digital bank to do so. The charter allows OakNorth, backed by Jared Kushner's private equity firm, to acquire Michigan-based Community Unity Bank following an $80 million capital injection.",
+      "assetClasses": [
+        "Private Equity",
+        "Banking"
+      ],
+      "geographies": [
+        "United States",
+        "United Kingdom"
+      ],
+      "sectors": [
+        "Financials",
+        "Fintech",
+        "Banking"
+      ],
+      "investorImpact": "Highlights increasing competition from international digital banks entering the U.S. market and provides growth opportunities within the U.S. banking and private equity sectors.",
+      "reasoning": "Classified as MARKET because it details a significant corporate and regulatory milestone for a digital bank entering the U.S. market. It is relevant to fund monitoring due to its implications for fintech expansion and private equity backing.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Kushner-backed OakNorth secures U.S. bank charter as global digital banks push into America",
+      "publishedAtSgt": "2026-11-24T23:34:10+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/oaknorth-us-bank-charter.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-25T02:58:16+08:00"
+    },
+    {
+      "articleId": "2246ecafae5e080c85eb89d160909fea7ac906f27274845ec850ec94315e200c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Commercial real estate activity fell by 14% in October as rising interest rates, driven by the 10-year Treasury yield moving above 5% due to stubborn inflation, impacted the sector.",
+      "assetClasses": [
+        "Real Estate",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Commercial Real Estate"
+      ],
+      "investorImpact": "The decline in commercial real estate activity signals a cooling sector directly pressured by higher borrowing costs and rising Treasury yields, which may impact valuations and deal flows for real estate investors and private equity funds.",
+      "reasoning": "Classified as MARKET due to direct reporting on commercial real estate activity drops tied to macroeconomic yield shifts. Significance is HIGH as it affects asset valuation and investment volumes in real estate portfolios.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Commercial real estate activity falls 14% in October, as interest rates rise",
+      "publishedAtSgt": "2026-11-24T23:05:14+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/commercial-real-estate-activity-falls-14percent-in-october.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
+    {
+      "articleId": "a01c3b45a2e18d1f392a63a8ab4bb783bd1528bb97e99c4cbcb372a7462d42da",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Best Buy reported a comparable sales growth of 6.1%, beating the expectations of 2.3% and marking its highest growth in five years, driven by domestic and international increases.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Retail"
+      ],
+      "investorImpact": "Stronger-than-expected sales growth for a major consumer electronics retailer indicates healthier-than-anticipated consumer demand, which can positively impact retail sector equities and broader market sentiment regarding consumer spending.",
+      "reasoning": "Classified under MARKET because it reports on strong quarterly corporate earnings and sales growth for a publicly traded company. It is important for monitoring consumer health and retail sector performance.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Best Buy reports comparable sales growth of 6.1%, highest in five years",
+      "publishedAtSgt": "2026-11-24T22:51:58+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/best-buy-bby-q3-2027-earnings.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
+    {
+      "articleId": "deed420731c7980faf45b2c13c069aebb4570fec49f27e9a03460218db9b591d",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Privacy-focused messaging app Signal is restricting AI agents with onscreen awareness, such as Google's Gemini and Apple's Siri, from accessing and scanning information displayed on users' screens to protect user privacy and security.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Communication Services"
+      ],
+      "investorImpact": "Highlights emerging compliance, security, and privacy friction between consumer operating system AI features and independent app developers, potentially affecting product roadmaps and adoption for major tech platforms.",
+      "reasoning": "Classified under TECHNOLOGY as it addresses the interaction between artificial intelligence agents and application-level data privacy controls. Importance is MEDIUM due to broader implications for tech giants rolling out onscreen AI features.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Signal joins United Airlines, banks in limiting AI agents over customer risks",
+      "publishedAtSgt": "2026-11-24T22:46:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/signal-airlines-banks-ai-limit.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
     {
       "articleId": "39d3af6d3d8ec303d736650440f3c0926025d5e7e37405475d5c5f8cc301d722",
       "relevant": true,
