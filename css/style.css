@@ -11704,3 +11704,7 @@ html[data-style="glass"] .app-body {
     width: 100%;
     table-layout: auto;
 }
+
+.fin-tile em {
+    white-space: pre-line;
+}
