@@ -1,10 +1,293 @@
 {
-  "generatedAtSgt": "2026-11-26T08:48:09.166139+08:00",
+  "generatedAtSgt": "2026-11-26T18:12:25.140445+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 184,
+  "articleCount": 211,
   "analyses": [
+    {
+      "articleId": "9d80dce9a103548250f4299847cd18bc393a5319ad4e225168030c5a218e9fcb",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Norse Atlantic suspended all flights and warned of potential bankruptcy following an 85% collapse in its share price due to a critical financial situation.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Norway"
+      ],
+      "sectors": [
+        "Airlines",
+        "Transportation"
+      ],
+      "investorImpact": "Investors with exposure to Norse Atlantic face a total loss of equity value due to the bankruptcy risk and suspension of operations. The news also highlights broader pressures in the aviation sector such as fuel costs and currency pressures.",
+      "reasoning": "Classified as MARKET due to the severe share price collapse and bankruptcy warning of a publicly traded airline. Important for fund monitoring to track distressed equity assets and sector-specific contagion risks.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Norse Atlantic suspends all flights, warns it may file for bankruptcy after share price collapse",
+      "publishedAtSgt": "2026-11-26T17:02:30+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/norse-airline-finance-business.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-26T17:40:26+08:00"
+    },
+    {
+      "articleId": "18c55efb104bb702d505541c7a6c1b097cb39b9af9ca62071579aa44a7ee2358",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Latin America possesses the copper and energy resources required for the artificial intelligence infrastructure build-out, but faces challenges regarding infrastructure, restricted fiscal space, sticky inflation, and high borrowing costs as projected by the World Bank.",
+      "assetClasses": [
+        "Commodities",
+        "Equities"
+      ],
+      "geographies": [
+        "Latin America",
+        "Caribbean"
+      ],
+      "sectors": [
+        "Technology",
+        "Mining",
+        "Energy"
+      ],
+      "investorImpact": "Investors should monitor Latin America's capacity to supply crucial copper and energy for AI infrastructure, balancing potential growth opportunities against regional fiscal constraints and high borrowing costs.",
+      "reasoning": "The article discusses the intersection of AI infrastructure needs and Latin American commodity and energy resources, combined with macroeconomic hurdles, making it relevant for technology and commodity investment monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Latin America has the copper and energy the AI build-out needs. Infrastructure is the test",
+      "publishedAtSgt": "2026-11-26T16:59:11+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/latin-america-copper-energy-ai-investment.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 80,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-26T17:40:27+08:00"
+    },
+    {
+      "articleId": "620ae6b61d70bcf8e3e6f323e5a17bcce51f38108fa6f399643ffc5b0a32b464",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The U.S. administration has proposed new tariff hikes on more than a dozen trading partners, including China, Vietnam, and India, increasing pressure on these nations to finalize trade agreements with Washington while potentially incentivizing accelerated talks to secure lower rates.",
+      "assetClasses": [
+        "Equities",
+        "Commodities",
+        "Foreign Exchange"
+      ],
+      "geographies": [
+        "United States",
+        "China",
+        "Vietnam",
+        "India"
+      ],
+      "sectors": [
+        "International Trade",
+        "Manufacturing",
+        "Import/Export"
+      ],
+      "investorImpact": "Investors should monitor international trade dynamics and supply chain vulnerabilities, as aggressive U.S. tariff policies could increase cost pressures for multinational corporations, impact profit margins, and drive currency fluctuations in affected emerging markets.",
+      "reasoning": "The article is classified as GEOPOLITICAL due to its focus on U.S. tariff threats and trade negotiations. Sentiment is NEGATIVE because tariff hikes introduce trade tensions and potential cost burdens for global partners, though it presents mixed incentives for trade deals. It is highly important for fund monitoring as trade policies directly influence macroeconomic stability, sector performance, and global supply chains.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "U.S. tariff-hike threats pile pressure on partners to sign trade deals",
+      "publishedAtSgt": "2026-11-26T16:09:39+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/us-tariffs-hike-trade-agreement.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 72,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-26T17:40:26+08:00"
+    },
+    {
+      "articleId": "14b76e206af465ae82987c1a0887c8e43d7623e80a74f9bfac8d6fb406507664",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "According to a Goldman Sachs Alternatives survey, wealthy European investors are turning to alternative asset classes instead of public stocks to gain exposure to artificial intelligence and future technology themes amid recent market turbulence.",
+      "assetClasses": [
+        "Alternative Investments",
+        "Equities"
+      ],
+      "geographies": [
+        "Europe",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence",
+        "Wealth Management"
+      ],
+      "investorImpact": "Highlights a shifting asset allocation trend among high-net-worth individuals in Europe toward alternatives for tech and AI exposure, potentially signaling capital flows away from public equities.",
+      "reasoning": "The article is classified under MARKET because it deals with investor behavior and asset allocation shifts in response to market turbulence. It is relevant to fund monitoring as it tracks macro trends in alternative investments.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Wealthy Europeans look beyond stocks amid AI selloff. Here’s where they’re investing",
+      "publishedAtSgt": "2026-11-26T15:23:42+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/wealthy-europeans-alternative-investments-ai.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-26T17:40:27+08:00"
+    },
+    {
+      "articleId": "42c28e82e7b437d966c5f8c133f9e201173256118ad09b1732b6fe567e40dfee",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Fund managers at the iConnections Global Alts Asia conference warn of potential recession risks stemming from the artificial intelligence boom, driven either by a collapse in AI investment or widespread unemployment. At the same time, they advise investors to capture high U.S. credit yields while remaining aware of higher asset correlations.",
+      "assetClasses": [
+        "Credit",
+        "Equities",
+        "Alternatives"
+      ],
+      "geographies": [
+        "United States",
+        "Asia"
+      ],
+      "sectors": [
+        "Technology",
+        "Financials"
+      ],
+      "investorImpact": "Investors should weigh the attractive yields in U.S. credit against the rising risks of higher portfolio correlation and potential macroeconomic downturns linked to AI investment cycles or labor displacement.",
+      "reasoning": "Classified as MARKET due to direct commentary from fund managers on asset yields, correlations, and macro risks. Sentiment is negative because of warnings regarding AI-led or unemployment-led recessions, and it is important for monitoring portfolio risk and credit allocation.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Beware higher correlation but nab high U.S. credit yields, fund managers say",
+      "publishedAtSgt": "2026-11-26T13:36:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/mispricing-risk-fund-managers-ai-volatility.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-26T17:40:27+08:00"
+    },
+    {
+      "articleId": "a42e1a5402c6f72c3a9848a1dc57c61c3de834919122fcb1af336129283f3699",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Hedge funds are increasingly targeting everyday retail investors as traditional asset allocation models face challenges from geopolitical uncertainty, market volatility, inflation, and high correlation between equities and bonds.",
+      "assetClasses": [
+        "Alternatives",
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Financials",
+        "Asset Management"
+      ],
+      "investorImpact": "The democratization of hedge funds provides retail investors with new diversification tools amid challenging traditional market environments, potentially expanding capital inflows for alternative asset managers.",
+      "reasoning": "Classified as MARKET because it discusses shifting trends in hedge fund product availability and investor access, reflecting broader adjustments in portfolio diversification strategies.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Hedge funds are no longer just for the rich. They’re wooing everyday investors",
+      "publishedAtSgt": "2026-11-26T12:20:18+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/hedge-funds-retail-investors.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-26T17:40:27+08:00"
+    },
+    {
+      "articleId": "9ed4d191dc637fc0270d4121fd55fb21764fc107777326bb14003a5da58d78d2",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Recent tariff moves by the U.S. suggest that Washington is willing to offer India a competitive advantage over rival Asian exporters if New Delhi agrees to finalize a long-pending trade deal, with the USTR proposing a 17% tariff on Indian exports conditional on a reciprocal trade agreement.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "India",
+        "Asia"
+      ],
+      "sectors": [
+        "International Trade",
+        "Exports"
+      ],
+      "investorImpact": "Investors with exposure to Indian equities and Asian export markets should monitor developments, as a potential U.S.-India trade deal could benefit Indian exporters at the expense of regional competitors.",
+      "reasoning": "Classified as GEOPOLITICAL due to its focus on trade policy and bilateral negotiations between the U.S. and India, with relevant economic implications for Asian exporters.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "How Trump’s latest tariff moves hand India an edge over rival Asian exporters",
+      "publishedAtSgt": "2026-11-26T12:12:18+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/trump-us-tariff-india-trade.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-26T17:40:27+08:00"
+    },
+    {
+      "articleId": "254ed86608b8cc5247f380f5adbb0eadc37f7c104f6a14b7fbd2a8e9d7a7ef3a",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "South Korea's central bank raised benchmark lending rates to a two-year high and upgraded its growth forecast, citing persistent inflation above target and a resilient economy supporting monetary tightening.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Currencies"
+      ],
+      "geographies": [
+        "South Korea"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Higher benchmark interest rates impact borrowing costs, bond yields, currency valuations, and equity valuations within South Korea, signaling tighter financial conditions.",
+      "reasoning": "The article details a major central bank policy shift involving interest rate hikes and economic forecast upgrades, which is crucial for economic and market fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "South Korea upgrades growth forecast, raises benchmark rates to highest in two years",
+      "publishedAtSgt": "2026-11-26T11:32:53+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/bok-rate-decision-korea-gdp-inflation.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-26T17:40:27+08:00"
+    },
+    {
+      "articleId": "b70e6ac695c84776d6f1d9b8a676920c21fad9cca1c909434ac0ed1b2db45258",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "South Korean beauty stocks surged as skincare brands dominated Amazon bestseller lists ahead of Black Friday, with companies like APR, Kolmar Korea, and Cosmax posting strong gains despite a broader market downturn in Seoul.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "South Korea",
+        "Global"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Beauty",
+        "Retail"
+      ],
+      "investorImpact": "Highlights robust seasonal demand and global e-commerce traction for South Korean beauty brands, presenting tactical opportunities in K-beauty equities despite broader macroeconomic headwinds in the local market.",
+      "reasoning": "Classified as MARKET due to direct stock price movements and sector performance driven by global retail sales trends. It is relevant for fund monitoring as it highlights sector-specific resilience and cross-border e-commerce strength.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "K-beauty stocks rally as Korean brands top Amazon bestseller lists globally ahead of Black Friday",
+      "publishedAtSgt": "2026-11-26T11:09:47+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/k-beauty-firms-amazon-sales-black-friday.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-26T17:40:27+08:00"
+    },
     {
       "articleId": "cfdfcabb5ee3dec59233d00b7ac6a9ebc114c5fff5e04c9062e51790765b3a2a",
       "relevant": true,
@@ -490,6 +773,37 @@
       "collectedAtSgt": "2026-11-25T22:38:13+08:00"
     },
     {
+      "articleId": "62fb4ffd58e3b2313d228f3316219527362afa8227b3047f62da53784b2fba61",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Nvidia experienced a stock rebound driven by Jensen Huang's reinstatement as CEO, lifting the broader tech sector after a recent sell-off and Anthropic's lackluster IPO. However, investors are increasingly worried about AI-related debt and whether massive tech infrastructure spending is generating sufficient shareholder value.",
+      "assetClasses": [
+        "Equities",
+        "Debt"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence"
+      ],
+      "investorImpact": "Investors face conflicting signals as short-term relief from Nvidia's rebound contrasts with rising concerns over AI debt and capital expenditure sustainability, requiring closer scrutiny of tech sector valuations.",
+      "reasoning": "The article is classified under MARKET with MIXED sentiment because it covers both a positive technical rebound in tech stocks led by Nvidia and growing structural concerns over AI debt and spending, making it highly relevant for monitoring equity and technology sector risks.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "AI debt worries grow as Nvidia rebound masks Big Tech spending squeeze",
+      "publishedAtSgt": "2026-11-25T14:29:46+08:00",
+      "url": "https://www.cnbc.com/2026/11/25/ai-debt-big-tech-spending-nvidia.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-11-25T22:38:14+08:00"
+    },
+    {
       "articleId": "e74b898190e8e9773261802dd390f9db5f7a9d6c69a8122645f87c5a27f3151b",
       "relevant": true,
       "category": "GEOPOLITICAL",
@@ -968,6 +1282,522 @@
       "collectorRelevanceScore": 91,
       "collectorRelevanceReason": "strong_market_title",
       "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
+    {
+      "articleId": "c954d3ad0aeefbb322c8948fc645e5d936c856a01421b07465a8fafd7661903f",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "U.S. food banks are experiencing a surge in demand that in some cases surpasses pandemic levels, with a significant portion of seekers being employed individuals, amidst a reduction in philanthropic and government support.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Consumer Staples"
+      ],
+      "investorImpact": "The rising reliance on food banks despite employment highlights persistent consumer financial stress, potentially signaling softening consumer spending power and higher credit risks for consumer-facing sectors.",
+      "reasoning": "Classified as ECONOMIC because it highlights consumer distress and strain on lower-income demographics, which are broader macroeconomic indicators tracked by the Federal Reserve and relevant for consumption trends.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Some U.S. food banks see demand top pandemic levels",
+      "publishedAtSgt": "2026-11-24T20:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/us-food-banks-demand-snap.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-25T02:58:17+08:00"
+    },
+    {
+      "articleId": "7522e88ae688242fa3e207f80004d93223d5dd00b79dee24eb6fe1c7d94ab3f2",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "The U.S. Treasury announced new sanctions on over two dozen Iranian exchange houses, front companies, and key personnel to disrupt Iran's global shadow banking networks as part of Operation Economic Outcast, while reports indicate tankers were hit in the Strait of Hormuz.",
+      "assetClasses": [
+        "Commodities",
+        "Equities",
+        "Currencies"
+      ],
+      "geographies": [
+        "Iran",
+        "United States",
+        "Middle East"
+      ],
+      "sectors": [
+        "Energy",
+        "Financials",
+        "Transportation"
+      ],
+      "investorImpact": "Escalating geopolitical tensions and expanding sanctions in the Middle East can disrupt crude oil supply routes through the Strait of Hormuz, causing volatility in energy prices, shipping costs, and broader equity markets.",
+      "reasoning": "Classified as GEOPOLITICAL due to military and sanction actions involving Iran and the U.S. It is important and fund-monitoring relevant because it directly impacts global energy supply, commodity prices, and geopolitical risk premiums.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Iran says three tankers hit mines in Hormuz despite U.S. escort, as Treasury widens sanctions",
+      "publishedAtSgt": "2026-11-24T13:05:08+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/iran-trump-hormuz-crude-.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 72,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-24T14:10:26+08:00"
+    },
+    {
+      "articleId": "e103a89314dae2c25702a82c947724e7a7148ec9f6d60f2fc116b5e47420ef10",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Jensen Huang's return to Nvidia raises key questions regarding the sustainability of customer orders and AI infrastructure investments, ongoing concerns about the broader AI trade, data center financing costs, potential neocloud overbuilding, and national security inquiries surrounding AI chip exports to China.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "China",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors must carefully evaluate the sustainability of AI-related infrastructure spending, data center financing risks, and regulatory hurdles concerning advanced chip exports, as these factors directly impact tech sector valuations and semiconductor demand.",
+      "reasoning": "The article addresses crucial market-moving themes such as AI demand sustainability, financing costs, and regulatory scrutiny regarding exports, making it highly relevant for equity and sector monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Six key questions raised by Jensen Huang's return to Nvidia",
+      "publishedAtSgt": "2026-11-24T11:05:49+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/nvidia-jensen-huang-politics-market.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-24T14:10:26+08:00"
+    },
+    {
+      "articleId": "c376f193835362992ff37646bdad0064a57c7d8d1c1fddb73f771e2b8d1f8ec2",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "The U.S. has added Singapore-based Megaspeed and six other Southeast Asian companies to its trade blacklist due to national security and export control concerns related to semiconductor diversion.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "Singapore",
+        "Southeast Asia"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors in semiconductor and technology firms exposed to Southeast Asian supply chains and export controls face heightened regulatory scrutiny and potential operational disruptions.",
+      "reasoning": "The addition of companies to the U.S. trade blacklist for semiconductor diversion touches directly on geopolitical trade restrictions and technology supply chain compliance, making it relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "U.S. adds Megaspeed to trade blacklist over export control concerns amid Nvidia controversy",
+      "publishedAtSgt": "2026-11-24T10:37:39+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/us-adds-megaspeed-to-trade-blacklist-over-export-control-concerns-.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-24T14:10:26+08:00"
+    },
+    {
+      "articleId": "4ebdd18f1a9088a02c91518f4320b4ab50a603dbb576fe7a6dbb3bcede57d646",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Asian Nvidia-related tech stocks and suppliers experienced a significant surge, with Taiwan-listed partners nearing price limits, following the reinstatement of Nvidia CEO Jensen Huang.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Asia",
+        "Taiwan"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors with exposure to Asian technology and semiconductor equities saw immediate positive momentum and relief rally conditions as leadership stability returned to a key market bellwether.",
+      "reasoning": "Classified as MARKET due to the strong stock price reactions and trading activity across Asian exchanges following corporate leadership news regarding Nvidia. It is highly important for tech sector allocations and regional equity monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Asian Nvidia-related stocks jump after Huang's return, with Taiwan's near price limits",
+      "publishedAtSgt": "2026-11-24T10:20:36+08:00",
+      "url": "https://www.cnbc.com/2026/11/24/nvidia-jensen-huang-asia-chip-stocks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-24T14:10:27+08:00"
+    },
+    {
+      "articleId": "3879312a290848eb5f216d304a539dc48ca325cd4293cb4ff5c0a8c8bcc8d7f8",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "CrowdStrike CEO George Kurtz defended the company's planned all-stock acquisition of Zscaler, despite a 9% drop in CrowdStrike shares following the announcement.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Cybersecurity"
+      ],
+      "investorImpact": "Investors in CrowdStrike experienced a negative short-term market reaction with a 9% share price decline, highlighting near-term dilution or integration concerns regarding the all-stock deal, while long-term thesis depends on successful platform integration.",
+      "reasoning": "The article covers a major corporate M&A deal in the cybersecurity sector accompanied by significant stock price volatility, making it highly relevant for market and fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "CrowdStrike CEO defends Zscaler acquisition, calls it a 'winning combination'",
+      "publishedAtSgt": "2026-11-24T07:53:20+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/crowdstrike-zscaler-deal-ceo-george-kurtz.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-24T14:10:27+08:00"
+    },
+    {
+      "articleId": "64daa43cb542a8fd268acd47e3c9780878e3b2b9da1166c4ece4b15638a8c75b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "Investors are weighing the recent surge in Nvidia stock and the broader AI trade against potential headwinds, including investigations into alleged Chinese espionage and the risk of data center moratoriums amid political shifts.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors in Nvidia and the AI sector must balance near-term bullish momentum with regulatory, political, and geopolitical risks that could impact data center expansion and stock valuations.",
+      "reasoning": "The article discusses key market dynamics, sentiment, and risks surrounding a major market leader and thematic trade, making it highly relevant for market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Nvidia surge: What investors should do with the stock and the AI trade now",
+      "publishedAtSgt": "2026-11-24T06:43:38+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/nvidia-stock-jensen-huang-ai-trade.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-24T14:10:26+08:00"
+    },
+    {
+      "articleId": "3453f425bf2d40ee3a0be5353414fcfb2d170e123a9087c31b00d8424ba18cc0",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Major tech stocks rebounded sharply, reversing a steep sell-off from the previous week when the Nasdaq experienced its worst week since 2020 due to AI valuation concerns. Shares rallied following news regarding Nvidia's CEO.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "The broad market rebound offers temporary relief to tech-heavy portfolios following heavy losses, highlighting ongoing volatility and sensitivity to AI sentiment and leadership news.",
+      "reasoning": "Classified as MARKET because it details a major sector-wide equity rally and recovery following significant volatility in tech stocks. High importance due to its impact on major market indices like the Nasdaq.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Tech stocks see monster rally after Jensen Huang returns as Nvidia CEO",
+      "publishedAtSgt": "2026-11-24T05:22:13+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/anthropic-nvidia-shares.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-24T06:06:18+08:00"
+    },
+    {
+      "articleId": "67d843fb02397704aef278fcb692685855ec95c96a7e4327a87a69a8836e75e4",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "Short-end Treasury yields rose as Wall Street stocks rebounded, with the 2-year Treasury note yield climbing over 7 basis points to 4.69% while investors awaited upcoming remarks from New York Fed President John Williams.",
+      "assetClasses": [
+        "Fixed Income",
+        "Equities",
+        "Treasuries"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Rising 2-year Treasury yields reflect shifts in rate expectations and risk sentiment, directly impacting short-term borrowing costs, fixed-income valuations, and equity market dynamics.",
+      "reasoning": "The article details significant price action in short-term US Treasury yields and stock market rebounds, which are core indicators for macroeconomic and market monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "2-year Treasury yield jumps as stocks rebound, investors await New York Fed President Williams speech",
+      "publishedAtSgt": "2026-11-24T05:05:02+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/treasury-yields-bonds-fed.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 93,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-24T06:06:20+08:00"
+    },
+    {
+      "articleId": "ba17c25c386367823e4fee08ba949f5ca56c5e0c50f48628110b7d0af370e902",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "New York Federal Reserve President John Williams indicated that further interest rate adjustments may be needed over time to control inflation, while noting that artificial intelligence is currently pressuring prices without showing evidence of causing persistent inflation.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "Investors should monitor potential future interest rate increases which can impact borrowing costs, equity valuations, and fixed income yields.",
+      "reasoning": "The article discusses central bank monetary policy and inflation outlook from a key Federal Reserve official, making it highly relevant for macroeconomic tracking and portfolio positioning.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Fed's John Williams indicates higher interest rates likely 'over time' to address inflation",
+      "publishedAtSgt": "2026-11-24T05:02:17+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/john-williams-fed-inflation-rate-hikes.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-24T06:06:18+08:00"
+    },
+    {
+      "articleId": "b542958b664d96ebd1d39429a905b11c0318c9d58e3e1ddbd3bad7e8b77397b5",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Investors are reacting negatively to CrowdStrike's $43.9 billion all-stock acquisition of Zscaler, causing CrowdStrike shares to drop 10% amid concerns over the massive deal.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Cybersecurity"
+      ],
+      "investorImpact": "The significant 10% drop in CrowdStrike's share price following the acquisition announcement highlights investor apprehension regarding large-scale M&A activity and valuation dilution in the cybersecurity sector.",
+      "reasoning": "Classified as MARKET due to the direct impact on equity prices and investor sentiment following a major corporate acquisition in the cybersecurity sector. Importance is set to HIGH because of the multi-billion dollar transaction size and the notable 10% stock movement.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Investors are missing the bigger picture in CrowdStrike's deal to buy Zscaler",
+      "publishedAtSgt": "2026-11-24T04:26:39+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/23/crowdstrikes-zscaler-deal-investors-are-missing-the-bigger-picture.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-24T06:06:18+08:00"
+    },
+    {
+      "articleId": "52bb90aca41ab5a898008288caa0119dab61391fc18a3d5f4267f6d33dbeb49d",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Virginia and Oregon have filed lawsuits against Elon Musk's SpaceX regarding AI deepfake porn issues associated with its Grok AI image generator and alleged false safety claims, marking the first state-level consumer protection actions on these issues.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "Oregon",
+        "Virginia"
+      ],
+      "sectors": [
+        "Technology",
+        "Artificial Intelligence",
+        "Telecommunications"
+      ],
+      "investorImpact": "The legal action highlights escalating regulatory and legal risks surrounding generative AI tools and consumer protection compliance, potentially creating sentiment headwinds and compliance costs for companies operating in the AI space.",
+      "reasoning": "Classified as TECHNOLOGY due to its focus on AI safety and deepfake generation issues involving Grok. Sentiment is NEGATIVE due to state-level consumer protection lawsuits. Importance is MEDIUM as it signals growing state regulatory scrutiny over AI safety claims.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "SpaceX sued by Oregon and Virginia over AI deepfake porn, Grok safety claims",
+      "publishedAtSgt": "2026-11-24T00:45:31+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/oregon-virginia-spacex-grok-deepfake-lawsuits.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 80,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-24T06:06:18+08:00"
+    },
+    {
+      "articleId": "1919a1d4a6540dd5a1c761ec4c0cabf629787c9e012942fb549e072e6c07f493",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Tokenized stocks face pushback from major companies as NYSE and Nasdaq pivot toward a new market. Out of 62 companies sought for trading by OKXICE, 56 objected to having their shares tokenized, though some companies are becoming more receptive as they learn about 24/7 global access, with specific firms like Coinbase, Robinhood, Strategy, Circle, Securitize, and BitGo set to launch on the platform.",
+      "assetClasses": [
+        "Equities",
+        "Digital Assets"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Financials",
+        "Technology",
+        "Crypto"
+      ],
+      "investorImpact": "Investors should monitor the tension between traditional exchanges, tokenized trading platforms, and corporate issuers, as pushback against unauthorized or early tokenization could impact the growth of digital asset infrastructure and trading accessibility.",
+      "reasoning": "The article discusses significant structural market developments involving tokenized stocks and traditional exchanges, presenting mixed sentiments due to widespread issuer pushback alongside growing platform adoption.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Tokenized stocks face pushback as NYSE, Nasdaq pivot for a new market",
+      "publishedAtSgt": "2026-11-23T23:30:27+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/tokenized-stocks-face-pushback-as-nyse-nasdaq-pivot-for-a-new-market-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-24T06:06:26+08:00"
+    },
+    {
+      "articleId": "be723b9243d0d8cce8fa9d7b4c9758e9e81a5b9453b9fd03a72162a1de4cf150",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "LOW",
+      "summary": "An increasing number of Americans are paying the 3.8% Net Investment Income Tax (NIIT) on investment gains as earnings exceed thresholds, though strategies exist to reduce or avoid the bill.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Real Estate"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "High-net-worth individual investors and tax-planning advisors should be aware of the 3.8% NIIT threshold impacts, though it has limited direct systemic impact on broader fund flows or institutional portfolios.",
+      "reasoning": "The article discusses personal tax implications on investment income rather than broad market or macroeconomic shifts, making it of low importance for general fund monitoring but relevant for individual tax strategy.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "More Americans pay this Obama-era investment tax every year — how to avoid it",
+      "publishedAtSgt": "2026-11-23T21:15:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/net-investment-income-tax-niit.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-24T06:06:25+08:00"
+    },
+    {
+      "articleId": "f4014968f4133785d9308e7d575e527d1cdc084087777c1edf3049de9f9c4927",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "The article discusses the shifting landscape in energy and technology investing, noting that traditional big energy trades may be cooling off while Washington energy policies and a selloff in AI, neocloud, and data center power-related stocks create new dynamics for investors.",
+      "assetClasses": [
+        "Equities",
+        "Energy"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Technology",
+        "Utilities"
+      ],
+      "investorImpact": "Investors must navigate shifting regulatory policies from Washington and a recent selloff in power-related technology and AI infrastructure stocks, prompting a reevaluation of where to allocate capital in energy and tech.",
+      "reasoning": "Classified under MARKET due to the focus on asset rotation, sector selloffs, and changing investment strategies in energy and technology. The sentiment is MIXED reflecting both downside in certain tech/power stocks and potential upside in discounted shares.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "The biggest money-making energy trade looks over. What to buy instead",
+      "publishedAtSgt": "2026-11-23T20:00:20+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/refinery-stocks-crack-spreads.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 72,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-24T06:06:26+08:00"
+    },
+    {
+      "articleId": "93b8447ca713e5dacf9551c596f85c56c9e8891ca0020b2105cd8ba065845dd4",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Stock futures are rallying to help major markets recover from a difficult week, though technology stocks like SK Hynix faced losses in overnight trading weighing on South Korea's Kospi while other chip stocks rebounded from the recent sell-off.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "South Korea"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "The market rebound offers potential relief to equity portfolios following a steep correction, but persistent tech sector volatility and regional divergence in Asia require continued risk management.",
+      "reasoning": "The article captures ongoing market volatility and sector-specific rebounds following a severe market downturn, making it moderately important for equity and technology fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Futures rally after Wall Street's nightmare week",
+      "publishedAtSgt": "2026-11-23T19:10:34+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/futures-rally-after-wall-streets-nightmare-week-.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-11-24T06:06:26+08:00"
+    },
+    {
+      "articleId": "1cffa7327234c1559efc24d3551a4af3171cf6e06739a2ad425bfe7bd3e081c6",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "French biotech Abivax experienced a sharp 17% share price drop followed by a partial recovery and a 10% rise after refuting a short seller report by Scorpion Capital that accused the company of scientific and safety shortcomings regarding its experimental inflammatory bowel disease drug, obefazimod.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "France"
+      ],
+      "sectors": [
+        "Biotechnology",
+        "Healthcare"
+      ],
+      "investorImpact": "Investors in Abivax experienced heightened volatility due to short-seller claims and subsequent rebuttals, highlighting regulatory and safety scrutiny risks typical in the biotech sector.",
+      "reasoning": "Classified as MARKET because it details stock price volatility driven by a short seller report and corporate response for a specific listed biotech company.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "French biotech rejects short seller’s cancer-risk claims after shares plunge 17%",
+      "publishedAtSgt": "2026-11-23T17:45:42+08:00",
+      "url": "https://www.cnbc.com/2026/11/23/abivax-scorpion-capital-obefazimod.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-24T06:06:27+08:00"
     },
     {
       "articleId": "39d3af6d3d8ec303d736650440f3c0926025d5e7e37405475d5c5f8cc301d722",
