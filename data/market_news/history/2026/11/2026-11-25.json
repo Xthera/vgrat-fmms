@@ -5,6 +5,21 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "f3cf88bc012293e66d6936436e607f6e220ca5ece3dcd26335c8766cc2848bff",
+      "source": "CNBC",
+      "title": "Wealthy investors seek tax savings from municipal bonds as yields remain elevated",
+      "publishedAtSgt": "2026-11-25T23:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/25/wealthy-investors-seek-tax-savings-from-municipal-bonds.html",
+      "category": "MARKET",
+      "relevanceScore": 93,
+      "relevanceReason": "strong_market_title",
+      "summary": "For top-bracket investors, municipal bonds can offer a twofold benefit: tax-equivalent yields that approach long-run stock-market returns, and losses that may offset gains elsewhere in a portfolio, according to Ran Leshem, BlackRock's head of SMA solutions. \"We are seeing yields that haven't been around for quite a few years, so it's a good opportunity for clients to lock in yields at these higher rates.\" Rising yields earlier this fall pushed bond prices down, leaving some investors with paper...",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-11-26T08:31:57+08:00"
+    },
+    {
       "id": "0b37e6c97179665cf79415ee05c8a7f4c9d57b13cdbfe7a3fa22f55682d1c51f",
       "source": "CNBC",
       "title": "Fed’s preferred inflation gauge accelerated to 3.8% in October, raising the 2027 stakes for the central bank",
@@ -249,6 +264,6 @@
       "collectedAtSgt": "2026-11-25T02:58:09+08:00"
     }
   ],
-  "articleCount": 15,
-  "updatedAtSgt": "2026-11-25T22:38:14+08:00"
+  "articleCount": 16,
+  "updatedAtSgt": "2026-11-26T08:31:57+08:00"
 }
