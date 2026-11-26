@@ -3891,7 +3891,7 @@ const CALCULATOR_KEY = "vgrat-fms-calculator";
 function showCalculator(name, { save = true } = {}) {
 
     const value =
-        ["prucredits", "finance"].includes(name) ? name : "prushield";
+        ["prucredits", "finance", "tax"].includes(name) ? name : "prushield";
 
     qsa("[data-calc]").forEach(
         button => {
@@ -3903,7 +3903,8 @@ function showCalculator(name, { save = true } = {}) {
 
     qsa("[data-calc-block]").forEach(
         block => {
-            block.hidden = block.dataset.calcBlock !== value;
+            // Financial and Tax / SRS share one calculator block
+            block.hidden = block.dataset.calcBlock !== (value === "tax" ? "finance" : value);
         }
     );
 
@@ -3913,9 +3914,9 @@ function showCalculator(name, { save = true } = {}) {
 
     }
 
-    if (value === "finance") {
+    if (value === "finance" || value === "tax") {
 
-        initializeFinanceCalculator();
+        initializeFinanceCalculator(value);
 
     }
 
@@ -3947,18 +3948,18 @@ function initializeCalculatorSwitch() {
     );
 
     // Don't load the external page until the Calculator page is opened
-    if (saved === "prucredits" || saved === "finance") {
+    if (saved === "prucredits" || saved === "finance" || saved === "tax") {
         qsa("[data-calc]").forEach(button => {
             const active = button.dataset.calc === saved;
             button.classList.toggle("active", active);
             button.setAttribute("aria-selected", String(active));
         });
         qsa("[data-calc-block]").forEach(block => {
-            block.hidden = block.dataset.calcBlock !== saved;
+            block.hidden = block.dataset.calcBlock !== (saved === "tax" ? "finance" : saved);
         });
     }
 
-    if (saved === "finance") initializeFinanceCalculator();
+    if (saved === "finance" || saved === "tax") initializeFinanceCalculator(saved);
 
 }
 
