@@ -1,10 +1,228 @@
 {
-  "generatedAtSgt": "2026-11-26T18:12:25.140445+08:00",
+  "generatedAtSgt": "2026-11-27T03:58:55.791629+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 211,
+  "articleCount": 199,
   "analyses": [
+    {
+      "articleId": "b6aee9a8cbc2bfe17ac935c3d928e4b1829343dd92c3b87a489856f14136cbed",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Third-quarter real GDP growth was massively revised higher to a 4.3% annualized rate from the initial 3.4% estimate. President Trump demanded an immediate investigation into the significant discrepancy, criticizing the timing of the correction relative to the election.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Broad Economy"
+      ],
+      "investorImpact": "The substantial upward revision in GDP demonstrates stronger-than-expected economic resilience, which could influence Federal Reserve rate expectations and broader market valuations. However, political controversy surrounding economic data reliability introduces uncertainty.",
+      "reasoning": "Classified as ECONOMIC because it deals directly with national GDP data revisions. Sentiment is MIXED as strong economic growth is fundamentally positive for equities, but political calls for investigations into data integrity add friction and uncertainty.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump demands probe into ‘record setting error’ after third-quarter GDP data gets massive revision higher",
+      "publishedAtSgt": "2026-11-27T02:44:15+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/trump-gdp-revision-investigation.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-27T03:42:56+08:00"
+    },
+    {
+      "articleId": "bff0f97c46f006cb70906c73d39ba72298802d7546dd3f013301c2ce59d53eb6",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Microdrama apps such as My Drama are expanding rapidly with backing from Hollywood investors like Fox Entertainment, though companies still face challenges in turning short-form vertical video viewing hours into sustainable profits.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Media",
+        "Entertainment",
+        "Technology"
+      ],
+      "investorImpact": "Investors should monitor the monetization strategies of vertical video and microdrama platforms as major studios enter the space, noting both high growth potential and ongoing profit translation challenges.",
+      "reasoning": "The article highlights emerging market trends and investment shifts within the entertainment sector regarding short-form video monetization, making it relevant for sector-specific market analysis.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Microdrama apps chase profits as Hollywood moves into short-form, vertical video",
+      "publishedAtSgt": "2026-11-27T02:27:43+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/micro-drama-apps-hollywood-vertical-video.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-27T03:42:57+08:00"
+    },
+    {
+      "articleId": "5ea344a76f6280bf2b542a5d724470216e3afdf8bd90132d9e560a6fbcc766f9",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "According to Deutsche Bank analysis, semiconductors have surpassed oil and gas in global export value for the first time due to the artificial intelligence boom. However, this milestone coincides with a cooling investor outlook on AI spending and declining semiconductor stock prices.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors",
+        "Energy"
+      ],
+      "investorImpact": "Investors must weigh the record-setting export demand for semiconductors driven by AI against current downward pressures on tech valuations and spending expectations.",
+      "reasoning": "Classified as GEOPOLITICAL due to the systemic shift in global trade where semiconductors replace traditional commodities like oil, with significant implications for market sentiment and technology sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Semiconductor chips are the new oil. Here's why",
+      "publishedAtSgt": "2026-11-27T01:52:15+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/semiconductor-chips-are-the-new-oil-heres-why.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-27T03:42:56+08:00"
+    },
+    {
+      "articleId": "d8d2c8ba79367cdaf584c0726ec7d1f2b0a3f6fc51919c5c2af8714169ee4d6d",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Chip sellers have instructed neocloud buyers to rule out renting out advanced Nvidia GPUs to Chinese entities, aiming to close an export control loophole. This development adds pressure to neocloud stocks amid investor questions regarding the sustainability of the AI boom.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global",
+        "China",
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors",
+        "Cloud Computing"
+      ],
+      "investorImpact": "Investors in neoclouds and semiconductor hardware face increased regulatory headwinds and potential revenue restrictions regarding access to Chinese clients, weighing on valuations.",
+      "reasoning": "The article details tighter enforcement of export controls targeting advanced AI hardware access for Chinese entities, directly impacting neocloud business models and semiconductor market dynamics.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Nvidia chip buyers told to rule out Chinese renters to purchase GPUs, sources say",
+      "publishedAtSgt": "2026-11-27T01:04:54+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/neoclouds-nvidia-china-ai.html",
+      "collectorCategory": "TECHNOLOGY",
+      "collectorRelevanceScore": 81,
+      "collectorRelevanceReason": "technology_business_or_infrastructure",
+      "collectedAtSgt": "2026-11-27T03:42:58+08:00"
+    },
+    {
+      "articleId": "84b757dcf48149f41479f2ecb47c400c195affc4bcac32c4d5e34b6f3f68e149",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "U.S. leadership and the NATO chief cautioned Russia amid intensified attacks on Ukraine's energy infrastructure, while also discussing the need for increased defense spending and investment in the defense industrial base.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "U.S.",
+        "Russia",
+        "Ukraine",
+        "NATO"
+      ],
+      "sectors": [
+        "Defense",
+        "Energy"
+      ],
+      "investorImpact": "Increased geopolitical tensions and attacks on energy infrastructure can drive volatility in energy commodities and create investment tailwinds for the defense sector due to calls for higher defense spending.",
+      "reasoning": "Classified as GEOPOLITICAL due to the diplomatic and military warnings involving Russia, Ukraine, and NATO, carrying direct relevance to defense and energy sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump, NATO chief caution Russia as attacks on Ukraine’s energy infrastructure intensify",
+      "publishedAtSgt": "2026-11-27T00:12:47+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/trump-nato-rutte-russia-ukraine-war.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-27T03:42:58+08:00"
+    },
+    {
+      "articleId": "d36673b4a2a328c6c3d40ff499a34590bb1722c65cd8f4df3bfc1728454119f2",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Spain's Pablo Hernández de Cos is set to lead the European Central Bank, with analysts viewing him as a moderately dovish pragmatist who favors lower interest rates to support economic growth, while navigating a higher-inflation regime.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income",
+        "Currencies"
+      ],
+      "geographies": [
+        "Spain",
+        "Eurozone",
+        "Europe"
+      ],
+      "sectors": [
+        "Financials",
+        "Banking"
+      ],
+      "investorImpact": "The leadership change at the ECB directly influences Eurozone monetary policy, interest rate expectations, and currency valuations, impacting European equities and fixed income markets.",
+      "reasoning": "The appointment of a new ECB president is a major macroeconomic and monetary policy development affecting Eurozone financial markets and interest rate outlooks.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Spain’s Pablo Hernández de Cos set to lead European Central Bank",
+      "publishedAtSgt": "2026-11-26T23:28:26+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/pablo-hernandez-de-cos-ecb-president.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 92,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-27T03:43:01+08:00"
+    },
+    {
+      "articleId": "ad238784b20c8a198aca29f1a0f9da9deda18b0675a1b4e46593aabefc76e4ed",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "Switzerland's biggest bank faces a major political fight over sweeping regulatory plans that could force it to hold significantly more capital against its foreign subsidiaries, even as the Swiss regulator FINMA notes progress in the bank's post-Credit Suisse integration and crisis resolvability.",
+      "assetClasses": [
+        "Equities",
+        "Fixed Income"
+      ],
+      "geographies": [
+        "Switzerland",
+        "Europe"
+      ],
+      "sectors": [
+        "Financials",
+        "Banking"
+      ],
+      "investorImpact": "Investors in major European financial institutions should monitor potential stricter capital adequacy requirements, which can affect bank profitability, dividend payout capacities, and overall equity valuations.",
+      "reasoning": "The article discusses high-stakes regulatory and capital requirement battles for Switzerland's largest bank, carrying significant implications for the banking sector and market stability.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Switzerland’s biggest bank set for showdown with lawmakers as capital fight intensifies amid crisis planning",
+      "publishedAtSgt": "2026-11-26T19:17:39+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/ubs-swiss-capital-rules-finma-crisis-plan.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-27T03:43:01+08:00"
+    },
     {
       "articleId": "9d80dce9a103548250f4299847cd18bc393a5319ad4e225168030c5a218e9fcb",
       "relevant": true,
@@ -5785,579 +6003,6 @@
       "collectorRelevanceScore": 91,
       "collectorRelevanceReason": "strong_market_title",
       "collectedAtSgt": "2026-11-14T04:31:42+08:00"
-    },
-    {
-      "articleId": "c4a9e7a05e12e1e69e0f3cf5822d48863fc934de3f539f8754098d41029898be",
-      "relevant": true,
-      "category": "ECONOMIC",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Chicago Federal Reserve President Austan Goolsbee stated that the central bank still has work to do on inflation following a higher producer price index report, signaling potential future policy tightening or prolonged higher interest rates.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income",
-        "Currencies"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials"
-      ],
-      "investorImpact": "Investors should anticipate potential volatility across equity and fixed income markets as expectations for monetary policy shift towards sustained higher interest rates or additional central bank action.",
-      "reasoning": "The article discusses central bank monetary policy and inflation data which are critical macro economic drivers impacting broad asset valuations and fund monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Chicago Fed's Goolsbee says central bank 'has definitely got work to do' on inflation",
-      "publishedAtSgt": "2026-11-13T22:22:07+08:00",
-      "url": "https://www.cnbc.com/2026/11/13/chicago-feds-goolsbee-says-central-bank-has-definitely-got-work-to-do-on-inflation.html",
-      "collectorCategory": "ECONOMIC",
-      "collectorRelevanceScore": 101,
-      "collectorRelevanceReason": "strong_economic_title",
-      "collectedAtSgt": "2026-11-14T04:31:46+08:00"
-    },
-    {
-      "articleId": "31d6eeed43979cc390aaca332a202d960a63890141790ad4005136178ddc35c2",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "MEDIUM",
-      "summary": "CNBC published its 2026 NHL team valuations, highlighting strong valuations such as a pending 15% stake sale in the New York Islanders at a $3 billion valuation, supported by long product life cycles and viewed as a hedge against tech/AI risks.",
-      "assetClasses": [
-        "Private Equity",
-        "Alternative Investments"
-      ],
-      "geographies": [
-        "United States",
-        "North America"
-      ],
-      "sectors": [
-        "Sports",
-        "Media",
-        "Entertainment"
-      ],
-      "investorImpact": "Highlights rising valuations and strong investor demand for professional sports franchises as alternative asset classes that provide stable product life cycles and diversification against tech-driven market risks.",
-      "reasoning": "Classified as MARKET due to the focus on franchise valuations and equity stakes. Sentiment is POSITIVE based on robust valuations ($3 billion for the Islanders) and strong industry positioning. Fund monitoring relevance is true as it touches on sports private equity and alternative valuations.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "CNBC's Official NHL Team Valuations 2026: How the 32 franchises stack up",
-      "publishedAtSgt": "2026-11-13T19:48:31+08:00",
-      "url": "https://www.cnbc.com/2026/11/13/cnbcs-official-nhl-team-valuations-2026-how-the-32-clubs-stack-up.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T20:23:08+08:00"
-    },
-    {
-      "articleId": "02bfb6d604cb7d2e05d67887da7e8eefe5a51f3150fe6fdd77b7a7ce2212c7e6",
-      "relevant": true,
-      "category": "ECONOMIC",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "The Federal Reserve, which previously expected to lower interest rates this year, was forced to raise rates by 25 basis points in September due to persistent inflation running above its 2% target.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials",
-        "Macro"
-      ],
-      "investorImpact": "Higher interest rates and renewed inflation concerns create downward pressure on equity valuations and bond prices, requiring investors to reassess risk and yield expectations.",
-      "reasoning": "The article discusses critical monetary policy shifts by the Federal Reserve in response to inflation, which directly impacts broad market asset classes and economic conditions.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "The Fed expected rate cuts this year. Now it’s bracing for another inflation fight",
-      "publishedAtSgt": "2026-11-13T19:31:10+08:00",
-      "url": "https://www.cnbc.com/2026/11/13/us-inflation-outlook-federal-reserve-rate-hike.html",
-      "collectorCategory": "ECONOMIC",
-      "collectorRelevanceScore": 101,
-      "collectorRelevanceReason": "strong_economic_title",
-      "collectedAtSgt": "2026-11-13T20:23:08+08:00"
-    },
-    {
-      "articleId": "c4b26c28d13532b1e191030dcf92532a65ed179835e6777ef9115d3b5c4d84db",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Commerce Secretary Lutnick has reportedly agreed to testify regarding China chip sales following bipartisan scrutiny and accusations of utilizing loopholes to permit AI chip exports by Nvidia.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States",
-        "China"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors"
-      ],
-      "investorImpact": "Regulatory and geopolitical scrutiny over semiconductor exports to China creates compliance risks and potential sales headwinds for Nvidia and the broader tech sector, impacting investor sentiment.",
-      "reasoning": "The article is classified under GEOPOLITICAL due to government oversight, international trade restrictions, and congressional scrutiny of chip sales to China. It is NEGATIVE due to potential regulatory crackdowns and scandals involving top trade officials. It is important for investors tracking semiconductor exposures.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Nvidia scandal draws in Commerce Secretary Lutnick, who reportedly agrees to testify about China chip sales",
-      "publishedAtSgt": "2026-11-13T18:54:40+08:00",
-      "url": "https://www.cnbc.com/2026/11/13/nvidia-scandal-lutnick-chip-sales.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 81,
-      "collectorRelevanceReason": "technology_business_or_infrastructure",
-      "collectedAtSgt": "2026-11-13T20:23:08+08:00"
-    },
-    {
-      "articleId": "c384305df99b302a94f843685dc34f405ada075920963620f087f982ac8f99bc",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "HIGH",
-      "summary": "Nvidia shares rose slightly in premarket trading following a volatile session triggered by the resignation of CEO Jensen Huang amid reports of personal affairs.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Global",
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors"
-      ],
-      "investorImpact": "The sudden departure of a key visionary executive like Jensen Huang introduces significant governance and strategic uncertainty for Nvidia and the broader semiconductor sector, potentially increasing short-term stock volatility.",
-      "reasoning": "Classified as MARKET due to direct stock price reaction and high importance given Nvidia's heavy weighting in major equity indices and leadership role in the technology sector.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Nvidia stock inches higher as investors continue to weigh Jensen Huang’s departure",
-      "publishedAtSgt": "2026-11-13T18:00:37+08:00",
-      "url": "https://www.cnbc.com/2026/11/13/nvidia-nvda-stock-jensen-huang-transition.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T20:23:08+08:00"
-    },
-    {
-      "articleId": "7ed4e019858042939e74dbd3a219f4ce953e1bca764f83947d6290b2c9d250f9",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Canada has threatened to sue auto giant Stellantis over the planned sale of an idled assembly plant in Brampton, Ontario, alleging breaches of a federal funding agreement after the carmaker announced plans to shift production to the U.S. amid trade tensions and U.S. pressure to move vehicle manufacturing south of the border.",
-      "assetClasses": [
-        "Equities",
-        "Debt"
-      ],
-      "geographies": [
-        "Canada",
-        "United States"
-      ],
-      "sectors": [
-        "Automotive",
-        "Manufacturing"
-      ],
-      "investorImpact": "The dispute highlights growing cross-border trade friction and the vulnerability of multinational automakers to shifting geopolitical and trade policies, which could negatively impact supply chain efficiencies, capital expenditures, and profitability for companies altering production footprints between Canada and the U.S.",
-      "reasoning": "Classified as GEOPOLITICAL due to the intergovernmental tensions and trade dispute impacts on corporate strategy. It is highly important for monitoring automotive and cross-border manufacturing investments as protectionist pressures and tariff threats reshape regional supply chains.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "‘We will sue them’: Canada threatens Stellantis as Trump trade war reshapes Jeep production plans",
-      "publishedAtSgt": "2026-11-13T17:45:04+08:00",
-      "url": "https://www.cnbc.com/2026/11/13/canada-stellantis-auto-trump-tariffs-jeep.html",
-      "collectorCategory": "GEOPOLITICAL",
-      "collectorRelevanceScore": 72,
-      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
-      "collectedAtSgt": "2026-11-13T20:23:08+08:00"
-    },
-    {
-      "articleId": "8fe5044c35fcd0147b62b9d740e6d9587574f6d9d91f302d1186497512edc848",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "MEDIUM",
-      "summary": "Treasury yields rose as traders strengthened bets on Federal Reserve rate hikes, with the 30-year bond yield up 3 basis points to 5.4602% and the 2-year note yield down 1 basis point to 4.8525%. Meanwhile, oil is heading for its second weekly decline amid energy inflation focus and prospects of renewed U.S. strikes.",
-      "assetClasses": [
-        "Fixed Income",
-        "Commodities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Energy",
-        "Financials"
-      ],
-      "investorImpact": "Shifting Treasury yields and energy prices directly impact fixed income valuations and sectoral cost structures, influencing portfolio duration and rate expectations.",
-      "reasoning": "The article discusses changes in Treasury yields and Federal Reserve rate expectations alongside oil market movements, making it directly relevant for market risk and monetary policy monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Treasury yields rise as traders strengthen Fed rate hike bets",
-      "publishedAtSgt": "2026-11-13T16:50:43+08:00",
-      "url": "https://www.cnbc.com/2026/11/13/treasury-yields-fed-rates.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 93,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T20:23:09+08:00"
-    },
-    {
-      "articleId": "a8390a03265202ac4f6035e0029c8ca233837b4ceeabb24a86033c4cd09c232e",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "HIGH",
-      "summary": "Nvidia's leadership crisis and Jensen Huang's departure are prompting a market rotation into rival chip stocks like AMD and Broadcom, though overall AI infrastructure spending remains structurally intact for 2027 and 2028.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Global"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors"
-      ],
-      "investorImpact": "Investors are reassessing market leadership in the AI semiconductor space, creating potential opportunities in rival chip stocks while introducing volatility for Nvidia.",
-      "reasoning": "Classified as MARKET because it details sector rotation and investor positioning shifts among chip stocks following Nvidia's leadership changes, with high importance due to Nvidia's market dominance and broader semiconductor implications.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Nvidia’s turmoil is prompting a rotation across chip stocks. Here's what we know",
-      "publishedAtSgt": "2026-11-13T16:27:07+08:00",
-      "url": "https://www.cnbc.com/2026/11/13/nvidia-jensen-huang-affairs-amd-broadcom-tsmc.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T20:23:08+08:00"
-    },
-    {
-      "articleId": "a5cef1a4a466aff830c7ba2aed867e7e336c760efbc884a42cf76855c786af5a",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "NEGATIVE",
-      "importance": "MEDIUM",
-      "summary": "Singapore has emerged as a central point in discussions regarding U.S. export controls on Nvidia AI chips to China, amid concerns that Southeast Asia is being used as a hub for chip smuggling and export control circumvention.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Singapore",
-        "China",
-        "United States",
-        "Southeast Asia"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors"
-      ],
-      "investorImpact": "Heightened scrutiny on secondary hubs like Singapore could lead to stricter U.S. export controls, potentially impacting sales channels and supply chains for major semiconductor companies like Nvidia.",
-      "reasoning": "The article is classified under GEOPOLITICAL and TECHNOLOGY because it addresses international trade restrictions, national security enforcement, and semiconductor supply chains involving major economies.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Why Singapore keeps turning up in the fight over Nvidia chips and China",
-      "publishedAtSgt": "2026-11-13T15:15:01+08:00",
-      "url": "https://www.cnbc.com/2026/11/13/nvidia-jensen-huang-alice-spy-megaspeed-.html",
-      "collectorCategory": "TECHNOLOGY",
-      "collectorRelevanceScore": 81,
-      "collectorRelevanceReason": "technology_business_or_infrastructure",
-      "collectedAtSgt": "2026-11-13T20:23:09+08:00"
-    },
-    {
-      "articleId": "9d94c807f076dbfbbb94ae3490552e0347480633b03d37602cd2250dea5cec93",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "MIXED",
-      "importance": "HIGH",
-      "summary": "In its updated IPO paperwork, Anthropic announced plans to offer 825 million shares at $70 to $78 each. Jim Cramer raised three lingering questions regarding valuation, the impact of price cuts on revenue, and AI safety despite the company's explosive growth and adoption of its Claude Code product among enterprises.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology"
-      ],
-      "investorImpact": "The historic IPO of a major artificial intelligence player provides significant market interest and valuation benchmarks for the broader technology and AI sectors, while highlighting lingering uncertainties regarding pricing and revenue growth.",
-      "reasoning": "The article is classified as MARKET because it discusses an upcoming high-profile IPO and public offering details for Anthropic. It carries mixed sentiment due to strong growth balanced by analyst uncertainties regarding pricing and monetization, and high importance given the scale of the IPO.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Jim Cramer has three lingering questions about Anthropic ahead of its historic IPO",
-      "publishedAtSgt": "2026-11-13T07:45:00+08:00",
-      "url": "https://www.cnbc.com/2026/11/12/anthropic-ipo-cramer-pricing-growth-ai-safety.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T10:43:03+08:00"
-    },
-    {
-      "articleId": "c10758dd415d1c4bb83ac54e85451c92027afaffdcd6ab5a82071c9bd83b87a5",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Nvidia shares experienced high volatility, ending down more than 4% after dropping over 14% at morning lows. Commentary highlighted concerns over CEO Jensen Huang's equity investment strategy, which included large stakes in companies like Intel and CoreWeave.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors"
-      ],
-      "investorImpact": "Significant stock volatility and strategic concerns over Nvidia's equity investments impact shareholder confidence and short-term tech sector sentiment.",
-      "reasoning": "Classified as MARKET and HIGH importance because it covers heavy volatility and strategic critique of a major market heavyweight, Nvidia, affecting technology equities.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Cramer says Jensen Huang betrayed Nvidia shareholders. How to pick up the pieces",
-      "publishedAtSgt": "2026-11-13T07:14:56+08:00",
-      "url": "https://www.cnbc.com/2026/11/12/nvidia-jensen-huang-exit-cramer.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 100,
-      "collectorRelevanceReason": "financial_market_legal_story",
-      "collectedAtSgt": "2026-11-13T10:43:03+08:00"
-    },
-    {
-      "articleId": "cc23d49d087a5cad55738639134c419b7615cb38586efdf95a980d503a7f2a03",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEGATIVE",
-      "importance": "MEDIUM",
-      "summary": "Nscale has updated its IPO prospectus for the New York Stock Exchange, revealing widening losses and a reliance on Microsoft as a future significant customer. Meanwhile, the broader neocloud market is experiencing turbulence following the resignation of Nvidia CEO Jensen Huang.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology"
-      ],
-      "investorImpact": "Investors should note the widening losses in neocloud offerings and market turbulence following leadership changes at key chip suppliers like Nvidia, which may impact near-term tech IPO valuations and sentiment.",
-      "reasoning": "The article covers a significant upcoming IPO in the technology and neocloud sector alongside market-moving executive changes at Nvidia, making it highly relevant for market and equity monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Nscale updates IPO prospectus that shows widening loss",
-      "publishedAtSgt": "2026-11-13T07:12:15+08:00",
-      "url": "https://www.cnbc.com/2026/11/12/nscale-updates-ipo-prospectus-that-shows-widening-loss.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T10:43:03+08:00"
-    },
-    {
-      "articleId": "b9b06146060b9f920caa4a1c6409f5f1ba5347daa2259391e3e2fad877277b63",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "MEDIUM",
-      "summary": "Cerebras shares surged 17% following a quarterly revenue beat and the announcement of a deal with Microsoft, although its core revenue growth decelerated and the stock remains down since its May debut.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors"
-      ],
-      "investorImpact": "The strong earnings report and partnership with Microsoft provide a positive catalyst for Cerebras, offering a potential alternative play in the AI chip market against Nvidia, though growth deceleration warrants close monitoring.",
-      "reasoning": "Classified as MARKET due to the significant stock price reaction and earnings update. It is relevant to fund monitoring given the direct involvement with major tech players like Microsoft and competition in the AI hardware space.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Cerebras surges 17% after beating on quarterly revenue and announcing Microsoft deal",
-      "publishedAtSgt": "2026-11-13T06:48:26+08:00",
-      "url": "https://www.cnbc.com/2026/11/12/cerebras-systems-cbrs-q3-earnings-report-2026.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T10:43:02+08:00"
-    },
-    {
-      "articleId": "a9c264453f09edeab886a193d009625b65e4889fa107f81261d865c98076fad0",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "POSITIVE",
-      "importance": "MEDIUM",
-      "summary": "Cisco shares rose in extended trading after reporting better-than-expected fiscal first-quarter results and projecting that AI infrastructure revenue will double this fiscal year as the networking company pushes further into the generative AI buildout.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "Global",
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Networking",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "The positive earnings beat and strong outlook for AI infrastructure revenue signals robust demand in the networking and AI hardware space, which can boost investor confidence in tech equities and related hardware suppliers.",
-      "reasoning": "Classified as MARKET and POSITIVE because Cisco reported better-than-expected earnings and provided an optimistic forecast for AI infrastructure growth, driving its share price up in extended trading. It is relevant for fund monitoring as it provides direct insight into corporate tech spending and AI infrastructure adoption.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Cisco beats on earnings, says AI infrastructure revenue will double this fiscal year",
-      "publishedAtSgt": "2026-11-13T05:20:35+08:00",
-      "url": "https://www.cnbc.com/2026/11/12/cisco-csco-q1-2027-earnings.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T10:43:03+08:00"
-    },
-    {
-      "articleId": "5216871911b7a5d80e1ea0a38bca2f21b694ac15dea79122ece6b02c84b51ac8",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEUTRAL",
-      "importance": "MEDIUM",
-      "summary": "Financial advisors note that Nvidia stock price drops have a muted impact on typical mutual fund and ETF investors due to generally limited and diversified exposure.",
-      "assetClasses": [
-        "Equities",
-        "ETFs",
-        "Mutual Funds"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors"
-      ],
-      "investorImpact": "Provides reassurance to diversified mutual fund and ETF investors that individual stock volatility in large holdings like Nvidia has a limited overall impact on their broader portfolios.",
-      "reasoning": "The article addresses market movements of a major stock and its impact on diversified investment products, making it relevant for market monitoring and investor sentiment analysis.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Why Nvidia stock drop isn't a big deal for many ETF, mutual fund investors",
-      "publishedAtSgt": "2026-11-13T05:16:37+08:00",
-      "url": "https://www.cnbc.com/2026/11/12/nvidia-stock-drop-etf-mutual-fund-investors.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 92,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T20:23:08+08:00"
-    },
-    {
-      "articleId": "c25a87e60e5841e4f02a69ee4be09f1072939fa95a1afb23b63e32fe1b17ac14",
-      "relevant": true,
-      "category": "TECHNOLOGY",
-      "sentiment": "NEUTRAL",
-      "importance": "HIGH",
-      "summary": "Jensen Huang's potential exit from Nvidia raises critical questions about the future of AI following a historic period of growth that transformed Nvidia from a niche video game technology provider into a dominant player in AI and national defense.",
-      "assetClasses": [
-        "Equities"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Technology",
-        "Semiconductors",
-        "Artificial Intelligence"
-      ],
-      "investorImpact": "Leadership changes at a critical market-leading AI hardware provider can introduce strategic uncertainty for tech-heavy portfolios and semiconductor holdings.",
-      "reasoning": "The article discusses leadership transition questions for Nvidia, a central pillar of the artificial intelligence sector and modern equity markets, making it highly relevant for technology and market monitoring.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Jensen Huang's exit from Nvidia raises critical questions about the future of AI",
-      "publishedAtSgt": "2026-11-13T04:32:21+08:00",
-      "url": "https://www.cnbc.com/2026/11/12/jensen-huangs-exit-from-nvidia-raises-questions-about-future-of-ai.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T04:56:53+08:00"
-    },
-    {
-      "articleId": "c7547c239ac4667f67fa88e05857ea748de5ba058d0b4505e06a5e2ac10e5b86",
-      "relevant": true,
-      "category": "MARKET",
-      "sentiment": "NEUTRAL",
-      "importance": "MEDIUM",
-      "summary": "The Federal Reserve announced that its October 2027 meeting will not feature a vote on interest rates, a policy shift initiated by Chairman Kevin Warsh to reduce the central bank's market footprint.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income",
-        "Currencies"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials",
-        "Banking"
-      ],
-      "investorImpact": "Investors should note changes to the Federal Reserve's scheduling and meeting framework as part of broader efforts to reduce its market footprint, potentially altering how markets anticipate and price in rate decisions.",
-      "reasoning": "The article is classified as MARKET because it details a Federal Reserve policy shift regarding meeting schedules and rate votes under Chairman Kevin Warsh, impacting monetary policy expectations and market operations.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "In a policy switch, the Fed says its October 2027 meeting will not see a vote on interest rates",
-      "publishedAtSgt": "2026-11-13T03:05:25+08:00",
-      "url": "https://www.cnbc.com/2026/11/12/in-policy-switch-fed-says-its-october-2027-meeting-will-not-see-a-vote-on-interest-rates.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T04:56:53+08:00"
-    },
-    {
-      "articleId": "bb91e0bef0421f10ecea0dd093fa7678678b202ed9f3ab0d683474b3bac273b7",
-      "relevant": true,
-      "category": "GEOPOLITICAL",
-      "sentiment": "NEGATIVE",
-      "importance": "HIGH",
-      "summary": "Oil prices rose following comments from President Donald Trump indicating that no Iran deal is needed and noting control over the Strait, stoking worries that the U.S.-Iran war continuation will keep oil markets tight.",
-      "assetClasses": [
-        "Commodities",
-        "Equities"
-      ],
-      "geographies": [
-        "United States",
-        "Iran",
-        "Middle East"
-      ],
-      "sectors": [
-        "Energy",
-        "Oil and Gas"
-      ],
-      "investorImpact": "Heightened geopolitical tensions in the Middle East and concerns over supply routes support higher oil prices and favor long-dated oil assets as well as drilling and producer stocks.",
-      "reasoning": "The article discusses geopolitical comments directly impacting energy markets and oil prices, making it highly relevant for monitoring commodity and energy sector exposures.",
-      "fundMonitoringRelevant": true,
-      "source": "CNBC",
-      "title": "Oil prices rise after Trump says no Iran deal needed: 'We've got their Strait'",
-      "publishedAtSgt": "2026-11-13T03:04:21+08:00",
-      "url": "https://www.cnbc.com/2026/11/12/oil-prices-jump-after-trump-says-no-iran-deal-needed-weve-got-their-strait.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T04:56:54+08:00"
-    },
-    {
-      "articleId": "befccb7d17fa5c7519e93dc424c9fa7189b5e1c6939fc70f9b5fcda4ac2a0eb6",
-      "relevant": true,
-      "category": "ECONOMIC",
-      "sentiment": "NEUTRAL",
-      "importance": "MEDIUM",
-      "summary": "The IRS announced the 2027 401(k) contribution limits and savings cap, including catch-up contribution limits for specific age groups based on Secure 2.0, alongside related inflation adjustments for federal income tax brackets, capital gains, estate and gift taxes.",
-      "assetClasses": [
-        "Equities",
-        "Fixed Income"
-      ],
-      "geographies": [
-        "United States"
-      ],
-      "sectors": [
-        "Financials",
-        "Wealth Management"
-      ],
-      "investorImpact": "Higher retirement account contribution limits allow individuals to shelter more capital from taxes, potentially increasing retail inflows into equity and fixed income markets over time.",
-      "reasoning": "The article reports official IRS inflation adjustments and contribution caps for retirement accounts which have broad implications for personal finance and retail investment flows, fitting the economic category with moderate importance.",
-      "fundMonitoringRelevant": false,
-      "source": "CNBC",
-      "title": "IRS announces 2027 401(k) contribution limits, raises savings cap: What it means for your money",
-      "publishedAtSgt": "2026-11-13T01:23:14+08:00",
-      "url": "https://www.cnbc.com/2026/11/12/401k-contribution-limits-2027.html",
-      "collectorCategory": "MARKET",
-      "collectorRelevanceScore": 91,
-      "collectorRelevanceReason": "strong_market_title",
-      "collectedAtSgt": "2026-11-13T04:56:54+08:00"
     }
   ]
 }
