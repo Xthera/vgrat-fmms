@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-11-26T17:40:27+08:00",
+  "generatedAtSgt": "2026-11-27T03:43:01+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,118 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "b6aee9a8cbc2bfe17ac935c3d928e4b1829343dd92c3b87a489856f14136cbed",
+      "source": "CNBC",
+      "title": "Trump demands probe into ‘record setting error’ after third-quarter GDP data gets massive revision higher",
+      "publishedAtSgt": "2026-11-27T02:44:15+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/trump-gdp-revision-investigation.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "economy exhibited much stronger growth for the third quarter than initially estimated, showing that real GDP grew at a 4.3% annualized rate. \"I would like to wish a Happy Thanksgiving to even those who issued fake Economic Numbers, just prior to the Election, and corrected them yesterday, three weeks late, showing that the GDP was actually 4.3%, versus 3.4%, A RECORD SETTING ERROR, and one so grave that it should be immediately investigated,\" Trump wrote.",
+      "feeds": [
+        "latest"
+      ],
+      "collectedAtSgt": "2026-11-27T03:42:56+08:00"
+    },
+    {
+      "id": "bff0f97c46f006cb70906c73d39ba72298802d7546dd3f013301c2ce59d53eb6",
+      "source": "CNBC",
+      "title": "Microdrama apps chase profits as Hollywood moves into short-form, vertical video",
+      "publishedAtSgt": "2026-11-27T02:27:43+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/micro-drama-apps-hollywood-vertical-video.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Bogdan Nesvit says his mission is simple: \"We are essentially building Disney for the 21st century.\" Nesvit is the co-founder of microseries app My Drama, built around the latest, bite-sized form of storytelling. Fox Entertainment was one of the earliest Hollywood investors in microdramas. Despite the flurry of investment, Hollywood still faces the challenge of how to translate viewing hours into profit, especially for shorter content.",
+      "feeds": [
+        "latest",
+        "business"
+      ],
+      "collectedAtSgt": "2026-11-27T03:42:57+08:00"
+    },
+    {
+      "id": "5ea344a76f6280bf2b542a5d724470216e3afdf8bd90132d9e560a6fbcc766f9",
+      "source": "CNBC",
+      "title": "Semiconductor chips are the new oil. Here's why",
+      "publishedAtSgt": "2026-11-27T01:52:15+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/semiconductor-chips-are-the-new-oil-heres-why.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "The artificial intelligence boom has pushed semiconductors past oil and gas in global export value for the first time, according to a Deutsche Bank analysis of International Trade Centre data. Yet the milestone arrives at an awkward moment, just as investors reassess the outlook for artificial intelligence spending and drive down the price of semiconductor stocks. technology stocks, startups and data centers, further helping to finance the AI investment cycle.",
+      "feeds": [
+        "latest",
+        "finance"
+      ],
+      "collectedAtSgt": "2026-11-27T03:42:56+08:00"
+    },
+    {
+      "id": "d8d2c8ba79367cdaf584c0726ec7d1f2b0a3f6fc51919c5c2af8714169ee4d6d",
+      "source": "CNBC",
+      "title": "Nvidia chip buyers told to rule out Chinese renters to purchase GPUs, sources say",
+      "publishedAtSgt": "2026-11-27T01:04:54+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/neoclouds-nvidia-china-ai.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 81,
+      "relevanceReason": "technology_business_or_infrastructure",
+      "summary": "Chip sellers communicated the messaging to neoclouds after the announcement, which seeks to close an export controls loophole allowing Chinese companies to rent access to Nvidia's most advanced chips when hosted in data centers overseas, two people familiar with the situation told CNBC. Neocloud stocks have come under renewed pressure lately as investors questioned the sustainability of the AI boom.",
+      "feeds": [
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T03:42:58+08:00"
+    },
+    {
+      "id": "84b757dcf48149f41479f2ecb47c400c195affc4bcac32c4d5e34b6f3f68e149",
+      "source": "CNBC",
+      "title": "Trump, NATO chief caution Russia as attacks on Ukraine’s energy infrastructure intensify",
+      "publishedAtSgt": "2026-11-27T00:12:47+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/trump-nato-rutte-russia-ukraine-war.html",
+      "category": "GEOPOLITICAL",
+      "relevanceScore": 71,
+      "relevanceReason": "geopolitical_with_direct_economic_impact",
+      "summary": "Moreover, the two discussed the importance of further increasing defense spending as well as investment in the defense industrial base in both the U.S. While some have questioned whether this approach has delivered any tangible benefits, Trump has previously described Rutte as a \"great leader\" and NATO's \"biggest asset.\" Russia has stepped up its attacks on Ukraine's energy infrastructure in recent weeks, with further attacks on the central Ukrainian city of Kryvyi Rih overnight disrupting...",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T03:42:58+08:00"
+    },
+    {
+      "id": "d36673b4a2a328c6c3d40ff499a34590bb1722c65cd8f4df3bfc1728454119f2",
+      "source": "CNBC",
+      "title": "Spain’s Pablo Hernández de Cos set to lead European Central Bank",
+      "publishedAtSgt": "2026-11-26T23:28:26+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/pablo-hernandez-de-cos-ecb-president.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "Analysts say de Cos's commentary and actions over more than two decades at Spain's central bank paint him as moderately dovish — inclined to favor lower interest rates to support economic growth — but also as a pragmatist who has been willing to adapt. \"We are now clearly in a higher-inflation regime, with core inflation in the euro area expected to remain above the ECB's target through 2029.\" Kopf added that de Cos was the candidate with the \"strongest technical understanding of monetary...",
+      "feeds": [
+        "latest",
+        "economy",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T03:43:01+08:00"
+    },
+    {
+      "id": "ad238784b20c8a198aca29f1a0f9da9deda18b0675a1b4e46593aabefc76e4ed",
+      "source": "CNBC",
+      "title": "Switzerland’s biggest bank set for showdown with lawmakers as capital fight intensifies amid crisis planning",
+      "publishedAtSgt": "2026-11-26T19:17:39+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/ubs-swiss-capital-rules-finma-crisis-plan.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "But Switzerland's biggest bank still faces a major fight over sweeping plans that would force it to hold more capital against its foreign subsidiaries. FINMA, the Swiss markets regulator, said Wednesday that UBS's resolvability — or its ability to fail safely, without wreaking havoc on the economy — has improved since it integrated rival Credit Suisse, with progress made in implementing the emergency plan across group-wide resolution planning.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T03:43:01+08:00"
+    },
     {
       "id": "9d80dce9a103548250f4299847cd18bc393a5319ad4e225168030c5a218e9fcb",
       "source": "CNBC",
@@ -1495,117 +1607,6 @@
         "world"
       ],
       "collectedAtSgt": "2026-11-20T15:18:36+08:00"
-    },
-    {
-      "id": "ee2fe0b054c8961a47f0386b38fe6386a5fd728f6abf3dd592bc1ffd6dbaf5b2",
-      "source": "CNBC",
-      "title": "California AG issues subpoena to Nvidia in probe of China chips",
-      "publishedAtSgt": "2026-11-20T07:04:13+08:00",
-      "url": "https://www.cnbc.com/2026/11/19/nvidia-california-bonta-subpoena-china-chips.html",
-      "category": "TECHNOLOGY",
-      "relevanceScore": 81,
-      "relevanceReason": "technology_business_or_infrastructure",
-      "summary": "California Attorney General Rob Bonta has issued an investigative subpoena to Nvidia as part of a probe of whether the company's advanced semiconductor chips ended up in China in contravention of U.S. \"The conduct of Nvidia and its former CEO raises bright red flags, including about the ways in which the company may have misled investors,\" Bonta said in a statement.",
-      "feeds": [
-        "latest",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-20T07:06:58+08:00"
-    },
-    {
-      "id": "900ceab79cba98c5e1cb8bb8eb71e8936a19038f6cd2190e6263fd1f7c4d9b02",
-      "source": "CNBC",
-      "title": "Congress passes bill to protect older investors from financial fraud",
-      "publishedAtSgt": "2026-11-20T06:23:29+08:00",
-      "url": "https://www.cnbc.com/2026/11/19/financial-exploitation-prevention-act-older-investors-fraud.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "The bill would generally allow mutual fund companies and their transfer agents, which handle shareholder records and transactions, to temporarily delay paying out redemption requests when they suspect an older or otherwise vulnerable investor is being financially exploited. \"This legislation fills an important regulatory gap that can help protect vulnerable investors before assets are lost.\" The measure's congressional approval comes amid growing financial fraud among older Americans.",
-      "feeds": [
-        "latest"
-      ],
-      "collectedAtSgt": "2026-11-20T07:06:58+08:00"
-    },
-    {
-      "id": "ab78c1ca78969ba5abcfa661bafe7ec7528d18dd68e56c78e12e889f9b41bc8f",
-      "source": "CNBC",
-      "title": "Palo Alto stock jumps on earnings beat and company's big bet on securing open-weight models",
-      "publishedAtSgt": "2026-11-20T05:00:57+08:00",
-      "url": "https://www.cnbc.com/2026/11/19/palo-alto-networks-earnings-applied-compute.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "Palo Alto Networks shares rose 6% on Thursday as businesses boosted spending on cybersecurity products and investors cheered the company's acquisition of a startup that pushes it into securing open-weight artificial intelligence models. Those fears have led more businesses to consolidate platforms, which is fueling growth in areas like firewall and AI security, Palo Alto Networks CEO Nikesh Arora told CNBC's \"Mad Money\" on Wednesday.",
-      "feeds": [
-        "latest",
-        "technology",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-20T07:06:58+08:00"
-    },
-    {
-      "id": "9b664f477623ee1fcded722f849e98d0150ea0e8c1d3295e1729c417bc4244ad",
-      "source": "CNBC",
-      "title": "Kraken parent's acquisition of Tribe Capital flags new chapter in evolution of crypto exchanges",
-      "publishedAtSgt": "2026-11-20T04:33:05+08:00",
-      "url": "https://www.cnbc.com/2026/11/19/acquisition-of-tribe-capital-flags-new-chapter-in-evolution-of-crypto-exchanges.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "Payward, the owner of crypto exchange Kraken, is pushing into private markets with its latest acquisition, underscoring a broader shift in cryptocurrencies, from trading-led growth to the buildout of financial infrastructure. \"Joining Payward gives us the opportunity to bring Tribe's investment approach to a global financial platform,\" Jonathan Hsu, another co-founder of Tribe Capital, said in a statement.",
-      "feeds": [
-        "latest",
-        "technology"
-      ],
-      "collectedAtSgt": "2026-11-20T07:06:59+08:00"
-    },
-    {
-      "id": "846134e24452e18f77040b0a913006ffc0d0c7ba80d5f25053307e74f3fe6e6f",
-      "source": "CNBC",
-      "title": "Trump bought Nvidia, Palantir, SpaceX in September as federal deals, White House ties grew",
-      "publishedAtSgt": "2026-11-20T03:43:08+08:00",
-      "url": "https://www.cnbc.com/2026/11/19/trump-nvidia-spacex-palantir-stock-trades-september.html",
-      "category": "MARKET",
-      "relevanceScore": 57,
-      "relevanceReason": "supporting_market_description",
-      "summary": "President Donald Trump's investment accounts bought shares of Nvidia, Palantir and Elon Musk's SpaceX in September, around the time the companies secured major federal contracts and their executives met with the president, according to a newly released financial disclosure. The timing was particularly notable at Palantir, the artificial intelligence software maker whose technology is used by U.S.",
-      "feeds": [
-        "latest",
-        "technology"
-      ],
-      "collectedAtSgt": "2026-11-20T07:06:58+08:00"
-    },
-    {
-      "id": "c487be86047834c0555457b938482af2569df51673fc485c839162baa903966c",
-      "source": "CNBC",
-      "title": "Amid recent banking outages, should you start carrying cash again? Top advisors weigh in",
-      "publishedAtSgt": "2026-11-20T03:06:56+08:00",
-      "url": "https://www.cnbc.com/2026/11/19/banking-outages-emergency-cash.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "currency in favor of credit, debit and digital payments. banks and the peer-to-peer payments network Zelle. As technology outages expose vulnerabilities across parts of the U.S.",
-      "feeds": [
-        "latest"
-      ],
-      "collectedAtSgt": "2026-11-20T07:06:58+08:00"
-    },
-    {
-      "id": "4c58eef840be958354a719668d1648058d64801e019d22fb443576330d7603ff",
-      "source": "CNBC",
-      "title": "Gold's bad year is getting worse. Why its price keeps falling",
-      "publishedAtSgt": "2026-11-20T00:29:52+08:00",
-      "url": "https://www.cnbc.com/2026/11/19/gold-prices-fall-fed-rates-dollar.html",
-      "category": "MARKET",
-      "relevanceScore": 57,
-      "relevanceReason": "supporting_market_description",
-      "summary": "Precious metals investors can be forgiven if they feel like the past year has given them whiplash. Which role it plays depends on the factors dominating the market and the psyche of investors, and right now, it's the currency argument that is bringing the precious metal down.",
-      "feeds": [
-        "latest",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-20T07:06:59+08:00"
     }
   ]
 }

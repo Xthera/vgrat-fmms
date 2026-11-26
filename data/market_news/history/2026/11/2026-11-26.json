@@ -5,6 +5,39 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "d36673b4a2a328c6c3d40ff499a34590bb1722c65cd8f4df3bfc1728454119f2",
+      "source": "CNBC",
+      "title": "Spain’s Pablo Hernández de Cos set to lead European Central Bank",
+      "publishedAtSgt": "2026-11-26T23:28:26+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/pablo-hernandez-de-cos-ecb-president.html",
+      "category": "MARKET",
+      "relevanceScore": 92,
+      "relevanceReason": "strong_market_title",
+      "summary": "Analysts say de Cos's commentary and actions over more than two decades at Spain's central bank paint him as moderately dovish — inclined to favor lower interest rates to support economic growth — but also as a pragmatist who has been willing to adapt. \"We are now clearly in a higher-inflation regime, with core inflation in the euro area expected to remain above the ECB's target through 2029.\" Kopf added that de Cos was the candidate with the \"strongest technical understanding of monetary...",
+      "feeds": [
+        "latest",
+        "economy",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T03:43:01+08:00"
+    },
+    {
+      "id": "ad238784b20c8a198aca29f1a0f9da9deda18b0675a1b4e46593aabefc76e4ed",
+      "source": "CNBC",
+      "title": "Switzerland’s biggest bank set for showdown with lawmakers as capital fight intensifies amid crisis planning",
+      "publishedAtSgt": "2026-11-26T19:17:39+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/ubs-swiss-capital-rules-finma-crisis-plan.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "But Switzerland's biggest bank still faces a major fight over sweeping plans that would force it to hold more capital against its foreign subsidiaries. FINMA, the Swiss markets regulator, said Wednesday that UBS's resolvability — or its ability to fail safely, without wreaking havoc on the economy — has improved since it integrated rival Credit Suisse, with progress made in implementing the emergency plan across group-wide resolution planning.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T03:43:01+08:00"
+    },
+    {
       "id": "9d80dce9a103548250f4299847cd18bc393a5319ad4e225168030c5a218e9fcb",
       "source": "CNBC",
       "title": "Norse Atlantic suspends all flights, warns it may file for bankruptcy after share price collapse",
@@ -340,6 +373,6 @@
       "collectedAtSgt": "2026-11-26T08:31:52+08:00"
     }
   ],
-  "articleCount": 21,
-  "updatedAtSgt": "2026-11-26T17:40:27+08:00"
+  "articleCount": 23,
+  "updatedAtSgt": "2026-11-27T03:43:01+08:00"
 }
