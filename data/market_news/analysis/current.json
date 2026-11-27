@@ -1,10 +1,42 @@
 {
-  "generatedAtSgt": "2026-11-27T03:58:55.791629+08:00",
+  "generatedAtSgt": "2026-11-27T12:35:56.536535+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 199,
+  "articleCount": 200,
   "analyses": [
+    {
+      "articleId": "05f0420aeac13e316069940b116f137feb9506b8f030c379d6ec14055d8a1b6f",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "China's industrial profits growth surged to a five-month high of 20.1% in October, driven heavily by electronics makers doubling earnings due to AI computing demand and commodity producers benefiting from renewable energy and AI-driven copper and aluminum price increases.",
+      "assetClasses": [
+        "Equities",
+        "Commodities"
+      ],
+      "geographies": [
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Electronics",
+        "Commodities",
+        "Industrials"
+      ],
+      "investorImpact": "The sharp surge in Chinese industrial profits indicates robust manufacturing demand driven by AI and renewable energy trends, offering positive signals for regional equities and global commodity demand.",
+      "reasoning": "Classified as ECONOMIC because it reports official industrial profit statistics. It is highly significant due to the 20.1% surge and specific growth drivers like AI computing and renewable energy demand, making it directly relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "China industrial profits growth surges to a 5-month high of 20.1% in October",
+      "publishedAtSgt": "2026-11-27T10:04:09+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/china-industrial-profits-october.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-27T12:20:11+08:00"
+    },
     {
       "articleId": "b6aee9a8cbc2bfe17ac935c3d928e4b1829343dd92c3b87a489856f14136cbed",
       "relevant": true,
