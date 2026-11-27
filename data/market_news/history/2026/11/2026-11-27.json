@@ -5,6 +5,102 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "488b01fbc71ed191176a7e2cb5d6d28ba9fac9d62478fe7c0c201a968f2adf9c",
+      "source": "CNBC",
+      "title": "Budget airline Norse Atlantic files for bankruptcy in Europe after failing to secure funding",
+      "publishedAtSgt": "2026-11-27T21:58:19+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/norse-atlantic-bankruptcy-fuel-costs.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Budget carrier Norse Atlantic filed for bankruptcy Friday, saying it failed to secure funding after soaring fuel costs strained the company's operations throughout the year. \"Despite extensive efforts, the Company has so far not been able to secure sufficient funding to meet its short-term liquidity needs,\" the firm said in a statement Friday. The company's shares closed 85% lower on Wednesday.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T22:00:40+08:00"
+    },
+    {
+      "id": "8a23bd25f0461dc07bf14da02e30d38589dfd16dd44265e7c2491331f250109c",
+      "source": "CNBC",
+      "title": "The Tech Download: Will Jensen Huang’s return be the spark the shaky AI market needs?",
+      "publishedAtSgt": "2026-11-27T20:00:22+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/tech-download-jensen-huang-ai-market.html",
+      "category": "MARKET",
+      "relevanceScore": 57,
+      "relevanceReason": "supporting_market_description",
+      "summary": "Neoclouds have seen stocks plummet in recent months as investors question the sustainability of the AI boom. \"While Jensen Huang's reinstatement as Nvidia CEO is indubitably a boon for the markets and the overall AI trade, it does not assuage every risk and concern about an industry confronting a potential peak in its investment boom and moderating earnings growth.\" The early week rally was \"largely driven\" by Huang's return, said Violeta Todorova, senior research analyst at Leverage Shares.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T22:00:40+08:00"
+    },
+    {
+      "id": "afa777ba6487778e381672df2e0f1e7456966af617ae3debd50401a281f9931f",
+      "source": "CNBC",
+      "title": "Inflation has shoppers hunting for value. That bodes well for Black Friday",
+      "publishedAtSgt": "2026-11-27T19:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/black-friday-2026-inflation-value-deals.html",
+      "category": "ECONOMIC",
+      "relevanceScore": 101,
+      "relevanceReason": "strong_economic_title",
+      "summary": "Economic headwinds have made consumers more cautious — but new data and reports from retailers are painting a picture of robust holiday spending through Black Friday and beyond. High inflation, fluctuating gas prices and labor uncertainty have dampened consumer sentiment and contributed to a pullback in spending. Holiday sales are expected to top $1 trillion this year, but that growth is boosted by inflation.",
+      "feeds": [
+        "business"
+      ],
+      "collectedAtSgt": "2026-11-27T22:00:41+08:00"
+    },
+    {
+      "id": "05690ceef5b308aa2432da272db8c2edfd383cf3a09cf3b18574c4b1d34a2da7",
+      "source": "CNBC",
+      "title": "SpaceX shares jump 4% amid tech rally and after Musk says he will expand on Trump Account share donations",
+      "publishedAtSgt": "2026-11-27T18:20:39+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/spacex-shares-musk-donations.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "SpaceX shares rose in premarket trading amid a broader tech rally and after CEO Elon Musk expanded his SpaceX share-donation plan for U.S. Big Tech stocks, including Nvidia, Intel, Marvell, AMD and Micron were all higher in premarket trading as the sector rebounded from a heavy selloff earlier this week.",
+      "feeds": [
+        "latest",
+        "technology",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T22:00:40+08:00"
+    },
+    {
+      "id": "92848794f4cf0a923ede59393e5facacb5d6fe6511b3939208d253b633c243de",
+      "source": "CNBC",
+      "title": "Chinese chip stocks notch biggest ever one-day gains as Beijing signals broader market support",
+      "publishedAtSgt": "2026-11-27T18:13:44+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/china-chip-stocks-beijing-market-support.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Chinese stocks rebounded sharply on Friday after a rare intraday state media readout cheered investors as top policymakers pledged to expand the role of state-backed funds in supporting the market. The CSI Semiconductor index of 40 chip stocks climbed by 17.6% in its biggest single-day gain on record, surpassing the prior record of nearly 17% in late 2024, according to Wind Information.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtSgt": "2026-11-27T22:00:41+08:00"
+    },
+    {
+      "id": "3a571f01562eed085661aa8794ba53c12eb023133f95b9076c88494bb283752b",
+      "source": "CNBC",
+      "title": "Private markets are more accessible than ever for investors. Getting out is another matter",
+      "publishedAtSgt": "2026-11-27T16:05:09+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/private-markets-retail-investors-liquidity.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Retail investors are lining up to back private funds. PwC research has found that 77% of fund distributors surveyed said access to private markets is becoming important or very important to what they plan to offer clients, but just 15% of asset managers said they provide comprehensive education for retail investors.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T22:00:40+08:00"
+    },
+    {
       "id": "05f0420aeac13e316069940b116f137feb9506b8f030c379d6ec14055d8a1b6f",
       "source": "CNBC",
       "title": "China industrial profits growth surges to a 5-month high of 20.1% in October",
@@ -101,6 +197,6 @@
       "collectedAtSgt": "2026-11-27T03:42:58+08:00"
     }
   ],
-  "articleCount": 6,
-  "updatedAtSgt": "2026-11-27T12:20:11+08:00"
+  "articleCount": 12,
+  "updatedAtSgt": "2026-11-27T22:00:41+08:00"
 }

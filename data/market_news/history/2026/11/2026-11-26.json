@@ -22,6 +22,21 @@
       "collectedAtSgt": "2026-11-27T03:43:01+08:00"
     },
     {
+      "id": "5ad7238d11d28810cf0ad0290fa3f940daf1f85ef059e5575a8774295e4357f8",
+      "source": "CNBC",
+      "title": "The great aluminum squeeze: London supply crunch deepens as warehouse stocks slide",
+      "publishedAtSgt": "2026-11-26T22:09:10+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/lme-aluminum-squeeze-supply.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Iran war disruption has driven the historic London Metal Exchange's warehoused stock of aluminum to levels not seen in decades — forcing it to act. LME-registered warehouses' available aluminum stocks have declined by 51% since the war began in late February, according to a Nov. But now the overwhelming majority of stock in LME warehouses — more than 99% — is of Russian origin — a source many Western traders are unwilling to touch.",
+      "feeds": [
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T22:00:41+08:00"
+    },
+    {
       "id": "ad238784b20c8a198aca29f1a0f9da9deda18b0675a1b4e46593aabefc76e4ed",
       "source": "CNBC",
       "title": "Switzerland’s biggest bank set for showdown with lawmakers as capital fight intensifies amid crisis planning",
@@ -373,6 +388,6 @@
       "collectedAtSgt": "2026-11-26T08:31:52+08:00"
     }
   ],
-  "articleCount": 23,
-  "updatedAtSgt": "2026-11-27T03:43:01+08:00"
+  "articleCount": 24,
+  "updatedAtSgt": "2026-11-27T22:00:41+08:00"
 }
