@@ -5,6 +5,23 @@
   "source": "CNBC",
   "articles": [
     {
+      "id": "05f0420aeac13e316069940b116f137feb9506b8f030c379d6ec14055d8a1b6f",
+      "source": "CNBC",
+      "title": "China industrial profits growth surges to a 5-month high of 20.1% in October",
+      "publishedAtSgt": "2026-11-27T10:04:09+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/china-industrial-profits-october.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Electronics makers drove the profit gain, with earnings in the sector doubling in the first 10 months from the same period last year, as demand for AI computing power lifted memory chips and related manufacturing, said Yu Weining, chief statistician of the NBS. Commodity producers also saw sharp growth in profits as demand tied to renewable energy and AI pushed up copper and aluminum prices, Yu said.",
+      "feeds": [
+        "latest",
+        "economy",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T12:20:11+08:00"
+    },
+    {
       "id": "b6aee9a8cbc2bfe17ac935c3d928e4b1829343dd92c3b87a489856f14136cbed",
       "source": "CNBC",
       "title": "Trump demands probe into ‘record setting error’ after third-quarter GDP data gets massive revision higher",
@@ -84,6 +101,6 @@
       "collectedAtSgt": "2026-11-27T03:42:58+08:00"
     }
   ],
-  "articleCount": 5,
-  "updatedAtSgt": "2026-11-27T03:42:58+08:00"
+  "articleCount": 6,
+  "updatedAtSgt": "2026-11-27T12:20:11+08:00"
 }

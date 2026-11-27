@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-11-27T03:43:01+08:00",
+  "generatedAtSgt": "2026-11-27T12:20:11+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,23 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "05f0420aeac13e316069940b116f137feb9506b8f030c379d6ec14055d8a1b6f",
+      "source": "CNBC",
+      "title": "China industrial profits growth surges to a 5-month high of 20.1% in October",
+      "publishedAtSgt": "2026-11-27T10:04:09+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/china-industrial-profits-october.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "Electronics makers drove the profit gain, with earnings in the sector doubling in the first 10 months from the same period last year, as demand for AI computing power lifted memory chips and related manufacturing, said Yu Weining, chief statistician of the NBS. Commodity producers also saw sharp growth in profits as demand tied to renewable energy and AI pushed up copper and aluminum prices, Yu said.",
+      "feeds": [
+        "latest",
+        "economy",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-27T12:20:11+08:00"
+    },
     {
       "id": "b6aee9a8cbc2bfe17ac935c3d928e4b1829343dd92c3b87a489856f14136cbed",
       "source": "CNBC",
@@ -1591,22 +1608,6 @@
         "technology"
       ],
       "collectedAtSgt": "2026-11-20T15:18:35+08:00"
-    },
-    {
-      "id": "d63bc27efa5e669aa9c3d1d001b250219673f4966b7c1c5182da5799089d924e",
-      "source": "CNBC",
-      "title": "Cramer says Nvidia’s woes are trumping Anthropic excitement for the rest of the AI trade",
-      "publishedAtSgt": "2026-11-20T07:22:53+08:00",
-      "url": "https://www.cnbc.com/2026/11/19/nvidia-anthropic-ipo-ai-trade.html",
-      "category": "GEOPOLITICAL",
-      "relevanceScore": 71,
-      "relevanceReason": "geopolitical_with_direct_economic_impact",
-      "summary": "Nvidia's deepening sell-off following last week's leadership shake-up is overwhelming the optimism surrounding Anthropic's stock market debut and hurting the rest of the artificial intelligence trade, CNBC's Jim Cramer argued Thursday. As the longtime leader of the AI trade, the chipmaker has helped drive investor enthusiasm for everything from semiconductor manufacturers to data center infrastructure companies.",
-      "feeds": [
-        "technology",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-20T15:18:36+08:00"
     }
   ]
 }
