@@ -1,10 +1,184 @@
 {
-  "generatedAtSgt": "2026-11-27T12:35:56.536535+08:00",
+  "generatedAtSgt": "2026-11-27T22:16:37.108124+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
-  "articleCount": 200,
+  "articleCount": 207,
   "analyses": [
+    {
+      "articleId": "488b01fbc71ed191176a7e2cb5d6d28ba9fac9d62478fe7c0c201a968f2adf9c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Budget carrier Norse Atlantic filed for bankruptcy after failing to secure funding, driven by soaring fuel costs that strained operations. The company's shares had previously closed 85% lower.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Europe"
+      ],
+      "sectors": [
+        "Airlines",
+        "Transportation"
+      ],
+      "investorImpact": "Investors in budget airlines and European equities face heightened sector risk regarding fuel price volatility and funding pressures, highlighting credit and liquidity vulnerabilities in low-margin segments.",
+      "reasoning": "Classified as MARKET due to corporate insolvency and severe equity devaluation driven by macro cost pressures like fuel prices. Significant for monitoring transport sector vulnerabilities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Budget airline Norse Atlantic files for bankruptcy in Europe after failing to secure funding",
+      "publishedAtSgt": "2026-11-27T21:58:19+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/norse-atlantic-bankruptcy-fuel-costs.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-27T22:00:40+08:00"
+    },
+    {
+      "articleId": "8a23bd25f0461dc07bf14da02e30d38589dfd16dd44265e7c2491331f250109c",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Neocloud stocks have dropped amid investor doubts over the AI boom's sustainability. While Jensen Huang's return as Nvidia CEO sparked an early week market rally, analysts note it does not eliminate all risks regarding potential peaks in the AI investment cycle and moderating earnings growth.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Technology"
+      ],
+      "investorImpact": "Investors in the AI and technology sectors should remain cautious; while leadership news can trigger short-term rallies, underlying concerns regarding investment sustainability and moderating earnings growth persist.",
+      "reasoning": "The article discusses market movements and sentiment regarding the AI sector following leadership changes at Nvidia, making it relevant for market and technology sector monitoring despite lingering industry risks.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "The Tech Download: Will Jensen Huang’s return be the spark the shaky AI market needs?",
+      "publishedAtSgt": "2026-11-27T20:00:22+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/tech-download-jensen-huang-ai-market.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 57,
+      "collectorRelevanceReason": "supporting_market_description",
+      "collectedAtSgt": "2026-11-27T22:00:40+08:00"
+    },
+    {
+      "articleId": "afa777ba6487778e381672df2e0f1e7456966af617ae3debd50401a281f9931f",
+      "relevant": true,
+      "category": "ECONOMIC",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Economic headwinds including inflation, fluctuating gas prices, and labor uncertainty have made consumers cautious and contributed to spending pullbacks, yet current data shows robust holiday spending through Black Friday with overall holiday sales expected to top $1 trillion, though growth is partially driven by inflation.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Consumer Discretionary",
+        "Retail"
+      ],
+      "investorImpact": "The resilience in Black Friday spending despite inflationary headwinds offers supportive signals for retail sector equities and consumer discretionary stocks during the crucial holiday shopping season.",
+      "reasoning": "Classified as ECONOMIC because it discusses macroeconomic factors like inflation and consumer sentiment alongside retail sales performance. Sentiment is MIXED as cautious consumer sentiment and inflation-driven spending contrast with robust headline sales figures. It is relevant for fund monitoring as it impacts consumer and retail sector valuations.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Inflation has shoppers hunting for value. That bodes well for Black Friday",
+      "publishedAtSgt": "2026-11-27T19:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/black-friday-2026-inflation-value-deals.html",
+      "collectorCategory": "ECONOMIC",
+      "collectorRelevanceScore": 101,
+      "collectorRelevanceReason": "strong_economic_title",
+      "collectedAtSgt": "2026-11-27T22:00:41+08:00"
+    },
+    {
+      "articleId": "05690ceef5b308aa2432da272db8c2edfd383cf3a09cf3b18574c4b1d34a2da7",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "SpaceX shares rose 4% in premarket trading amid a broader tech sector rally and following CEO Elon Musk's announcement regarding an expansion of his SpaceX share-donation plan for U.S. Big Tech stocks.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Aerospace"
+      ],
+      "investorImpact": "The positive movement in SpaceX and broader tech shares signals a recovery from recent sector selloffs, offering short-term upside opportunities for tech-focused portfolios.",
+      "reasoning": "Classified as MARKET due to direct stock price movements and sector-wide premarket rallies. Important for tracking sentiment recovery in technology and space assets.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "SpaceX shares jump 4% amid tech rally and after Musk says he will expand on Trump Account share donations",
+      "publishedAtSgt": "2026-11-27T18:20:39+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/spacex-shares-musk-donations.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-27T22:00:40+08:00"
+    },
+    {
+      "articleId": "92848794f4cf0a923ede59393e5facacb5d6fe6511b3939208d253b633c243de",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "HIGH",
+      "summary": "Chinese semiconductor stocks surged to record highs on Friday, posting their biggest single-day gain ever after state media and top policymakers signaled broader market support and an expanded role for state-backed funds.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "The strong policy signals and record gains in Chinese chip stocks indicate robust short-term upside driven by state intervention, presenting tactical opportunities for investors exposed to Chinese equity and technology sectors.",
+      "reasoning": "The article highlights significant state-driven market support resulting in record-breaking equity gains within the Chinese semiconductor sector, making it highly relevant for market monitoring and investment strategies.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Chinese chip stocks notch biggest ever one-day gains as Beijing signals broader market support",
+      "publishedAtSgt": "2026-11-27T18:13:44+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/china-chip-stocks-beijing-market-support.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-27T22:00:41+08:00"
+    },
+    {
+      "articleId": "3a571f01562eed085661aa8794ba53c12eb023133f95b9076c88494bb283752b",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "MIXED",
+      "importance": "MEDIUM",
+      "summary": "Private markets are becoming increasingly accessible and important for retail investors and fund distributors, with 77% of surveyed distributors noting their importance, although significant challenges remain around liquidity and investor education, as only 15% of asset managers provide comprehensive education.",
+      "assetClasses": [
+        "Private Equity",
+        "Private Markets"
+      ],
+      "geographies": [
+        "Global"
+      ],
+      "sectors": [
+        "Asset Management",
+        "Wealth Management"
+      ],
+      "investorImpact": "Highlights growing retail demand for private market allocations alongside a critical liquidity and education gap that investors and fund managers must navigate.",
+      "reasoning": "Classified as MARKET because it discusses broader trends in private market accessibility, fund distribution, and retail investor participation. Sentiment is MIXED due to high demand contrasted with low education and liquidity concerns. Fund monitoring relevant because it addresses liquidity and distribution trends in private funds.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Private markets are more accessible than ever for investors. Getting out is another matter",
+      "publishedAtSgt": "2026-11-27T16:05:09+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/private-markets-retail-investors-liquidity.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-27T22:00:40+08:00"
+    },
     {
       "articleId": "05f0420aeac13e316069940b116f137feb9506b8f030c379d6ec14055d8a1b6f",
       "relevant": true,
@@ -223,6 +397,38 @@
       "collectorRelevanceScore": 92,
       "collectorRelevanceReason": "strong_market_title",
       "collectedAtSgt": "2026-11-27T03:43:01+08:00"
+    },
+    {
+      "articleId": "5ad7238d11d28810cf0ad0290fa3f940daf1f85ef059e5575a8774295e4357f8",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "HIGH",
+      "summary": "Geopolitical disruption from the Iran war has caused available aluminum stocks in London Metal Exchange warehouses to plunge by 51%, while over 99% of the remaining inventory consists of Russian metal that many Western traders avoid.",
+      "assetClasses": [
+        "Commodities"
+      ],
+      "geographies": [
+        "Global",
+        "United Kingdom",
+        "Russia",
+        "Iran"
+      ],
+      "sectors": [
+        "Metals and Mining",
+        "Materials"
+      ],
+      "investorImpact": "The severe supply squeeze and heavy reliance on untouchable Russian metal in LME warehouses drive upward price volatility for aluminum, impacting input costs for manufacturing, construction, and automotive sectors.",
+      "reasoning": "Classified as MARKET due to direct impacts on exchange inventories and metal pricing driven by geopolitical conflicts affecting commodity supply chains.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "The great aluminum squeeze: London supply crunch deepens as warehouse stocks slide",
+      "publishedAtSgt": "2026-11-26T22:09:10+08:00",
+      "url": "https://www.cnbc.com/2026/11/26/lme-aluminum-squeeze-supply.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-27T22:00:41+08:00"
     },
     {
       "articleId": "ad238784b20c8a198aca29f1a0f9da9deda18b0675a1b4e46593aabefc76e4ed",
