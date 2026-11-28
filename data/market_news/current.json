@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-11-28T08:07:28+08:00",
+  "generatedAtSgt": "2026-11-28T16:58:21+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,22 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "74e55768efb721453e5781b8a1e74b49f6e6e3e4468b6ffb566983c2c7877111",
+      "source": "CNBC",
+      "title": "Africa’s richest man is taking his mega-refinery public in a blockbuster IPO",
+      "publishedAtSgt": "2026-11-28T14:00:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/28/dangote-refinery-oil-ipo-nigeria-africa-energy.html",
+      "category": "MARKET",
+      "relevanceScore": 91,
+      "relevanceReason": "strong_market_title",
+      "summary": "One of the world's largest oil refineries is set to become Africa's biggest public firm in a highly anticipated offering that the continent's richest man has marketed as an \"IPO for the people.\" Dangote Petroleum Refinery and Petrochemicals FZE, founded by Nigerian billionaire Aliko Dangote, is expected to begin trading in Lagos on Dec.",
+      "feeds": [
+        "latest",
+        "world"
+      ],
+      "collectedAtSgt": "2026-11-28T16:58:21+08:00"
+    },
     {
       "id": "edd0b258b0b1628353e404eb8700acee2a0ffe4f8d976f7eb087278df2ecc29c",
       "source": "CNBC",
@@ -1591,22 +1607,6 @@
         "world"
       ],
       "collectedAtSgt": "2026-11-21T02:40:01+08:00"
-    },
-    {
-      "id": "fe1acb282f63208e16a4008f36f99159c2bcb1ae0619a2a72830af7bc49e33fc",
-      "source": "CNBC",
-      "title": "Forget Anthropic: In Europe, the IPO hype is about a blue lagoon",
-      "publishedAtSgt": "2026-11-20T14:00:01+08:00",
-      "url": "https://www.cnbc.com/2026/11/20/anthropic-ipo-iceland-blue-lagoon.html",
-      "category": "MARKET",
-      "relevanceScore": 91,
-      "relevanceReason": "strong_market_title",
-      "summary": "While investors are fixated on Anthropic's blockbuster stock market debut, a very different IPO is making waves in Europe: Iceland's Blue Lagoon, the operator of one of the world's most famous geothermal spas. raised roughly 14.3 billion Icelandic kronur ($110 million) through the offering, valuing the Icelandic geothermal spa operator at about $787 million, according to the company's investor presentation.",
-      "feeds": [
-        "latest",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-20T15:18:35+08:00"
     }
   ]
 }
