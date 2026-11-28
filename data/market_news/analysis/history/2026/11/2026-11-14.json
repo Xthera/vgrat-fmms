@@ -1,0 +1,244 @@
+{
+  "date": "2026-11-14",
+  "timezone": "Asia/Singapore",
+  "timezoneLabel": "SGT",
+  "articleCount": 8,
+  "analyses": [
+    {
+      "articleId": "7d6f0bed1aaf448c826dd3fff70ed62853145c45ca24c9734fa1ba1ef8fd60fb",
+      "relevant": true,
+      "category": "TECHNOLOGY",
+      "sentiment": "MIXED",
+      "importance": "HIGH",
+      "summary": "According to ETF experts on CNBC's ETF Edge, the AI trade and major tech stocks could see reshaped dynamics following Nvidia turmoil, including CEO Jensen Huang's resignation, alongside political shifts involving a Democratic-controlled Congress pushing back on data centers.",
+      "assetClasses": [
+        "Equities",
+        "ETFs"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Technology",
+        "Semiconductors"
+      ],
+      "investorImpact": "Investors in mega-cap technology and artificial intelligence may need to reallocate exposure as Nvidia faces leadership and trust issues, while alternative chip makers and tech infrastructure providers could capture shifting market demand under a changing political landscape.",
+      "reasoning": "The article discusses major structural shifts in the artificial intelligence trade driven by specific corporate governance turbulence at Nvidia and regulatory or political pressures from Congress regarding data centers. This directly impacts technology sector valuations and ETF strategies, making it highly relevant for fund monitoring.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "How Nvidia turmoil and a Democratic Congress could reshape the AI trade, according to ETF experts",
+      "publishedAtSgt": "2026-11-14T23:50:43+08:00",
+      "url": "https://www.cnbc.com/2026/11/14/nvidia-ai-trade-data-centers-congress.html",
+      "collectorCategory": "GEOPOLITICAL",
+      "collectorRelevanceScore": 71,
+      "collectorRelevanceReason": "geopolitical_with_direct_economic_impact",
+      "collectedAtSgt": "2026-11-15T02:46:43+08:00"
+    },
+    {
+      "articleId": "8b1ce5591d9666ec9abf6fbe2dc331e1c3ab3332e525b52b4889a2cadc5d49f3",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Wall Street and institutional investors are increasingly investing in industrial outdoor storage (IOS) lots across the U.S., driven by rising rents and surging demand for heavy equipment linked to AI infrastructure and broader energy and infrastructure activity.",
+      "assetClasses": [
+        "Real Estate",
+        "Private Equity"
+      ],
+      "geographies": [
+        "U.S."
+      ],
+      "sectors": [
+        "Real Estate",
+        "Industrial"
+      ],
+      "investorImpact": "Investors can find attractive yields and creditworthy tenants in the industrial outdoor storage sector, benefiting from infrastructure-driven rent growth.",
+      "reasoning": "Classified as MARKET because it details emerging real estate investment trends and institutional capital flows into industrial outdoor storage lots. It is relevant for fund monitoring due to new yield opportunities in alternative real estate sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Rising rents draw Wall Street money to industrial outdoor storage lot investments across the U.S.",
+      "publishedAtSgt": "2026-11-14T23:14:57+08:00",
+      "url": "https://www.cnbc.com/2026/11/14/real-estate-rental-income-industrial-storage-market.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-15T02:46:43+08:00"
+    },
+    {
+      "articleId": "4e9ad46dc82912eda0b06322e1cf94f409269f0e1048c648c2e3ccc858e85573",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEGATIVE",
+      "importance": "MEDIUM",
+      "summary": "Heating oil prices have surged 59% from last winter, creating severe financial strain for households, particularly in regions like Maine. The spike has prompted calls from congressional lawmakers for increased federal LIHEAP funding to assist qualifying families facing energy crises.",
+      "assetClasses": [
+        "Commodities",
+        "Energy"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Energy",
+        "Utilities"
+      ],
+      "investorImpact": "The significant rise in heating oil prices impacts consumer disposable income and discretionary spending, particularly for lower-income households during the winter season, while highlighting volatility in energy commodity markets.",
+      "reasoning": "Classified as MARKET due to direct reporting on heating oil price spikes and consumer impacts, with relevance to energy commodities and consumer discretionary sectors.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Heating oil prices are up 59% from last winter. The spike is 'crushing folks,' Maine nonprofit says",
+      "publishedAtSgt": "2026-11-14T22:30:01+08:00",
+      "url": "https://www.cnbc.com/2026/11/14/heating-oil-price-spike-household-budgets.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-15T02:46:43+08:00"
+    },
+    {
+      "articleId": "ee07ac69c57570b1582a395f956ba02aefc303f1574c27f64e88d01986aa73df",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "LOW",
+      "summary": "During open enrollment season, financial advisors highlight the benefits of health savings accounts (HSAs) as a tax-advantaged investment vehicle for growth and healthcare cost savings.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Healthcare"
+      ],
+      "investorImpact": "Highlights retail investment trends into tax-advantaged accounts like HSAs, offering minor indirect signals for asset management and wealth advisory sectors.",
+      "reasoning": "Classified as MARKET because it discusses personal investment strategies and tax-advantaged accounts during benefits open enrollment. Importance is LOW as it is general financial advice rather than market-moving macro news.",
+      "fundMonitoringRelevant": false,
+      "source": "CNBC",
+      "title": "Juice your growth and save on taxes in this workplace investment account",
+      "publishedAtSgt": "2026-11-14T22:08:17+08:00",
+      "url": "https://www.cnbc.com/2026/11/14/hsa-investing-tax-benefits.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-15T02:46:43+08:00"
+    },
+    {
+      "articleId": "badd428a6717a337d01500b9b2598482569a20b108fbb5809bc39e575d53af65",
+      "relevant": true,
+      "category": "GEOPOLITICAL",
+      "sentiment": "NEUTRAL",
+      "importance": "HIGH",
+      "summary": "U.S. officials stated that President Donald Trump does not plan to raise allegations regarding a Chinese intelligence operation involving former Nvidia CEO Jensen Huang during his upcoming meeting with Chinese President Xi Jinping. Additionally, Elon Musk will accompany Trump on the trip to Shenzhen, China, for the APEC summit.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States",
+        "China"
+      ],
+      "sectors": [
+        "Technology",
+        "Automotive",
+        "Aerospace"
+      ],
+      "investorImpact": "The avoidance of escalating tensions regarding Nvidia and Chinese intelligence operations during high-level diplomatic talks removes a potential near-term geopolitical headwind for the technology sector, while Musk's presence highlights ongoing corporate and geopolitical intersections.",
+      "reasoning": "Classified as GEOPOLITICAL due to the focus on presidential diplomacy between the U.S. and China, involving high-profile tech executives. It carries HIGH importance given the market capitalization and significance of Nvidia and Tesla, though sentiment is NEUTRAL as the diplomatic decision averts new friction rather than creating a new positive catalyst.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Trump doesn’t plan to raise Nvidia, spy issue during China trip: U.S. officials",
+      "publishedAtSgt": "2026-11-14T09:34:11+08:00",
+      "url": "https://www.cnbc.com/2026/11/13/trump-nvidia-huang-china.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-14T10:30:40+08:00"
+    },
+    {
+      "articleId": "f470b3855a597b6bda0d29b4f746735e2f79a3ac1fd87f6cdf5748f3a117ee15",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "NEUTRAL",
+      "importance": "MEDIUM",
+      "summary": "The Supreme Court has agreed to hear Robinhood's challenge regarding an investor lawsuit over IPO information omissions, which also involves financial firms such as Goldman Sachs and J.P. Morgan.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials"
+      ],
+      "investorImpact": "The Supreme Court's decision to hear the case could set important legal precedents regarding IPO disclosures and liability for underwriting and issuing firms, impacting risk assessment for future public offerings.",
+      "reasoning": "Classified as MARKET due to its focus on IPO litigation and financial institutions. It is important as it involves a Supreme Court review affecting securities litigation standards.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Supreme Court agrees to hear Robinhood challenge to IPO information omission lawsuit",
+      "publishedAtSgt": "2026-11-14T04:00:06+08:00",
+      "url": "https://www.cnbc.com/2026/11/13/robinhood-supreme-court-ipo-lawsuit.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-14T04:31:41+08:00"
+    },
+    {
+      "articleId": "76736f159d6e7e3da5df19341fc3fa8ff902cfe2717f36b0f921040f40e1e746",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "Goldman Sachs and other investment banks are positioned to secure significant financial windfalls from Anthropic's anticipated initial public offering, extending beyond traditional underwriting fees into wealth management and advisory services for newly enriched executives.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Financials",
+        "Technology"
+      ],
+      "investorImpact": "Investors in major investment banks and the broader AI sector can anticipate strong fee generation and potential market stabilization from high-profile tech IPOs like Anthropic.",
+      "reasoning": "Classified as MARKET because it discusses major investment banking opportunities and market sentiment surrounding the anticipated Anthropic IPO, which holds relevance for financial sector performance and AI market health.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Goldman Sachs looks to cash in on Anthropic's IPO, twice. Here's how and who else wants to",
+      "publishedAtSgt": "2026-11-14T03:45:35+08:00",
+      "url": "https://www.cnbc.com/investingclub/2026/11/13/goldman-sachs-looks-to-cash-in-on-anthropics-ipo-twice-heres-how-and-who-else-wants-to.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-14T04:31:43+08:00"
+    },
+    {
+      "articleId": "a4a7ae779ef76d923a17b1d97fc9e1a686d27933c9015a1a613668c4b2e94659",
+      "relevant": true,
+      "category": "MARKET",
+      "sentiment": "POSITIVE",
+      "importance": "MEDIUM",
+      "summary": "According to utility CEOs and energy-focused investors at the Edison Electric Institute's annual conference, concerns over a data center slowdown are overblown. Goldman Sachs notes that recent midterm election results pose only modest risks to AI investment for now, highlighting opportunities in utility stocks.",
+      "assetClasses": [
+        "Equities"
+      ],
+      "geographies": [
+        "United States"
+      ],
+      "sectors": [
+        "Utilities",
+        "Technology"
+      ],
+      "investorImpact": "Investors can look past overblown fears of a data center slowdown and consider utility stocks that benefit from the intersection of AI infrastructure and energy demand.",
+      "reasoning": "The article addresses market sentiment regarding data center investments and utility stocks, providing insights into AI-related infrastructure risks and opportunities.",
+      "fundMonitoringRelevant": true,
+      "source": "CNBC",
+      "title": "Why the data center slowdown concern is overblown. Two stocks to buy amid the fear",
+      "publishedAtSgt": "2026-11-14T00:54:40+08:00",
+      "url": "https://www.cnbc.com/2026/11/13/data-center-slowdown-utility-stocks.html",
+      "collectorCategory": "MARKET",
+      "collectorRelevanceScore": 91,
+      "collectorRelevanceReason": "strong_market_title",
+      "collectedAtSgt": "2026-11-14T04:31:42+08:00"
+    }
+  ]
+}
