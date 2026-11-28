@@ -1,5 +1,5 @@
 {
-  "generatedAtSgt": "2026-11-27T22:00:41+08:00",
+  "generatedAtSgt": "2026-11-28T08:07:28+08:00",
   "timezone": "Asia/Singapore",
   "timezoneLabel": "SGT",
   "windowDays": 14,
@@ -7,6 +7,21 @@
   "source": "CNBC",
   "articleCount": 100,
   "articles": [
+    {
+      "id": "edd0b258b0b1628353e404eb8700acee2a0ffe4f8d976f7eb087278df2ecc29c",
+      "source": "CNBC",
+      "title": "AI shopping agents are having a moment, but Amazon and a growing number of sites threaten to stunt their growth",
+      "publishedAtSgt": "2026-11-28T00:43:14+08:00",
+      "url": "https://www.cnbc.com/2026/11/27/ai-shopping-agents-retailer-blocks.html",
+      "category": "TECHNOLOGY",
+      "relevanceScore": 54,
+      "relevanceReason": "supporting_technology_description",
+      "summary": "So last month, she turned to Meta's Muse personal artificial intelligence agent. Bittner, chief product officer at fintech startup Imprint, gave Muse the greenlight to buy some wipers on her behalf from AutoZone. The interaction encapsulates the current messy and complicated landscape of agentic shopping apps, the AI tools that can make purchases on behalf of users.",
+      "feeds": [
+        "technology"
+      ],
+      "collectedAtSgt": "2026-11-28T08:07:24+08:00"
+    },
     {
       "id": "488b01fbc71ed191176a7e2cb5d6d28ba9fac9d62478fe7c0c201a968f2adf9c",
       "source": "CNBC",
@@ -1587,22 +1602,6 @@
       "relevanceScore": 91,
       "relevanceReason": "strong_market_title",
       "summary": "While investors are fixated on Anthropic's blockbuster stock market debut, a very different IPO is making waves in Europe: Iceland's Blue Lagoon, the operator of one of the world's most famous geothermal spas. raised roughly 14.3 billion Icelandic kronur ($110 million) through the offering, valuing the Icelandic geothermal spa operator at about $787 million, according to the company's investor presentation.",
-      "feeds": [
-        "latest",
-        "world"
-      ],
-      "collectedAtSgt": "2026-11-20T15:18:35+08:00"
-    },
-    {
-      "id": "f08b664f31d31f70894871e091ca81e3d199f77eda084e8395a35733fc8e046a",
-      "source": "CNBC",
-      "title": "U.K.-India trade deal faces a stiff test over Scotch whisky import taxes",
-      "publishedAtSgt": "2026-11-20T13:09:52+08:00",
-      "url": "https://www.cnbc.com/2026/11/20/uk-india-trade-scotch-whisky-tariffs.html",
-      "category": "GEOPOLITICAL",
-      "relevanceScore": 71,
-      "relevanceReason": "geopolitical_with_direct_economic_impact",
-      "summary": "trade deal is facing an early test, as New Delhi resists extending preferential tariffs to bulk Scotch whisky imports. Duty on bulk Scotch whisky imports was expected to be slashed to 75% then gradually to 40% over 10 years as per the trade agreement. However, a Reuters report Thursday said that India now plans to levy a 162.5% duty on these imports, higher than the 150% in place before the trade deal.",
       "feeds": [
         "latest",
         "world"
